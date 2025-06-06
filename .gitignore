@@ -1,0 +1,28 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Godot generated files
+export/
+.import/
+.cache/
+.mono/
+mono/
+*.mono
+*.sln
+*.userprefs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Visual Studio files
+.vscode/
+.vs/
+
+# Build output folders (if any)
+bin/
+obj/
+
+# JetBrains Rider IDE files (optional)
+.idea/
