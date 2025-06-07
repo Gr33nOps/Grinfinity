@@ -1,7 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://bi5oq2qgbb1cd"]
+[gd_scene load_steps=8 format=3 uid="uid://bi5oq2qgbb1cd"]
 
 [ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Script" uid="uid://d4llrs4c80d0g" path="res://scripts/Game.cs" id="1_yqjtg"]
+
+[sub_resource type="Environment" id="Environment_yqjtg"]
+background_mode = 3
+glow_enabled = true
+glow_blend_mode = 0
+glow_hdr_threshold = 0.77
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_uwrxv"]
 normal = Vector2(0, 1)
@@ -19,6 +25,9 @@ distance = -2.0
 
 [node name="game" type="Node2D" groups=["enemies"]]
 script = ExtResource("1_yqjtg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." groups=["enemies"]]
+environment = SubResource("Environment_yqjtg")
 
 [node name="player" parent="." instance=ExtResource("1_uwrxv")]
 position = Vector2(504, 317)

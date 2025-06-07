@@ -5,8 +5,11 @@ public partial class Bullet : Area2D
 {
 	public Vector2 Direction { get; set; }
 	private const float SPEED = 10.0f;
+	private PackedScene explosionScene;
 	
 	public override void _Ready(){
+		explosionScene = GD.Load<PackedScene>("res://scenes/explosion.tscn");
+
 		BodyEntered += OnBodyEntered;
 		GetNode<Timer>("Timer").Timeout += OnTimerTimeout;
 	}
@@ -23,6 +26,12 @@ public partial class Bullet : Area2D
 		if (body.IsInGroup("enemies")){
 			body.QueueFree();
 			QueueFree();
+
+			var explosion = explosionScene.Instantiate<CpuParticles2D>();
+			explosion.GlobalPosition = GlobalPosition;
+			explosion.Emitting = true;
+			explosion.Lifetime = GD.RandRange(0.5f, 0.7f);
+			GetNode("/root/game").AddChild(explosion);
 		}
 	}
 }

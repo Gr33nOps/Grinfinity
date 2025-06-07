@@ -16,7 +16,7 @@ position = Vector2(16.3089, -4.88503)
 color = Color(1, 0.301961, 0.364706, 1)
 polygon = PackedVector2Array(-24.3089, 31.885, 17.6911, 36.885, 23.6911, 27.885, -13.3089, 21.885, -13.3089, -13.115, 18.6911, -22.115, 22.6911, -33.115, -23.3089, -23.115)
 
-[node name="Polygon2D2" type="Polygon2D" parent="."]
+[node name="Polygon2D2" type="Polygon2D" parent="." groups=["enemies"]]
 position = Vector2(0, -9.53674e-07)
 scale = Vector2(2.43456, 2.29425)
 color = Color(1, 0.300784, 0.363114, 1)

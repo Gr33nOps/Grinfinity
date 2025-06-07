@@ -60,3 +60,4 @@ shoot={
 
 renderer/rendering_method="mobile"
 anti_aliasing/quality/msaa_2d=2
+environment/defaults/default_clear_color=Color(0.0962047, 0.0962048, 0.0962047, 1)
