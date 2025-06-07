@@ -23,6 +23,10 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="ZomShot"
 
+[global_group]
+
+enemies=""
+
 [input]
 
 up={
