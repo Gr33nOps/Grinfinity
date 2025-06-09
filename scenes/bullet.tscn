@@ -3,19 +3,22 @@
 [ext_resource type="Script" uid="uid://bm8ol0obt273u" path="res://scripts/Bullet.cs" id="1_mkf8s"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_h1aey"]
-radius = 11.0
+radius = 8.0
 
 [node name="bullet" type="Area2D" groups=["enemies"]]
+scale = Vector2(2, 2)
 script = ExtResource("1_mkf8s")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_h1aey")
 
 [node name="Polygon2D" type="Polygon2D" parent="."]
-color = Color(0, 1, 1, 1)
+scale = Vector2(0.8, 0.8)
+color = Color(0.952941, 0.623529, 0.352941, 1)
 polygon = PackedVector2Array(-3, -10, 0, -10, 3, -10, 5, -9, 7, -7, 9, -5, 10, -2, 10, 0, 10, 3, 8, 6, 6, 8, 3, 10, -2, 10, -5, 9, -7, 7, -9, 5, -10, 2, -10, 0, -10, -2, -9, -5, -7, -7, -6, -8)
 
 [node name="Timer" type="Timer" parent="."]
+wait_time = 3.0
 one_shot = true
 autostart = true
 

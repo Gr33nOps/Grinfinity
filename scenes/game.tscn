@@ -1,7 +1,12 @@
-[gd_scene load_steps=8 format=3 uid="uid://bi5oq2qgbb1cd"]
+[gd_scene load_steps=7 format=3 uid="uid://bi5oq2qgbb1cd"]
 
 [ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Script" uid="uid://d4llrs4c80d0g" path="res://scripts/Game.cs" id="1_yqjtg"]
+[ext_resource type="Script" uid="uid://bpyrayovp2nmu" path="res://scripts/PauseMenu.cs" id="3_lnu2h"]
+[ext_resource type="Script" uid="uid://dabfhc40aafyr" path="res://scripts/GameOverMenu.cs" id="4_lbhrr"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lbhrr"]
+bg_color = Color(0.0784314, 0.0156863, 0.0980392, 1)
 
 [sub_resource type="Environment" id="Environment_yqjtg"]
 background_mode = 3
@@ -9,48 +14,152 @@ glow_enabled = true
 glow_blend_mode = 0
 glow_hdr_threshold = 0.77
 
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_uwrxv"]
-normal = Vector2(0, 1)
-distance = -54.0
-
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_yqjtg"]
-normal = Vector2(1, 0)
-
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_lnu2h"]
-normal = Vector2(-1, 0)
-distance = -940.0
-
-[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_lbhrr"]
-distance = -2.0
-
 [node name="game" type="Node2D" groups=["enemies"]]
+process_mode = 2
 script = ExtResource("1_yqjtg")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -137.5
+offset_right = 137.5
+offset_bottom = 52.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 50
+text = "Survival Time: 00:00"
+
+[node name="GameOverLayer" type="CanvasLayer" parent="."]
+layer = 128
+
+[node name="GameOverMenu" type="Control" parent="GameOverLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_lbhrr")
+
+[node name="GameOverMenu" type="Panel" parent="GameOverLayer/GameOverMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_lbhrr")
+
+[node name="Label" type="Label" parent="GameOverLayer/GameOverMenu/GameOverMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -580.0
+offset_top = -136.5
+offset_right = 580.0
+offset_bottom = 136.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 200
+text = "GAME OVER"
+
+[node name="Label2" type="Label" parent="GameOverLayer/GameOverMenu/GameOverMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -569.0
+offset_top = 89.0
+offset_right = 569.0
+offset_bottom = 226.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 100
+text = "Press 'SPACE' to Restart"
+
+[node name="SurvivalTimeLabel" type="Label" parent="GameOverLayer/GameOverMenu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -569.0
+offset_top = -244.0
+offset_right = 569.0
+offset_bottom = -107.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 100
+text = "You survived: 00:00"
+
+[node name="PauseLayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="PauseMenu" type="Control" parent="PauseLayer"]
+process_mode = 2
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1918.0
+offset_bottom = 1077.0
+script = ExtResource("3_lnu2h")
+
+[node name="Panel" type="Panel" parent="PauseLayer/PauseMenu"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.00743
+grow_horizontal = 2
+grow_vertical = 2
+metadata/_edit_use_anchors_ = true
+
+[node name="Label" type="Label" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -699.0
+offset_top = -140.5
+offset_right = 699.0
+offset_bottom = 132.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 200
+text = "GAME PAUSED"
+
+[node name="Label2" type="Label" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -534.0
+offset_top = 83.5
+offset_right = 522.0
+offset_bottom = 220.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 100
+text = "Press 'ESC' to Resume"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." groups=["enemies"]]
 environment = SubResource("Environment_yqjtg")
 
-[node name="player" parent="." instance=ExtResource("1_uwrxv")]
-position = Vector2(504, 317)
-
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-
-[node name="top" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2(0, 54)
-shape = SubResource("WorldBoundaryShape2D_uwrxv")
-
-[node name="left" type="CollisionShape2D" parent="StaticBody2D"]
-shape = SubResource("WorldBoundaryShape2D_yqjtg")
-
-[node name="right" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2(211, 0)
-shape = SubResource("WorldBoundaryShape2D_lnu2h")
-
-[node name="bottom" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2(0, 648)
-shape = SubResource("WorldBoundaryShape2D_lbhrr")
-
 [node name="Timer" type="Timer" parent="."]
 wait_time = 0.5
 autostart = true
+
+[node name="player" parent="." instance=ExtResource("1_uwrxv")]
+position = Vector2(967, 541)
 
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

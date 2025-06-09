@@ -1,40 +1,34 @@
-[gd_scene load_steps=3 format=3 uid="uid://bcmipct1fe830"]
+[gd_scene load_steps=5 format=3 uid="uid://bcmipct1fe830"]
 
 [ext_resource type="Script" uid="uid://bj2ub38457ksw" path="res://scripts/Player.cs" id="1_3vyb7"]
+[ext_resource type="Texture2D" uid="uid://bnsqvdjs6k77x" path="res://sprites/player.png" id="2_g2els"]
+[ext_resource type="Texture2D" uid="uid://bme1omawnuju1" path="res://sprites/player 2.png" id="3_qhqgy"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u8vuu"]
-radius = 28.0
-height = 62.0
+radius = 26.0
+height = 54.0
 
 [node name="player" type="CharacterBody2D"]
+position = Vector2(-11, 12)
+scale = Vector2(2, 2)
 script = ExtResource("1_3vyb7")
 
-[node name="Polygon2D4" type="Polygon2D" parent="."]
-position = Vector2(0, -4.34783)
-scale = Vector2(1, 1.17391)
-color = Color(0.191124, 0.759547, 0.626468, 1)
-polygon = PackedVector2Array(-47, -21, -19, -21, -19, 25, -47, 25)
-
-[node name="Polygon2D3" type="Polygon2D" parent="."]
-position = Vector2(3.03798, -1.47)
-scale = Vector2(0.936709, 1.03)
-color = Color(0.173471, 0.507346, 0.610371, 1)
-polygon = PackedVector2Array(-29, -46.1456, -31, -44.5173, -31, 42.3602, -28, 44.1456, -25.0491, 45.4596, 48, 2, -25.7826, -47.4997)
-
-[node name="Polygon2D2" type="Polygon2D" parent="."]
-position = Vector2(-9, 0)
-color = Color(0.95848, 0.567591, 1.54018e-06, 1)
-polygon = PackedVector2Array(76, -8, 19, -5, 19, 5, 76, 8)
-
-[node name="Polygon2D" type="Polygon2D" parent="."]
-position = Vector2(-38, -0.260941)
-scale = Vector2(1.01471, 0.956041)
-polygon = PackedVector2Array(6.88406, -43.6582, 6.88405, -34.5149, 6.88406, 38.7721, 63.058, 23.1772, 63.058, -22.4937, 15.7549, -40.316)
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-3.8147e-06, -3.8147e-06)
+position = Vector2(-3, -12.5)
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_u8vuu")
 
 [node name="shootyPart" type="Node2D" parent="."]
-position = Vector2(70, 0)
+position = Vector2(54.5, -6)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(10.5, -9.5)
+scale = Vector2(0.273333, 0.273333)
+texture = ExtResource("2_g2els")
+flip_h = true
+
+[node name="Player2" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(26.5, -14)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("3_qhqgy")
