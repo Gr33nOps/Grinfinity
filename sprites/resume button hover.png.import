@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctdqy1x0us2ch"
-path="res://.godot/imported/player 2.png-08d51fd5c5bd5696c476e1fbc718ded0.ctex"
+uid="uid://cb0aafxndmees"
+path="res://.godot/imported/resume button hover.png-7148653f8af2129a18ae733bddf0af40.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player 2.png"
-dest_files=["res://.godot/imported/player 2.png-08d51fd5c5bd5696c476e1fbc718ded0.ctex"]
+source_file="res://sprites/resume button hover.png"
+dest_files=["res://.godot/imported/resume button hover.png-7148653f8af2129a18ae733bddf0af40.ctex"]
 
 [params]
 

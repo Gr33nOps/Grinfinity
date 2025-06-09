@@ -1,11 +1,29 @@
-[gd_scene load_steps=7 format=3 uid="uid://bi5oq2qgbb1cd"]
+[gd_scene load_steps=23 format=3 uid="uid://bi5oq2qgbb1cd"]
 
 [ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="Script" uid="uid://d4llrs4c80d0g" path="res://scripts/Game.cs" id="1_yqjtg"]
+[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://Bubblegum.ttf" id="2_iywne"]
 [ext_resource type="Script" uid="uid://bpyrayovp2nmu" path="res://scripts/PauseMenu.cs" id="3_lnu2h"]
 [ext_resource type="Script" uid="uid://dabfhc40aafyr" path="res://scripts/GameOverMenu.cs" id="4_lbhrr"]
+[ext_resource type="Texture2D" uid="uid://dxliovayscmb5" path="res://sprites/play button normal.png" id="4_ssvqc"]
+[ext_resource type="Texture2D" uid="uid://buokn6fjy7so1" path="res://sprites/play button pressed.png" id="5_264po"]
+[ext_resource type="Texture2D" uid="uid://ca5d0ur37l0g5" path="res://sprites/resume button normal.png" id="5_u5sy4"]
+[ext_resource type="Texture2D" uid="uid://byhcfvx17bamg" path="res://sprites/play button hover.png" id="6_1kice"]
+[ext_resource type="Texture2D" uid="uid://ntotnqmwcp0n" path="res://sprites/resume button pressed.png" id="6_gee14"]
+[ext_resource type="Texture2D" uid="uid://cdrqhaqjdgflp" path="res://sprites/menu button normal.png" id="7_264po"]
+[ext_resource type="Texture2D" uid="uid://cb0aafxndmees" path="res://sprites/resume button hover.png" id="7_gee14"]
+[ext_resource type="Texture2D" uid="uid://cgr52y1pq83q2" path="res://sprites/menu button pressed.png" id="8_1kice"]
+[ext_resource type="Texture2D" uid="uid://ce2ylkaa25ks8" path="res://sprites/giveup button normal.png" id="8_kvpfn"]
+[ext_resource type="Texture2D" uid="uid://cj1epkcqpudfn" path="res://sprites/menu button hover.png" id="9_5newe"]
+[ext_resource type="Texture2D" uid="uid://b7s532cjxyhmh" path="res://sprites/giveup button pressed.png" id="9_dinhu"]
+[ext_resource type="Texture2D" uid="uid://b6pgleqeuvdfd" path="res://sprites/GAME OVER.png" id="10_264po"]
+[ext_resource type="Texture2D" uid="uid://btoi1wiiss7ia" path="res://sprites/giveup button hover.png" id="10_kvuet"]
+[ext_resource type="Texture2D" uid="uid://djfl0p3jufn1h" path="res://sprites/paused.png" id="11_dinhu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lbhrr"]
+bg_color = Color(0.0784314, 0.0156863, 0.0980392, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_264po"]
 bg_color = Color(0.0784314, 0.0156863, 0.0980392, 1)
 
 [sub_resource type="Environment" id="Environment_yqjtg"]
@@ -24,10 +42,12 @@ script = ExtResource("1_yqjtg")
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -137.5
-offset_right = 137.5
-offset_bottom = 52.0
+offset_left = -260.0
+offset_top = 13.0
+offset_right = 261.0
+offset_bottom = 67.0
 grow_horizontal = 2
+theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 50
 text = "Survival Time: 00:00"
 
@@ -53,6 +73,7 @@ grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_lbhrr")
 
 [node name="Label" type="Label" parent="GameOverLayer/GameOverMenu/GameOverMenu"]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -65,10 +86,12 @@ offset_right = 580.0
 offset_bottom = 136.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 200
 text = "GAME OVER"
 
 [node name="Label2" type="Label" parent="GameOverLayer/GameOverMenu/GameOverMenu"]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -81,8 +104,38 @@ offset_right = 569.0
 offset_bottom = 226.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 100
 text = "Press 'SPACE' to Restart"
+
+[node name="playAgainButton" type="TextureButton" parent="GameOverLayer/GameOverMenu/GameOverMenu"]
+layout_mode = 0
+offset_left = 635.0
+offset_top = 215.0
+offset_right = 1277.0
+offset_bottom = 521.0
+texture_normal = ExtResource("4_ssvqc")
+texture_pressed = ExtResource("5_264po")
+texture_hover = ExtResource("6_1kice")
+
+[node name="MenuButton" type="TextureButton" parent="GameOverLayer/GameOverMenu/GameOverMenu"]
+layout_mode = 0
+offset_left = 635.0
+offset_top = 537.0
+offset_right = 1277.0
+offset_bottom = 841.0
+texture_normal = ExtResource("7_264po")
+texture_pressed = ExtResource("8_1kice")
+texture_hover = ExtResource("9_5newe")
+
+[node name="TextureRect" type="TextureRect" parent="GameOverLayer/GameOverMenu/GameOverMenu"]
+layout_mode = 0
+offset_left = 509.0
+offset_top = 91.0
+offset_right = 1416.0
+offset_bottom = 531.0
+mouse_filter = 2
+texture = ExtResource("10_264po")
 
 [node name="SurvivalTimeLabel" type="Label" parent="GameOverLayer/GameOverMenu"]
 layout_mode = 1
@@ -91,12 +144,13 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -569.0
-offset_top = -244.0
-offset_right = 569.0
-offset_bottom = -107.0
+offset_left = -507.0
+offset_top = 352.0
+offset_right = 631.0
+offset_bottom = 489.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 100
 text = "You survived: 00:00"
 
@@ -118,9 +172,20 @@ anchor_right = 1.0
 anchor_bottom = 1.00743
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_264po")
 metadata/_edit_use_anchors_ = true
 
+[node name="TextureRect" type="TextureRect" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 0
+offset_left = 472.0
+offset_top = 151.0
+offset_right = 1484.0
+offset_bottom = 695.0
+mouse_filter = 2
+texture = ExtResource("11_dinhu")
+
 [node name="Label" type="Label" parent="PauseLayer/PauseMenu/Panel"]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -133,10 +198,12 @@ offset_right = 699.0
 offset_bottom = 132.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 200
 text = "GAME PAUSED"
 
 [node name="Label2" type="Label" parent="PauseLayer/PauseMenu/Panel"]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -149,8 +216,29 @@ offset_right = 522.0
 offset_bottom = 220.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 100
 text = "Press 'ESC' to Resume"
+
+[node name="ResumeButton" type="TextureButton" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 0
+offset_left = 661.0
+offset_top = 338.0
+offset_right = 1303.0
+offset_bottom = 644.0
+texture_normal = ExtResource("5_u5sy4")
+texture_pressed = ExtResource("6_gee14")
+texture_hover = ExtResource("7_gee14")
+
+[node name="GiveUpButton" type="TextureButton" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 0
+offset_left = 661.0
+offset_top = 660.0
+offset_right = 1303.0
+offset_bottom = 964.0
+texture_normal = ExtResource("8_kvpfn")
+texture_pressed = ExtResource("9_dinhu")
+texture_hover = ExtResource("10_kvuet")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." groups=["enemies"]]
 environment = SubResource("Environment_yqjtg")
@@ -162,4 +250,8 @@ autostart = true
 [node name="player" parent="." instance=ExtResource("1_uwrxv")]
 position = Vector2(967, 541)
 
+[connection signal="pressed" from="GameOverLayer/GameOverMenu/GameOverMenu/playAgainButton" to="." method="OnRestartGame"]
+[connection signal="pressed" from="GameOverLayer/GameOverMenu/GameOverMenu/MenuButton" to="." method="OnGoToMainMenu"]
+[connection signal="pressed" from="PauseLayer/PauseMenu/Panel/ResumeButton" to="." method="OnResumeButtonPressed"]
+[connection signal="pressed" from="PauseLayer/PauseMenu/Panel/GiveUpButton" to="." method="OnGiveUpButtonPressed"]
 [connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

@@ -1,20 +1,23 @@
-[gd_scene load_steps=6 format=3 uid="uid://bt682dupuu2ev"]
+[gd_scene load_steps=9 format=3 uid="uid://bt682dupuu2ev"]
 
-[ext_resource type="Script" uid="uid://3bcegfvhclme" path="res://scripts/Menu.cs" id="1_lti8b"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_vsb4k"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lti8b"]
-bg_color = Color(0.81048, 0.474335, 0.163296, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ouk20"]
-bg_color = Color(0.952941, 0.623529, 0.352941, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mae5d"]
-bg_color = Color(0.952941, 0.623529, 0.352941, 1)
+[ext_resource type="Script" uid="uid://3bcegfvhclme" path="res://scripts/Menu.cs" id="1_13sgg"]
+[ext_resource type="Texture2D" uid="uid://jdo6pd7tj486" path="res://sprites/title.png" id="2_i6lef"]
+[ext_resource type="Texture2D" uid="uid://dxliovayscmb5" path="res://sprites/play button normal.png" id="3_70i5f"]
+[ext_resource type="Texture2D" uid="uid://buokn6fjy7so1" path="res://sprites/play button pressed.png" id="4_mj5lg"]
+[ext_resource type="Texture2D" uid="uid://byhcfvx17bamg" path="res://sprites/play button hover.png" id="5_ufwb2"]
+[ext_resource type="Texture2D" uid="uid://55e2hvimhsmn" path="res://sprites/quit button normal.png" id="6_6cdou"]
+[ext_resource type="Texture2D" uid="uid://3ognhkt25xix" path="res://sprites/quit button pressed.png" id="7_i42df"]
+[ext_resource type="Texture2D" uid="uid://cv1y3q1rxq1j1" path="res://sprites/quit button hover.png" id="8_7jp70"]
 
 [node name="menu" type="Node2D"]
-script = ExtResource("1_lti8b")
+script = ExtResource("1_13sgg")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+offset_left = 482.0
+offset_top = 156.0
+offset_right = 1446.0
+offset_bottom = 730.0
+texture = ExtResource("2_i6lef")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 anchors_preset = 7
@@ -22,45 +25,27 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = 747.0
-offset_top = 555.0
-offset_right = 1298.0
-offset_bottom = 785.0
+offset_left = 642.5
+offset_top = 313.0
+offset_right = 1284.5
+offset_bottom = 933.0
 grow_horizontal = 2
 grow_vertical = 0
 size_flags_horizontal = 0
 size_flags_vertical = 6
 theme_override_constants/separation = 10
 
-[node name="PlayButton" type="Button" parent="VBoxContainer"]
+[node name="PlayButton" type="TextureButton" parent="VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.145098, 0.286275, 1)
-theme_override_font_sizes/font_size = 80
-theme_override_styles/focus = SubResource("StyleBoxEmpty_vsb4k")
-theme_override_styles/hover = SubResource("StyleBoxFlat_lti8b")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_ouk20")
-theme_override_styles/normal = SubResource("StyleBoxFlat_mae5d")
-text = "PLAY"
+texture_normal = ExtResource("3_70i5f")
+texture_pressed = ExtResource("4_mj5lg")
+texture_hover = ExtResource("5_ufwb2")
 
-[node name="QuitButton" type="Button" parent="VBoxContainer"]
+[node name="QuitButton" type="TextureButton" parent="VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.145098, 0.286275, 1)
-theme_override_font_sizes/font_size = 80
-theme_override_styles/focus = SubResource("StyleBoxEmpty_vsb4k")
-theme_override_styles/hover = SubResource("StyleBoxFlat_lti8b")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_ouk20")
-theme_override_styles/normal = SubResource("StyleBoxFlat_mae5d")
-text = "QUIT"
-
-[node name="Label" type="Label" parent="."]
-offset_left = 486.0
-offset_top = 185.0
-offset_right = 1561.0
-offset_bottom = 527.0
-theme_override_font_sizes/font_size = 250
-text = "ZOMBOT"
-horizontal_alignment = 1
-vertical_alignment = 1
+texture_normal = ExtResource("6_6cdou")
+texture_pressed = ExtResource("7_i42df")
+texture_hover = ExtResource("8_7jp70")
 
 [connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="OnPlayButtonPressed"]
 [connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="OnQuitButtonPressed"]

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctdqy1x0us2ch"
-path="res://.godot/imported/player 2.png-08d51fd5c5bd5696c476e1fbc718ded0.ctex"
+uid="uid://btoi1wiiss7ia"
+path="res://.godot/imported/giveup button hover.png-afd7b0a0bae1dcae0740b75f48323202.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://sprites/player 2.png"
-dest_files=["res://.godot/imported/player 2.png-08d51fd5c5bd5696c476e1fbc718ded0.ctex"]
+source_file="res://sprites/giveup button hover.png"
+dest_files=["res://.godot/imported/giveup button hover.png-afd7b0a0bae1dcae0740b75f48323202.ctex"]
 
 [params]
 

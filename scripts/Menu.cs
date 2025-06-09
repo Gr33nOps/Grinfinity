@@ -8,6 +8,7 @@ public partial class Menu : Node
 	{
 		GetNode<Button>("PlayButton").Pressed += OnPlayButtonPressed;
 		GetNode<Button>("QuitButton").Pressed += OnQuitButtonPressed;
+		Input.MouseMode = Input.MouseModeEnum.Visible;
 	}
 	
 	private void OnPlayButtonPressed()

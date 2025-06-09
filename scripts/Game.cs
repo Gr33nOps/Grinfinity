@@ -58,6 +58,12 @@ public partial class Game : Node2D
 		
 		pauseMenu = GetNode<PauseMenu>("PauseLayer/PauseMenu");
 		
+		if (pauseMenu != null)
+		{
+			pauseMenu.ResumeGame += OnResumeGame;
+			pauseMenu.GiveUpGame += OnGiveUpGame; 
+		}
+		
 		enemyTextures = new Texture2D[]
 		{
 			GD.Load<Texture2D>("res://sprites/enemy.png"),
@@ -92,6 +98,7 @@ public partial class Game : Node2D
 		if (gameOverMenu != null)
 		{
 			gameOverMenu.RestartGame += OnRestartGame;
+			gameOverMenu.GoToMainMenu += OnGoToMainMenu; // NEW CONNECTION
 		}
 		
 		ProcessMode = Node.ProcessModeEnum.Always;
@@ -162,37 +169,40 @@ public partial class Game : Node2D
 		}
 	}
 	
-	private void TogglePause()
+	// Replace your TogglePause method in Game.cs with this (back to original + mouse cursor fix):
+private void TogglePause()
+{
+	isPaused = !isPaused;
+	
+	if (isPaused)
 	{
-		isPaused = !isPaused;
-		
-		if (isPaused)
-		{
-			pauseMenu.ShowPauseMenu();
-			if (crosshair != null) crosshair.Visible = false;
-		}
-		else
-		{
-			pauseMenu.HidePauseMenu();
-			if (crosshair != null) crosshair.Visible = true;
-		}
-		
-		var timer = GetNode<Timer>("Timer");
-		timer.Paused = isPaused;
-		
-		if (player != null)
-		{
-			player.SetProcess(!isPaused);
-			player.SetPhysicsProcess(!isPaused);
-		}
-		
-		var enemies = GetTree().GetNodesInGroup("enemies");
-		foreach (Node enemy in enemies)
-		{
-			enemy.SetProcess(!isPaused);
-			enemy.SetPhysicsProcess(!isPaused);
-		}
+		pauseMenu.ShowPauseMenu();
+		if (crosshair != null) crosshair.Visible = false;
+		Input.MouseMode = Input.MouseModeEnum.Visible; // Show cursor for clicking buttons
 	}
+	else
+	{
+		pauseMenu.HidePauseMenu();
+		if (crosshair != null) crosshair.Visible = true;
+		Input.MouseMode = Input.MouseModeEnum.Hidden; // Hide cursor for gameplay
+	}
+	
+	var timer = GetNode<Timer>("Timer");
+	timer.Paused = isPaused;
+	
+	if (player != null)
+	{
+		player.SetProcess(!isPaused);
+		player.SetPhysicsProcess(!isPaused);
+	}
+	
+	var enemies = GetTree().GetNodesInGroup("enemies");
+	foreach (Node enemy in enemies)
+	{
+		enemy.SetProcess(!isPaused);
+		enemy.SetPhysicsProcess(!isPaused);
+	}
+}
 	
 	private void OnTimerTimeout()
 	{
@@ -265,10 +275,11 @@ public partial class Game : Node2D
 		if (isGameOver) return;
 
 		isGameOver = true;
-
+		
+		Input.MouseMode = Input.MouseModeEnum.Visible;
+		
 		var timer = GetNode<Timer>("Timer");
 		timer.Paused = true;
-
 		if (player != null)
 		{
 			player.SetProcess(false);
@@ -291,5 +302,29 @@ public partial class Game : Node2D
 	private void OnRestartGame()
 	{
 		GetTree().ReloadCurrentScene();
+	}
+	private void OnResumeGame()
+	{
+		TogglePause(); // This will unpause the game
+	}
+	
+	private void OnGiveUpGame()
+	{
+		// First unpause the game so TriggerGameOver works properly
+		if (isPaused)
+		{
+			isPaused = false;
+			pauseMenu.HidePauseMenu();
+			if (crosshair != null) crosshair.Visible = true;
+			Input.MouseMode = Input.MouseModeEnum.Hidden;
+		}
+		
+		// Then trigger game over
+		TriggerGameOver();
+	}
+	
+	private void OnGoToMainMenu()
+	{
+		GetTree().ChangeSceneToFile("res://scenes/Menu.tscn"); // Make sure this path is correct
 	}
 }
