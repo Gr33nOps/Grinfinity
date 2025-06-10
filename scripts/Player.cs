@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 public partial class Player : CharacterBody2D
 {
@@ -8,88 +7,93 @@ public partial class Player : CharacterBody2D
 	private bool isReloading = false;
 	private Node2D shootyPart;
 	private Sprite2D playerSprite;
-	private Vector2 lastMousePosition;
+	private AudioStreamPlayer2D shootSound;
 	
 	public override void _Ready()
 	{
 		bulletScene = GD.Load<PackedScene>("res://scenes/bullet.tscn");
 		shootyPart = GetNode<Node2D>("shootyPart");
-		
-		// Get the player sprite - adjust the path as needed based on your scene structure
+		playerSprite = FindPlayerSprite();
+		shootSound = GetNode<AudioStreamPlayer2D>("ShootSound");
+	}
+	
+	private Sprite2D FindPlayerSprite()
+	{
 		if (HasNode("Sprite2D"))
+			return GetNode<Sprite2D>("Sprite2D");
+		
+		if (HasNode("sprite"))
+			return GetNode<Sprite2D>("sprite");
+		
+		foreach (Node child in GetChildren())
 		{
-			playerSprite = GetNode<Sprite2D>("Sprite2D");
-		}
-		else if (HasNode("sprite"))
-		{
-			playerSprite = GetNode<Sprite2D>("sprite");
-		}
-		else
-		{
-			// Search through children to find the Sprite2D
-			foreach (Node child in GetChildren())
-			{
-				if (child is Sprite2D sprite2D)
-				{
-					playerSprite = sprite2D;
-					break;
-				}
-			}
+			if (child is Sprite2D sprite2D)
+				return sprite2D;
 		}
 		
-		lastMousePosition = GetGlobalMousePosition();
+		return null;
 	}
 	
 	public override void _PhysicsProcess(double delta)
 	{
-		Vector2 currentMousePosition = GetGlobalMousePosition();
+		Vector2 mousePosition = GetGlobalMousePosition();
 		
-		// Flip the player sprite based on mouse direction
+		HandleSpriteFlip(mousePosition);
+		LookAt(mousePosition);
+		HandleMovement();
+		HandleShooting(mousePosition);
+		HandleCollisions();
+		
+		MoveAndSlide();
+		ClampToViewport();
+	}
+	
+	private void HandleSpriteFlip(Vector2 mousePosition)
+	{
 		if (playerSprite != null)
 		{
-			// If mouse moved to the left of the player, flip horizontally
-			if (currentMousePosition.X < GlobalPosition.X)
-			{
-				playerSprite.FlipV = true;
-			}
-			// If mouse moved to the right of the player, don't flip
-			else if (currentMousePosition.X > GlobalPosition.X)
-			{
-				playerSprite.FlipV = false;
-			}
+			playerSprite.FlipV = mousePosition.X < GlobalPosition.X;
 		}
-		
-		LookAt(currentMousePosition);
-		
+	}
+	
+	private void HandleMovement()
+	{
 		Velocity = new Vector2(
 			Input.GetAxis("left", "right") * SPEED,
 			Input.GetAxis("up", "down") * SPEED
 		);
 		
+		Velocity = GetRealVelocity().Lerp(Velocity, 0.1f);
+	}
+	
+	private void HandleShooting(Vector2 mousePosition)
+	{
 		if (Input.IsActionJustPressed("shoot"))
 		{
 			var bullet = bulletScene.Instantiate<Bullet>();
 			bullet.GlobalPosition = shootyPart.GlobalPosition;
-			bullet.Direction = (currentMousePosition - GlobalPosition).Normalized();
+			bullet.Direction = (mousePosition - GlobalPosition).Normalized();
 			GetNode("/root/game").AddChild(bullet);
+			if (shootSound != null){
+				shootSound.Play();
+			}
 		}
-		
-		Velocity = GetRealVelocity().Lerp(Velocity, 0.1f);
-		MoveAndSlide();
-		ClampToViewport();
-		
+	}
+	
+	private void HandleCollisions()
+	{
 		for (int i = 0; i < GetSlideCollisionCount(); i++)
 		{
 			var collision = GetSlideCollision(i);
-			if (collision.GetCollider() is Node colliderNode && colliderNode.IsInGroup("enemies") && !isReloading)
+			if (collision.GetCollider() is Node colliderNode && 
+				colliderNode.IsInGroup("enemies") && 
+				!isReloading)
 			{
 				isReloading = true;
-				var gameNode = GetNode<Game>("/root/game");
-				gameNode.TriggerGameOver();
+				var gameManager = GetNode<GameManager>("/root/game");
+				gameManager.TriggerGameOver();
 			}
 		}
-		
-		lastMousePosition = currentMousePosition;
 	}
 	
 	private void ClampToViewport()

@@ -15,6 +15,10 @@ run/main_scene="uid://bt682dupuu2ev"
 config/features=PackedStringArray("4.4", "C#", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+MusicManager="*res://scenes/music_manager.tscn"
+
 [display]
 
 window/size/viewport_width=1920
@@ -69,4 +73,4 @@ esc={
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="mobile"
 anti_aliasing/quality/msaa_2d=2
-environment/defaults/default_clear_color=Color(0.0767657, 0.0141332, 0.0974747, 1)
+environment/defaults/default_clear_color=Color(0.0641172, 0.0110893, 0.0828401, 1)

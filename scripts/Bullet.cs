@@ -7,6 +7,7 @@ public partial class Bullet : Area2D
 	public Vector2 Direction { get; set; }
 	private const float SPEED = 10.0f;
 	private PackedScene explosionScene;
+
 	
 	public override void _Ready()
 	{
@@ -30,6 +31,7 @@ public partial class Bullet : Area2D
 	{
 		if (body.IsInGroup("enemies"))
 		{
+			GetNode<GameManager>("/root/game").PlayKillSound();
 			body.QueueFree();
 			QueueFree();
 			var explosion = explosionScene.Instantiate<CpuParticles2D>();

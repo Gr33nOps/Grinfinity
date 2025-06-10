@@ -5,7 +5,6 @@ public partial class PauseMenu : Control
 {
 	[Signal]
 	public delegate void ResumeGameEventHandler();
-	
 	[Signal]
 	public delegate void GiveUpGameEventHandler();
 	
@@ -15,48 +14,47 @@ public partial class PauseMenu : Control
 	public override void _Ready()
 	{
 		Visible = false;
-		ProcessMode = Node.ProcessModeEnum.Always; // Changed back to Always
+		ProcessMode = Node.ProcessModeEnum.Always;
 		
-		var canvasLayer = GetParent<CanvasLayer>();
-		if (canvasLayer != null)
-		{
-			canvasLayer.Layer = 100;
-		}
-		
-		// Find the resume button (it's inside the Panel)
 		resumeButton = GetNode<TextureButton>("Panel/ResumeButton");
-		if (resumeButton != null)
-		{
-			resumeButton.Pressed += OnResumeButtonPressed;
-		}
-		
-		// Find the give up button (it's inside the Panel)
 		giveUpButton = GetNode<TextureButton>("Panel/GiveUpButton");
-		if (giveUpButton != null)
-		{
-			giveUpButton.Pressed += OnGiveUpButtonPressed;
-		}
+
+		resumeButton.Pressed += OnResumeButtonPressed;
+		giveUpButton.Pressed += OnGiveUpButtonPressed;
+
+		resumeButton.MouseEntered += OnResumeButtonHover;
+		giveUpButton.MouseEntered += OnGiveUpButtonHover;
 	}
-	
+
 	public void ShowPauseMenu()
 	{
 		Visible = true;
-		// Removed GetTree().Paused = true; to use your original system
 	}
 	
 	public void HidePauseMenu()
 	{
 		Visible = false;
-		// Removed GetTree().Paused = false; to use your original system
 	}
 	
 	private void OnResumeButtonPressed()
 	{
+		GetNode<GameManager>("/root/game").PlayButtonSound();
 		EmitSignal(SignalName.ResumeGame);
 	}
 	
 	private void OnGiveUpButtonPressed()
 	{
+		GetNode<GameManager>("/root/game").PlayButtonSound();
 		EmitSignal(SignalName.GiveUpGame);
+	}
+	
+	private void OnResumeButtonHover()
+	{
+		GetNode<GameManager>("/root/game").PlayHoverSound();
+	}
+	
+	private void OnGiveUpButtonHover()
+	{
+		GetNode<GameManager>("/root/game").PlayHoverSound();
 	}
 }

@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://bcmipct1fe830"]
+[gd_scene load_steps=6 format=3 uid="uid://bcmipct1fe830"]
 
 [ext_resource type="Script" uid="uid://bj2ub38457ksw" path="res://scripts/Player.cs" id="1_3vyb7"]
-[ext_resource type="Texture2D" uid="uid://bnsqvdjs6k77x" path="res://sprites/player.png" id="2_g2els"]
+[ext_resource type="Texture2D" uid="uid://50b437dwilfi" path="res://sprites/player 1.png" id="2_dqkch"]
 [ext_resource type="Texture2D" uid="uid://ctdqy1x0us2ch" path="res://sprites/player 2.png" id="3_qhqgy"]
+[ext_resource type="AudioStream" uid="uid://c8a1w30h1aujo" path="res://sounds/shoot.ogg" id="4_dqkch"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u8vuu"]
 radius = 26.0
@@ -19,12 +20,12 @@ rotation = 1.5708
 shape = SubResource("CapsuleShape2D_u8vuu")
 
 [node name="shootyPart" type="Node2D" parent="."]
-position = Vector2(54.5, -6)
+position = Vector2(62, -6.5)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(10.5, -9.5)
+position = Vector2(10, -7.5)
 scale = Vector2(0.273333, 0.273333)
-texture = ExtResource("2_g2els")
+texture = ExtResource("2_dqkch")
 flip_h = true
 
 [node name="Player2" type="Sprite2D" parent="."]
@@ -32,3 +33,7 @@ visible = false
 position = Vector2(26.5, -14)
 scale = Vector2(0.3, 0.3)
 texture = ExtResource("3_qhqgy")
+
+[node name="ShootSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_dqkch")
+volume_db = -10.0
