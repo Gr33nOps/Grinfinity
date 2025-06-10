@@ -33,7 +33,7 @@ public partial class GameOver : Control
 	{
 		int minutes = (int)(SurvivalTimeToShow / 60);
 		int seconds = (int)(SurvivalTimeToShow % 60);
-		survivalTimeLabel.Text = $"Survived: {minutes:D2}:{seconds:D2}";
+		survivalTimeLabel.Text = $"You Survived: {minutes:D2}:{seconds:D2}";
 	}
 		
 	private void ORBP()
