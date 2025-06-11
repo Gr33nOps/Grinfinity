@@ -1,55 +1,37 @@
-# Godot 4+ specific ignores
-.godot/
+# Godot-specific
 .import/
+export.cfg
+export_presets.cfg
+.godot/
+mono_crash.*
 
-# Godot-specific ignores
-*.tmp
-*.translation
-*.import
-
-# C# / .NET specific ignores
+# C# build files
+.mono/
 bin/
 obj/
-*.user
-*.suo
-*.userprefs
+
+# VS/VSCode
 .vs/
 .vscode/
-*.DotSettings.user
+*.csproj.user
 
-# Rider specific ignores
-.idea/
-
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-build/
-bld/
-[Bb]in/
-[Oo]bj/
-
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-
-# NUnit
-*.VisualState.xml
-TestResult.xml
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# OS specific ignores
+# OS-specific
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Godot editor crash logs
+*.godot/mono_crash.*
+
+# Avoid ignoring essential project files
+!project.godot
+!*.tscn
+!*.tres
+!*.cs
+!*.gd

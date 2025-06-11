@@ -1,0 +1,198 @@
+[gd_scene load_steps=14 format=3 uid="uid://bxr050kkegye4"]
+
+[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="1_q3owl"]
+[ext_resource type="Texture2D" uid="uid://dxliovayscmb5" path="res://sprites/play button normal.png" id="2_bbups"]
+[ext_resource type="Texture2D" uid="uid://buokn6fjy7so1" path="res://sprites/play button pressed.png" id="3_tc3hk"]
+[ext_resource type="Texture2D" uid="uid://byhcfvx17bamg" path="res://sprites/play button hover.png" id="4_h1461"]
+[ext_resource type="Texture2D" uid="uid://cdrqhaqjdgflp" path="res://sprites/menu button normal.png" id="5_h7oys"]
+[ext_resource type="Texture2D" uid="uid://cgr52y1pq83q2" path="res://sprites/menu button pressed.png" id="6_l7deq"]
+[ext_resource type="Texture2D" uid="uid://cj1epkcqpudfn" path="res://sprites/menu button hover.png" id="7_1cspj"]
+[ext_resource type="Texture2D" uid="uid://b6pgleqeuvdfd" path="res://sprites/GAME OVER.png" id="8_myg10"]
+[ext_resource type="AudioStream" uid="uid://sh84xsxpvnv7" path="res://sounds/button_press.ogg" id="9_8gonw"]
+[ext_resource type="AudioStream" uid="uid://dcr4vb45l3psr" path="res://sounds/button_hover.ogg" id="10_3n10a"]
+[ext_resource type="AudioStream" uid="uid://id8pukr41fia" path="res://sounds/GameOver.ogg" id="11_n1f6j"]
+
+[sub_resource type="CSharpScript" id="CSharpScript_q3owl"]
+script/source = "using Godot;
+using System;
+
+public partial class GameOverMenu : Control
+{
+	private TextureButton RestartButton;
+	private TextureButton MenuButton;
+	private Label survivalTimeLabel;
+	private AudioStreamPlayer buttonSound;
+	private AudioStreamPlayer hoverSound;
+	private AudioStreamPlayer gameOverSound;
+	public static float SurvivalTimeToShow = 0f;
+	
+	public override void _Ready()
+	{
+		survivalTimeLabel = GetNode<Label>(\"SurvivalTimeLabel\");
+		RestartButton = GetNode<TextureButton>(\"GameOverMenu/RestartButton\");
+		MenuButton = GetNode<TextureButton>(\"GameOverMenu/MenuButton\");
+		buttonSound = GetNode<AudioStreamPlayer>(\"GameOverMenu/ButtonSound\");
+		hoverSound = GetNode<AudioStreamPlayer>(\"GameOverMenu/HoverSound\");
+		gameOverSound = GetNode<AudioStreamPlayer>(\"GameOverMenu/GameOverSound\");
+		
+		PlayGameOverSound();
+		ShowSurvivalTime();
+		
+		RestartButton.Pressed += ORBP;
+		MenuButton.Pressed += OMBP;
+		
+		RestartButton.MouseEntered += ORBH;
+		MenuButton.MouseEntered += OMBH;
+		
+		Input.MouseMode = Input.MouseModeEnum.Visible;
+	}
+
+	private void ShowSurvivalTime()
+	{
+		int minutes = (int)(SurvivalTimeToShow / 60);
+		int seconds = (int)(SurvivalTimeToShow % 60);
+		survivalTimeLabel.Text = $\"You Survived: {minutes:D2}:{seconds:D2}\";
+	}
+		
+	private void ORBP()
+	{
+		buttonSound.Play();
+	}
+
+	private void OMBP()
+	{
+		buttonSound.Play();
+	}
+	
+	private void ORBH()
+	{
+		hoverSound.Play();
+	}
+	
+	private void OMBH()
+	{
+		hoverSound.Play();
+	}
+	
+	private void PlayGameOverSound()
+	{
+		gameOverSound.Play();
+	}
+}
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_su2cq"]
+bg_color = Color(0.0784314, 0.0156863, 0.0980392, 1)
+
+[node name="gameOverMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = SubResource("CSharpScript_q3owl")
+
+[node name="GameOverMenu" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_su2cq")
+
+[node name="Label" type="Label" parent="GameOverMenu"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -580.0
+offset_top = -136.5
+offset_right = 580.0
+offset_bottom = 136.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_q3owl")
+theme_override_font_sizes/font_size = 200
+text = "GAME OVER"
+
+[node name="Label2" type="Label" parent="GameOverMenu"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -569.0
+offset_top = 89.0
+offset_right = 569.0
+offset_bottom = 226.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_q3owl")
+theme_override_font_sizes/font_size = 100
+text = "Press 'SPACE' to Restart"
+
+[node name="RestartButton" type="TextureButton" parent="GameOverMenu"]
+layout_mode = 0
+offset_left = 635.0
+offset_top = 215.0
+offset_right = 1277.0
+offset_bottom = 521.0
+texture_normal = ExtResource("2_bbups")
+texture_pressed = ExtResource("3_tc3hk")
+texture_hover = ExtResource("4_h1461")
+
+[node name="MenuButton" type="TextureButton" parent="GameOverMenu"]
+layout_mode = 0
+offset_left = 635.0
+offset_top = 537.0
+offset_right = 1277.0
+offset_bottom = 841.0
+texture_normal = ExtResource("5_h7oys")
+texture_pressed = ExtResource("6_l7deq")
+texture_hover = ExtResource("7_1cspj")
+
+[node name="TextureRect" type="TextureRect" parent="GameOverMenu"]
+layout_mode = 0
+offset_left = 509.0
+offset_top = 91.0
+offset_right = 1416.0
+offset_bottom = 531.0
+mouse_filter = 2
+texture = ExtResource("8_myg10")
+
+[node name="ButtonSound" type="AudioStreamPlayer" parent="GameOverMenu"]
+stream = ExtResource("9_8gonw")
+volume_db = -15.0
+
+[node name="HoverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
+stream = ExtResource("10_3n10a")
+volume_db = -15.0
+
+[node name="GameOverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
+stream = ExtResource("11_n1f6j")
+volume_db = -30.0
+
+[node name="SurvivalTimeLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 461.0
+offset_top = 852.0
+offset_right = 1470.0
+offset_bottom = 989.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("1_q3owl")
+theme_override_font_sizes/font_size = 100
+text = "You survived: 00:00"
+
+[connection signal="pressed" from="GameOverMenu/RestartButton" to="GameOverMenu/ButtonSound" method="ORBP"]
+[connection signal="pressed" from="GameOverMenu/MenuButton" to="GameOverMenu/ButtonSound" method="OMBP"]

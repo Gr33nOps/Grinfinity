@@ -36,15 +36,17 @@ public partial class PauseMenu : Control
 		Visible = false;
 	}
 	
-	private void OnResumeButtonPressed()
+	private async void OnResumeButtonPressed()
 	{
 		GetNode<GameManager>("/root/game").PlayButtonSound();
+		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
 		EmitSignal(SignalName.ResumeGame);
 	}
 	
-	private void OnGiveUpButtonPressed()
+	private async void OnGiveUpButtonPressed()
 	{
 		GetNode<GameManager>("/root/game").PlayButtonSound();
+		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
 		EmitSignal(SignalName.GiveUpGame);
 	}
 	

@@ -1,6 +1,6 @@
 [gd_scene load_steps=14 format=3 uid="uid://cq7d4h3j0bp50"]
 
-[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://Bubblegum.ttf" id="1_ewvvw"]
+[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="1_ewvvw"]
 [ext_resource type="Texture2D" uid="uid://dxliovayscmb5" path="res://sprites/play button normal.png" id="2_a26ct"]
 [ext_resource type="Texture2D" uid="uid://buokn6fjy7so1" path="res://sprites/play button pressed.png" id="3_m0ci3"]
 [ext_resource type="Texture2D" uid="uid://byhcfvx17bamg" path="res://sprites/play button hover.png" id="4_y0vp6"]

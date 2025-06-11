@@ -102,12 +102,12 @@ public partial class GameManager : Node2D
 		killSound.Play();
 	}
 	
-	public void PlayButtonSound()
+	public async void PlayButtonSound()
 	{
 		buttonSound.Play();
 	}
 	
-	public void PlayHoverSound()
+	public async void PlayHoverSound()
 	{
 		hoverSound.Play();
 	}
