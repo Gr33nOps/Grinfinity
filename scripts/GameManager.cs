@@ -10,17 +10,16 @@ public partial class GameManager : Node2D
 	private AudioStreamPlayer killSound;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
-
 	private bool isPaused = false;
 	
 	public override void _Ready()
 	{
-		InitializeComponents();
+		SetupComponents();
 		ConnectSignals();
 		ProcessMode = Node.ProcessModeEnum.Always;
 	}
 	
-	private void InitializeComponents()
+	private void SetupComponents()
 	{
 		pauseMenu = GetNode<PauseMenu>("PauseLayer/PauseMenu");
 		killSound = GetNode<AudioStreamPlayer>("KillSound");
@@ -46,9 +45,9 @@ public partial class GameManager : Node2D
 		pauseMenu.GiveUpGame += OnGiveUpGame;
 	}
 	
-	public override void _Input(InputEvent @event)
+	public override void _Input(InputEvent inputEvent)
 	{
-		if (@event.IsActionPressed("ui_cancel"))
+		if (inputEvent.IsActionPressed("ui_cancel"))
 		{
 			TogglePause();
 		}
@@ -102,12 +101,12 @@ public partial class GameManager : Node2D
 		killSound.Play();
 	}
 	
-	public async void PlayButtonSound()
+	public void PlayButtonSound()
 	{
 		buttonSound.Play();
 	}
 	
-	public async void PlayHoverSound()
+	public void PlayHoverSound()
 	{
 		hoverSound.Play();
 	}

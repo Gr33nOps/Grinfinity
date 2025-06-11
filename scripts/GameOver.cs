@@ -25,7 +25,6 @@ public partial class GameOver : Control
 		
 		RestartButton.Pressed += ORBP;
 		MenuButton.Pressed += OMBP;
-
 		RestartButton.MouseEntered += ORBH;
 		MenuButton.MouseEntered += OMBH;
 

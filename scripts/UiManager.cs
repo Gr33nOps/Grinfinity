@@ -10,20 +10,20 @@ public partial class UIManager : Node
 		HideCursor();
 	}
 	
-	private void SetupCrosshair()
-	{
-		crosshair = new Sprite2D();
-		crosshair.Texture = GD.Load<Texture2D>("res://sprites/crosshair.png");
-		crosshair.ZIndex = 1000;
-		GetParent().AddChild(crosshair);
-	}
-	
 	public override void _Process(double delta)
 	{
 		if (crosshair != null && crosshair.Visible)
 		{
 			crosshair.GlobalPosition = crosshair.GetGlobalMousePosition();
 		}
+	}
+	
+	private void SetupCrosshair()
+	{
+		crosshair = new Sprite2D();
+		crosshair.Texture = GD.Load<Texture2D>("res://sprites/crosshair.png");
+		crosshair.ZIndex = 1000;
+		GetParent().AddChild(crosshair);
 	}
 	
 	public void ShowCursor()

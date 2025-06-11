@@ -1,4 +1,3 @@
-// PauseMenu.cs - Fixed version
 using Godot;
 
 public partial class PauseMenu : Control
@@ -18,14 +17,12 @@ public partial class PauseMenu : Control
 		
 		resumeButton = GetNode<TextureButton>("Panel/ResumeButton");
 		giveUpButton = GetNode<TextureButton>("Panel/GiveUpButton");
-
 		resumeButton.Pressed += OnResumeButtonPressed;
 		giveUpButton.Pressed += OnGiveUpButtonPressed;
-
 		resumeButton.MouseEntered += OnResumeButtonHover;
 		giveUpButton.MouseEntered += OnGiveUpButtonHover;
 	}
-
+	
 	public void ShowPauseMenu()
 	{
 		Visible = true;
@@ -39,14 +36,14 @@ public partial class PauseMenu : Control
 	private async void OnResumeButtonPressed()
 	{
 		GetNode<GameManager>("/root/game").PlayButtonSound();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
+		await ToSignal(GetTree().CreateTimer(0.3f), "timeout");
 		EmitSignal(SignalName.ResumeGame);
 	}
 	
 	private async void OnGiveUpButtonPressed()
 	{
 		GetNode<GameManager>("/root/game").PlayButtonSound();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
+		await ToSignal(GetTree().CreateTimer(0.3f), "timeout");
 		EmitSignal(SignalName.GiveUpGame);
 	}
 	

@@ -5,16 +5,26 @@ public partial class PlayerManager : Node
 	private Node2D player;
 	private Sprite2D playerSprite;
 	private Texture2D[] playerTextures;
-	private float spriteSwapTimer = 0f;
-	private const float playerSpriteSwapInterval = 5f;
+	private float spriteTimer = 0f;
+	private float spriteInterval = 5f;
 	
 	public override void _Ready()
 	{
-		LoadPlayerReference();
+		GetPlayerReference();
 		LoadPlayerTextures();
 	}
 	
-	private void LoadPlayerReference()
+	public override void _Process(double delta)
+	{
+		spriteTimer += (float)delta;
+		if (spriteTimer >= spriteInterval)
+		{
+			ChangePlayerSprite();
+			spriteTimer = 0f;
+		}
+	}
+	
+	private void GetPlayerReference()
 	{
 		player = GetNode<Node2D>("/root/game/player");
 		
@@ -31,9 +41,6 @@ public partial class PlayerManager : Node
 		
 		if (player.HasNode("sprite"))
 			return player.GetNode<Sprite2D>("sprite");
-		
-		if (player is Sprite2D sprite)
-			return sprite;
 		
 		foreach (Node child in player.GetChildren())
 		{
@@ -63,17 +70,7 @@ public partial class PlayerManager : Node
 		};
 	}
 	
-	public override void _Process(double delta)
-	{
-		spriteSwapTimer += (float)delta;
-		if (spriteSwapTimer >= playerSpriteSwapInterval)
-		{
-			SwapPlayerSprite();
-			spriteSwapTimer = 0f;
-		}
-	}
-	
-	private void SwapPlayerSprite()
+	private void ChangePlayerSprite()
 	{
 		if (playerSprite == null || playerTextures == null || playerTextures.Length == 0)
 			return;
@@ -83,8 +80,8 @@ public partial class PlayerManager : Node
 		
 		do
 		{
-			int randIndex = GD.RandRange(0, playerTextures.Length - 1);
-			newTexture = playerTextures[randIndex];
+			int randomIndex = GD.RandRange(0, playerTextures.Length - 1);
+			newTexture = playerTextures[randomIndex];
 		} while (newTexture == currentTexture && playerTextures.Length > 1);
 		
 		playerSprite.Texture = newTexture;

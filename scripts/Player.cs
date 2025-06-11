@@ -3,7 +3,7 @@ using Godot;
 public partial class Player : CharacterBody2D
 {
 	private PackedScene bulletScene;
-	private const float SPEED = 200.0f;
+	private float speed = 200.0f;
 	private bool isReloading = false;
 	private Node2D shootyPart;
 	private Sprite2D playerSprite;
@@ -15,6 +15,20 @@ public partial class Player : CharacterBody2D
 		shootyPart = GetNode<Node2D>("shootyPart");
 		playerSprite = FindPlayerSprite();
 		shootSound = GetNode<AudioStreamPlayer2D>("ShootSound");
+	}
+	
+	public override void _PhysicsProcess(double delta)
+	{
+		Vector2 mousePosition = GetGlobalMousePosition();
+		
+		HandleSpriteFlip(mousePosition);
+		LookAt(mousePosition);
+		HandleMovement();
+		HandleShooting(mousePosition);
+		CheckCollisions();
+		
+		MoveAndSlide();
+		StayInViewport();
 	}
 	
 	private Sprite2D FindPlayerSprite()
@@ -34,20 +48,6 @@ public partial class Player : CharacterBody2D
 		return null;
 	}
 	
-	public override void _PhysicsProcess(double delta)
-	{
-		Vector2 mousePosition = GetGlobalMousePosition();
-		
-		HandleSpriteFlip(mousePosition);
-		LookAt(mousePosition);
-		HandleMovement();
-		HandleShooting(mousePosition);
-		HandleCollisions();
-		
-		MoveAndSlide();
-		ClampToViewport();
-	}
-	
 	private void HandleSpriteFlip(Vector2 mousePosition)
 	{
 		if (playerSprite != null)
@@ -59,8 +59,8 @@ public partial class Player : CharacterBody2D
 	private void HandleMovement()
 	{
 		Velocity = new Vector2(
-			Input.GetAxis("left", "right") * SPEED,
-			Input.GetAxis("up", "down") * SPEED
+			Input.GetAxis("left", "right") * speed,
+			Input.GetAxis("up", "down") * speed
 		);
 		
 		Velocity = GetRealVelocity().Lerp(Velocity, 0.1f);
@@ -74,13 +74,15 @@ public partial class Player : CharacterBody2D
 			bullet.GlobalPosition = shootyPart.GlobalPosition;
 			bullet.Direction = (mousePosition - GlobalPosition).Normalized();
 			GetNode("/root/game").AddChild(bullet);
-			if (shootSound != null){
+			
+			if (shootSound != null)
+			{
 				shootSound.Play();
 			}
 		}
 	}
 	
-	private void HandleCollisions()
+	private void CheckCollisions()
 	{
 		for (int i = 0; i < GetSlideCollisionCount(); i++)
 		{
@@ -96,7 +98,7 @@ public partial class Player : CharacterBody2D
 		}
 	}
 	
-	private void ClampToViewport()
+	private void StayInViewport()
 	{
 		var viewportSize = GetViewportRect().Size;
 		float margin = 25f;

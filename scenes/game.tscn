@@ -34,14 +34,14 @@ script = ExtResource("1_264po")
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -260.0
-offset_top = 13.0
-offset_right = 261.0
-offset_bottom = 67.0
+offset_left = -71.0
+offset_top = 27.0
+offset_right = 72.0
+offset_bottom = 81.0
 grow_horizontal = 2
 theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 50
-text = "Survival Time: 00:00"
+theme_override_font_sizes/font_size = 75
+text = "00:00"
 
 [node name="PauseLayer" type="CanvasLayer" parent="."]
 layer = 10

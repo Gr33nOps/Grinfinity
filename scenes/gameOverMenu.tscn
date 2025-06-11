@@ -167,15 +167,15 @@ texture = ExtResource("8_myg10")
 
 [node name="ButtonSound" type="AudioStreamPlayer" parent="GameOverMenu"]
 stream = ExtResource("9_8gonw")
-volume_db = -15.0
+volume_db = -5.0
 
 [node name="HoverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
 stream = ExtResource("10_3n10a")
-volume_db = -15.0
+volume_db = -5.0
 
 [node name="GameOverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
 stream = ExtResource("11_n1f6j")
-volume_db = -30.0
+volume_db = -10.0
 
 [node name="SurvivalTimeLabel" type="Label" parent="."]
 layout_mode = 1

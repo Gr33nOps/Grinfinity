@@ -5,38 +5,29 @@ public partial class EnemySpawner : Node
 	private PackedScene enemyScene;
 	private Timer spawnTimer;
 	private Texture2D[] enemyTextures;
-	private ScoreManager scoreManager;
-	
-	// Global speed that increases over time
-	private float globalEnemySpeed = 100.0f;
-	private float speedIncreaseRate = 1.67f; // Speed increase per second
-	
-	private const float SpawnMargin = 100.0f;
-	private const float spawnInterval = 0.8f;
-	private const int maxEnemyCount = 100;
+	private float enemySpeed = 100.0f;
+	private float speedIncrease = 1.67f;
+	private float spawnInterval = 0.8f;
+	private float spawnMargin = 100.0f;
 	
 	public override void _Ready()
 	{
-		LoadResources();
-		SetupTimer();
-		scoreManager = GetParent().GetNodeOrNull<ScoreManager>("ScoreManager");
+		LoadEnemyResources();
+		SetupSpawnTimer();
 	}
 	
 	public override void _Process(double delta)
 	{
-		globalEnemySpeed += speedIncreaseRate * (float)delta;
-
-		// Clamp speed effect to max 300 for spawn rate
-		float clampedSpeed = Mathf.Min(globalEnemySpeed, 300.0f);
-
-		// Adjust spawn rate (faster spawn as speed increases)
-		float dynamicWaitTime = Mathf.Max(0.1f, 1.2f - (clampedSpeed / 300.0f));
-		spawnTimer.WaitTime = dynamicWaitTime;;
+		enemySpeed += speedIncrease * (float)delta;
+		float maxSpeed = Mathf.Min(enemySpeed, 300.0f);
+		float newInterval = Mathf.Max(0.1f, 1.2f - (maxSpeed / 300.0f));
+		spawnTimer.WaitTime = newInterval;
 	}
 	
-	private void LoadResources()
+	private void LoadEnemyResources()
 	{
 		enemyScene = GD.Load<PackedScene>("res://scenes/enemy.tscn");
+		
 		enemyTextures = new Texture2D[]
 		{
 			GD.Load<Texture2D>("res://sprites/enemy 1.png"),
@@ -51,40 +42,36 @@ public partial class EnemySpawner : Node
 		};
 	}
 	
-	private void SetupTimer()
+	private void SetupSpawnTimer()
 	{
 		spawnTimer = new Timer();
 		spawnTimer.WaitTime = spawnInterval;
-		spawnTimer.Timeout += OnTimerTimeout;
+		spawnTimer.Timeout += SpawnEnemy;
 		AddChild(spawnTimer);
 		spawnTimer.Start();
-	}
-	
-	private void OnTimerTimeout()
-	{
-		SpawnEnemy();
 	}
 	
 	private void SpawnEnemy()
 	{
 		if (enemyScene == null) return;
 		
-		var enemy = enemyScene.Instantiate() as Enemies;
+		var enemy = enemyScene.Instantiate() as Enemy;
 		if (enemy == null) return;
 		
-		enemy.GlobalPosition = GetRandomSpawnPositionOutsideViewport();
+		enemy.GlobalPosition = GetSpawnPosition();
+		enemy.SetSpeed(enemySpeed);
 		
-		// CRITICAL: Set the current global speed to the new enemy
-		enemy.SetSpeed(globalEnemySpeed);
-		
+		SetRandomTexture(enemy);
+		GetTree().CurrentScene.AddChild(enemy);
+	}
+	
+	private void SetRandomTexture(Enemy enemy)
+	{
 		var sprite = enemy.GetNodeOrNull<Sprite2D>("Sprite2D");
 		if (enemyTextures.Length > 0 && sprite != null)
 		{
-			int randIndex = GD.RandRange(0, enemyTextures.Length - 1);
-			if (enemyTextures[randIndex] != null)
-			{
-				sprite.Texture = enemyTextures[randIndex];
-			}
+			int randomIndex = GD.RandRange(0, enemyTextures.Length - 1);
+			sprite.Texture = enemyTextures[randomIndex];
 			
 			Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
 			if (enemy.GlobalPosition.X > viewportSize.X || enemy.GlobalPosition.Y > viewportSize.Y)
@@ -93,20 +80,19 @@ public partial class EnemySpawner : Node
 				sprite.FlipH = true;
 			}
 		}
-		
-		GetTree().CurrentScene.AddChild(enemy);
 	}
 	
-	private Vector2 GetRandomSpawnPositionOutsideViewport()
+	private Vector2 GetSpawnPosition()
 	{
 		var viewportSize = GetViewport().GetVisibleRect().Size;
 		int side = GD.RandRange(0, 3);
+		
 		return side switch
 		{
-			0 => new Vector2(GD.RandRange(0, (int)viewportSize.X), -SpawnMargin),
-			1 => new Vector2(viewportSize.X + SpawnMargin, GD.RandRange(0, (int)viewportSize.Y)),
-			2 => new Vector2(GD.RandRange(0, (int)viewportSize.X), viewportSize.Y + SpawnMargin),
-			3 => new Vector2(-SpawnMargin, GD.RandRange(0, (int)viewportSize.Y)),
+			0 => new Vector2(GD.RandRange(0, (int)viewportSize.X), -spawnMargin),
+			1 => new Vector2(viewportSize.X + spawnMargin, GD.RandRange(0, (int)viewportSize.Y)),
+			2 => new Vector2(GD.RandRange(0, (int)viewportSize.X), viewportSize.Y + spawnMargin),
+			3 => new Vector2(-spawnMargin, GD.RandRange(0, (int)viewportSize.Y)),
 			_ => Vector2.Zero
 		};
 	}

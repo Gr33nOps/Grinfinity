@@ -22,7 +22,7 @@ public partial class ScoreManager : Node
 		{
 			int minutes = (int)(survivalTime / 60);
 			int seconds = (int)(survivalTime % 60);
-			scoreLabel.Text = $"Survival Time: {minutes:D2}:{seconds:D2}";
+			scoreLabel.Text = $"{minutes:D2}:{seconds:D2}";
 		}
 	}
 	

@@ -1,5 +1,4 @@
 using Godot;
-using System;
 
 public partial class Menu : Node
 {
@@ -15,27 +14,17 @@ public partial class Menu : Node
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 	}
 	
-	private void OnPlayButtonHover()
-	{
-		hoverSound.Play();
-	}
-	
-	private void OnQuitButtonHover()
-	{
-		hoverSound.Play();
-	}
-	
 	private async void OnPlayButtonPressed()
 	{
 		buttonSound.Play();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
+		await ToSignal(GetTree().CreateTimer(0.25f), "timeout");
 		GetTree().ChangeSceneToFile("res://scenes/game.tscn");
 	}
 	
 	private async void OnQuitButtonPressed()
 	{
 		buttonSound.Play();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
+		await ToSignal(GetTree().CreateTimer(0.25f), "timeout");
 		GetTree().Quit();
 	}
 }

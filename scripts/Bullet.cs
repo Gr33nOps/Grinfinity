@@ -1,13 +1,10 @@
-// Bullet.cs
 using Godot;
-using System;
 
 public partial class Bullet : Area2D
 {
 	public Vector2 Direction { get; set; }
-	private const float SPEED = 10.0f;
+	private float speed = 10.0f;
 	private PackedScene explosionScene;
-
 	
 	public override void _Ready()
 	{
@@ -19,7 +16,7 @@ public partial class Bullet : Area2D
 	
 	public override void _PhysicsProcess(double delta)
 	{
-		GlobalPosition += Direction * SPEED;
+		GlobalPosition += Direction * speed;
 	}
 	
 	private void OnTimerTimeout()
@@ -34,6 +31,7 @@ public partial class Bullet : Area2D
 			GetNode<GameManager>("/root/game").PlayKillSound();
 			body.QueueFree();
 			QueueFree();
+			
 			var explosion = explosionScene.Instantiate<CpuParticles2D>();
 			explosion.GlobalPosition = GlobalPosition;
 			explosion.Emitting = true;
