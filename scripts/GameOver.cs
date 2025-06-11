@@ -49,7 +49,7 @@ public partial class GameOver : Control
 	{
 		buttonSound.Play();
 		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
-		GetTree().ChangeSceneToFile("res://scenes/Menu.tscn");
+		GetTree().ChangeSceneToFile("res://scenes/menu.tscn");
 	}
 	
 	private void ORBH()

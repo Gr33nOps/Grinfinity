@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://cq7d4h3j0bp50"]
+[gd_scene load_steps=14 format=3 uid="uid://cavsvapc723w"]
 
 [ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="1_ewvvw"]
 [ext_resource type="Texture2D" uid="uid://dxliovayscmb5" path="res://sprites/play button normal.png" id="2_a26ct"]
@@ -103,7 +103,7 @@ volume_db = -15.0
 
 [node name="HoverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
 stream = ExtResource("11_37kri")
-volume_db = -15.0
+volume_db = -5.0
 
 [node name="GameOverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
 stream = ExtResource("12_a26ct")

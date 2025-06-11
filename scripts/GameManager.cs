@@ -76,7 +76,7 @@ public partial class GameManager : Node2D
 	{
 		var score = scoreManager.GetSurvivalTime();
 		GameOver.SurvivalTimeToShow = score;
-		var gameOverScene = GD.Load<PackedScene>("res://scenes/GameOver.tscn");
+		var gameOverScene = GD.Load<PackedScene>("res://scenes/gameOver.tscn");
 		GetTree().ChangeSceneToPacked(gameOverScene);
 	}
 	
