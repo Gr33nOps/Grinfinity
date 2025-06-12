@@ -23,10 +23,10 @@ public partial class GameOver : Control
 		PlayGameOverSound();
 		ShowSurvivalTime();
 		
-		RestartButton.Pressed += ORBP;
-		MenuButton.Pressed += OMBP;
-		RestartButton.MouseEntered += ORBH;
-		MenuButton.MouseEntered += OMBH;
+		RestartButton.Pressed += OnRestartButtonPressed;
+		MenuButton.Pressed += OnMenuButtonPressed;
+		RestartButton.MouseEntered += OnRestartButtonHover;
+		MenuButton.MouseEntered += OnMenuButtonHover;
 
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 	}
@@ -38,26 +38,26 @@ public partial class GameOver : Control
 		survivalTimeLabel.Text = $"You Survived: {minutes:D2}:{seconds:D2}";
 	}
 		
-	private async void ORBP()
+	private async void OnRestartButtonPressed()
 	{
 		buttonSound.Play();
 		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
 		GetTree().ChangeSceneToFile("res://scenes/game.tscn");
 	}
 
-	private async void OMBP()
+	private async void OnMenuButtonPressed()
 	{
 		buttonSound.Play();
 		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
 		GetTree().ChangeSceneToFile("res://scenes/menu.tscn");
 	}
 	
-	private void ORBH()
+	private void OnRestartButtonHover()
 	{
 		hoverSound.Play();
 	}
 	
-	private void OMBH()
+	private void OnMenuButtonHover()
 	{
 		hoverSound.Play();
 	}

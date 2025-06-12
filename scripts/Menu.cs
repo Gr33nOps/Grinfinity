@@ -24,28 +24,31 @@ public partial class Menu : Node
 	
 	private void SetupButtons()
 	{
-		if (playButton != null)
-			playButton.Pressed += OnPlayButtonPressed;
-		
-		if (quitButton != null)
-			quitButton.Pressed += OnQuitButtonPressed;
+		playButton.Pressed += OnPlayButtonPressed;
+		quitButton.Pressed += OnQuitButtonPressed;
 	}
 	
 	private async void OnPlayButtonPressed()
 	{
-		if (buttonSound != null)
-			buttonSound.Play();
-		
+		buttonSound.Play();
 		await ToSignal(GetTree().CreateTimer(0.25f), "timeout");
 		GetTree().ChangeSceneToFile("res://scenes/game.tscn");
 	}
 	
 	private async void OnQuitButtonPressed()
 	{
-		if (buttonSound != null)
-			buttonSound.Play();
-		
+		buttonSound.Play();
 		await ToSignal(GetTree().CreateTimer(0.25f), "timeout");
 		GetTree().Quit();
+	}
+	
+	private void OnPlayButtonHover()
+	{
+		hoverSound.Play();
+	}
+	
+	private void OnQuitButtonHover()
+	{
+		hoverSound.Play();
 	}
 }
