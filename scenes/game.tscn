@@ -34,14 +34,27 @@ script = ExtResource("1_264po")
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -71.0
-offset_top = 27.0
-offset_right = 72.0
-offset_bottom = 81.0
+offset_left = -102.5
+offset_top = 32.0
+offset_right = 102.5
+offset_bottom = 113.0
 grow_horizontal = 2
 theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 75
 text = "00:00"
+
+[node name="HighScoreLabel" type="Label" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -455.0
+offset_top = 32.0
+offset_right = -38.0
+offset_bottom = 113.0
+grow_horizontal = 0
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 75
+text = "BEST: 00:00"
 
 [node name="PauseLayer" type="CanvasLayer" parent="."]
 layer = 10
@@ -152,6 +165,10 @@ stream = ExtResource("20_37s47")
 volume_db = -15.0
 
 [node name="gameTime" type="Timer" parent="."]
+
+[node name="BestScoreLabel" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
 
 [connection signal="mouse_entered" from="PauseLayer/PauseMenu/Panel/ResumeButton" to="." method="OnResumeButtonHover"]
 [connection signal="pressed" from="PauseLayer/PauseMenu/Panel/ResumeButton" to="." method="OnResumeButtonPressed"]

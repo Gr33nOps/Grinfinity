@@ -57,6 +57,19 @@ volume_db = -5.0
 stream = ExtResource("10_mj5lg")
 volume_db = -5.0
 
+[node name="HighScoreLabel" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 50
+
+[node name="BestScoreLabel" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="TopScoresList" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+
 [connection signal="mouse_entered" from="VBoxContainer/PlayButton" to="." method="OnPlayButtonHover"]
 [connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="OnPlayButtonPressed"]
 [connection signal="mouse_entered" from="VBoxContainer/QuitButton" to="." method="OnQuitButtonHover"]

@@ -1,5 +1,4 @@
 using Godot;
-
 public partial class GameManager : Node2D
 {
 	private PauseMenu pauseMenu;
@@ -7,6 +6,7 @@ public partial class GameManager : Node2D
 	private EnemySpawner enemySpawner;
 	private UIManager uiManager;
 	private PlayerManager playerManager;
+	// Remove HighScoreManager - now using ScoreManager for everything
 	private AudioStreamPlayer killSound;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
@@ -75,6 +75,10 @@ public partial class GameManager : Node2D
 	public void TriggerGameOver()
 	{
 		var score = scoreManager.GetSurvivalTime();
+		
+		// Save high score using ScoreManager
+		scoreManager.SaveHighScore(score);
+		
 		GameOver.SurvivalTimeToShow = score;
 		var gameOverScene = GD.Load<PackedScene>("res://scenes/gameOver.tscn");
 		GetTree().ChangeSceneToPacked(gameOverScene);

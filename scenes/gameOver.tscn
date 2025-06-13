@@ -126,6 +126,12 @@ theme_override_fonts/font = ExtResource("1_ewvvw")
 theme_override_font_sizes/font_size = 100
 text = "You survived: 00:00"
 
+[node name="HighScoreLabel" type="Label" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 50
+
 [connection signal="mouse_entered" from="GameOverMenu/RestartButton" to="." method="OnRestartButtonHover"]
 [connection signal="pressed" from="GameOverMenu/RestartButton" to="." method="OnRestartButtonPressed"]
 [connection signal="mouse_entered" from="GameOverMenu/MenuButton" to="." method="OnMenuButtonHover"]
