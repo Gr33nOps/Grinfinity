@@ -6,8 +6,8 @@
 [ext_resource type="AudioStream" uid="uid://c8a1w30h1aujo" path="res://sounds/shoot.ogg" id="4_dqkch"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_u8vuu"]
-radius = 26.0
-height = 54.0
+radius = 28.5
+height = 57.0
 
 [node name="player" type="CharacterBody2D"]
 position = Vector2(-11, 12)
@@ -15,7 +15,7 @@ scale = Vector2(2, 2)
 script = ExtResource("1_3vyb7")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-3, -12.5)
+position = Vector2(-2.5, -10.5)
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_u8vuu")
 
