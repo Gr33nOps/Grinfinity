@@ -9,7 +9,7 @@ public partial class Player : CharacterBody2D
 	private PlayerAbilities abilities;
 	
 	private const float MoveSpeed = 200.0f;
-	private const float Border = 25f;
+	private const float Border = 50f;
 	private bool isDead = false;
 	
 	public override void _Ready()
