@@ -31,14 +31,13 @@ public partial class Menu : Node
 	private async void OnPlayButtonPressed()
 	{
 		buttonSound.Play();
-		await ToSignal(GetTree().CreateTimer(0.25f), "timeout");
-		GetTree().ChangeSceneToFile("res://scenes/game.tscn");
+		SceneTransition.Instance.ChangeScene("res://scenes/game.tscn");
 	}
 	
 	private async void OnQuitButtonPressed()
 	{
 		buttonSound.Play();
-		await ToSignal(GetTree().CreateTimer(0.25f), "timeout");
+		await ToSignal(GetTree().CreateTimer(0.5f), "timeout");
 		GetTree().Quit();
 	}
 	

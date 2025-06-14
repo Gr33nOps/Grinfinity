@@ -11,10 +11,10 @@
 [ext_resource type="AudioStream" uid="uid://sh84xsxpvnv7" path="res://sounds/button_press.ogg" id="9_y4eqm"]
 [ext_resource type="Script" uid="uid://b6qpmnh58ndv5" path="res://scripts/GameOver.cs" id="10_v3xm0"]
 [ext_resource type="AudioStream" uid="uid://dcr4vb45l3psr" path="res://sounds/button_hover.ogg" id="11_37kri"]
-[ext_resource type="AudioStream" uid="uid://id8pukr41fia" path="res://sounds/GameOver.ogg" id="12_a26ct"]
+[ext_resource type="AudioStream" uid="uid://dr5tmf6w4yntk" path="res://sounds/GameOver..ogg" id="11_a26ct"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_uqsjd"]
-bg_color = Color(0.0784314, 0.0156863, 0.0980392, 1)
+bg_color = Color(0, 0, 0, 0.686275)
 
 [node name="gameOver" type="Control"]
 layout_mode = 3
@@ -63,15 +63,15 @@ texture = ExtResource("8_x7ycj")
 
 [node name="ButtonSound" type="AudioStreamPlayer" parent="GameOverMenu"]
 stream = ExtResource("9_y4eqm")
-volume_db = -15.0
+volume_db = -5.0
 
 [node name="HoverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
 stream = ExtResource("11_37kri")
 volume_db = -5.0
 
 [node name="GameOverSound" type="AudioStreamPlayer" parent="GameOverMenu"]
-stream = ExtResource("12_a26ct")
-volume_db = -30.0
+stream = ExtResource("11_a26ct")
+volume_db = -15.0
 
 [node name="SurvivalTimeLabel" type="Label" parent="."]
 layout_mode = 1

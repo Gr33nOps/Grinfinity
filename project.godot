@@ -18,7 +18,8 @@ config/icon="uid://cgq7b3o6g7yae"
 [autoload]
 
 MusicManager="*res://scenes/music_manager.tscn"
-HighScoreManager="*res://scripts/HighScoreManager.cs"
+Background="*res://scenes/background.tscn"
+SceneTransition="*res://scenes/scene_transition.tscn"
 
 [display]
 

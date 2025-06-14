@@ -3,9 +3,9 @@
 [ext_resource type="Script" uid="uid://cjaaomehr1xjw" path="res://scripts/GameManager.cs" id="1_264po"]
 [ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_iywne"]
-[ext_resource type="Texture2D" uid="uid://dnf7v3xkhucfy" path="res://scripts/Dash.png" id="3_ca42v"]
+[ext_resource type="Texture2D" uid="uid://dnf7v3xkhucfy" path="res://sprites/Dash.png" id="3_ca42v"]
 [ext_resource type="Script" uid="uid://bpyrayovp2nmu" path="res://scripts/PauseMenu.cs" id="3_lnu2h"]
-[ext_resource type="Texture2D" uid="uid://gagsxy1221rk" path="res://scripts/RapidFire.png" id="4_ca42v"]
+[ext_resource type="Texture2D" uid="uid://gagsxy1221rk" path="res://sprites/RapidFire.png" id="4_ca42v"]
 [ext_resource type="Texture2D" uid="uid://ca5d0ur37l0g5" path="res://sprites/resume button normal.png" id="5_u5sy4"]
 [ext_resource type="Texture2D" uid="uid://ntotnqmwcp0n" path="res://sprites/resume button pressed.png" id="6_gee14"]
 [ext_resource type="Texture2D" uid="uid://cb0aafxndmees" path="res://sprites/resume button hover.png" id="7_gee14"]
@@ -17,8 +17,8 @@
 [ext_resource type="AudioStream" uid="uid://dcr4vb45l3psr" path="res://sounds/button_hover.ogg" id="20_37s47"]
 [ext_resource type="AudioStream" uid="uid://cbrq0wkol4k67" path="res://sounds/kill.ogg" id="22_37s47"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_264po"]
-bg_color = Color(0.0627451, 0.0117647, 0.0823529, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ca42v"]
+bg_color = Color(0, 0, 0, 0.686275)
 
 [sub_resource type="Environment" id="Environment_yqjtg"]
 background_mode = 3
@@ -69,7 +69,7 @@ scale = Vector2(0.3, 0.3)
 texture = ExtResource("4_ca42v")
 
 [node name="PauseLayer" type="CanvasLayer" parent="."]
-layer = 10
+layer = 0
 
 [node name="PauseMenu" type="Control" parent="PauseLayer"]
 process_mode = 2
@@ -86,7 +86,7 @@ anchor_right = 1.0
 anchor_bottom = 1.00743
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_264po")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ca42v")
 metadata/_edit_use_anchors_ = true
 
 [node name="TextureRect" type="TextureRect" parent="PauseLayer/PauseMenu/Panel"]
@@ -134,11 +134,11 @@ volume_db = -10.0
 
 [node name="ButtonSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("19_5newe")
-volume_db = -15.0
+volume_db = -5.0
 
 [node name="HoverSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("20_37s47")
-volume_db = -15.0
+volume_db = -5.0
 
 [node name="gameTime" type="Timer" parent="."]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dnf7v3xkhucfy"
-path="res://.godot/imported/Dash.png-fb0d6fb44352ced2987cf6bd6fd9371e.ctex"
+uid="uid://gagsxy1221rk"
+path="res://.godot/imported/RapidFire.png-bd1c85c94e905b9ebc79ff63e31df67e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scripts/Dash.png"
-dest_files=["res://.godot/imported/Dash.png-fb0d6fb44352ced2987cf6bd6fd9371e.ctex"]
+source_file="res://sprites/RapidFire.png"
+dest_files=["res://.godot/imported/RapidFire.png-bd1c85c94e905b9ebc79ff63e31df67e.ctex"]
 
 [params]
 

@@ -36,14 +36,12 @@ public partial class PauseMenu : Control
 	private async void OnResumeButtonPressed()
 	{
 		GetNode<GameManager>("/root/game").PlayButtonSound();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout");
 		EmitSignal(SignalName.ResumeGame);
 	}
 	
 	private async void OnGiveUpButtonPressed()
 	{
 		GetNode<GameManager>("/root/game").PlayButtonSound();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout");
 		EmitSignal(SignalName.GiveUpGame);
 	}
 	

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://gagsxy1221rk"
-path="res://.godot/imported/RapidFire.png-2e70b2ebd1fa4277fd27083c0c1b98db.ctex"
+uid="uid://dw45en8kt2l7i"
+path="res://.godot/imported/background.png-0cfaafa94fbfb5267bc500b34e5eeb6d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://scripts/RapidFire.png"
-dest_files=["res://.godot/imported/RapidFire.png-2e70b2ebd1fa4277fd27083c0c1b98db.ctex"]
+source_file="res://sprites/background.png"
+dest_files=["res://.godot/imported/background.png-0cfaafa94fbfb5267bc500b34e5eeb6d.ctex"]
 
 [params]
 

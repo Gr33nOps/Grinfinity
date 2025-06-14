@@ -53,14 +53,12 @@ public partial class GameOver : Control
 	private async void OnRestartButtonPressed()
 	{
 		buttonSound.Play();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
-		GetTree().ChangeSceneToFile("res://scenes/game.tscn");
+		SceneTransition.Instance.ChangeScene("res://scenes/game.tscn");
 	}
 	private async void OnMenuButtonPressed()
 	{
 		buttonSound.Play();
-		await ToSignal(GetTree().CreateTimer(0.3f), "timeout"); 
-		GetTree().ChangeSceneToFile("res://scenes/menu.tscn");
+		SceneTransition.Instance.ChangeScene("res://scenes/menu.tscn");
 	}
 	
 	private void OnRestartButtonHover()
