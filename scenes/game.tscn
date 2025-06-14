@@ -1,9 +1,11 @@
-[gd_scene load_steps=17 format=3 uid="uid://bi5oq2qgbb1cd"]
+[gd_scene load_steps=19 format=3 uid="uid://bi5oq2qgbb1cd"]
 
 [ext_resource type="Script" uid="uid://cjaaomehr1xjw" path="res://scripts/GameManager.cs" id="1_264po"]
 [ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
 [ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_iywne"]
+[ext_resource type="Texture2D" uid="uid://dxliovayscmb5" path="res://sprites/play button normal.png" id="3_ca42v"]
 [ext_resource type="Script" uid="uid://bpyrayovp2nmu" path="res://scripts/PauseMenu.cs" id="3_lnu2h"]
+[ext_resource type="Texture2D" uid="uid://cgr52y1pq83q2" path="res://sprites/menu button pressed.png" id="4_rysoc"]
 [ext_resource type="Texture2D" uid="uid://ca5d0ur37l0g5" path="res://sprites/resume button normal.png" id="5_u5sy4"]
 [ext_resource type="Texture2D" uid="uid://ntotnqmwcp0n" path="res://sprites/resume button pressed.png" id="6_gee14"]
 [ext_resource type="Texture2D" uid="uid://cb0aafxndmees" path="res://sprites/resume button hover.png" id="7_gee14"]
@@ -55,6 +57,28 @@ grow_horizontal = 0
 theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 75
 text = "BEST: 00:00"
+
+[node name="dash" type="Sprite2D" parent="UI"]
+position = Vector2(107, 61)
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("3_ca42v")
+
+[node name="rapid_fire" type="Sprite2D" parent="UI"]
+position = Vector2(268, 66)
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("4_rysoc")
+
+[node name="dash_bar" type="ProgressBar" parent="UI"]
+offset_left = 33.0
+offset_top = 118.0
+offset_right = 223.0
+offset_bottom = 145.0
+
+[node name="rapid_fire_bar" type="ProgressBar" parent="UI"]
+offset_left = 33.0
+offset_top = 168.0
+offset_right = 228.0
+offset_bottom = 195.0
 
 [node name="PauseLayer" type="CanvasLayer" parent="."]
 layer = 10
@@ -165,10 +189,6 @@ stream = ExtResource("20_37s47")
 volume_db = -15.0
 
 [node name="gameTime" type="Timer" parent="."]
-
-[node name="BestScoreLabel" type="Label" parent="."]
-offset_right = 40.0
-offset_bottom = 23.0
 
 [connection signal="mouse_entered" from="PauseLayer/PauseMenu/Panel/ResumeButton" to="." method="OnResumeButtonHover"]
 [connection signal="pressed" from="PauseLayer/PauseMenu/Panel/ResumeButton" to="." method="OnResumeButtonPressed"]

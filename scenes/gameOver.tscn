@@ -116,21 +116,32 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = 461.0
-offset_top = 852.0
-offset_right = 1470.0
-offset_bottom = 989.0
+offset_left = 353.0
+offset_top = 876.0
+offset_right = 947.0
+offset_bottom = 1013.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_fonts/font = ExtResource("1_ewvvw")
-theme_override_font_sizes/font_size = 100
-text = "You survived: 00:00"
+theme_override_font_sizes/font_size = 75
+text = "survived: 00:00"
 
 [node name="HighScoreLabel" type="Label" parent="."]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-theme_override_font_sizes/font_size = 50
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = 1100.0
+offset_top = 876.0
+offset_right = 1517.0
+offset_bottom = 1013.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("1_ewvvw")
+theme_override_font_sizes/font_size = 75
+text = "Best: 00:00"
 
 [connection signal="mouse_entered" from="GameOverMenu/RestartButton" to="." method="OnRestartButtonHover"]
 [connection signal="pressed" from="GameOverMenu/RestartButton" to="." method="OnRestartButtonPressed"]
