@@ -70,7 +70,6 @@ texture = ExtResource("4_ca42v")
 
 [node name="PauseLayer" type="CanvasLayer" parent="."]
 layer = 10
-visible = false
 
 [node name="PauseMenu" type="Control" parent="PauseLayer"]
 process_mode = 2
