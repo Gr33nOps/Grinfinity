@@ -1,14 +1,14 @@
 using Godot;
-
 public partial class EnemySpawner : Node
 {
 	private PackedScene enemyScene;
 	private Timer spawnTimer;
 	private Texture2D[] enemyTextures;
-	private float enemySpeed = 100.0f;
-	private float speedIncrease = 1.67f;
-	private float spawnInterval = 0.8f;
+	private float enemySpeed = 100.0f; 
+	private float speedIncrease = 1.0f; 
+	private float spawnInterval = 1.0f; 
 	private float spawnMargin = 100.0f;
+	private bool isPaused = false;
 	
 	public override void _Ready()
 	{
@@ -18,16 +18,23 @@ public partial class EnemySpawner : Node
 	
 	public override void _Process(double delta)
 	{
-		enemySpeed += speedIncrease * (float)delta;
-		float maxSpeed = Mathf.Min(enemySpeed, 300.0f);
-		float newInterval = Mathf.Max(0.1f, 1.2f - (maxSpeed / 300.0f));
-		spawnTimer.WaitTime = newInterval;
+		if (!isPaused)
+		{
+			enemySpeed += speedIncrease * (float)delta;
+			if (enemySpeed > 200.0f)
+				enemySpeed = 200.0f;
+			
+			float newInterval = 1.5f - ((enemySpeed - 100.0f) / 100.0f); 
+			if (newInterval < 0.5f)
+				newInterval = 0.5f;
+			
+			spawnTimer.WaitTime = newInterval;
+		}
 	}
 	
 	private void LoadEnemyResources()
 	{
 		enemyScene = GD.Load<PackedScene>("res://scenes/enemy.tscn");
-		
 		enemyTextures = new Texture2D[]
 		{
 			GD.Load<Texture2D>("res://sprites/enemy 1.png"),
@@ -45,7 +52,7 @@ public partial class EnemySpawner : Node
 	private void SetupSpawnTimer()
 	{
 		spawnTimer = new Timer();
-		spawnTimer.WaitTime = spawnInterval;
+		spawnTimer.WaitTime = spawnInterval; 
 		spawnTimer.Timeout += SpawnEnemy;
 		AddChild(spawnTimer);
 		spawnTimer.Start();
@@ -54,13 +61,10 @@ public partial class EnemySpawner : Node
 	private void SpawnEnemy()
 	{
 		if (enemyScene == null) return;
-		
 		var enemy = enemyScene.Instantiate() as Enemy;
 		if (enemy == null) return;
-		
 		enemy.GlobalPosition = GetSpawnPosition();
-		enemy.SetSpeed(enemySpeed);
-		
+		enemy.SetSpeed(enemySpeed); 
 		SetRandomTexture(enemy);
 		GetTree().CurrentScene.AddChild(enemy);
 	}
@@ -72,7 +76,6 @@ public partial class EnemySpawner : Node
 		{
 			int randomIndex = GD.RandRange(0, enemyTextures.Length - 1);
 			sprite.Texture = enemyTextures[randomIndex];
-			
 			Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
 			if (enemy.GlobalPosition.X > viewportSize.X || enemy.GlobalPosition.Y > viewportSize.Y)
 			{
@@ -86,21 +89,27 @@ public partial class EnemySpawner : Node
 	{
 		var viewportSize = GetViewport().GetVisibleRect().Size;
 		int side = GD.RandRange(0, 3);
-		
-		return side switch
+		if (side == 0) {
+			return new Vector2(GD.RandRange(0, (int)viewportSize.X), -spawnMargin);
+		}
+		else if (side == 1)
 		{
-			0 => new Vector2(GD.RandRange(0, (int)viewportSize.X), -spawnMargin),
-			1 => new Vector2(viewportSize.X + spawnMargin, GD.RandRange(0, (int)viewportSize.Y)),
-			2 => new Vector2(GD.RandRange(0, (int)viewportSize.X), viewportSize.Y + spawnMargin),
-			3 => new Vector2(-spawnMargin, GD.RandRange(0, (int)viewportSize.Y)),
-			_ => Vector2.Zero
-		};
+			return new Vector2(viewportSize.X + spawnMargin, GD.RandRange(0, (int)viewportSize.Y));
+		}
+		else if (side == 2)
+		{
+			return new Vector2(GD.RandRange(0, (int)viewportSize.X), viewportSize.Y + spawnMargin);
+		}
+		else
+		{
+			return new Vector2(-spawnMargin, GD.RandRange(0, (int)viewportSize.Y));
+		}
 	}
 	
 	public void SetPaused(bool paused)
 	{
+		isPaused = paused; 
 		spawnTimer.Paused = paused;
-		
 		var enemies = GetTree().GetNodesInGroup("enemies");
 		foreach (Node enemy in enemies)
 		{

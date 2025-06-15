@@ -1,12 +1,11 @@
 using Godot;
 public partial class ScoreManager : Node
 {
-	// Current game score
 	private float survivalTime = 0.0f;
 	private Label scoreLabel;
 	private Label highScoreLabel;
+	private bool isPaused = false; // Add pause state
 	
-	// High score functionality
 	private const string SAVE_FILE = "user://highscore.save";
 	private static float bestTime = 0.0f;
 	private static ScoreManager instance;
@@ -22,9 +21,20 @@ public partial class ScoreManager : Node
 	
 	public override void _Process(double delta)
 	{
-		survivalTime += (float)delta;
+		// Only update survival time if not paused
+		if (!isPaused)
+		{
+			survivalTime += (float)delta;
+		}
+		
 		UpdateScoreDisplay();
 		UpdateHighScoreDisplay();
+	}
+	
+	// Add method to set pause state
+	public void SetPaused(bool paused)
+	{
+		isPaused = paused;
 	}
 	
 	private void UpdateScoreDisplay()
@@ -63,7 +73,6 @@ public partial class ScoreManager : Node
 	
 	public void SaveHighScore(float time)
 	{
-	
 		if (time > bestTime)
 		{
 			bestTime = time;
@@ -106,16 +115,14 @@ public partial class ScoreManager : Node
 			bestTime = file.GetFloat();
 			file.Close();
 			
-			// Safety check - if the loaded time is unreasonable, reset it
-			if (bestTime < 0 || bestTime > 36000) // More than 10 hours is unreasonable
+			if (bestTime < 0 || bestTime > 36000) 
 			{
 				bestTime = 0;
-				SaveToFile(); // Save the reset value
+				SaveToFile(); 
 			}
 		}
 	}
 	
-	// Add this method to reset high score if needed
 	public void ResetHighScore()
 	{
 		bestTime = 0;

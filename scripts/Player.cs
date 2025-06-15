@@ -7,11 +7,11 @@ public partial class Player : CharacterBody2D
 	private Sprite2D playerSprite;
 	private AudioStreamPlayer2D shootSound;
 	private PlayerAbilities abilities;
-	
 	private const float MoveSpeed = 200.0f;
 	private const float Border = 50f;
+	private const float CollisionRadius = 100f; // Adjust this based on your sprite sizes
 	private bool isDead = false;
-	
+
 	public override void _Ready()
 	{
 		bulletScene = GD.Load<PackedScene>("res://scenes/bullet.tscn");
@@ -20,30 +20,33 @@ public partial class Player : CharacterBody2D
 		shootSound = GetNode<AudioStreamPlayer2D>("ShootSound");
 		abilities = new PlayerAbilities(this);
 	}
-	
+
 	public override void _PhysicsProcess(double delta)
 	{
-		if (isDead) return;
-		
+		if (isDead)
+		{
+			return;
+		}
+
 		Vector2 mousePos = GetGlobalMousePosition();
-		
 		abilities.Update(delta);
 		UpdatePlayer(mousePos);
-		CheckCollisions();
+		CheckSpriteCollisions(); // Using distance-based collision detection
 		MoveAndSlide();
 		StayOnScreen();
 	}
-	
+
 	private void UpdatePlayer(Vector2 mousePos)
 	{
 		if (playerSprite != null)
+		{
 			playerSprite.FlipV = mousePos.X < GlobalPosition.X;
-		
+		}
 		LookAt(mousePos);
 		HandleMovement();
 		abilities.HandleShooting(mousePos);
 	}
-	
+
 	private void HandleMovement()
 	{
 		if (abilities.IsDashing())
@@ -59,27 +62,36 @@ public partial class Player : CharacterBody2D
 			Velocity = GetRealVelocity().Lerp(moveDirection * MoveSpeed, 0.1f);
 		}
 	}
-	
-	private void CheckCollisions()
+
+	private void CheckSpriteCollisions()
 	{
-		for (int i = 0; i < GetSlideCollisionCount(); i++)
+		var enemies = GetTree().GetNodesInGroup("enemies");
+		
+		foreach (Node enemy in enemies)
 		{
-			var collision = GetSlideCollision(i);
-			if (collision.GetCollider() is Node enemy && enemy.IsInGroup("enemies"))
+			if (enemy is Node2D enemyNode2D)
 			{
-				Die();
-				break;
+				float distance = GlobalPosition.DistanceTo(enemyNode2D.GlobalPosition);
+				
+				if (distance < CollisionRadius)
+				{
+					Die();
+					break;
+				}
 			}
 		}
 	}
-	
+
 	private void Die()
 	{
-		if (isDead) return;
+		if (isDead)
+		{
+			return;
+		}
 		isDead = true;
 		GetNode<GameManager>("/root/game").TriggerGameOver();
 	}
-	
+
 	private void StayOnScreen()
 	{
 		var screenSize = GetViewportRect().Size;
@@ -88,18 +100,27 @@ public partial class Player : CharacterBody2D
 			screenSize - new Vector2(Border, Border)
 		);
 	}
-	
+
 	private Sprite2D FindPlayerSprite()
 	{
-		if (HasNode("Sprite2D")) return GetNode<Sprite2D>("Sprite2D");
-		if (HasNode("sprite")) return GetNode<Sprite2D>("sprite");
-		
+		if (HasNode("Sprite2D"))
+		{
+			return GetNode<Sprite2D>("Sprite2D");
+		}
+		if (HasNode("sprite"))
+		{
+			return GetNode<Sprite2D>("sprite");
+		}
 		foreach (Node child in GetChildren())
-			if (child is Sprite2D sprite) return sprite;
-		
+		{
+			if (child is Sprite2D sprite)
+			{
+				return sprite;
+			}
+		}
 		return null;
 	}
-	
+
 	public void ShootBullet(Vector2 mousePos)
 	{
 		var bullet = bulletScene.Instantiate<Bullet>();
@@ -108,35 +129,67 @@ public partial class Player : CharacterBody2D
 		GetNode("/root/game").AddChild(bullet);
 		PlayShootSound();
 	}
-	
+
 	public void PlayShootSound(bool isRapidFire = false)
 	{
 		if (shootSound != null)
 		{
-			shootSound.PitchScale = isRapidFire ? 1.2f : 1.0f;
+			if (isRapidFire)
+			{
+				shootSound.PitchScale = 1.2f;
+			}
+			else
+			{
+				shootSound.PitchScale = 1.0f;
+			}
 			shootSound.Play();
 		}
 	}
-	
+
 	public void CreateDashEffect()
 	{
-		if (playerSprite == null) return;
+		if (playerSprite == null)
+		{
+			return;
+		}
 		var tween = CreateTween();
 		tween.TweenProperty(playerSprite, "modulate:a", 0.5f, 0.1f);
 		tween.TweenProperty(playerSprite, "modulate:a", 1.0f, 0.1f);
 	}
-	
+
 	public void CreateRapidFireEffect()
 	{
-		if (playerSprite == null) return;
+		if (playerSprite == null)
+		{
+			return;
+		}
 		var tween = CreateTween();
 		tween.TweenProperty(playerSprite, "modulate", Colors.Orange, 0.2f);
 		tween.TweenProperty(playerSprite, "modulate", Colors.White, 0.2f);
 	}
-	
-	public void SetDead(bool dead) => isDead = dead;
-	public float GetDashCooldownPercent() => abilities.GetDashCooldownPercent();
-	public float GetRapidFireCooldownPercent() => abilities.GetRapidFireCooldownPercent();
-	public bool IsRapidFiring() => abilities.IsRapidFiring();
-	public float GetRapidFireTimeLeft() => abilities.GetRapidFireTimeLeft();
+
+	public void SetDead(bool dead)
+	{
+		isDead = dead;
+	}
+
+	public float GetDashCooldownPercent()
+	{
+		return abilities.GetDashCooldownPercent();
+	}
+
+	public float GetRapidFireCooldownPercent()
+	{
+		return abilities.GetRapidFireCooldownPercent();
+	}
+
+	public bool IsRapidFiring()
+	{
+		return abilities.IsRapidFiring();
+	}
+
+	public float GetRapidFireTimeLeft()
+	{
+		return abilities.GetRapidFireTimeLeft();
+	}
 }

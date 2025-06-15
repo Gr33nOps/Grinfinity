@@ -69,7 +69,6 @@ scale = Vector2(0.3, 0.3)
 texture = ExtResource("4_ca42v")
 
 [node name="PauseLayer" type="CanvasLayer" parent="."]
-layer = 0
 
 [node name="PauseMenu" type="Control" parent="PauseLayer"]
 process_mode = 2

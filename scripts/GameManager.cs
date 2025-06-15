@@ -1,5 +1,4 @@
 using Godot;
-
 public partial class GameManager : Node2D
 {
 	private PauseMenu pauseMenu;
@@ -68,8 +67,10 @@ public partial class GameManager : Node2D
 			uiManager.HideCursor();
 		}
 		
+		// Pause all game systems
 		enemySpawner.SetPaused(isPaused);
 		playerManager.SetPaused(isPaused);
+		scoreManager.SetPaused(isPaused); // Add this line to pause the score manager
 	}
 	
 	public void TriggerGameOver()
