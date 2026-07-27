@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://bcmipct1fe830"]
+
+[ext_resource type="Script" uid="uid://bj2ub38457ksw" path="res://scripts/Player.cs" id="1_3vyb7"]
+[ext_resource type="Texture2D" uid="uid://50b437dwilfi" path="res://sprites/player 1.png" id="2_dqkch"]
+[ext_resource type="AudioStream" uid="uid://c8a1w30h1aujo" path="res://sounds/shoot.ogg" id="4_dqkch"]
+
+[node name="player" type="CharacterBody2D"]
+collision_layer = 1
+collision_mask = 2
+scale = Vector2(2, 2)
+script = ExtResource("1_3vyb7")
+
+[node name="shootyPart" type="Node2D" parent="."]
+position = Vector2(62, -6.5)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(10, -7.5)
+scale = Vector2(0.273333, 0.273333)
+texture = ExtResource("2_dqkch")
+flip_h = true
+
+[node name="ShootSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("4_dqkch")
+volume_db = -10.0

@@ -1,0 +1,136 @@
+[gd_scene load_steps=19 format=3 uid="uid://bi5oq2qgbb1cd"]
+
+[ext_resource type="Script" uid="uid://cjaaomehr1xjw" path="res://scripts/GameManager.cs" id="1_264po"]
+[ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
+[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_iywne"]
+[ext_resource type="Texture2D" uid="uid://dnf7v3xkhucfy" path="res://sprites/Dash.png" id="3_ca42v"]
+[ext_resource type="Script" uid="uid://bpyrayovp2nmu" path="res://scripts/PauseMenu.cs" id="3_lnu2h"]
+[ext_resource type="Texture2D" uid="uid://gagsxy1221rk" path="res://sprites/RapidFire.png" id="4_ca42v"]
+[ext_resource type="Texture2D" uid="uid://ca5d0ur37l0g5" path="res://sprites/resume button normal.png" id="5_u5sy4"]
+[ext_resource type="Texture2D" uid="uid://ntotnqmwcp0n" path="res://sprites/resume button pressed.png" id="6_gee14"]
+[ext_resource type="Texture2D" uid="uid://cb0aafxndmees" path="res://sprites/resume button hover.png" id="7_gee14"]
+[ext_resource type="Texture2D" uid="uid://ce2ylkaa25ks8" path="res://sprites/giveup button normal.png" id="8_kvpfn"]
+[ext_resource type="Texture2D" uid="uid://b7s532cjxyhmh" path="res://sprites/giveup button pressed.png" id="9_dinhu"]
+[ext_resource type="Texture2D" uid="uid://btoi1wiiss7ia" path="res://sprites/giveup button hover.png" id="10_kvuet"]
+[ext_resource type="Texture2D" uid="uid://djfl0p3jufn1h" path="res://sprites/paused.png" id="11_dinhu"]
+[ext_resource type="AudioStream" uid="uid://sh84xsxpvnv7" path="res://sounds/button_press.ogg" id="19_5newe"]
+[ext_resource type="AudioStream" uid="uid://dcr4vb45l3psr" path="res://sounds/button_hover.ogg" id="20_37s47"]
+[ext_resource type="AudioStream" uid="uid://cbrq0wkol4k67" path="res://sounds/kill.ogg" id="22_37s47"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ca42v"]
+bg_color = Color(0, 0, 0, 0.686275)
+
+[sub_resource type="Environment" id="Environment_yqjtg"]
+background_mode = 3
+glow_enabled = true
+glow_blend_mode = 0
+glow_hdr_threshold = 0.77
+
+[node name="game" type="Node2D" groups=["game_manager"]]
+process_mode = 3
+script = ExtResource("1_264po")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -102.5
+offset_top = 32.0
+offset_right = 102.5
+offset_bottom = 113.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 75
+text = "00:00"
+
+[node name="HighScoreLabel" type="Label" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -455.0
+offset_top = 32.0
+offset_right = -38.0
+offset_bottom = 113.0
+grow_horizontal = 0
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 75
+text = "BEST: 00:00"
+
+[node name="dash" type="Sprite2D" parent="UI"]
+position = Vector2(64, 66)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("3_ca42v")
+
+[node name="rapid_fire" type="Sprite2D" parent="UI"]
+position = Vector2(143, 66)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("4_ca42v")
+
+[node name="PauseLayer" type="CanvasLayer" parent="."]
+
+[node name="PauseMenu" type="Control" parent="PauseLayer"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1918.0
+offset_bottom = 1077.0
+script = ExtResource("3_lnu2h")
+
+[node name="Panel" type="Panel" parent="PauseLayer/PauseMenu"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 1.0
+anchor_bottom = 1.00743
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ca42v")
+metadata/_edit_use_anchors_ = true
+
+[node name="TextureRect" type="TextureRect" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 0
+offset_left = 472.0
+offset_top = 151.0
+offset_right = 1484.0
+offset_bottom = 695.0
+mouse_filter = 2
+texture = ExtResource("11_dinhu")
+
+[node name="ResumeButton" type="TextureButton" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 0
+offset_left = 661.0
+offset_top = 338.0
+offset_right = 1303.0
+offset_bottom = 644.0
+texture_normal = ExtResource("5_u5sy4")
+texture_pressed = ExtResource("6_gee14")
+texture_hover = ExtResource("7_gee14")
+
+[node name="GiveUpButton" type="TextureButton" parent="PauseLayer/PauseMenu/Panel"]
+layout_mode = 0
+offset_left = 661.0
+offset_top = 660.0
+offset_right = 1303.0
+offset_bottom = 964.0
+texture_normal = ExtResource("8_kvpfn")
+texture_pressed = ExtResource("9_dinhu")
+texture_hover = ExtResource("10_kvuet")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_yqjtg")
+
+[node name="player" parent="." instance=ExtResource("1_uwrxv")]
+position = Vector2(967, 541)
+
+[node name="KillSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("22_37s47")
+volume_db = -10.0
+
+[node name="ButtonSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("19_5newe")
+volume_db = -5.0
+
+[node name="HoverSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("20_37s47")
+volume_db = -5.0
