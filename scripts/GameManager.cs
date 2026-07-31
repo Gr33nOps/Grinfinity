@@ -276,7 +276,7 @@ public partial class GameManager : Node2D
 	/// </param>
 	public void RegisterKill(in Enemy.Remains remains, Vector2 at, bool shedDebris = true)
 	{
-		bool heavy = remains.Kind == EnemyKind.Tank;
+		bool heavy = remains.Kind is BodyKind.Planetoid or BodyKind.Bulwark or BodyKind.Flare;
 
 		run?.AddKill();
 
@@ -288,10 +288,14 @@ public partial class GameManager : Node2D
 		Shake(heavy ? HeavyKillTrauma : LightKillTrauma);
 	}
 
-	/// <summary>Draws the nova shockwave and its burst. The damage is the player's job.</summary>
-	public void SpawnNova(Vector2 at, float radius)
+	/// <summary>
+	/// Draws a shockwave ring and its burst. The ring is not decoration: it is
+	/// the only thing that shows how far the blast actually reached, which the
+	/// player needs in order to learn the spacing.
+	/// </summary>
+	public void SpawnBlast(Vector2 at, float radius, Color colour)
 	{
-		var wave = new NovaWave { MaxRadius = radius };
+		var wave = new NovaWave { MaxRadius = radius, WaveColor = colour };
 		wave.GlobalPosition = at;
 		AddEntity(wave);
 
@@ -301,8 +305,8 @@ public partial class GameManager : Node2D
 		var burst = BurstScene.Instantiate<CpuParticles2D>();
 		burst.GlobalPosition = at;
 		burst.Amount = 220;
-		burst.Scale = new Vector2(3.2f, 3.2f);
-		burst.Color = new Color(1f, 0.86f, 0.5f);
+		burst.Scale = new Vector2(radius / 165.0f, radius / 165.0f);
+		burst.Color = colour;
 		burst.Lifetime = 0.8f;
 		burst.Emitting = true;
 		burst.Finished += burst.QueueFree;

@@ -5,6 +5,11 @@ public partial class Player : CharacterBody2D
 	[Export] public float MoveSpeed { get; set; } = 235.0f;
 	[Export] public float MoveSmoothing { get; set; } = 14.0f;
 	[Export] public float ScreenBorder { get; set; } = 50.0f;
+	/// <summary>
+	/// Ignores every source of death. Off in play; `tools/dev_capture.tscn` turns
+	/// it on so an unattended run can reach the late bestiary without dying to it.
+	/// </summary>
+	[Export] public bool Invulnerable { get; set; } = false;
 	[Export] public PackedScene BulletScene { get; set; }
 	[Export] public PackedScene DeathEffectScene { get; set; }
 
@@ -156,7 +161,7 @@ public partial class Player : CharacterBody2D
 				manager?.RegisterKill(remains, body.GlobalPosition, shedDebris: false);
 		}
 
-		manager?.SpawnNova(GlobalPosition, NovaRadius);
+		manager?.SpawnBlast(GlobalPosition, NovaRadius, new Color(1f, 0.86f, 0.5f));
 		manager?.Hitstop(0.12f);
 		manager?.Shake(NovaTrauma);
 		return true;
@@ -225,9 +230,15 @@ public partial class Player : CharacterBody2D
 			Die();
 	}
 
+	/// <summary>Killed by something other than contact — a Flare blast or a hostile shot.</summary>
+	public void KillByBlast()
+	{
+		Die();
+	}
+
 	private void Die()
 	{
-		if (isDead)
+		if (isDead || Invulnerable)
 			return;
 
 		isDead = true;

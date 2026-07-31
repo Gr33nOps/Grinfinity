@@ -13,12 +13,16 @@ public partial class EnemySpawner : Node
 	[Export] public float SpawnMargin { get; set; } = 100.0f;
 	[Export] public PackedScene EnemyScene { get; set; }
 
-	[ExportGroup("Enemy variety")]
-	/// <summary>Seconds before swarmers start appearing.</summary>
-	[Export] public float SwarmerUnlockTime { get; set; } = 18.0f;
-	/// <summary>Seconds before tanks start appearing.</summary>
-	[Export] public float TankUnlockTime { get; set; } = 40.0f;
-	[Export] public int SwarmerPackSize { get; set; } = 4;
+	[ExportGroup("Bestiary")]
+	// One new kind roughly every 20 seconds. Each arrival is meant to be
+	// noticeable, and each one teaches something the previous ones did not.
+	[Export] public float ShardUnlockTime { get; set; } = 18.0f;
+	[Export] public float PlanetoidUnlockTime { get; set; } = 40.0f;
+	[Export] public float FractureUnlockTime { get; set; } = 62.0f;
+	[Export] public float BulwarkUnlockTime { get; set; } = 85.0f;
+	[Export] public float SatelliteUnlockTime { get; set; } = 108.0f;
+	[Export] public float FlareUnlockTime { get; set; } = 130.0f;
+	[Export] public int ShardPackSize { get; set; } = 4;
 
 	[ExportGroup("Mass response")]
 	/// <summary>Spawn interval multiplier at full world mass. Under 1 means faster.</summary>
@@ -93,13 +97,13 @@ public partial class EnemySpawner : Node
 		if (GetTree().GetNodeCountInGroup("enemies") >= MaxEnemyCount)
 			return;
 
-		EnemyKind kind = PickKind();
+		BodyKind kind = PickKind();
 
-		if (kind == EnemyKind.Swarmer)
+		if (kind == BodyKind.Shard)
 		{
-			// Swarmers are only threatening in numbers, so they arrive together.
+			// Shards are only threatening in numbers, so they arrive together.
 			Vector2 origin = GetSpawnPosition();
-			for (int i = 0; i < SwarmerPackSize; i++)
+			for (int i = 0; i < ShardPackSize; i++)
 			{
 				Vector2 jitter = new Vector2(GD.RandRange(-90, 90), GD.RandRange(-90, 90));
 				SpawnOne(kind, origin + jitter);
@@ -112,26 +116,41 @@ public partial class EnemySpawner : Node
 
 	/// <summary>
 	/// Introduces kinds over time so the opening stays readable and each new
-	/// threat is noticeable when it shows up.
+	/// threat is noticeable when it shows up. Weights are cumulative bands over
+	/// a single roll; anything not claimed by a band falls through to a Drifter.
 	/// </summary>
-	private EnemyKind PickKind()
+	private BodyKind PickKind()
 	{
-		if (elapsed < SwarmerUnlockTime)
-			return EnemyKind.Chaser;
+		if (elapsed < ShardUnlockTime)
+			return BodyKind.Drifter;
 
 		float roll = GD.Randf();
+		float band = 0f;
 
-		if (elapsed < TankUnlockTime)
-			return roll < 0.35f ? EnemyKind.Swarmer : EnemyKind.Chaser;
+		if (Unlocked(FlareUnlockTime) && roll < (band += 0.10f))
+			return BodyKind.Flare;
 
-		if (roll < 0.30f)
-			return EnemyKind.Swarmer;
-		if (roll < 0.45f)
-			return EnemyKind.Tank;
-		return EnemyKind.Chaser;
+		if (Unlocked(SatelliteUnlockTime) && roll < (band += 0.10f))
+			return BodyKind.Satellite;
+
+		if (Unlocked(BulwarkUnlockTime) && roll < (band += 0.12f))
+			return BodyKind.Bulwark;
+
+		if (Unlocked(FractureUnlockTime) && roll < (band += 0.13f))
+			return BodyKind.Fracture;
+
+		if (Unlocked(PlanetoidUnlockTime) && roll < (band += 0.13f))
+			return BodyKind.Planetoid;
+
+		if (roll < band + 0.26f)
+			return BodyKind.Shard;
+
+		return BodyKind.Drifter;
 	}
 
-	private void SpawnOne(EnemyKind kind, Vector2 position)
+	private bool Unlocked(float at) => elapsed >= at;
+
+	private void SpawnOne(BodyKind kind, Vector2 position)
 	{
 		if (EnemyScene.Instantiate() is not Enemy enemy)
 			return;
@@ -148,8 +167,12 @@ public partial class EnemySpawner : Node
 		if (sprite == null || enemyTextures.Length == 0)
 			return;
 
-		int randomIndex = GD.RandRange(0, enemyTextures.Length - 1);
-		sprite.Texture = enemyTextures[randomIndex];
+		// Most kinds pin a face so they stay recognisable between orbits; only
+		// the baseline Drifter is left to vary.
+		int index = enemy.TextureIndex >= 0
+			? Mathf.Min(enemy.TextureIndex, enemyTextures.Length - 1)
+			: GD.RandRange(0, Mathf.Min(2, enemyTextures.Length - 1));
+		sprite.Texture = enemyTextures[index];
 
 		Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
 		if (enemy.GlobalPosition.X > viewportSize.X || enemy.GlobalPosition.Y > viewportSize.Y)

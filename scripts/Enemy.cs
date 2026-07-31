@@ -1,24 +1,11 @@
 using Godot;
 
-public enum EnemyKind
-{
-	/// <summary>Baseline: falls straight in.</summary>
-	Chaser,
-
-	/// <summary>Small and quick, arrives in packs. Dies to one hit.</summary>
-	Swarmer,
-
-	/// <summary>Large and slow, soaks several hits and has a big contact radius.</summary>
-	Tank
-}
-
 /// <summary>
 /// A body. It is not chasing — it is falling.
 ///
-/// Acceleration toward the world scales with the world's mass and with how close
-/// the body already is, so bodies build momentum, overshoot, swing back and
-/// clump. That behaviour is the whole point of the game; a straight-line chase
-/// would make this a re-skinned arena shooter.
+/// This class owns everything every kind shares: gravity, damage, knockback,
+/// flashing and culling. What differs per kind lives in a <see cref="BodyBehaviour"/>,
+/// which this hands the wheel to once a frame.
 /// </summary>
 public partial class Enemy : CharacterBody2D
 {
@@ -41,19 +28,61 @@ public partial class Enemy : CharacterBody2D
 	/// <summary>Ceiling on drift speed, as a multiple of the ramped base speed.</summary>
 	[Export] public float MaxSpeedFactor { get; set; } = 2.3f;
 
-	private Node2D player;
+	[ExportGroup("Armed bodies")]
+	[Export] public PackedScene BulletScene { get; set; }
+	[Export] public float BulletSpeed { get; set; } = 420.0f;
+
+	/// <summary>This same scene, for kinds that break apart into more of themselves.</summary>
+	[Export] public PackedScene BodyScene { get; set; }
+
+	private Node2D world;
 	private RunState run;
 	private Sprite2D sprite;
 	private Vector2 spriteBaseScale = Vector2.One;
-	private Vector2 drift = Vector2.Zero;
 	private Vector2 knockback = Vector2.Zero;
-	private float speedMultiplier = 1.0f;
-	private float accelMultiplier = 1.0f;
+	private BodyBehaviour behaviour = BodyBehaviours.For(BodyKind.Drifter);
 	private int health = 1;
 	private int maxHealth = 1;
-	private Color baseTint = Colors.White;
-	private Vector2 baseScale = Vector2.One;
+	private bool destroyed;
 	private Tween hitFlash;
+
+	public BodyKind Kind { get; private set; } = BodyKind.Drifter;
+
+	// Written by the behaviour in Apply, read by the shared code below.
+	public float SpeedMultiplier { get; set; } = 1.0f;
+	public float AccelMultiplier { get; set; } = 1.0f;
+	public Vector2 BaseScale { get; set; } = Vector2.One;
+	public Color BaseTint { get; set; } = Colors.White;
+	public float KnockbackStrength { get; set; } = 260.0f;
+	public int DebrisCount { get; set; } = 2;
+
+	/// <summary>
+	/// Which face sprite this kind wears. Fixed per kind so a Bulwark always
+	/// looks like a Bulwark; -1 leaves it to the spawner to pick at random.
+	/// </summary>
+	public int TextureIndex { get; set; } = -1;
+
+	/// <summary>Current velocity under gravity, before knockback is added.</summary>
+	public Vector2 Drift { get; set; } = Vector2.Zero;
+
+	/// <summary>One float of scratch space for the behaviour. Cadences, mostly.</summary>
+	public float BehaviourTimer { get; set; }
+
+	/// <summary>Which way this body circles, for kinds that hold an orbit.</summary>
+	public float OrbitDirection { get; private set; } = 1.0f;
+
+	/// <summary>Vector from this body to the world.</summary>
+	public Vector2 WorldOffset => HasWorld ? world.GlobalPosition - GlobalPosition : Vector2.Zero;
+	public Vector2 WorldPosition => HasWorld ? world.GlobalPosition : GlobalPosition;
+	public bool HasWorld => world != null && IsInstanceValid(world);
+
+	/// <summary>The direction this body is travelling — and therefore facing.</summary>
+	public Vector2 Forward => Drift.LengthSquared() > 1f ? Drift.Normalized() : Vector2.Right;
+
+	/// <summary>Death burst tuning, so a Shard does not pop like a Planetoid.</summary>
+	public int BurstAmount { get; private set; } = 55;
+	public float BurstScale { get; private set; } = 1.0f;
+	public Color BurstColor { get; private set; } = new Color(0.91f, 0.35f, 0.45f);
 
 	/// <summary>
 	/// What a body leaves behind. Captured before the killing blow, because that
@@ -61,7 +90,7 @@ public partial class Enemy : CharacterBody2D
 	/// </summary>
 	public readonly struct Remains
 	{
-		public Remains(EnemyKind kind, int debrisCount, int burstAmount, float burstScale, Color burstColor)
+		public Remains(BodyKind kind, int debrisCount, int burstAmount, float burstScale, Color burstColor)
 		{
 			Kind = kind;
 			DebrisCount = debrisCount;
@@ -70,7 +99,7 @@ public partial class Enemy : CharacterBody2D
 			BurstColor = burstColor;
 		}
 
-		public EnemyKind Kind { get; }
+		public BodyKind Kind { get; }
 		public int DebrisCount { get; }
 		public int BurstAmount { get; }
 		public float BurstScale { get; }
@@ -79,29 +108,31 @@ public partial class Enemy : CharacterBody2D
 
 	public Remains GetRemains() => new Remains(Kind, DebrisCount, BurstAmount, BurstScale, BurstColor);
 
-	public EnemyKind Kind { get; private set; } = EnemyKind.Chaser;
+	public void SetHealth(int value)
+	{
+		health = Mathf.Max(value, 1);
+		maxHealth = health;
+	}
 
-	/// <summary>How hard a hit on this body knocks it back.</summary>
-	public float KnockbackStrength { get; private set; } = 260.0f;
-
-	/// <summary>Motes shed on death, for the world to pull in and absorb.</summary>
-	public int DebrisCount { get; private set; } = 2;
-
-	/// <summary>Death burst tuning, so a tank does not pop like a swarmer.</summary>
-	public int BurstAmount { get; private set; } = 55;
-	public float BurstScale { get; private set; } = 1.0f;
-	public Color BurstColor { get; private set; } = new Color(0.91f, 0.35f, 0.45f);
+	public void SetBurst(int amount, float scale, Color color)
+	{
+		BurstAmount = amount;
+		BurstScale = scale;
+		BurstColor = color;
+	}
 
 	public override void _Ready()
 	{
 		var gameManager = GameManager.Of(this);
-		player = gameManager?.GetNodeOrNull<Node2D>("player");
+		world = gameManager?.GetNodeOrNull<Node2D>("player");
 		run = gameManager?.Run;
+		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
 
 		sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
 		if (sprite != null)
 			spriteBaseScale = sprite.Scale;
 
+		OrbitDirection = GD.Randf() < 0.5f ? -1.0f : 1.0f;
 		LaunchIntoOrbit();
 	}
 
@@ -111,84 +142,37 @@ public partial class Enemy : CharacterBody2D
 	/// </summary>
 	private void LaunchIntoOrbit()
 	{
-		if (player == null || !IsInstanceValid(player))
+		if (!HasWorld || Drift != Vector2.Zero)
 			return;
 
-		Vector2 toPlayer = player.GlobalPosition - GlobalPosition;
-		if (toPlayer.LengthSquared() < 1f)
+		Vector2 toWorld = WorldOffset;
+		if (toWorld.LengthSquared() < 1f)
 			return;
 
-		Vector2 tangent = toPlayer.Normalized().Orthogonal();
-		if (GD.Randf() < 0.5f)
-			tangent = -tangent;
-
-		float base_ = EnemySpawner.CurrentSpeed * speedMultiplier;
-		drift = tangent * base_ * (float)GD.RandRange(0.35, 0.95);
+		Vector2 tangent = toWorld.Normalized().Orthogonal() * OrbitDirection;
+		Drift = tangent * EnemySpawner.CurrentSpeed * SpeedMultiplier * (float)GD.RandRange(0.35, 0.95);
 	}
 
 	/// <summary>Applies the stats and look for a kind. Call before adding to the tree.</summary>
-	public void Configure(EnemyKind kind)
+	public void Configure(BodyKind kind)
 	{
 		Kind = kind;
+		behaviour = BodyBehaviours.For(kind);
+		behaviour.Apply(this);
 
-		switch (kind)
-		{
-			case EnemyKind.Swarmer:
-				speedMultiplier = 1.7f;
-				accelMultiplier = 1.55f;
-				health = 1;
-				baseScale = new Vector2(1.2f, 1.2f);
-				baseTint = new Color(0.72f, 1.0f, 0.85f);
-				KnockbackStrength = 420.0f;
-				DebrisCount = 1;
-				BurstAmount = 26;
-				BurstScale = 0.65f;
-				BurstColor = new Color(0.62f, 1.0f, 0.78f);
-				break;
-
-			case EnemyKind.Tank:
-				speedMultiplier = 0.5f;
-				// Heavy bodies answer gravity slowly, which is what makes them
-				// read as heavy rather than merely slow.
-				accelMultiplier = 0.45f;
-				health = 4;
-				baseScale = new Vector2(3.0f, 3.0f);
-				baseTint = new Color(0.7f, 0.78f, 1.0f);
-				KnockbackStrength = 90.0f;
-				DebrisCount = 6;
-				BurstAmount = 120;
-				BurstScale = 2.1f;
-				BurstColor = new Color(0.66f, 0.76f, 1.0f);
-				break;
-
-			default:
-				speedMultiplier = 1.0f;
-				accelMultiplier = 1.0f;
-				health = 1;
-				baseScale = new Vector2(2.0f, 2.0f);
-				baseTint = Colors.White;
-				KnockbackStrength = 240.0f;
-				DebrisCount = 2;
-				BurstAmount = 55;
-				BurstScale = 1.0f;
-				BurstColor = new Color(0.91f, 0.35f, 0.45f);
-				break;
-		}
-
-		maxHealth = health;
-		Scale = baseScale;
-		Modulate = baseTint;
+		Scale = BaseScale;
+		Modulate = BaseTint;
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
-		if (player == null || !IsInstanceValid(player))
+		if (!HasWorld)
 			return;
 
 		float step = (float)delta;
-		ApplyPull(step);
+		behaviour.Steer(this, step);
 
-		Velocity = drift + knockback;
+		Velocity = Drift + knockback;
 		FaceTravel();
 		MoveAndSlide();
 
@@ -197,23 +181,24 @@ public partial class Enemy : CharacterBody2D
 		CullIfLost();
 	}
 
-	private void ApplyPull(float delta)
+	/// <summary>The default motion: accelerate toward the world under its gravity.</summary>
+	public void FallTowardWorld(float delta)
 	{
-		Vector2 toPlayer = player.GlobalPosition - GlobalPosition;
-		float distance = Mathf.Max(toPlayer.Length(), 1.0f);
-		Vector2 towards = toPlayer / distance;
+		Vector2 toWorld = WorldOffset;
+		float distance = Mathf.Max(toWorld.Length(), 1.0f);
+		Vector2 towards = toWorld / distance;
 
 		// Softened inverse falloff: real inverse-square explodes on contact and
 		// leaves distant bodies barely moving. This keeps both ends playable.
 		float falloff = FalloffDistance / (distance + FalloffDistance);
 		float massPull = Mathf.Lerp(1.0f, HeavyPullMultiplier, run?.MassNormalised ?? 0f);
-		float acceleration = BaseAcceleration * accelMultiplier * massPull * falloff
+		float acceleration = BaseAcceleration * AccelMultiplier * massPull * falloff
 			* EnemySpawner.SpeedScale;
 
-		drift += towards * acceleration * delta;
+		Vector2 drift = Drift + towards * acceleration * delta;
 		drift *= Mathf.Max(1.0f - Drag * delta, 0f);
 
-		float baseSpeed = EnemySpawner.CurrentSpeed * speedMultiplier;
+		float baseSpeed = EnemySpawner.CurrentSpeed * SpeedMultiplier;
 
 		// Far out, orbiting forever would just mean drifting off-screen, so a
 		// minimum closing speed is enforced. Inside that range the body is left
@@ -226,7 +211,67 @@ public partial class Enemy : CharacterBody2D
 				drift += towards * (minApproach - approach);
 		}
 
-		drift = drift.LimitLength(baseSpeed * MaxSpeedFactor);
+		Drift = drift.LimitLength(baseSpeed * MaxSpeedFactor);
+	}
+
+	/// <summary>Spawns another body of <paramref name="kind"/> with an outward push.</summary>
+	public void SpawnChild(BodyKind kind, Vector2 launch)
+	{
+		var manager = GameManager.Of(this);
+		if (manager == null)
+			return;
+
+		BodyScene ??= GD.Load<PackedScene>("res://scenes/enemy.tscn");
+
+		var child = BodyScene.Instantiate<Enemy>();
+		child.Configure(kind);
+		child.GlobalPosition = GlobalPosition;
+		child.Drift = Drift * 0.4f + launch;
+
+		// Splits happen inside a collision callback, and inserting a physics body
+		// while the server is flushing queries is an error. The add waits for idle.
+		Callable.From(() =>
+		{
+			if (IsInstanceValid(manager) && IsInstanceValid(child))
+				manager.AddEntity(child);
+			else
+				child.QueueFree();
+		}).CallDeferred();
+	}
+
+	/// <summary>Fires this body's own projectile at a point.</summary>
+	public void FireAt(Vector2 target)
+	{
+		if (BulletScene == null)
+			return;
+
+		var shot = BulletScene.Instantiate<Bullet>();
+		shot.GlobalPosition = GlobalPosition;
+		shot.Direction = (target - GlobalPosition).Normalized();
+		shot.Speed = BulletSpeed;
+		shot.MakeHostile();
+		GameManager.Spawn(this, shot);
+	}
+
+	/// <summary>
+	/// Blows up everything nearby, including the world. Chained bodies do not
+	/// score, so two Flares next to each other cannot cascade into free points.
+	/// </summary>
+	public void Detonate(float radius)
+	{
+		GameManager.Of(this)?.SpawnBlast(GlobalPosition, radius, BurstColor);
+
+		foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+		{
+			if (node is not Enemy other || other == this || !IsInstanceValid(other))
+				continue;
+
+			if (GlobalPosition.DistanceTo(other.GlobalPosition) <= radius)
+				other.TakeDamage(9999, (other.GlobalPosition - GlobalPosition).Normalized());
+		}
+
+		if (HasWorld && GlobalPosition.DistanceTo(world.GlobalPosition) <= radius)
+			(world as Player)?.KillByBlast();
 	}
 
 	// Bodies are falling, so they should point where they are going. Below a
@@ -241,6 +286,15 @@ public partial class Enemy : CharacterBody2D
 	/// <returns>True if this hit destroyed the body.</returns>
 	public bool TakeDamage(int amount, Vector2 impactDirection = default)
 	{
+		if (destroyed)
+			return false;
+
+		if (behaviour.Deflects(this, impactDirection))
+		{
+			FlashDeflect();
+			return false;
+		}
+
 		health -= amount;
 
 		if (health > 0)
@@ -250,6 +304,8 @@ public partial class Enemy : CharacterBody2D
 			return false;
 		}
 
+		destroyed = true;
+		behaviour.OnDestroyed(this);
 		QueueFree();
 		return true;
 	}
@@ -260,21 +316,30 @@ public partial class Enemy : CharacterBody2D
 	/// </summary>
 	private void FlashHit()
 	{
-		hitFlash?.Kill();
-		Modulate = Colors.White;
-
 		// Bodies with more health left flash back to tint faster; a nearly-dead
-		// tank lingers pale, which telegraphs the last hit.
+		// one lingers pale, which telegraphs the last hit.
 		float lingerFactor = 1.0f - (float)health / Mathf.Max(maxHealth, 1);
-		float duration = Mathf.Lerp(0.12f, 0.26f, lingerFactor);
+		Flash(Colors.White, Mathf.Lerp(0.12f, 0.26f, lingerFactor), 1.2f);
+	}
+
+	/// <summary>A bounce off armour has to look different from a wound.</summary>
+	private void FlashDeflect()
+	{
+		Flash(new Color(0.75f, 0.9f, 1.0f), 0.1f, 0.9f);
+	}
+
+	private void Flash(Color colour, float duration, float spritePunch)
+	{
+		hitFlash?.Kill();
+		Modulate = colour;
 
 		hitFlash = CreateTween().SetParallel();
-		hitFlash.TweenProperty(this, "modulate", baseTint, duration);
+		hitFlash.TweenProperty(this, "modulate", BaseTint, duration);
 
 		// Punch the sprite rather than the body, so the collision shape stays honest.
 		if (sprite != null)
 		{
-			sprite.Scale = spriteBaseScale * 1.2f;
+			sprite.Scale = spriteBaseScale * spritePunch;
 			hitFlash.TweenProperty(sprite, "scale", spriteBaseScale, 0.15f)
 				.SetTrans(Tween.TransitionType.Back)
 				.SetEase(Tween.EaseType.Out);

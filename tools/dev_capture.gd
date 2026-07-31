@@ -17,13 +17,13 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	# Death would change the scene out from under this node, and the interesting
-	# frames are late in an orbit, so contact damage is switched off for capture.
-	# Set GRIN_MORTAL=1 to leave it on and exercise the death and recap path.
-	var hitbox: Area2D = scene.get_node_or_null("player/HitBox")
-	if hitbox and OS.get_environment("GRIN_MORTAL") == "":
-		hitbox.monitoring = false
+	# frames are late in an orbit, so the world is made invulnerable for capture.
+	# Set GRIN_MORTAL=1 to leave it mortal and exercise the death and recap path.
+	var world: Node2D = scene.get_node_or_null("player")
+	if world and OS.get_environment("GRIN_MORTAL") == "":
+		world.set("Invulnerable", true)
 
-	_capture(hitbox != null)
+	_capture(world != null)
 
 func _capture(is_gameplay: bool) -> void:
 	var run_seconds := float(OS.get_environment("GRIN_RUN"))

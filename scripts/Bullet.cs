@@ -11,8 +11,24 @@ public partial class Bullet : Area2D
 
 	public Vector2 Direction { get; set; }
 
+	/// <summary>Danger telegraph from the style guide — reserved for "about to hurt you".</summary>
+	private static readonly Color HostileTint = new Color(1.0f, 0.30f, 0.30f);
+
 	private Line2D trail;
 	private bool hasHit = false;
+	private bool hostile = false;
+
+	/// <summary>
+	/// Turns this into a body's shot: it looks for the world instead of for
+	/// bodies, and is tinted the one colour the palette reserves for threats.
+	/// </summary>
+	public void MakeHostile()
+	{
+		hostile = true;
+		// Layer 1 is the player, layer 2 the bodies.
+		CollisionMask = 1;
+		Modulate = HostileTint;
+	}
 
 	public override void _Ready()
 	{
@@ -47,8 +63,24 @@ public partial class Bullet : Area2D
 
 	private void OnBodyEntered(Node2D body)
 	{
-		// Two enemies can overlap the bullet in the same frame; only the first counts.
-		if (hasHit || body is not Enemy enemy)
+		if (hasHit)
+			return;
+
+		if (hostile)
+		{
+			if (body is not Player world)
+				return;
+
+			hasHit = true;
+			SetDeferred(Area2D.PropertyName.Monitoring, false);
+			world.KillByBlast();
+			SpawnBurst(20, 0.6f, HostileTint, 0.6f);
+			QueueFree();
+			return;
+		}
+
+		// Two bodies can overlap the bullet in the same frame; only the first counts.
+		if (body is not Enemy enemy)
 			return;
 
 		hasHit = true;
