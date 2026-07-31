@@ -5,11 +5,17 @@ public partial class GameOver : Control
 	public static float SurvivalTimeToShow = 0f;
 	public static int KillsToShow = 0;
 	public static int BestComboToShow = 0;
+	public static int ScoreToShow = 0;
+	/// <summary>Mass at death, 0..1. Tells the player whether the risk dial got used.</summary>
+	public static float MassAtDeath = 0f;
+	/// <summary>Moons still held when the orbit ended — whether going heavy paid.</summary>
+	public static int MoonsAtDeath = 0;
 	public static bool IsNewBestTime = false;
+	public static bool IsNewBestScore = false;
 
 	private TextureButton restartButton;
 	private TextureButton menuButton;
-	private Label survivalTimeLabel;
+	private Label scoreLabel;
 	private Label statsLabel;
 	private Label highScoreLabel;
 	private AudioStreamPlayer buttonSound;
@@ -18,7 +24,7 @@ public partial class GameOver : Control
 
 	public override void _Ready()
 	{
-		survivalTimeLabel = GetNode<Label>("Recap/SurvivalTimeLabel");
+		scoreLabel = GetNode<Label>("Recap/ScoreLabel");
 		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
 		restartButton = GetNode<TextureButton>("GameOverMenu/RestartButton");
@@ -41,17 +47,29 @@ public partial class GameOver : Control
 
 	private void ShowRecap()
 	{
-		survivalTimeLabel.Text = $"You Survived: {ScoreManager.FormatTime(SurvivalTimeToShow)}";
+		scoreLabel.Text = $"{ScoreToShow:N0}";
 
 		if (statsLabel != null)
-			statsLabel.Text = $"KILLS: {KillsToShow}     BEST STREAK: x{BestComboToShow}";
+		{
+			// Mass at death is on the recap deliberately: it is the one number
+			// that says whether the risk dial was used at all.
+			statsLabel.Text =
+				$"{ScoreManager.FormatTime(SurvivalTimeToShow)}     KILLS: {KillsToShow}     " +
+				$"STREAK: x{BestComboToShow}     MASS: {Mathf.RoundToInt(MassAtDeath * 100)}%     " +
+				$"MOONS: {MoonsAtDeath}";
+		}
 
 		if (highScoreLabel == null)
 			return;
 
-		if (IsNewBestTime)
+		if (IsNewBestScore)
 		{
-			highScoreLabel.Text = "NEW BEST TIME!";
+			highScoreLabel.Text = "NEW BEST!";
+			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
+		}
+		else if (IsNewBestTime)
+		{
+			highScoreLabel.Text = "LONGEST ORBIT YET!";
 			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
 		}
 		else

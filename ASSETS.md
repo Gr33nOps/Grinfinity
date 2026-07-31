@@ -135,22 +135,26 @@ shader's uniforms — `nebula_strength`, `star_cell`, `star_scroll`,
 
 ### M2 — Gravity spine
 
-**Art (6)**
+**Art (4)** — debris ships as a `Polygon2D` chunk, so these are upgrades.
 - [ ] `debris_a.png` / `debris_b.png` / `debris_c.png` — 24×24, three chunk shapes
+      *(one shared polygon today, tinted by whatever body shed it)*
 - [ ] `absorb_flash.png` — 64×64, brief ring on absorbing debris
 - [ ] `pull_ring.png` — 512×512, faint hollow circle marking your pull radius,
       scaled by mass in code
-- [ ] `mass_ring_segment.png` — 256×256 arc, optional; the meter can be drawn
-      in-engine instead — **try `draw_arc()` first and skip this if it works**
+- ~~`mass_ring_segment.png`~~ **Cut** — `draw_arc()` worked, as suspected.
 
-**Rings and moons (7)** — the diegetic mass display and its payoff.
-- [ ] `world_ring_1.png` / `world_ring_2.png` / `world_ring_3.png` — 512×160,
-      three tiers of planetary ring that appear on the player as mass grows.
-      Drawn flat and slightly elliptical so they read as rings at a glance.
+**Rings and moons** — built, and mostly without art.
+- ~~`world_ring_1/2/3.png`~~ **Cut.** `WorldRings` draws all three tiers in
+  `_Draw`, split into a far half behind the sprite and a near half in front so
+  they read as rings around a body rather than circles painted on one. Tune via
+  `InnerRadius`, `RadiusStep`, `Flatten`, `Tilt` and `SweepSpeed`.
+- Moons are placeholder `Polygon2D` discs in `scenes/moon.tscn`. These are the
+  ones actually worth drawing:
 - [ ] `moon_small.png` — 64×64, orbits the player at low mass tiers
 - [ ] `moon_large.png` — 96×96, higher tier
 - [ ] `moon_break.png` — 96×96, cracked variant for the frame it detaches
 - [ ] `moon_shot.png` — 24×24, the moon's own projectile
+      *(moons currently fire the standard bullet)*
 
 **Audio (4)**
 - [ ] `debris_absorb.ogg` — very short tick, pitched up by streak in code

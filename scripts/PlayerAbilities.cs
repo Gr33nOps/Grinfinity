@@ -10,6 +10,7 @@ public class PlayerAbilities
 
 	private float dashTimer = 0.0f;
 	private float dashTimeLeft = 0.0f;
+	private float dashCooldownLength = 1.0f;
 	private bool isDashing = false;
 	private Vector2 dashDirection = Vector2.Zero;
 
@@ -72,6 +73,11 @@ public class PlayerAbilities
 
 		if (Input.IsActionJustPressed("rapid_fire") && rapidFireTimer <= 0 && !isRapidFiring)
 			StartRapidFire();
+
+		// Nova has no cooldown of its own — mass *is* its cost, which is what
+		// makes spending it a decision rather than a timer.
+		if (Input.IsActionJustPressed("nova"))
+			player.TryNova();
 	}
 
 	private void StartDash()
@@ -89,7 +95,10 @@ public class PlayerAbilities
 		dashDirection = inputDirection;
 		isDashing = true;
 		dashTimeLeft = player.DashDuration;
-		dashTimer = player.DashCooldown;
+		// Read once at the start, so the icon does not jump around as mass moves.
+		dashCooldownLength = player.CurrentDashCooldown;
+		dashTimer = dashCooldownLength;
+		player.VentForDash();
 		player.CreateDashEffect();
 	}
 
@@ -129,7 +138,7 @@ public class PlayerAbilities
 
 	public float GetDashCooldownPercent()
 	{
-		return Mathf.Clamp(1.0f - (dashTimer / player.DashCooldown), 0.0f, 1.0f);
+		return Mathf.Clamp(1.0f - (dashTimer / Mathf.Max(dashCooldownLength, 0.001f)), 0.0f, 1.0f);
 	}
 
 	public float GetRapidFireCooldownPercent()

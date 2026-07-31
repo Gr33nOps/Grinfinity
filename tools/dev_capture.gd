@@ -18,8 +18,9 @@ func _ready() -> void:
 
 	# Death would change the scene out from under this node, and the interesting
 	# frames are late in an orbit, so contact damage is switched off for capture.
+	# Set GRIN_MORTAL=1 to leave it on and exercise the death and recap path.
 	var hitbox: Area2D = scene.get_node_or_null("player/HitBox")
-	if hitbox:
+	if hitbox and OS.get_environment("GRIN_MORTAL") == "":
 		hitbox.monitoring = false
 
 	_capture(hitbox != null)
@@ -37,11 +38,59 @@ func _capture(is_gameplay: bool) -> void:
 	var elapsed := 0.0
 	while elapsed < run_seconds:
 		if is_gameplay:
-			# Sweep the aim so kills happen all around, not down one lane.
-			var angle := elapsed * 1.1
-			Input.warp_mouse(Vector2(1280.0, 700.0) + Vector2(cos(angle), sin(angle)) * 520.0)
+			# Standing still lets gravity stack every body on top of the world,
+			# where they sit inside the muzzle offset and never get shot. Keep
+			# moving, and aim at whatever is closest.
+			_drive(elapsed)
+			_aim_at_nearest()
+			# Cash mass out now and then, so nova and venting get exercised.
+			if fmod(elapsed, 12.0) < 0.05:
+				Input.action_press("nova")
+			else:
+				Input.action_release("nova")
 		await get_tree().create_timer(0.05).timeout
 		elapsed += 0.05
+
+	_release_all()
+
+
+func _drive(elapsed: float) -> void:
+	var heading := Vector2.from_angle(elapsed * 0.7)
+	_axis("left", "right", heading.x)
+	_axis("up", "down", heading.y)
+
+
+func _axis(negative: String, positive: String, value: float) -> void:
+	Input.action_release(negative)
+	Input.action_release(positive)
+	if value > 0.3:
+		Input.action_press(positive)
+	elif value < -0.3:
+		Input.action_press(negative)
+
+
+func _aim_at_nearest() -> void:
+	var world: Node2D = get_tree().get_first_node_in_group("game_manager").get_node_or_null("player")
+	if world == null:
+		return
+
+	var best: Node2D = null
+	var best_distance := INF
+	for body in get_tree().get_nodes_in_group("enemies"):
+		var distance: float = world.global_position.distance_squared_to(body.global_position)
+		if distance < best_distance:
+			best_distance = distance
+			best = body
+
+	if best == null:
+		return
+
+	Input.warp_mouse(get_viewport().get_screen_transform() * best.global_position)
+
+
+func _release_all() -> void:
+	for action in ["shoot", "left", "right", "up", "down"]:
+		Input.action_release(action)
 
 	await RenderingServer.frame_post_draw
 	var image: Image = get_viewport().get_texture().get_image()

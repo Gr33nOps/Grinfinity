@@ -54,6 +54,21 @@ theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 75
 text = "BEST: 00:00"
 
+[node name="RunScoreLabel" type="Label" parent="UI"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -320.0
+offset_top = 116.0
+offset_right = 320.0
+offset_bottom = 168.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 40
+text = "0   x1.0"
+horizontal_alignment = 1
+
 [node name="KillsLabel" type="Label" parent="UI"]
 anchors_preset = 0
 offset_left = 30.0
@@ -70,9 +85,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -320.0
-offset_top = 120.0
+offset_top = 186.0
 offset_right = 320.0
-offset_bottom = 196.0
+offset_bottom = 262.0
 grow_horizontal = 2
 pivot_offset = Vector2(320, 38)
 theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
@@ -207,6 +222,12 @@ bus = &"SFX"
 stream = ExtResource("22_37s47")
 volume_db = -7.0
 pitch_scale = 1.45
+bus = &"SFX"
+
+[node name="AbsorbSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("22_37s47")
+volume_db = -24.0
+pitch_scale = 1.9
 bus = &"SFX"
 
 [node name="ButtonSound" type="AudioStreamPlayer" parent="."]

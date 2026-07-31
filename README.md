@@ -2,7 +2,14 @@
 
 A top-down twin-stick survival shooter built with **Godot 4.4** and **C#**.
 
-Survive as long as you can while enemies spawn faster and get quicker over time. Aim with the mouse, move with WASD, and use dash / rapid-fire abilities to stay alive.
+You are a small, cheerful planet with a gun. Your gravity is why they come.
+
+Bodies do not chase you — they *fall* toward you, gain momentum, overshoot and
+clump. Every one you destroy sheds debris your gravity drags back in, and
+absorbing it makes you heavier. Mass is the risk dial and the score multiplier at
+the same time: heavy means a wider pull, visible rings, moons that orbit and
+shoot for you, and a fatter multiplier — paid for with a bigger hitbox, slower
+movement and a longer dash cooldown. Spend it with a nova, or ride it.
 
 ## Controls
 
@@ -13,6 +20,7 @@ Survive as long as you can while enemies spawn faster and get quicker over time.
 | Shoot | Left mouse / `Space` | Right trigger |
 | Dash | `Shift` | B |
 | Rapid fire | `E` | X |
+| Nova (spends mass) | `R` | Y |
 | Pause | `Esc` | Start |
 | Toggle fullscreen | `F11` | — |
 
@@ -21,8 +29,11 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 
 ## Features
 
-- Survival timer, kill count and streak counter, all saved as personal bests
-- Death recap: time survived, kills, best streak, and a new-record callout
+- Gravity, not pathfinding: bodies orbit, overshoot, clump and slingshot
+- Mass as a single risk-and-reward dial — rings, moons, venting and a live
+  score multiplier all read from it
+- Score, survival timer, kill count and streak counter, saved as personal bests
+- Death recap: score, time, kills, best streak, mass at death and moons held
 - Three enemy types that unlock as a run goes on:
   - **Chaser** — the baseline, walks straight at you
   - **Swarmer** — small and fast, arrives in packs (from 20s)

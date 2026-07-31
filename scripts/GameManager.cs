@@ -12,8 +12,14 @@ public partial class GameManager : Node2D
 	[Export] public float HeavyKillTrauma { get; set; } = 0.42f;
 	[Export] public float DeathTrauma { get; set; } = 1.0f;
 
+	[ExportGroup("Gravity")]
+	[Export] public PackedScene DebrisScene { get; set; }
+	[Export] public PackedScene BurstScene { get; set; }
+	/// <summary>Ceiling on live motes, so a wipe cannot flood the arena.</summary>
+	[Export] public int MaxDebris { get; set; } = 220;
+
 	private PauseMenu pauseMenu;
-	private ScoreManager scoreManager;
+	private RunState run;
 	private EnemySpawner enemySpawner;
 	private UIManager uiManager;
 	private PlayerManager playerManager;
@@ -21,6 +27,7 @@ public partial class GameManager : Node2D
 	private Node2D entities;
 	private AudioStreamPlayer killSound;
 	private AudioStreamPlayer streakSound;
+	private AudioStreamPlayer absorbSound;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
 	private bool isPaused = false;
@@ -32,14 +39,23 @@ public partial class GameManager : Node2D
 
 	public bool IsPaused => isPaused;
 
+	/// <summary>The live orbit: time, kills, streak, mass, moons and score.</summary>
+	public RunState Run => run;
+
 	/// <summary>Seconds survived so far. Read by the music layer and the spawner.</summary>
-	public float RunTime => scoreManager?.GetSurvivalTime() ?? 0f;
+	public float RunTime => run?.SurvivalTime ?? 0f;
+
+	// _EnterTree runs top-down, _Ready bottom-up. The player and everything under
+	// it read mass during their own _Ready, which is *before* this node's, so the
+	// group registration and RunState have to be in place by here.
+	public override void _EnterTree()
+	{
+		AddToGroup("game_manager");
+		run = AddPausableChild(new RunState());
+	}
 
 	public override void _Ready()
 	{
-		// Must be in the group before the child managers run their own _Ready,
-		// since they look the manager up by group.
-		AddToGroup("game_manager");
 		SetupComponents();
 		ConnectSignals();
 	}
@@ -57,10 +73,13 @@ public partial class GameManager : Node2D
 		gameCamera = GetNodeOrNull<GameCamera>("GameCamera");
 		killSound = GetNode<AudioStreamPlayer>("KillSound");
 		streakSound = GetNodeOrNull<AudioStreamPlayer>("StreakSound");
+		absorbSound = GetNodeOrNull<AudioStreamPlayer>("AbsorbSound");
 		buttonSound = GetNode<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNode<AudioStreamPlayer>("HoverSound");
 
-		scoreManager = AddPausableChild(new ScoreManager());
+		DebrisScene ??= GD.Load<PackedScene>("res://scenes/debris.tscn");
+		BurstScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
+
 		enemySpawner = AddPausableChild(new EnemySpawner());
 		uiManager = AddPausableChild(new UIManager());
 		playerManager = AddPausableChild(new PlayerManager());
@@ -79,7 +98,7 @@ public partial class GameManager : Node2D
 	{
 		pauseMenu.ResumeGame += OnResumeGame;
 		pauseMenu.GiveUpGame += OnGiveUpGame;
-		scoreManager.StreakMilestone += OnStreakMilestone;
+		run.StreakChanged += OnStreakChanged;
 	}
 
 	/// <summary>Parents runtime-spawned nodes under the pausable entity container.</summary>
@@ -206,14 +225,21 @@ public partial class GameManager : Node2D
 		// The transition runs on an AnimationPlayer, which obeys Engine.TimeScale.
 		EndHitstop();
 
-		float score = scoreManager.GetSurvivalTime();
-		int runKills = scoreManager.GetKills();
-		int runCombo = scoreManager.GetBestCombo();
+		// Snapshot first: clearing the tiers below would zero the moon count the
+		// recap is meant to report.
+		GameOver.SurvivalTimeToShow = run.SurvivalTime;
+		GameOver.KillsToShow = run.Kills;
+		GameOver.BestComboToShow = run.BestStreak;
+		GameOver.ScoreToShow = run.Score;
+		GameOver.MassAtDeath = run.MassNormalised;
+		GameOver.MoonsAtDeath = run.Moons;
 
-		GameOver.SurvivalTimeToShow = score;
-		GameOver.KillsToShow = runKills;
-		GameOver.BestComboToShow = runCombo;
-		GameOver.IsNewBestTime = ScoreManager.SaveRun(score, runKills, runCombo);
+		// Every moon breaks away with the world that held them.
+		run.ClearTiers();
+
+		var records = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak, run.Score);
+		GameOver.IsNewBestScore = records.NewBestScore;
+		GameOver.IsNewBestTime = records.NewBestTime;
 
 		SceneTransition.Instance.ChangeScene("res://scenes/gameOver.tscn");
 	}
@@ -241,17 +267,87 @@ public partial class GameManager : Node2D
 	}
 
 	/// <summary>
-	/// Called by bullets when they destroy a body. Owns the whole kill payoff:
-	/// score, sound, freeze and shake, so the weighting stays in one place.
+	/// Called by bullets when they destroy a body. Owns the whole kill payoff —
+	/// score, debris, sound, freeze and shake — so the weighting stays in one place.
 	/// </summary>
-	public void RegisterKill(EnemyKind kind)
+	/// <param name="shedDebris">
+	/// False for a nova, whose kills are already paid for in mass. Refunding that
+	/// mass as debris would make the ability free.
+	/// </param>
+	public void RegisterKill(in Enemy.Remains remains, Vector2 at, bool shedDebris = true)
 	{
-		bool heavy = kind == EnemyKind.Tank;
+		bool heavy = remains.Kind == EnemyKind.Tank;
 
-		scoreManager?.AddKill();
+		run?.AddKill();
+
+		if (shedDebris)
+			ShedDebris(remains, at);
+
 		PlayKillSound(heavy);
 		Hitstop(heavy ? HeavyKillHitstop : LightKillHitstop);
 		Shake(heavy ? HeavyKillTrauma : LightKillTrauma);
+	}
+
+	/// <summary>Draws the nova shockwave and its burst. The damage is the player's job.</summary>
+	public void SpawnNova(Vector2 at, float radius)
+	{
+		var wave = new NovaWave { MaxRadius = radius };
+		wave.GlobalPosition = at;
+		AddEntity(wave);
+
+		if (BurstScene == null)
+			return;
+
+		var burst = BurstScene.Instantiate<CpuParticles2D>();
+		burst.GlobalPosition = at;
+		burst.Amount = 220;
+		burst.Scale = new Vector2(3.2f, 3.2f);
+		burst.Color = new Color(1f, 0.86f, 0.5f);
+		burst.Lifetime = 0.8f;
+		burst.Emitting = true;
+		burst.Finished += burst.QueueFree;
+		AddEntity(burst);
+	}
+
+	/// <summary>
+	/// Scatters the motes a dead body leaves behind. Gravity does the rest — the
+	/// player's own pull is what turns them into mass.
+	/// </summary>
+	private void ShedDebris(in Enemy.Remains remains, Vector2 at)
+	{
+		if (DebrisScene == null || remains.DebrisCount <= 0)
+			return;
+
+		int budget = MaxDebris - GetTree().GetNodeCountInGroup("debris");
+		int count = Mathf.Min(remains.DebrisCount, budget);
+
+		for (int i = 0; i < count; i++)
+		{
+			var mote = DebrisScene.Instantiate<Debris>();
+			mote.GlobalPosition = at;
+			mote.Modulate = remains.BurstColor;
+			mote.AddToGroup("debris");
+			AddEntity(mote);
+		}
+	}
+
+	/// <summary>A mote reaching the world. Tiny by design: this fires constantly.</summary>
+	public void PlayAbsorbTick()
+	{
+		if (absorbSound == null)
+			return;
+
+		absorbSound.PitchScale = (float)GD.RandRange(1.6, 2.1);
+		absorbSound.Play();
+	}
+
+	/// <summary>A moon took a hit meant for the world, and breaks away with the mass that earned it.</summary>
+	public void OnMoonBlocked(Vector2 at)
+	{
+		run?.BreakMoon();
+		Hitstop(HeavyKillHitstop);
+		Shake(HeavyKillTrauma);
+		PlayKillSound(true);
 	}
 
 	private void OnResumeGame()
@@ -280,13 +376,13 @@ public partial class GameManager : Node2D
 		killSound.Play();
 	}
 
-	private void OnStreakMilestone(int combo)
+	private void OnStreakChanged(int streak, bool milestone)
 	{
-		if (streakSound == null)
+		if (!milestone || streakSound == null)
 			return;
 
 		// Each milestone lands a step higher, capped so it stays musical.
-		float step = combo >= 25 ? 2.0f : combo >= 10 ? 1.7f : 1.45f;
+		float step = streak >= 25 ? 2.0f : streak >= 10 ? 1.7f : 1.45f;
 		streakSound.PitchScale = step;
 		streakSound.Play();
 

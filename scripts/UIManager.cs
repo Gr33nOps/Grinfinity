@@ -1,13 +1,28 @@
 using Godot;
 
+/// <summary>
+/// Everything the HUD draws, read from <see cref="RunState"/>. The run itself
+/// owns no labels — it raises signals and this decides how loud they look.
+/// </summary>
 public partial class UIManager : Node
 {
+	/// <summary>Resting streak colour — the UI accent from the style guide.</summary>
+	private static readonly Color StreakIdle = new Color(1.0f, 0.72f, 0.32f);
+	private static readonly Color StreakFlash = Colors.White;
+
 	private Sprite2D crosshair;
 	private Sprite2D dashIcon;
 	private Sprite2D rapidFireIcon;
 	private Label dashKeyLabel;
 	private Label rapidFireKeyLabel;
+	private Label timeLabel;
+	private Label bestLabel;
+	private Label killsLabel;
+	private Label streakLabel;
+	private Label scoreLabel;
 	private Player player;
+	private RunState run;
+	private Tween streakPop;
 
 	public override void _Ready()
 	{
@@ -19,10 +34,41 @@ public partial class UIManager : Node
 		rapidFireIcon = gameRoot?.GetNodeOrNull<Sprite2D>("UI/rapid_fire");
 		dashKeyLabel = gameRoot?.GetNodeOrNull<Label>("UI/DashKey");
 		rapidFireKeyLabel = gameRoot?.GetNodeOrNull<Label>("UI/RapidFireKey");
+		timeLabel = gameRoot?.GetNodeOrNull<Label>("UI/ScoreLabel");
+		bestLabel = gameRoot?.GetNodeOrNull<Label>("UI/HighScoreLabel");
+		killsLabel = gameRoot?.GetNodeOrNull<Label>("UI/KillsLabel");
+		streakLabel = gameRoot?.GetNodeOrNull<Label>("UI/ComboLabel");
+		scoreLabel = gameRoot?.GetNodeOrNull<Label>("UI/RunScoreLabel");
 		player = gameRoot?.GetNodeOrNull<Player>("player");
+		run = GameManager.Of(this)?.Run;
+
+		// The best score cannot change mid-orbit, so it only needs writing once.
+		if (bestLabel != null)
+			bestLabel.Text = ScoreManager.GetFormattedHighScore();
+
+		// Scale tweens have to grow from the middle of the banner, not its corner.
+		if (streakLabel != null)
+			streakLabel.PivotOffset = streakLabel.Size * 0.5f;
+
+		if (run != null)
+		{
+			run.KillsChanged += OnKillsChanged;
+			run.StreakChanged += OnStreakChanged;
+			OnKillsChanged(run.Kills);
+			OnStreakChanged(run.Streak, false);
+		}
 
 		RefreshKeyLabels();
 		HideCursor();
+	}
+
+	public override void _ExitTree()
+	{
+		if (run == null || !IsInstanceValid(run))
+			return;
+
+		run.KillsChanged -= OnKillsChanged;
+		run.StreakChanged -= OnStreakChanged;
 	}
 
 	/// <summary>
@@ -56,6 +102,69 @@ public partial class UIManager : Node
 			crosshair.GlobalPosition = GetViewport().CanvasTransform * player.AimPosition;
 
 		UpdateAbilityIcons();
+		UpdateRunLabels();
+	}
+
+	private void UpdateRunLabels()
+	{
+		if (run == null)
+			return;
+
+		if (timeLabel != null)
+			timeLabel.Text = ScoreManager.FormatTime(run.SurvivalTime);
+
+		// The live multiplier sits next to the score, because it is the only
+		// place the player can see what carrying mass is actually buying them.
+		if (scoreLabel != null)
+			scoreLabel.Text = $"{run.Score:N0}   x{run.ScoreMultiplier:0.0}";
+	}
+
+	private void OnKillsChanged(int kills)
+	{
+		if (killsLabel != null)
+			killsLabel.Text = $"KILLS: {kills}";
+	}
+
+	private void OnStreakChanged(int streak, bool milestone)
+	{
+		if (streakLabel == null)
+			return;
+
+		// A streak of one is just a kill; only shout about actual chains.
+		bool wasVisible = streakLabel.Visible;
+		streakLabel.Visible = streak >= 2;
+		streakLabel.Text = $"x{streak} STREAK";
+
+		if (!streakLabel.Visible)
+		{
+			if (wasVisible)
+				ResetStreakBanner();
+			return;
+		}
+
+		// A milestone gets a much bigger punch so it reads without being counted.
+		PopStreak(milestone ? 1.85f : 1.26f);
+	}
+
+	private void ResetStreakBanner()
+	{
+		streakPop?.Kill();
+		streakLabel.Scale = Vector2.One;
+		streakLabel.AddThemeColorOverride("font_color", StreakIdle);
+	}
+
+	/// <summary>Scale-and-flash punch on the streak banner, restarted on every kill.</summary>
+	private void PopStreak(float scale)
+	{
+		streakPop?.Kill();
+		streakLabel.Scale = new Vector2(scale, scale);
+		streakLabel.AddThemeColorOverride("font_color", StreakFlash);
+
+		streakPop = CreateTween().SetParallel();
+		streakPop.TweenProperty(streakLabel, "scale", Vector2.One, 0.24f)
+			.SetTrans(Tween.TransitionType.Back)
+			.SetEase(Tween.EaseType.Out);
+		streakPop.TweenProperty(streakLabel, "theme_override_colors/font_color", StreakIdle, 0.3f);
 	}
 
 	private void UpdateAbilityIcons()

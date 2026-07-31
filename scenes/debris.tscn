@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1grindebris01"]
+
+[ext_resource type="Script" path="res://scripts/Debris.cs" id="1_debris"]
+
+[node name="Debris" type="Node2D"]
+scale = Vector2(1.6, 1.6)
+script = ExtResource("1_debris")
+
+[node name="Chunk" type="Polygon2D" parent="."]
+color = Color(1, 1, 1, 1)
+polygon = PackedVector2Array(-8, -4, -3, -9, 5, -8, 9, -1, 6, 7, -2, 9, -8, 4)
+
+[node name="Glint" type="Polygon2D" parent="."]
+position = Vector2(-1.5, -2)
+scale = Vector2(0.42, 0.42)
+color = Color(1, 1, 1, 0.55)
+polygon = PackedVector2Array(-8, -4, -3, -9, 5, -8, 9, -1, 6, 7, -2, 9, -8, 4)

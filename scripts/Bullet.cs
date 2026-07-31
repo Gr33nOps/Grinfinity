@@ -55,16 +55,13 @@ public partial class Bullet : Area2D
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
 
 		// Captured before the hit, because a lethal one queues the body for free.
-		EnemyKind kind = enemy.Kind;
-		int burstAmount = enemy.BurstAmount;
-		float burstScale = enemy.BurstScale;
-		Color burstColor = enemy.BurstColor;
+		Enemy.Remains remains = enemy.GetRemains();
 
 		// Tanks survive several hits, so the kill only scores when it lands.
 		if (enemy.TakeDamage(Damage, Direction))
 		{
-			GameManager.Of(this)?.RegisterKill(kind);
-			SpawnBurst(burstAmount, burstScale, burstColor, 1.0f);
+			GameManager.Of(this)?.RegisterKill(remains, GlobalPosition);
+			SpawnBurst(remains.BurstAmount, remains.BurstScale, remains.BurstColor, 1.0f);
 		}
 		else
 		{

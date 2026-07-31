@@ -22,6 +22,24 @@ public partial class Player : CharacterBody2D
 	[Export] public float DashTrauma { get; set; } = 0.14f;
 	[Export] public float MuzzleFlashTime { get; set; } = 0.055f;
 
+	[ExportGroup("Mass")]
+	// The risk dial. Heavy is slower, bigger and slower to dash — paid for by a
+	// wider pull, a fatter multiplier and moons.
+	/// <summary>Move speed multiplier at full mass.</summary>
+	[Export] public float HeavyMoveScale { get; set; } = 0.74f;
+	/// <summary>Dash cooldown multiplier at full mass.</summary>
+	[Export] public float HeavyDashCooldown { get; set; } = 1.55f;
+	/// <summary>Body scale at full mass. A bigger world is a bigger target.</summary>
+	[Export] public float HeavyBodyScale { get; set; } = 1.32f;
+	/// <summary>Mass spent by a dash.</summary>
+	[Export] public float DashVent { get; set; } = 4.0f;
+
+	[ExportGroup("Nova")]
+	/// <summary>Mass spent by a nova. Deliberately steep — it is the big cash-out.</summary>
+	[Export] public float NovaVent { get; set; } = 35.0f;
+	[Export] public float NovaRadius { get; set; } = 520.0f;
+	[Export] public float NovaTrauma { get; set; } = 0.85f;
+
 	// How far in front of the player the gamepad aim point sits.
 	private const float GamepadAimDistance = 400.0f;
 	private const float StickDeadzoneSq = 0.0625f;
@@ -33,6 +51,8 @@ public partial class Player : CharacterBody2D
 	private AudioStreamPlayer2D shootSound;
 	private Area2D hitBox;
 	private PlayerAbilities abilities;
+	private RunState run;
+	private Vector2 baseScale = Vector2.One;
 	private Vector2 lastMousePosition;
 	private Vector2 gamepadAimDirection = Vector2.Right;
 	private bool usingGamepadAim = false;
@@ -40,6 +60,15 @@ public partial class Player : CharacterBody2D
 
 	/// <summary>World-space point the player is currently aiming at.</summary>
 	public Vector2 AimPosition { get; private set; }
+
+	/// <summary>Mass as 0..1, or 0 outside a run. Everything mass-scaled reads this.</summary>
+	public float MassNormalised => run?.MassNormalised ?? 0f;
+
+	/// <summary>Move speed after the weight of the world is taken off it.</summary>
+	public float CurrentMoveSpeed => MoveSpeed * Mathf.Lerp(1.0f, HeavyMoveScale, MassNormalised);
+
+	/// <summary>Dash cooldown after mass has lengthened it.</summary>
+	public float CurrentDashCooldown => DashCooldown * Mathf.Lerp(1.0f, HeavyDashCooldown, MassNormalised);
 
 	public override void _Ready()
 	{
@@ -54,6 +83,9 @@ public partial class Player : CharacterBody2D
 		muzzleFlash = shootyPart.GetNodeOrNull<Node2D>("MuzzleFlash");
 		if (muzzleFlash != null)
 			muzzleFlash.Visible = false;
+
+		baseScale = Scale;
+		run = GameManager.Of(this)?.Run;
 
 		hitBox = GetNodeOrNull<Area2D>("HitBox");
 		if (hitBox != null)
@@ -75,6 +107,59 @@ public partial class Player : CharacterBody2D
 		UpdatePlayer(AimPosition, delta);
 		MoveAndSlide();
 		StayOnScreen();
+		FollowMass(delta);
+	}
+
+	/// <summary>
+	/// A heavier world is a physically bigger one, and therefore an easier
+	/// target. Chased rather than tweened, because absorbing debris changes mass
+	/// several times a second and competing tweens would stutter.
+	/// </summary>
+	private void FollowMass(double delta)
+	{
+		Vector2 target = baseScale * Mathf.Lerp(1.0f, HeavyBodyScale, MassNormalised);
+		Scale = Scale.Lerp(target, 1f - Mathf.Exp(-6f * (float)delta));
+	}
+
+	/// <summary>Spends mass on a dash. Dashing with nothing to vent is still allowed.</summary>
+	public void VentForDash()
+	{
+		run?.Vent(DashVent);
+	}
+
+	/// <summary>
+	/// Cashes a large slice of mass in for a radial wipe. This is the choice the
+	/// whole mass system exists to offer: stay heavy and dangerous, or spend it.
+	/// </summary>
+	/// <returns>False if there was not enough mass, and nothing happened.</returns>
+	public bool TryNova()
+	{
+		if (run == null || !run.Vent(NovaVent))
+			return false;
+
+		var manager = GameManager.Of(this);
+
+		foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+		{
+			if (node is not Enemy body)
+				continue;
+
+			if (GlobalPosition.DistanceTo(body.GlobalPosition) > NovaRadius)
+				continue;
+
+			Enemy.Remains remains = body.GetRemains();
+			Vector2 outward = (body.GlobalPosition - GlobalPosition).Normalized();
+
+			// The mass is already spent on the blast, so these kills score but
+			// shed nothing — a nova must not refund itself.
+			if (body.TakeDamage(9999, outward))
+				manager?.RegisterKill(remains, body.GlobalPosition, shedDebris: false);
+		}
+
+		manager?.SpawnNova(GlobalPosition, NovaRadius);
+		manager?.Hitstop(0.12f);
+		manager?.Shake(NovaTrauma);
+		return true;
 	}
 
 	/// <summary>
@@ -128,7 +213,7 @@ public partial class Player : CharacterBody2D
 		Vector2 targetVelocity = new Vector2(
 			Input.GetAxis("left", "right"),
 			Input.GetAxis("up", "down")
-		) * MoveSpeed;
+		) * CurrentMoveSpeed;
 
 		float t = 1f - Mathf.Exp(-MoveSmoothing * (float)delta);
 		Velocity = Velocity.Lerp(targetVelocity, t);

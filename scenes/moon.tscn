@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://c1grinmoon0001"]
+
+[ext_resource type="Script" path="res://scripts/Moon.cs" id="1_moon"]
+[ext_resource type="PackedScene" uid="uid://bw0u5kimoedt1" path="res://scenes/bullet.tscn" id="2_bullet"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_moon"]
+radius = 26.0
+
+[node name="Moon" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_moon")
+BulletScene = ExtResource("2_bullet")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_moon")
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.85, 0.88, 0.96, 1)
+polygon = PackedVector2Array(26, 0, 22.5, 13, 13, 22.5, 0, 26, -13, 22.5, -22.5, 13, -26, 0, -22.5, -13, -13, -22.5, 0, -26, 13, -22.5, 22.5, -13)
+
+[node name="Crater" type="Polygon2D" parent="."]
+position = Vector2(-7, -6)
+scale = Vector2(0.3, 0.3)
+color = Color(0.66, 0.7, 0.82, 1)
+polygon = PackedVector2Array(26, 0, 22.5, 13, 13, 22.5, 0, 26, -13, 22.5, -22.5, 13, -26, 0, -22.5, -13, -13, -22.5, 0, -26, 13, -22.5, 22.5, -13)
+
+[node name="Crater2" type="Polygon2D" parent="."]
+position = Vector2(8, 7)
+scale = Vector2(0.22, 0.22)
+color = Color(0.66, 0.7, 0.82, 1)
+polygon = PackedVector2Array(26, 0, 22.5, 13, 13, 22.5, 0, 26, -13, 22.5, -22.5, 13, -26, 0, -22.5, -13, -13, -22.5, 0, -26, 13, -22.5, 22.5, -13)

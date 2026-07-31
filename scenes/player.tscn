@@ -1,10 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://bcmipct1fe830"]
+[gd_scene load_steps=10 format=3 uid="uid://bcmipct1fe830"]
 
 [ext_resource type="Script" uid="uid://bj2ub38457ksw" path="res://scripts/Player.cs" id="1_3vyb7"]
 [ext_resource type="Texture2D" uid="uid://50b437dwilfi" path="res://sprites/player 1.png" id="2_dqkch"]
 [ext_resource type="AudioStream" uid="uid://c8a1w30h1aujo" path="res://sounds/shoot.ogg" id="4_dqkch"]
 [ext_resource type="PackedScene" uid="uid://bw0u5kimoedt1" path="res://scenes/bullet.tscn" id="5_bullet"]
 [ext_resource type="PackedScene" uid="uid://bqbrm25rh4kjc" path="res://scenes/explosion.tscn" id="6_expl"]
+[ext_resource type="Script" path="res://scripts/WorldRings.cs" id="7_rings"]
+[ext_resource type="Script" path="res://scripts/MoonRing.cs" id="8_moons"]
+[ext_resource type="PackedScene" uid="uid://c1grinmoon0001" path="res://scenes/moon.tscn" id="9_moon"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 25.0
@@ -27,11 +30,25 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
 shape = SubResource("CircleShape2D_player")
 
+[node name="RingsFar" type="Node2D" parent="."]
+z_index = -1
+script = ExtResource("7_rings")
+NearHalf = false
+
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(10, -7.5)
 scale = Vector2(0.273333, 0.273333)
 texture = ExtResource("2_dqkch")
 flip_h = true
+
+[node name="RingsNear" type="Node2D" parent="."]
+z_index = 1
+script = ExtResource("7_rings")
+NearHalf = true
+
+[node name="MoonRing" type="Node2D" parent="."]
+script = ExtResource("8_moons")
+MoonScene = ExtResource("9_moon")
 
 [node name="shootyPart" type="Node2D" parent="."]
 position = Vector2(62, -6.5)

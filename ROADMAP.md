@@ -163,22 +163,42 @@ exists because tuning an unfelt game wastes everything after it.
 
 ### M2 — Gravity becomes the mechanic
 
-- [ ] **`RunState`** — one owner for mass, kills, streak, time and modifiers.
-      Extract from `GameManager` / `ScoreManager`.
-- [ ] **Pull replaces chase**, scaled by mass
-- [ ] **Debris motes** — shed on death, pulled in by *your* gravity. They should
-      **orbit you briefly before being absorbed** — the mechanic demonstrating
-      itself, and free satisfaction.
-- [ ] **Mass affects** hitbox scale, move speed, dash cooldown, score multiplier,
-      spawn rate
-- [ ] **Rings** — visible mass on the world itself
-- [ ] **Moons** — gained at mass thresholds; orbit, block one hit, fire
-      independently; break away when mass drops
-- [ ] **Venting** — dash and nova consume mass
-- [ ] **Score rework** — `f(time, kills, streak, average mass)`; bump save to v3
+- [x] **`RunState`** — one owner for mass, kills, streak, time, moons and score,
+      raising signals rather than touching labels. `ScoreManager` is now
+      persistent records only, and `UIManager` owns every HUD element.
+- [x] **Pull replaces chase**, scaled by mass — bodies accelerate toward the
+      world under a softened falloff, gain momentum, overshoot and clump. Each
+      one is launched with a sideways nudge at birth, without which they fall
+      dead straight and never orbit. A minimum closing speed is enforced only
+      beyond 700 px, so nothing strands while near-range orbits survive.
+- [x] **Debris motes** — shed per kind (a swarmer leaves one, a tank six), flung
+      out, caught by the world's gravity, and reeled in on a ramping deadline so
+      they orbit before they are absorbed.
+- [x] **Mass affects** body scale, move speed, dash cooldown, score multiplier
+      and spawn interval.
+- [x] **Rings** — drawn in-engine on the world itself, far half behind the
+      sprite and near half in front, with a brightness sweep so a solid band
+      still reads as spinning. Detached from the world's transform, or they
+      would swing with the aim.
+- [x] **Moons** — gained at mass thresholds; they orbit, fire at the nearest
+      body on their own cadence, and body-block one hit. Blocking drops mass
+      below the threshold that granted the moon, so the save costs the risk that
+      earned it and cannot immediately repeat.
+- [x] **Venting** — dash vents a little, nova vents a lot. Nova is the mass
+      cash-out: a radial wipe whose kills score but shed no debris, or it would
+      refund itself. Bound to `R`, rebindable like everything else.
+- [x] **Score rework** — accumulated as it is earned at the live multiplier,
+      rather than computed at the end from average mass, so the multiplier on the
+      HUD is literally true. Streak links pay extra up to a cap. Save is at v3
+      and v2 files migrate.
 
 **Done when:** a player can explain, unprompted, why they chose to stay light or
 go heavy — and wants a moon.
+
+**Status:** built and running. The numbers are a considered first pass, not a
+playtested one — `MaxMass`, the ring and moon thresholds, `HeavyPullMultiplier`
+and `Drag` are the four knobs most likely to want moving after real hands are on
+it, and all four are `[Export]`.
 
 ---
 
@@ -346,8 +366,10 @@ Firm. Revisit only if a shipped game earns the right.
    the art, so they are now cropped and the key is drawn live from the input map
    — which also fixes rebinding silently lying about itself.
 3. ~~**M1**: tune the existing numbers → hitstop → screen shake → parallax space.~~
-   Done; see M1 above. Next up is **M2 — the gravity spine**, starting with
-   `RunState` and pull-replaces-chase.
+   Done, and **M2 is done too** — see both above. Next is **M3: the arsenal and
+   bestiary**, starting with the weapon system and the enemy behaviour refactor,
+   which the per-kind gravity constants in `Enemy.Configure` are already
+   straining against.
 
 ### Recording the M1 audio
 

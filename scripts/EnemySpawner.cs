@@ -20,11 +20,19 @@ public partial class EnemySpawner : Node
 	[Export] public float TankUnlockTime { get; set; } = 40.0f;
 	[Export] public int SwarmerPackSize { get; set; } = 4;
 
-	/// <summary>Current ramped chase speed, read by living enemies each frame.</summary>
+	[ExportGroup("Mass response")]
+	/// <summary>Spawn interval multiplier at full world mass. Under 1 means faster.</summary>
+	[Export] public float HeavySpawnRate { get; set; } = 0.78f;
+
+	/// <summary>Current ramped base speed, read by living bodies each frame.</summary>
 	public static float CurrentSpeed { get; private set; } = 100.0f;
+
+	/// <summary>The ramp as a multiplier on its starting value, for scaling pull.</summary>
+	public static float SpeedScale { get; private set; } = 1.0f;
 
 	private Timer spawnTimer;
 	private Texture2D[] enemyTextures;
+	private RunState run;
 	private float enemySpeed;
 	private float elapsed;
 
@@ -32,7 +40,9 @@ public partial class EnemySpawner : Node
 	{
 		enemySpeed = StartSpeed;
 		CurrentSpeed = StartSpeed;
+		SpeedScale = 1.0f;
 		elapsed = 0f;
+		run = GameManager.Of(this)?.Run;
 		LoadEnemyResources();
 		SetupSpawnTimer();
 	}
@@ -42,10 +52,15 @@ public partial class EnemySpawner : Node
 		elapsed += (float)delta;
 		enemySpeed = Mathf.Min(enemySpeed + SpeedIncreasePerSecond * (float)delta, MaxSpeed);
 		CurrentSpeed = enemySpeed;
+		SpeedScale = enemySpeed / Mathf.Max(StartSpeed, 1f);
 
 		float speedRange = Mathf.Max(MaxSpeed - StartSpeed, 0.001f);
 		float progress = (enemySpeed - StartSpeed) / speedRange;
-		spawnTimer.WaitTime = Mathf.Lerp(StartSpawnInterval, MinSpawnInterval, progress);
+
+		// A heavy world pulls harder, so it also draws more attention: mass
+		// tightens the spawn interval on top of the time ramp.
+		float massRate = Mathf.Lerp(1.0f, HeavySpawnRate, run?.MassNormalised ?? 0f);
+		spawnTimer.WaitTime = Mathf.Lerp(StartSpawnInterval, MinSpawnInterval, progress) * massRate;
 	}
 
 	private void LoadEnemyResources()
