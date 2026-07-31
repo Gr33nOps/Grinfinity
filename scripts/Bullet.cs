@@ -3,6 +3,7 @@ using Godot;
 public partial class Bullet : Area2D
 {
 	[Export] public float Speed { get; set; } = 700.0f;
+	[Export] public int Damage { get; set; } = 1;
 	[Export] public PackedScene ExplosionScene { get; set; }
 
 	public Vector2 Direction { get; set; }
@@ -27,17 +28,21 @@ public partial class Bullet : Area2D
 	private void OnBodyEntered(Node2D body)
 	{
 		// Two enemies can overlap the bullet in the same frame; only the first counts.
-		if (hasHit || !body.IsInGroup("enemies"))
+		if (hasHit || body is not Enemy enemy)
 			return;
 
 		hasHit = true;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
 
-		var gameManager = GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
-		gameManager?.PlayKillSound();
+		// Tanks survive several hits, so the kill only scores when it lands.
+		if (enemy.TakeDamage(Damage))
+		{
+			var gameManager = GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
+			gameManager?.PlayKillSound();
+			gameManager?.RegisterKill();
+			SpawnExplosion();
+		}
 
-		SpawnExplosion();
-		body.QueueFree();
 		QueueFree();
 	}
 

@@ -118,10 +118,22 @@ public partial class GameManager : Node2D
 		GetTree().Paused = false;
 		pauseMenu.HidePauseMenu();
 
-		var score = scoreManager.GetSurvivalTime();
-		ScoreManager.SaveHighScore(score);
+		float score = scoreManager.GetSurvivalTime();
+		int runKills = scoreManager.GetKills();
+		int runCombo = scoreManager.GetBestCombo();
+
 		GameOver.SurvivalTimeToShow = score;
+		GameOver.KillsToShow = runKills;
+		GameOver.BestComboToShow = runCombo;
+		GameOver.IsNewBestTime = ScoreManager.SaveRun(score, runKills, runCombo);
+
 		SceneTransition.Instance.ChangeScene("res://scenes/gameOver.tscn");
+	}
+
+	/// <summary>Called by bullets when they destroy an enemy.</summary>
+	public void RegisterKill()
+	{
+		scoreManager?.AddKill();
 	}
 
 	private void OnResumeGame()

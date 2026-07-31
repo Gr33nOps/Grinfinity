@@ -17,15 +17,21 @@ Survive as long as you can while enemies spawn faster and get quicker over time.
 | Toggle fullscreen | `F11` | — |
 
 Aiming switches automatically between mouse and right stick — whichever you used last.
+Every keyboard binding above can be changed in **Settings → Controls**.
 
 ## Features
 
-- Survival timer + best time save
+- Survival timer, kill count and streak counter, all saved as personal bests
+- Death recap: time survived, kills, best streak, and a new-record callout
+- Three enemy types that unlock as a run goes on:
+  - **Chaser** — the baseline, walks straight at you
+  - **Swarmer** — small and fast, arrives in packs (from 20s)
+  - **Tank** — large and slow, takes four hits (from 45s)
 - Ramping enemy speed and spawn rate
 - Random player skins and enemy variants
 - Dash and rapid-fire abilities
 - Pause menu and game over flow
-- Settings screen: master / music / SFX volume, fullscreen
+- Settings: master / music / SFX volume, fullscreen, and key rebinding
 - Gamepad support
 - Background music and SFX on separate audio buses
 
@@ -74,8 +80,8 @@ Edit the masters, re-crop, and drop the result into `sprites/`.
 
 Stored under Godot's user data directory (`%APPDATA%\Godot\app_userdata\Grinfinity` on Windows):
 
-- `highscore.cfg` — best survival time
-- `settings.cfg` — volume and fullscreen preferences
+- `highscore.cfg` — best survival time, best kill count, best streak
+- `settings.cfg` — volume, fullscreen and key binding preferences
 
 ## License
 

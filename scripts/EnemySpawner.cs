@@ -11,23 +11,33 @@ public partial class EnemySpawner : Node
 	[Export] public float SpawnMargin { get; set; } = 100.0f;
 	[Export] public PackedScene EnemyScene { get; set; }
 
+	[ExportGroup("Enemy variety")]
+	/// <summary>Seconds before swarmers start appearing.</summary>
+	[Export] public float SwarmerUnlockTime { get; set; } = 20.0f;
+	/// <summary>Seconds before tanks start appearing.</summary>
+	[Export] public float TankUnlockTime { get; set; } = 45.0f;
+	[Export] public int SwarmerPackSize { get; set; } = 3;
+
 	/// <summary>Current ramped chase speed, read by living enemies each frame.</summary>
 	public static float CurrentSpeed { get; private set; } = 100.0f;
 
 	private Timer spawnTimer;
 	private Texture2D[] enemyTextures;
 	private float enemySpeed;
+	private float elapsed;
 
 	public override void _Ready()
 	{
 		enemySpeed = StartSpeed;
 		CurrentSpeed = StartSpeed;
+		elapsed = 0f;
 		LoadEnemyResources();
 		SetupSpawnTimer();
 	}
 
 	public override void _Process(double delta)
 	{
+		elapsed += (float)delta;
 		enemySpeed = Mathf.Min(enemySpeed + SpeedIncreasePerSecond * (float)delta, MaxSpeed);
 		CurrentSpeed = enemySpeed;
 
@@ -54,11 +64,11 @@ public partial class EnemySpawner : Node
 			WaitTime = StartSpawnInterval,
 			Autostart = true
 		};
-		spawnTimer.Timeout += SpawnEnemy;
+		spawnTimer.Timeout += OnSpawnTimeout;
 		AddChild(spawnTimer);
 	}
 
-	private void SpawnEnemy()
+	private void OnSpawnTimeout()
 	{
 		if (EnemyScene == null)
 			return;
@@ -66,11 +76,51 @@ public partial class EnemySpawner : Node
 		if (GetTree().GetNodeCountInGroup("enemies") >= MaxEnemyCount)
 			return;
 
+		EnemyKind kind = PickKind();
+
+		if (kind == EnemyKind.Swarmer)
+		{
+			// Swarmers are only threatening in numbers, so they arrive together.
+			Vector2 origin = GetSpawnPosition();
+			for (int i = 0; i < SwarmerPackSize; i++)
+			{
+				Vector2 jitter = new Vector2(GD.RandRange(-90, 90), GD.RandRange(-90, 90));
+				SpawnOne(kind, origin + jitter);
+			}
+			return;
+		}
+
+		SpawnOne(kind, GetSpawnPosition());
+	}
+
+	/// <summary>
+	/// Introduces kinds over time so the opening stays readable and each new
+	/// threat is noticeable when it shows up.
+	/// </summary>
+	private EnemyKind PickKind()
+	{
+		if (elapsed < SwarmerUnlockTime)
+			return EnemyKind.Chaser;
+
+		float roll = GD.Randf();
+
+		if (elapsed < TankUnlockTime)
+			return roll < 0.35f ? EnemyKind.Swarmer : EnemyKind.Chaser;
+
+		if (roll < 0.30f)
+			return EnemyKind.Swarmer;
+		if (roll < 0.45f)
+			return EnemyKind.Tank;
+		return EnemyKind.Chaser;
+	}
+
+	private void SpawnOne(EnemyKind kind, Vector2 position)
+	{
 		if (EnemyScene.Instantiate() is not Enemy enemy)
 			return;
 
-		enemy.GlobalPosition = GetSpawnPosition();
-		enemy.SetSpeed(enemySpeed);
+		enemy.Configure(kind);
+		enemy.GlobalPosition = position;
 		SetRandomTexture(enemy);
 		GameManager.Spawn(this, enemy);
 	}

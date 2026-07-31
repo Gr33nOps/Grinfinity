@@ -167,6 +167,18 @@ theme_override_font_sizes/font_size = 32
 text = "F11 toggles fullscreen at any time"
 horizontal_alignment = 1
 
+[node name="ControlsButton" type="Button" parent="Layout"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.5, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 50
+text = "CONTROLS"
+flat = true
+
 [node name="BackButton" type="Button" parent="Layout"]
 custom_minimum_size = Vector2(0, 90)
 layout_mode = 2

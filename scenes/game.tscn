@@ -53,6 +53,32 @@ theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 75
 text = "BEST: 00:00"
 
+[node name="KillsLabel" type="Label" parent="UI"]
+anchors_preset = 0
+offset_left = 30.0
+offset_top = 128.0
+offset_right = 530.0
+offset_bottom = 198.0
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 46
+text = "KILLS: 0"
+
+[node name="ComboLabel" type="Label" parent="UI"]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -320.0
+offset_top = 120.0
+offset_right = 320.0
+offset_bottom = 196.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 58
+text = "x2 STREAK"
+horizontal_alignment = 1
+
 [node name="dash" type="Sprite2D" parent="UI"]
 position = Vector2(64, 66)
 scale = Vector2(0.3, 0.3)

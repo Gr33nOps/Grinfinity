@@ -158,10 +158,24 @@ export_presets.cfg           Windows + Linux export presets
 art_source/sprites/          Untrimmed art masters (excluded via .gdignore)
 ```
 
-## Still open (deliberately out of scope)
+## Built after the audit
 
-These are features from `LAUNCH_TODO.md`, not defects: kill scoring and combos,
-death recap, new enemy types, bosses, pickups, weapon variety, difficulty select,
-unlocks and currency, leaderboards, screen shake, and music intensity layers.
-Key **rebinding** also remains unbuilt — the input map is now rebind-ready
-(actions are named by intent, not by key) but there is no UI for it yet.
+Kill scoring with streaks, the death recap, three enemy types, and the key
+rebinding screen have since been added on top of the fixes above. The Windows
+export has been built and the standalone `.exe` verified to run.
+
+## Still open
+
+Features from `LAUNCH_TODO.md`, none of them defects: bosses, pickups, weapon
+variety, difficulty select, unlocks and currency, leaderboards, screen shake, and
+music intensity layers.
+
+## Environment note
+
+On the development machine a **vJoy virtual gamepad** is connected, and something
+in that setup emits `Q` keypresses into the game. Because `Q` is rapid fire, the
+ability self-triggers a few seconds into a run and its HUD icon greys out during
+the cooldown. This was traced to a real key event arriving from outside the game
+(`keyQ=True` with every gamepad button reading `0`), not to anything in the
+project — but it is worth knowing about when testing input, and the rebinding
+screen now offers an easy workaround.

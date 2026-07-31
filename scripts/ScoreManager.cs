@@ -5,15 +5,27 @@ public partial class ScoreManager : Node
 	private const string SavePath = "user://highscore.cfg";
 	private const string LegacySavePath = "user://highscore.save";
 	private const string Section = "score";
-	private const int SaveVersion = 1;
+	private const int SaveVersion = 2;
 	private const float MaxPlausibleTime = 36000.0f;
 
+	/// <summary>How long a streak survives without a kill before it resets.</summary>
+	private const float ComboWindow = 2.5f;
+
 	private static float bestTime = 0.0f;
+	private static int bestKills = 0;
+	private static int bestCombo = 0;
 	private static bool isLoaded = false;
 
 	private float survivalTime = 0.0f;
+	private int kills = 0;
+	private int combo = 0;
+	private int runBestCombo = 0;
+	private float comboTimer = 0.0f;
+
 	private Label scoreLabel;
 	private Label highScoreLabel;
+	private Label killsLabel;
+	private Label comboLabel;
 
 	public override void _Ready()
 	{
@@ -22,11 +34,15 @@ public partial class ScoreManager : Node
 		var gameRoot = GetParent();
 		scoreLabel = gameRoot?.GetNodeOrNull<Label>("UI/ScoreLabel");
 		highScoreLabel = gameRoot?.GetNodeOrNull<Label>("UI/HighScoreLabel");
+		killsLabel = gameRoot?.GetNodeOrNull<Label>("UI/KillsLabel");
+		comboLabel = gameRoot?.GetNodeOrNull<Label>("UI/ComboLabel");
 
 		// The best time cannot change mid-run, so it only needs writing once.
 		if (highScoreLabel != null)
 			highScoreLabel.Text = GetFormattedHighScore();
 
+		RefreshKills();
+		RefreshCombo();
 	}
 
 	public override void _Process(double delta)
@@ -35,12 +51,50 @@ public partial class ScoreManager : Node
 
 		if (scoreLabel != null)
 			scoreLabel.Text = FormatTime(survivalTime);
+
+		if (comboTimer > 0)
+		{
+			comboTimer -= (float)delta;
+			if (comboTimer <= 0 && combo > 0)
+			{
+				combo = 0;
+				RefreshCombo();
+			}
+		}
 	}
 
-	public float GetSurvivalTime()
+	public void AddKill()
 	{
-		return survivalTime;
+		kills++;
+		combo++;
+		comboTimer = ComboWindow;
+
+		if (combo > runBestCombo)
+			runBestCombo = combo;
+
+		RefreshKills();
+		RefreshCombo();
 	}
+
+	private void RefreshKills()
+	{
+		if (killsLabel != null)
+			killsLabel.Text = $"KILLS: {kills}";
+	}
+
+	private void RefreshCombo()
+	{
+		if (comboLabel == null)
+			return;
+
+		// A streak of one is just a kill; only shout about actual chains.
+		comboLabel.Visible = combo >= 2;
+		comboLabel.Text = $"x{combo} STREAK";
+	}
+
+	public float GetSurvivalTime() => survivalTime;
+	public int GetKills() => kills;
+	public int GetBestCombo() => runBestCombo;
 
 	public static string FormatTime(float seconds)
 	{
@@ -55,15 +109,34 @@ public partial class ScoreManager : Node
 		return $"BEST: {FormatTime(bestTime)}";
 	}
 
-	public static void SaveHighScore(float time)
+	public static float GetBestTime()
+	{
+		EnsureLoaded();
+		return bestTime;
+	}
+
+	/// <summary>
+	/// Records a finished run. Returns true if it set a new best time, so the
+	/// game over screen can celebrate it.
+	/// </summary>
+	public static bool SaveRun(float time, int runKills, int runCombo)
 	{
 		EnsureLoaded();
 
-		if (time <= bestTime)
-			return;
+		bool newBestTime = time > bestTime;
+		bool improved = newBestTime || runKills > bestKills || runCombo > bestCombo;
 
-		bestTime = time;
-		SaveToFile();
+		if (newBestTime)
+			bestTime = time;
+		if (runKills > bestKills)
+			bestKills = runKills;
+		if (runCombo > bestCombo)
+			bestCombo = runCombo;
+
+		if (improved)
+			SaveToFile();
+
+		return newBestTime;
 	}
 
 	private static void EnsureLoaded()
@@ -77,6 +150,8 @@ public partial class ScoreManager : Node
 		if (config.Load(SavePath) == Error.Ok)
 		{
 			bestTime = config.GetValue(Section, "best_time", 0.0f).AsSingle();
+			bestKills = config.GetValue(Section, "best_kills", 0).AsInt32();
+			bestCombo = config.GetValue(Section, "best_combo", 0).AsInt32();
 		}
 		else if (FileAccess.FileExists(LegacySavePath))
 		{
@@ -87,9 +162,12 @@ public partial class ScoreManager : Node
 		}
 
 		if (!float.IsFinite(bestTime) || bestTime < 0 || bestTime > MaxPlausibleTime)
-		{
 			bestTime = 0;
-		}
+
+		if (bestKills < 0)
+			bestKills = 0;
+		if (bestCombo < 0)
+			bestCombo = 0;
 	}
 
 	private static float ReadLegacyBestTime()
@@ -106,6 +184,8 @@ public partial class ScoreManager : Node
 		var config = new ConfigFile();
 		config.SetValue(Section, "version", SaveVersion);
 		config.SetValue(Section, "best_time", bestTime);
+		config.SetValue(Section, "best_kills", bestKills);
+		config.SetValue(Section, "best_combo", bestCombo);
 
 		Error error = config.Save(SavePath);
 		if (error != Error.Ok)

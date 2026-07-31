@@ -3,10 +3,14 @@ using Godot;
 public partial class GameOver : Control
 {
 	public static float SurvivalTimeToShow = 0f;
+	public static int KillsToShow = 0;
+	public static int BestComboToShow = 0;
+	public static bool IsNewBestTime = false;
 
 	private TextureButton restartButton;
 	private TextureButton menuButton;
 	private Label survivalTimeLabel;
+	private Label statsLabel;
 	private Label highScoreLabel;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
@@ -14,8 +18,9 @@ public partial class GameOver : Control
 
 	public override void _Ready()
 	{
-		survivalTimeLabel = GetNode<Label>("SurvivalTimeLabel");
-		highScoreLabel = GetNodeOrNull<Label>("HighScoreLabel");
+		survivalTimeLabel = GetNode<Label>("Recap/SurvivalTimeLabel");
+		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
+		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
 		restartButton = GetNode<TextureButton>("GameOverMenu/RestartButton");
 		menuButton = GetNode<TextureButton>("GameOverMenu/MenuButton");
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("GameOverMenu/ButtonSound");
@@ -23,8 +28,7 @@ public partial class GameOver : Control
 		gameOverSound = GetNodeOrNull<AudioStreamPlayer>("GameOverMenu/GameOverSound");
 
 		gameOverSound?.Play();
-		ShowSurvivalTime();
-		ShowHighScore();
+		ShowRecap();
 
 		restartButton.Pressed += OnRestartButtonPressed;
 		menuButton.Pressed += OnMenuButtonPressed;
@@ -35,15 +39,25 @@ public partial class GameOver : Control
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 	}
 
-	private void ShowSurvivalTime()
+	private void ShowRecap()
 	{
 		survivalTimeLabel.Text = $"You Survived: {ScoreManager.FormatTime(SurvivalTimeToShow)}";
-	}
 
-	private void ShowHighScore()
-	{
-		if (highScoreLabel != null)
+		if (statsLabel != null)
+			statsLabel.Text = $"KILLS: {KillsToShow}     BEST STREAK: x{BestComboToShow}";
+
+		if (highScoreLabel == null)
+			return;
+
+		if (IsNewBestTime)
+		{
+			highScoreLabel.Text = "NEW BEST TIME!";
+			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
+		}
+		else
+		{
 			highScoreLabel.Text = ScoreManager.GetFormattedHighScore();
+		}
 	}
 
 	private void OnRestartButtonPressed()

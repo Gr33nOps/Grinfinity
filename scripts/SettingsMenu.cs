@@ -9,6 +9,7 @@ public partial class SettingsMenu : Control
 	private Label musicValue;
 	private Label sfxValue;
 	private Button fullscreenCheck;
+	private Button controlsButton;
 	private Button backButton;
 
 	public override void _Ready()
@@ -20,6 +21,7 @@ public partial class SettingsMenu : Control
 		musicValue = GetNode<Label>("Layout/MusicRow/Value");
 		sfxValue = GetNode<Label>("Layout/SfxRow/Value");
 		fullscreenCheck = GetNode<Button>("Layout/FullscreenRow/Check");
+		controlsButton = GetNode<Button>("Layout/ControlsButton");
 		backButton = GetNode<Button>("Layout/BackButton");
 
 		var settings = GameSettings.Instance;
@@ -38,6 +40,7 @@ public partial class SettingsMenu : Control
 		musicSlider.ValueChanged += OnMusicChanged;
 		sfxSlider.ValueChanged += OnSfxChanged;
 		fullscreenCheck.Toggled += OnFullscreenToggled;
+		controlsButton.Pressed += OnControlsPressed;
 		backButton.Pressed += OnBackPressed;
 
 		Input.MouseMode = Input.MouseModeEnum.Visible;
@@ -82,6 +85,12 @@ public partial class SettingsMenu : Control
 		masterValue.Text = $"{Mathf.RoundToInt(masterSlider.Value * 100)}%";
 		musicValue.Text = $"{Mathf.RoundToInt(musicSlider.Value * 100)}%";
 		sfxValue.Text = $"{Mathf.RoundToInt(sfxSlider.Value * 100)}%";
+	}
+
+	private void OnControlsPressed()
+	{
+		GameSettings.Instance?.SaveSettings();
+		SceneTransition.Instance.ChangeScene("res://scenes/controls.tscn");
 	}
 
 	private void OnBackPressed()
