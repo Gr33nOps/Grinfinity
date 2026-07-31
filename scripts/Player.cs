@@ -128,6 +128,17 @@ public partial class Player : CharacterBody2D
 	public void VentForDash()
 	{
 		run?.Vent(DashVent);
+
+		// Greedy Dash turns the dash into a collection tool, so venting mass to
+		// move can pay for itself if there is debris on the field.
+		if (run == null || !run.Has(RelicId.VampiricDash))
+			return;
+
+		foreach (Node node in GetTree().GetNodesInGroup("debris"))
+		{
+			if (node is Debris mote && IsInstanceValid(mote))
+				mote.Yank();
+		}
 	}
 
 	/// <summary>
@@ -329,6 +340,9 @@ public partial class Player : CharacterBody2D
 			// is worth the same to every weapon rather than only to the slow ones.
 			if (run != null && run.Overcharged)
 				bullet.Damage += run.OverchargeBonus;
+
+			if (run != null && run.Has(RelicId.Piercing))
+				bullet.Pierce += 2;
 
 			bullet.GlobalPosition = shootyPart.GlobalPosition;
 			bullet.Direction = aim.Rotated(offset);

@@ -59,6 +59,7 @@ public partial class GameManager : Node2D
 	private bool bossSpawned;
 	private Control bossBar;
 	private ProgressBar bossHealth;
+	private Announcer announcer;
 
 	public bool IsPaused => isPaused;
 
@@ -108,6 +109,7 @@ public partial class GameManager : Node2D
 		BossScene ??= GD.Load<PackedScene>("res://scenes/boss_coil.tscn");
 		PowerUpScene ??= GD.Load<PackedScene>("res://scenes/power_up.tscn");
 
+		announcer = GetNodeOrNull<Announcer>("UI/Announcer");
 		bossBar = GetNodeOrNull<Control>("UI/BossBar");
 		bossHealth = GetNodeOrNull<ProgressBar>("UI/BossBar/Health");
 		if (bossBar != null)
@@ -132,6 +134,24 @@ public partial class GameManager : Node2D
 		pauseMenu.ResumeGame += OnResumeGame;
 		pauseMenu.GiveUpGame += OnGiveUpGame;
 		run.StreakChanged += OnStreakChanged;
+
+		AnnounceRelic();
+	}
+
+	/// <summary>
+	/// Tells the player what they rolled. A passive nobody was told about is a
+	/// passive that does not exist.
+	/// </summary>
+	private void AnnounceRelic()
+	{
+		Relics.Profile relic = Relics.Get(run.Relic);
+		Announce(relic.Name, relic.Effect, relic.Colour);
+	}
+
+	/// <summary>Shouts something in the middle of the screen. See <see cref="Announcer"/>.</summary>
+	public void Announce(string title, string detail, Color colour)
+	{
+		announcer?.Announce(title, detail, colour);
 	}
 
 	/// <summary>Parents runtime-spawned nodes under the pausable entity container.</summary>
@@ -407,8 +427,12 @@ public partial class GameManager : Node2D
 		if (DebrisScene == null || remains.DebrisCount <= 0)
 			return;
 
+		int shed = remains.DebrisCount;
+		if (run != null && run.Has(RelicId.DoubleDebris))
+			shed *= 2;
+
 		int budget = MaxDebris - GetTree().GetNodeCountInGroup("debris");
-		int count = Mathf.Min(remains.DebrisCount, budget);
+		int count = Mathf.Min(shed, budget);
 
 		for (int i = 0; i < count; i++)
 		{

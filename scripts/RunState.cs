@@ -64,6 +64,11 @@ public partial class RunState : Node
 	public int Moons { get; private set; }
 	public int RingTier { get; private set; }
 
+	/// <summary>This orbit's passive. Rolled once, in _Ready, and never changes.</summary>
+	public RelicId Relic { get; private set; }
+
+	public bool Has(RelicId relic) => Relic == relic;
+
 	/// <summary>Mass as 0..1. This is what every other system should read.</summary>
 	public float MassNormalised => MaxMass <= 0f ? 0f : Mathf.Clamp(Mass / MaxMass, 0f, 1f);
 
@@ -167,6 +172,7 @@ public partial class RunState : Node
 	public override void _Ready()
 	{
 		Mass = Mathf.Clamp(StartMass, 0f, MaxMass);
+		Relic = Relics.Roll();
 	}
 
 	public override void _Process(double delta)

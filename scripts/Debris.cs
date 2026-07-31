@@ -24,6 +24,8 @@ public partial class Debris : Node2D
 	[Export] public float AbsorbRadius { get; set; } = 46.0f;
 	/// <summary>How much harder the Magnet pickup pulls.</summary>
 	[Export] public float MagnetFactor { get; set; } = 5.0f;
+	/// <summary>Speed a mote is thrown at the world by the Greedy Dash relic.</summary>
+	[Export] public float YankSpeed { get; set; } = 1500.0f;
 	/// <summary>Hard stop, so a mote can never outlive the body that shed it.</summary>
 	[Export] public float Lifetime { get; set; } = 6.0f;
 
@@ -82,6 +84,19 @@ public partial class Debris : Node2D
 
 		GlobalPosition += velocity * step;
 		Rotation += step * 6.0f;
+	}
+
+	/// <summary>
+	/// Called by Greedy Dash. Skips the mote past its orbit phase and throws it
+	/// at the world, rather than teleporting it — the pull has to stay visible.
+	/// </summary>
+	public void Yank()
+	{
+		if (absorbed || world == null || !IsInstanceValid(world))
+			return;
+
+		age = Mathf.Max(age, GrabTime);
+		velocity = (world.GlobalPosition - GlobalPosition).Normalized() * YankSpeed;
 	}
 
 	private void Absorb()

@@ -28,6 +28,10 @@ public partial class Body : CharacterBody2D, IShootable
 	/// <summary>Ceiling on drift speed, as a multiple of the ramped base speed.</summary>
 	[Export] public float MaxSpeedFactor { get; set; } = 2.3f;
 
+	[ExportGroup("Relics")]
+	[Export] public float SlowAuraRadius { get; set; } = 340.0f;
+	[Export] public float SlowAuraStrength { get; set; } = 3.2f;
+
 	[ExportGroup("Armed bodies")]
 	[Export] public PackedScene BulletScene { get; set; }
 	[Export] public float BulletSpeed { get; set; } = 420.0f;
@@ -178,6 +182,8 @@ public partial class Body : CharacterBody2D, IShootable
 		else
 			Drift = Drift.MoveToward(Vector2.Zero, 900f * step);
 
+		ApplySlowAura(step);
+
 		Velocity = Drift + knockback;
 		FaceTravel();
 		MoveAndSlide();
@@ -185,6 +191,24 @@ public partial class Body : CharacterBody2D, IShootable
 		knockback = knockback.MoveToward(Vector2.Zero, KnockbackDecay * step);
 
 		CullIfLost();
+	}
+
+	/// <summary>
+	/// Deep Well relic: bodies bog down as they close. It makes the last stretch
+	/// before contact readable, which is exactly where the game is hardest.
+	/// </summary>
+	private void ApplySlowAura(float delta)
+	{
+		if (run == null || !run.Has(RelicId.SlowAura))
+			return;
+
+		float distance = WorldOffset.Length();
+		if (distance > SlowAuraRadius)
+			return;
+
+		// Strongest at the centre, nothing at the rim, so there is no edge to it.
+		float bite = 1f - distance / SlowAuraRadius;
+		Drift *= Mathf.Max(1f - SlowAuraStrength * bite * delta, 0f);
 	}
 
 	/// <summary>The default motion: accelerate toward the world under its gravity.</summary>
