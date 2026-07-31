@@ -2,20 +2,28 @@ using Godot;
 
 public partial class PlayerManager : Node
 {
-	private Node2D player;
+	[Export] public float SpriteInterval { get; set; } = 5.0f;
+
+	private const int SkinCount = 12;
+
 	private Sprite2D playerSprite;
 	private Texture2D[] playerTextures;
 	private float spriteTimer = 0f;
-	private const float SpriteInterval = 5f;
 
 	public override void _Ready()
 	{
-		GetPlayerReference();
 		LoadPlayerTextures();
+
+		var player = GetParent()?.GetNodeOrNull<Node2D>("player");
+		if (player != null)
+			playerSprite = FindPlayerSprite(player);
 	}
 
 	public override void _Process(double delta)
 	{
+		if (playerSprite == null)
+			return;
+
 		spriteTimer += (float)delta;
 		if (spriteTimer >= SpriteInterval)
 		{
@@ -24,26 +32,10 @@ public partial class PlayerManager : Node
 		}
 	}
 
-	private void GetPlayerReference()
-	{
-		var gameManager = GetTree().GetFirstNodeInGroup("game_manager");
-		if (gameManager == null)
-			return;
-
-		player = gameManager.GetNodeOrNull<Node2D>("player");
-		if (player != null)
-		{
-			playerSprite = FindPlayerSprite();
-		}
-	}
-
-	private Sprite2D FindPlayerSprite()
+	private static Sprite2D FindPlayerSprite(Node2D player)
 	{
 		if (player.HasNode("Sprite2D"))
 			return player.GetNode<Sprite2D>("Sprite2D");
-
-		if (player.HasNode("sprite"))
-			return player.GetNode<Sprite2D>("sprite");
 
 		foreach (Node child in player.GetChildren())
 		{
@@ -56,26 +48,16 @@ public partial class PlayerManager : Node
 
 	private void LoadPlayerTextures()
 	{
-		playerTextures = new Texture2D[]
+		playerTextures = new Texture2D[SkinCount];
+		for (int i = 0; i < SkinCount; i++)
 		{
-			GD.Load<Texture2D>("res://sprites/player 1.png"),
-			GD.Load<Texture2D>("res://sprites/player 2.png"),
-			GD.Load<Texture2D>("res://sprites/player 3.png"),
-			GD.Load<Texture2D>("res://sprites/player 4.png"),
-			GD.Load<Texture2D>("res://sprites/player 5.png"),
-			GD.Load<Texture2D>("res://sprites/player 6.png"),
-			GD.Load<Texture2D>("res://sprites/player 7.png"),
-			GD.Load<Texture2D>("res://sprites/player 8.png"),
-			GD.Load<Texture2D>("res://sprites/player 9.png"),
-			GD.Load<Texture2D>("res://sprites/player 10.png"),
-			GD.Load<Texture2D>("res://sprites/player 11.png"),
-			GD.Load<Texture2D>("res://sprites/player 12.png")
-		};
+			playerTextures[i] = GD.Load<Texture2D>($"res://sprites/player {i + 1}.png");
+		}
 	}
 
 	private void ChangePlayerSprite()
 	{
-		if (playerSprite == null || playerTextures == null || playerTextures.Length == 0)
+		if (playerTextures == null || playerTextures.Length == 0)
 			return;
 
 		Texture2D currentTexture = playerSprite.Texture;

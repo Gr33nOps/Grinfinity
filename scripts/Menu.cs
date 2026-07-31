@@ -4,42 +4,63 @@ public partial class Menu : Node
 {
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
+	private ConfirmationDialog quitConfirm;
 
 	public override void _Ready()
 	{
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNodeOrNull<AudioStreamPlayer>("HoverSound");
+		quitConfirm = GetNodeOrNull<ConfirmationDialog>("QuitConfirm");
 
-		var playButton = GetNode<TextureButton>("VBoxContainer/PlayButton");
-		var quitButton = GetNode<TextureButton>("VBoxContainer/QuitButton");
+		var playButton = GetNode<TextureButton>("UI/Buttons/PlayButton");
+		var quitButton = GetNode<TextureButton>("UI/Buttons/QuitButton");
+		var settingsButton = GetNode<Button>("UI/SideMenu/SettingsButton");
+		var creditsButton = GetNode<Button>("UI/SideMenu/CreditsButton");
 
-		playButton.Pressed += OnPlayButtonPressed;
+		playButton.Pressed += () => GoTo("res://scenes/game.tscn");
+		settingsButton.Pressed += () => GoTo("res://scenes/settings.tscn");
+		creditsButton.Pressed += () => GoTo("res://scenes/credits.tscn");
 		quitButton.Pressed += OnQuitButtonPressed;
-		playButton.MouseEntered += OnPlayButtonHover;
-		quitButton.MouseEntered += OnQuitButtonHover;
 
+		foreach (var button in new BaseButton[] { playButton, settingsButton, creditsButton, quitButton })
+		{
+			button.MouseEntered += PlayHoverSound;
+		}
+
+		if (quitConfirm != null)
+			quitConfirm.Confirmed += OnQuitConfirmed;
+
+		playButton.GrabFocus();
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 	}
 
-	private void OnPlayButtonPressed()
+	private void GoTo(string scenePath)
 	{
 		buttonSound?.Play();
-		SceneTransition.Instance.ChangeScene("res://scenes/game.tscn");
+		SceneTransition.Instance.ChangeScene(scenePath);
 	}
 
-	private async void OnQuitButtonPressed()
+	private void OnQuitButtonPressed()
 	{
 		buttonSound?.Play();
-		await ToSignal(GetTree().CreateTimer(0.5f), SceneTreeTimer.SignalName.Timeout);
+
+		if (quitConfirm == null)
+		{
+			OnQuitConfirmed();
+			return;
+		}
+
+		quitConfirm.PopupCentered();
+	}
+
+	private async void OnQuitConfirmed()
+	{
+		buttonSound?.Play();
+		await ToSignal(GetTree().CreateTimer(0.3f), SceneTreeTimer.SignalName.Timeout);
 		GetTree().Quit();
 	}
 
-	private void OnPlayButtonHover()
-	{
-		hoverSound?.Play();
-	}
-
-	private void OnQuitButtonHover()
+	private void PlayHoverSound()
 	{
 		hoverSound?.Play();
 	}

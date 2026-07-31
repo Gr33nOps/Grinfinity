@@ -19,13 +19,15 @@ public partial class PauseMenu : Control
 		giveUpButton = GetNode<TextureButton>("Panel/GiveUpButton");
 		resumeButton.Pressed += OnResumeButtonPressed;
 		giveUpButton.Pressed += OnGiveUpButtonPressed;
-		resumeButton.MouseEntered += OnResumeButtonHover;
-		giveUpButton.MouseEntered += OnGiveUpButtonHover;
+		resumeButton.MouseEntered += PlayHoverSound;
+		giveUpButton.MouseEntered += PlayHoverSound;
 	}
 
 	public void ShowPauseMenu()
 	{
 		Visible = true;
+		// Gives the gamepad something to start from.
+		resumeButton.GrabFocus();
 	}
 
 	public void HidePauseMenu()
@@ -45,25 +47,18 @@ public partial class PauseMenu : Control
 		EmitSignal(SignalName.GiveUpGame);
 	}
 
-	private void OnResumeButtonHover()
-	{
-		PlayHoverSound();
-	}
-
-	private void OnGiveUpButtonHover()
-	{
-		PlayHoverSound();
-	}
-
 	private void PlayButtonSound()
 	{
-		var gameManager = GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
-		gameManager?.PlayButtonSound();
+		GetGameManager()?.PlayButtonSound();
 	}
 
 	private void PlayHoverSound()
 	{
-		var gameManager = GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
-		gameManager?.PlayHoverSound();
+		GetGameManager()?.PlayHoverSound();
+	}
+
+	private GameManager GetGameManager()
+	{
+		return GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
 	}
 }

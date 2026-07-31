@@ -1,14 +1,31 @@
-[gd_scene load_steps=4 format=3 uid="uid://bcmipct1fe830"]
+[gd_scene load_steps=7 format=3 uid="uid://bcmipct1fe830"]
 
 [ext_resource type="Script" uid="uid://bj2ub38457ksw" path="res://scripts/Player.cs" id="1_3vyb7"]
 [ext_resource type="Texture2D" uid="uid://50b437dwilfi" path="res://sprites/player 1.png" id="2_dqkch"]
 [ext_resource type="AudioStream" uid="uid://c8a1w30h1aujo" path="res://sounds/shoot.ogg" id="4_dqkch"]
+[ext_resource type="PackedScene" uid="uid://bw0u5kimoedt1" path="res://scenes/bullet.tscn" id="5_bullet"]
+[ext_resource type="PackedScene" uid="uid://bqbrm25rh4kjc" path="res://scenes/explosion.tscn" id="6_expl"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 25.0
 
 [node name="player" type="CharacterBody2D"]
 collision_layer = 1
-collision_mask = 2
+collision_mask = 0
 scale = Vector2(2, 2)
 script = ExtResource("1_3vyb7")
+BulletScene = ExtResource("5_bullet")
+DeathEffectScene = ExtResource("6_expl")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_player")
+
+[node name="HitBox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
+shape = SubResource("CircleShape2D_player")
 
 [node name="shootyPart" type="Node2D" parent="."]
 position = Vector2(62, -6.5)
@@ -22,3 +39,4 @@ flip_h = true
 [node name="ShootSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("4_dqkch")
 volume_db = -10.0
+bus = &"SFX"

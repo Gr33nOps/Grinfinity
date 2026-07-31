@@ -8,6 +8,7 @@ process_mode = 3
 [node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("1_tn5dr")
-volume_db = -20.0
+volume_db = -12.0
 autoplay = true
+bus = &"Music"
 parameters/looping = true

@@ -1,9 +1,11 @@
 # Godot-specific
 .import/
 export.cfg
-export_presets.cfg
 .godot/
 mono_crash.*
+
+# Build output (export_presets.cfg itself is committed so builds are reproducible)
+builds/
 
 # C# build files
 .mono/

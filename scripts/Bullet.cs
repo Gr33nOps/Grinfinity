@@ -2,18 +2,22 @@ using Godot;
 
 public partial class Bullet : Area2D
 {
+	[Export] public float Speed { get; set; } = 700.0f;
+	[Export] public int Damage { get; set; } = 1;
+	[Export] public PackedScene ExplosionScene { get; set; }
+
 	public Vector2 Direction { get; set; }
-	private const float Speed = 700.0f;
-	private PackedScene explosionScene;
+
+	private bool hasHit = false;
 
 	public override void _Ready()
 	{
-		explosionScene = GD.Load<PackedScene>("res://scenes/explosion.tscn");
-		AddToGroup("bullets");
-		CollisionLayer = 4;
-		CollisionMask = 2;
+		ExplosionScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 		BodyEntered += OnBodyEntered;
-		GetNode<Timer>("Timer").Timeout += OnTimerTimeout;
+
+		var lifetime = GetNodeOrNull<Timer>("Timer");
+		if (lifetime != null)
+			lifetime.Timeout += QueueFree;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -21,40 +25,38 @@ public partial class Bullet : Area2D
 		GlobalPosition += Direction * Speed * (float)delta;
 	}
 
-	private void OnTimerTimeout()
+	private void OnBodyEntered(Node2D body)
 	{
+		// Two enemies can overlap the bullet in the same frame; only the first counts.
+		if (hasHit || body is not Enemy enemy)
+			return;
+
+		hasHit = true;
+		SetDeferred(Area2D.PropertyName.Monitoring, false);
+
+		// Tanks survive several hits, so the kill only scores when it lands.
+		if (enemy.TakeDamage(Damage))
+		{
+			var gameManager = GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
+			gameManager?.PlayKillSound();
+			gameManager?.RegisterKill();
+			SpawnExplosion();
+		}
+
 		QueueFree();
 	}
 
-	private void OnBodyEntered(Node body)
+	private void SpawnExplosion()
 	{
-		if (!body.IsInGroup("enemies"))
+		if (ExplosionScene == null)
 			return;
 
-		var gameManager = GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
-		gameManager?.PlayKillSound();
-
-		body.QueueFree();
-		QueueFree();
-
-		if (explosionScene == null)
-			return;
-
-		var explosion = explosionScene.Instantiate<CpuParticles2D>();
+		var explosion = ExplosionScene.Instantiate<CpuParticles2D>();
 		explosion.GlobalPosition = GlobalPosition;
-		explosion.Emitting = true;
 		explosion.Lifetime = (float)GD.RandRange(0.5, 0.7);
-
-		var parent = GetTree().GetFirstNodeInGroup("game_manager") ?? GetTree().CurrentScene;
-		parent?.AddChild(explosion);
-
-		var cleanupTimer = new Timer
-		{
-			WaitTime = explosion.Lifetime + 0.1f,
-			OneShot = true,
-			Autostart = true
-		};
-		explosion.AddChild(cleanupTimer);
-		cleanupTimer.Timeout += () => explosion.QueueFree();
+		explosion.Emitting = true;
+		// explosion.tscn is one_shot, so Finished fires once the burst is done.
+		explosion.Finished += explosion.QueueFree;
+		GameManager.Spawn(this, explosion);
 	}
 }
