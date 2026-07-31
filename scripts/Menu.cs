@@ -31,8 +31,26 @@ public partial class Menu : Node
 		if (quitConfirm != null)
 			quitConfirm.Confirmed += OnQuitConfirmed;
 
+		ShowRecords();
+
 		playButton.GrabFocus();
 		Input.MouseMode = Input.MouseModeEnum.Visible;
+	}
+
+	/// <summary>
+	/// The number to beat, on the screen you decide from. "One more orbit" is a
+	/// pillar; it needs something on the menu to be one more *than*.
+	/// </summary>
+	private void ShowRecords()
+	{
+		var label = GetNodeOrNull<Label>("UI/BestLabel");
+		if (label == null)
+			return;
+
+		// A fresh install has nothing to beat, and an empty scoreboard is worse
+		// than none at all.
+		label.Visible = ScoreManager.BestScore > 0 || ScoreManager.BestTime > 0f;
+		label.Text = $"BEST {ScoreManager.BestScore:N0}\nLONGEST {ScoreManager.FormatTime(ScoreManager.BestTime)}";
 	}
 
 	private void GoTo(string scenePath)

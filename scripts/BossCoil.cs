@@ -7,7 +7,7 @@ using Godot;
 /// no way through except by reading where the gap will be and dashing into it,
 /// which is the single skill the rest of the game never forces you to practise.
 ///
-/// It is deliberately not a body: it is not in the "enemies" group, so it does
+/// It is deliberately not a body: it is not in the "bodies" group, so it does
 /// not count toward the spawn cap, cannot be absorbed by a nova, is not targeted
 /// by moons, and sheds no debris. Beating it has to be worth something other
 /// than mass.

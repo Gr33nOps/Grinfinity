@@ -36,7 +36,7 @@ project/assembly_name="Grinfinity"
 
 [global_group]
 
-enemies=""
+bodies=""
 game_manager=""
 
 [input]
@@ -125,7 +125,7 @@ fullscreen_toggle={
 [layer_names]
 
 2d_physics/layer_1="player"
-2d_physics/layer_2="enemies"
+2d_physics/layer_2="bodies"
 2d_physics/layer_3="bullets"
 
 [rendering]

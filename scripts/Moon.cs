@@ -79,7 +79,7 @@ public partial class Moon : Area2D
 		Node2D nearest = null;
 		float nearestDistance = TargetRange * TargetRange;
 
-		foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
 		{
 			if (node is not Node2D body)
 				continue;
@@ -95,9 +95,9 @@ public partial class Moon : Area2D
 		return nearest;
 	}
 
-	private void OnBodyEntered(Node2D body)
+	private void OnBodyEntered(Node2D hit)
 	{
-		if (broken || body is not Enemy enemy)
+		if (broken || hit is not Body body)
 			return;
 
 		broken = true;
@@ -105,7 +105,7 @@ public partial class Moon : Area2D
 
 		// The block is the moon's whole job: the body dies, but it does not
 		// score, and the mass that earned the moon goes with it.
-		enemy.TakeDamage(9999, (enemy.GlobalPosition - GlobalPosition).Normalized());
+		body.TakeDamage(9999, (body.GlobalPosition - GlobalPosition).Normalized());
 		manager?.OnMoonBlocked(GlobalPosition);
 
 		QueueFree();

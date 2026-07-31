@@ -29,7 +29,7 @@ public partial class GameManager : Node2D
 
 	private PauseMenu pauseMenu;
 	private RunState run;
-	private EnemySpawner enemySpawner;
+	private BodySpawner bodySpawner;
 	private UIManager uiManager;
 	private PlayerManager playerManager;
 	private GameCamera gameCamera;
@@ -103,7 +103,7 @@ public partial class GameManager : Node2D
 		if (bossBar != null)
 			bossBar.Visible = false;
 
-		enemySpawner = AddPausableChild(new EnemySpawner());
+		bodySpawner = AddPausableChild(new BodySpawner());
 		uiManager = AddPausableChild(new UIManager());
 		playerManager = AddPausableChild(new PlayerManager());
 	}
@@ -131,7 +131,7 @@ public partial class GameManager : Node2D
 	}
 
 	/// <summary>
-	/// Parents a runtime-spawned node (bullet, enemy, particle burst) under the
+	/// Parents a runtime-spawned node (bullet, body, particle burst) under the
 	/// pausable entity container so it pauses along with the rest of the game.
 	/// Falls back to the current scene if no game manager is present.
 	/// </summary>
@@ -346,7 +346,7 @@ public partial class GameManager : Node2D
 	/// False for a nova, whose kills are already paid for in mass. Refunding that
 	/// mass as debris would make the ability free.
 	/// </param>
-	public void RegisterKill(in Enemy.Remains remains, Vector2 at, bool shedDebris = true)
+	public void RegisterKill(in Body.Remains remains, Vector2 at, bool shedDebris = true)
 	{
 		bool heavy = remains.Kind is BodyKind.Planetoid or BodyKind.Bulwark or BodyKind.Flare;
 
@@ -389,7 +389,7 @@ public partial class GameManager : Node2D
 	/// Scatters the motes a dead body leaves behind. Gravity does the rest — the
 	/// player's own pull is what turns them into mass.
 	/// </summary>
-	private void ShedDebris(in Enemy.Remains remains, Vector2 at)
+	private void ShedDebris(in Body.Remains remains, Vector2 at)
 	{
 		if (DebrisScene == null || remains.DebrisCount <= 0)
 			return;

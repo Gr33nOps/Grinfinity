@@ -24,7 +24,7 @@ public partial class BodyMark : Node2D
 
 	public override void _Ready()
 	{
-		if (GetParent() is Enemy body)
+		if (GetParent() is Body body)
 			Configure(body.Kind, body.BaseTint);
 	}
 

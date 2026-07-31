@@ -108,6 +108,20 @@ reach its busy late minutes.
 GRIN_SCENE=res://scenes/game.tscn GRIN_RUN=60 GRIN_SHOT=/tmp/shot.png godot --path . --windowed res://tools/dev_capture.tscn
 ```
 
+| Variable | Effect |
+|---|---|
+| `GRIN_SCENE` | Scene to load (default `res://scenes/game.tscn`) |
+| `GRIN_SHOT` | Where to write the PNG |
+| `GRIN_RUN` | Seconds to play for |
+| `GRIN_WEAPON` | Loadout index: 0 Comet, 1 Debris Cannon, 2 Ion Lance |
+| `GRIN_BOSS` | Seconds before The Coil arrives |
+| `GRIN_MORTAL` | Leave contact damage on, to exercise death and the recap |
+| `GRIN_PACIFIST` | Hold fire, so bodies pile to the spawn cap |
+
+Every run also prints frame-time statistics — average, worst, and how many frames
+went over the 16.67 ms budget — which is how the object-pooling question in
+`ROADMAP.md` gets answered with a number instead of a guess.
+
 `art_source/` holds the full-canvas originals of the character sprites. The
 files under `sprites/` are cropped to their artwork bounds — symmetrically about
 the original canvas centre, so every node's position, scale and flip stays valid.

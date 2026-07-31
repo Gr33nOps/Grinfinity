@@ -6,17 +6,17 @@ using Godot;
 /// from a hit, and what it leaves when it dies.
 ///
 /// Behaviours are stateless and shared between every body of a kind — anything
-/// per-body lives on <see cref="Enemy"/>, including the one scratch timer a
+/// per-body lives on <see cref="Body"/>, including the one scratch timer a
 /// behaviour is allowed to keep. That is what makes a bestiary of eight cost
 /// eight small classes instead of one unreadable branch in _PhysicsProcess.
 /// </summary>
 public abstract class BodyBehaviour
 {
 	/// <summary>Stats and look. Called once, before the body enters the tree.</summary>
-	public abstract void Apply(Enemy body);
+	public abstract void Apply(Body body);
 
 	/// <summary>Steering for one physics frame. The default is to simply fall in.</summary>
-	public virtual void Steer(Enemy body, float delta)
+	public virtual void Steer(Body body, float delta)
 	{
 		body.FallTowardWorld(delta);
 	}
@@ -25,10 +25,10 @@ public abstract class BodyBehaviour
 	/// A chance to refuse a hit. Used by armour: a deflected hit costs no health
 	/// and reads as a clang rather than a wound.
 	/// </summary>
-	public virtual bool Deflects(Enemy body, Vector2 impactDirection) => false;
+	public virtual bool Deflects(Body body, Vector2 impactDirection) => false;
 
 	/// <summary>Called on the killing blow, while the body is still valid.</summary>
-	public virtual void OnDestroyed(Enemy body) { }
+	public virtual void OnDestroyed(Body body) { }
 }
 
 /// <summary>Lookup from kind to its shared behaviour.</summary>
@@ -56,7 +56,7 @@ public static class BodyBehaviours
 
 public sealed class DrifterBehaviour : BodyBehaviour
 {
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 1.0f;
 		body.AccelMultiplier = 1.0f;
@@ -71,7 +71,7 @@ public sealed class DrifterBehaviour : BodyBehaviour
 
 public sealed class ShardBehaviour : BodyBehaviour
 {
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 1.7f;
 		body.AccelMultiplier = 1.55f;
@@ -87,7 +87,7 @@ public sealed class ShardBehaviour : BodyBehaviour
 
 public sealed class PlanetoidBehaviour : BodyBehaviour
 {
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 0.5f;
 		// Heavy bodies answer gravity slowly, which is what makes them read as
@@ -109,7 +109,7 @@ public sealed class FractureBehaviour : BodyBehaviour
 	private const int SplinterCount = 3;
 	private const float SplinterSpread = 190.0f;
 
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 0.85f;
 		body.AccelMultiplier = 0.9f;
@@ -122,7 +122,7 @@ public sealed class FractureBehaviour : BodyBehaviour
 		body.TextureIndex = 6;
 	}
 
-	public override void OnDestroyed(Enemy body)
+	public override void OnDestroyed(Body body)
 	{
 		for (int i = 0; i < SplinterCount; i++)
 		{
@@ -134,7 +134,7 @@ public sealed class FractureBehaviour : BodyBehaviour
 
 public sealed class SplinterBehaviour : BodyBehaviour
 {
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 1.45f;
 		body.AccelMultiplier = 1.35f;
@@ -158,7 +158,7 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 	private const float RadialCorrection = 2.4f;
 	private const float FireInterval = 2.1f;
 
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 1.05f;
 		body.AccelMultiplier = 1.0f;
@@ -172,7 +172,7 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 		body.BehaviourTimer = (float)GD.RandRange(0.4, FireInterval);
 	}
 
-	public override void Steer(Enemy body, float delta)
+	public override void Steer(Body body, float delta)
 	{
 		Vector2 toWorld = body.WorldOffset;
 		float distance = Mathf.Max(toWorld.Length(), 1.0f);
@@ -181,7 +181,7 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 		// Push out when too close, pull in when too far, and always keep going
 		// round. The result is a body that circles at a readable, stable range.
 		float error = distance - OrbitRadius;
-		float speed = EnemySpawner.CurrentSpeed * body.SpeedMultiplier;
+		float speed = BodySpawner.CurrentSpeed * body.SpeedMultiplier;
 
 		Vector2 tangent = inward.Orthogonal() * body.OrbitDirection;
 		Vector2 target = tangent * speed + inward * Mathf.Clamp(error * RadialCorrection, -speed, speed);
@@ -205,7 +205,7 @@ public sealed class FlareBehaviour : BodyBehaviour
 {
 	private const float BlastRadius = 260.0f;
 
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 0.8f;
 		body.AccelMultiplier = 0.8f;
@@ -218,7 +218,7 @@ public sealed class FlareBehaviour : BodyBehaviour
 		body.TextureIndex = 8;
 	}
 
-	public override void OnDestroyed(Enemy body)
+	public override void OnDestroyed(Body body)
 	{
 		body.Detonate(BlastRadius);
 	}
@@ -233,7 +233,7 @@ public sealed class BulwarkBehaviour : BodyBehaviour
 	/// <summary>Cosine of the half-angle of the armoured arc. -0.5 is a 120 degree face.</summary>
 	private const float ArmourCosine = -0.5f;
 
-	public override void Apply(Enemy body)
+	public override void Apply(Body body)
 	{
 		body.SpeedMultiplier = 0.7f;
 		body.AccelMultiplier = 0.65f;
@@ -246,7 +246,7 @@ public sealed class BulwarkBehaviour : BodyBehaviour
 		body.TextureIndex = 4;
 	}
 
-	public override bool Deflects(Enemy body, Vector2 impactDirection)
+	public override bool Deflects(Body body, Vector2 impactDirection)
 	{
 		if (impactDirection == Vector2.Zero)
 			return false;

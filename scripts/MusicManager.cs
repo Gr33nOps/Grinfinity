@@ -72,7 +72,7 @@ public partial class MusicManager : Node
 			return 0f;
 
 		float byTime = manager.RunTime / Mathf.Max(DangerRampSeconds, 1f);
-		float byCrowd = GetTree().GetNodeCountInGroup("enemies") / (float)Mathf.Max(DangerCrowd, 1);
+		float byCrowd = GetTree().GetNodeCountInGroup("bodies") / (float)Mathf.Max(DangerCrowd, 1);
 
 		return Mathf.Clamp(Mathf.Max(byTime, byCrowd), 0f, 1f);
 	}

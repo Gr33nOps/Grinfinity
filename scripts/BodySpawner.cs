@@ -1,6 +1,6 @@
 using Godot;
 
-public partial class EnemySpawner : Node
+public partial class BodySpawner : Node
 {
 	// Tuned for a 2-6 minute orbit: the ramp tops out around 2:00, which is when
 	// the spawn interval is also at its floor, so the back half is flat-out.
@@ -9,9 +9,9 @@ public partial class EnemySpawner : Node
 	[Export] public float SpeedIncreasePerSecond { get; set; } = 0.9f;
 	[Export] public float StartSpawnInterval { get; set; } = 1.35f;
 	[Export] public float MinSpawnInterval { get; set; } = 0.38f;
-	[Export] public int MaxEnemyCount { get; set; } = 90;
+	[Export] public int MaxBodyCount { get; set; } = 90;
 	[Export] public float SpawnMargin { get; set; } = 100.0f;
-	[Export] public PackedScene EnemyScene { get; set; }
+	[Export] public PackedScene BodyScene { get; set; }
 
 	[ExportGroup("Bestiary")]
 	// One new kind roughly every 20 seconds. Each arrival is meant to be
@@ -35,7 +35,7 @@ public partial class EnemySpawner : Node
 	public static float SpeedScale { get; private set; } = 1.0f;
 
 	private Timer spawnTimer;
-	private Texture2D[] enemyTextures;
+	private Texture2D[] bodyTextures;
 	private RunState run;
 	private float enemySpeed;
 	private float elapsed;
@@ -47,7 +47,7 @@ public partial class EnemySpawner : Node
 		SpeedScale = 1.0f;
 		elapsed = 0f;
 		run = GameManager.Of(this)?.Run;
-		LoadEnemyResources();
+		LoadBodyResources();
 		SetupSpawnTimer();
 	}
 
@@ -67,14 +67,14 @@ public partial class EnemySpawner : Node
 		spawnTimer.WaitTime = Mathf.Lerp(StartSpawnInterval, MinSpawnInterval, progress) * massRate;
 	}
 
-	private void LoadEnemyResources()
+	private void LoadBodyResources()
 	{
-		EnemyScene ??= GD.Load<PackedScene>("res://scenes/enemy.tscn");
+		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 
-		enemyTextures = new Texture2D[9];
-		for (int i = 0; i < enemyTextures.Length; i++)
+		bodyTextures = new Texture2D[9];
+		for (int i = 0; i < bodyTextures.Length; i++)
 		{
-			enemyTextures[i] = GD.Load<Texture2D>($"res://sprites/enemy {i + 1}.png");
+			bodyTextures[i] = GD.Load<Texture2D>($"res://sprites/enemy {i + 1}.png");
 		}
 	}
 
@@ -91,7 +91,7 @@ public partial class EnemySpawner : Node
 
 	private void OnSpawnTimeout()
 	{
-		if (EnemyScene == null)
+		if (BodyScene == null)
 			return;
 
 		// A boss fight is about the boss. Trash on top of it would only make the
@@ -99,7 +99,7 @@ public partial class EnemySpawner : Node
 		if (GameManager.Of(this)?.BossActive == true)
 			return;
 
-		if (GetTree().GetNodeCountInGroup("enemies") >= MaxEnemyCount)
+		if (GetTree().GetNodeCountInGroup("bodies") >= MaxBodyCount)
 			return;
 
 		BodyKind kind = PickKind();
@@ -157,30 +157,30 @@ public partial class EnemySpawner : Node
 
 	private void SpawnOne(BodyKind kind, Vector2 position)
 	{
-		if (EnemyScene.Instantiate() is not Enemy enemy)
+		if (BodyScene.Instantiate() is not Body body)
 			return;
 
-		enemy.Configure(kind);
-		enemy.GlobalPosition = position;
-		SetRandomTexture(enemy);
-		GameManager.Spawn(this, enemy);
+		body.Configure(kind);
+		body.GlobalPosition = position;
+		SetRandomTexture(body);
+		GameManager.Spawn(this, body);
 	}
 
-	private void SetRandomTexture(Enemy enemy)
+	private void SetRandomTexture(Body body)
 	{
-		var sprite = enemy.GetNodeOrNull<Sprite2D>("Sprite2D");
-		if (sprite == null || enemyTextures.Length == 0)
+		var sprite = body.GetNodeOrNull<Sprite2D>("Sprite2D");
+		if (sprite == null || bodyTextures.Length == 0)
 			return;
 
 		// Most kinds pin a face so they stay recognisable between orbits; only
 		// the baseline Drifter is left to vary.
-		int index = enemy.TextureIndex >= 0
-			? Mathf.Min(enemy.TextureIndex, enemyTextures.Length - 1)
-			: GD.RandRange(0, Mathf.Min(2, enemyTextures.Length - 1));
-		sprite.Texture = enemyTextures[index];
+		int index = body.TextureIndex >= 0
+			? Mathf.Min(body.TextureIndex, bodyTextures.Length - 1)
+			: GD.RandRange(0, Mathf.Min(2, bodyTextures.Length - 1));
+		sprite.Texture = bodyTextures[index];
 
 		Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
-		if (enemy.GlobalPosition.X > viewportSize.X || enemy.GlobalPosition.Y > viewportSize.Y)
+		if (body.GlobalPosition.X > viewportSize.X || body.GlobalPosition.Y > viewportSize.Y)
 		{
 			sprite.FlipV = true;
 			sprite.FlipH = true;

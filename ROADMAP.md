@@ -48,11 +48,21 @@ Never introduce a name that could belong to any other genre.
 - Windows + Linux exports, CI that fails on import errors
 
 **Known debt**
-- No object pooling — bullets, enemies and debris all instantiate per spawn
-- Enemy behaviour is a single `_PhysicsProcess` branch; needs a per-kind split
-  once there are six or more
-- No `RunState` owner — mass, score and modifiers will otherwise smear across
-  `GameManager` and `ScoreManager`
+- ~~No object pooling — bullets, enemies and debris all instantiate per spawn.~~
+  **Measured, and it is not a problem yet.** A 150-second orbit under combat
+  load: 152,290 frames, **1.00 ms average, 10.38 ms worst, zero frames over the
+  16.67 ms budget**, peaking at 77 live bodies and motes. A second run held at
+  the 90-body spawn cap with no shooting saw one 21 ms outlier and nothing else.
+  Roughly 17x headroom. Re-measure with `tools/dev_capture.tscn` before spending
+  a day on pools — the numbers print at the end of every capture run.
+- ~~Enemy behaviour is a single `_PhysicsProcess` branch~~ — split into
+  `BodyBehaviour`, one stateless strategy per kind (M3).
+- ~~No `RunState` owner~~ — built in M2; it owns time, kills, streak, mass,
+  moons and score, and raises signals rather than touching labels.
+- **The nine face sprites are still `enemy N.png` on disk.** The classes, scenes
+  and groups are all `Body` now; the texture filenames were left alone because
+  renaming them moves texture UIDs for no behavioural gain. Rename them when the
+  distinct silhouettes in `ASSETS.md` replace them anyway.
 
 ---
 
@@ -325,7 +335,9 @@ long it lasted.
 - [ ] **Accessibility** — colourblind-safe body palette, high-contrast outlines,
       hold-vs-toggle rapid fire, assist mode (slower bodies), shake off
 - [ ] **Localisation-ready** — all UI strings through a translation table
-- [ ] **Object pooling** for bullets, bodies and debris if frame time suffers
+- [ ] ~~**Object pooling** for bullets, bodies and debris if frame time suffers~~
+      — measured in M3 and it does not. See "Known debt" above; re-measure
+      rather than assuming.
 - [ ] **Steamworks** — overlay, achievements, cloud saves
 - [ ] **Store assets** — trailer, 6–8 screenshots, capsules, description
 - [ ] **QA matrix** — 1080p / 1440p / ultrawide, gamepad-only, keyboard-only,

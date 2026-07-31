@@ -83,14 +83,14 @@ public partial class Bullet : Area2D
 			trail.RemovePoint(0);
 	}
 
-	private void OnBodyEntered(Node2D body)
+	private void OnBodyEntered(Node2D hit)
 	{
 		if (hasHit)
 			return;
 
 		if (hostile)
 		{
-			if (body is not Player world)
+			if (hit is not Player world)
 				return;
 
 			hasHit = true;
@@ -101,11 +101,11 @@ public partial class Bullet : Area2D
 			return;
 		}
 
-		if (body is not Enemy enemy)
+		if (hit is not Body body)
 		{
 			// Bosses take damage but are not bodies: no score, no debris, no burst.
 			// What a kill is worth there is the boss's own business.
-			if (body is IShootable target)
+			if (hit is IShootable target)
 			{
 				target.TakeDamage(Damage, Direction);
 				SpawnBurst(10, 0.4f, new Color(1.0f, 0.95f, 0.8f), 0.5f);
@@ -125,10 +125,10 @@ public partial class Bullet : Area2D
 		}
 
 		// Captured before the hit, because a lethal one queues the body for free.
-		Enemy.Remains remains = enemy.GetRemains();
+		Body.Remains remains = body.GetRemains();
 
 		// Armoured bodies survive several hits, so the kill only scores when it lands.
-		if (enemy.TakeDamage(Damage, Direction))
+		if (body.TakeDamage(Damage, Direction))
 		{
 			GameManager.Of(this)?.RegisterKill(remains, GlobalPosition);
 			SpawnBurst(remains.BurstAmount, remains.BurstScale, remains.BurstColor, 1.0f);

@@ -7,7 +7,7 @@ using Godot;
 /// flashing and culling. What differs per kind lives in a <see cref="BodyBehaviour"/>,
 /// which this hands the wheel to once a frame.
 /// </summary>
-public partial class Enemy : CharacterBody2D, IShootable
+public partial class Body : CharacterBody2D, IShootable
 {
 	// How far outside the viewport a body may drift before it is culled.
 	private const float CullMargin = 700.0f;
@@ -150,7 +150,7 @@ public partial class Enemy : CharacterBody2D, IShootable
 			return;
 
 		Vector2 tangent = toWorld.Normalized().Orthogonal() * OrbitDirection;
-		Drift = tangent * EnemySpawner.CurrentSpeed * SpeedMultiplier * (float)GD.RandRange(0.35, 0.95);
+		Drift = tangent * BodySpawner.CurrentSpeed * SpeedMultiplier * (float)GD.RandRange(0.35, 0.95);
 	}
 
 	/// <summary>Applies the stats and look for a kind. Call before adding to the tree.</summary>
@@ -193,12 +193,12 @@ public partial class Enemy : CharacterBody2D, IShootable
 		float falloff = FalloffDistance / (distance + FalloffDistance);
 		float massPull = Mathf.Lerp(1.0f, HeavyPullMultiplier, run?.MassNormalised ?? 0f);
 		float acceleration = BaseAcceleration * AccelMultiplier * massPull * falloff
-			* EnemySpawner.SpeedScale;
+			* BodySpawner.SpeedScale;
 
 		Vector2 drift = Drift + towards * acceleration * delta;
 		drift *= Mathf.Max(1.0f - Drag * delta, 0f);
 
-		float baseSpeed = EnemySpawner.CurrentSpeed * SpeedMultiplier;
+		float baseSpeed = BodySpawner.CurrentSpeed * SpeedMultiplier;
 
 		// Far out, orbiting forever would just mean drifting off-screen, so a
 		// minimum closing speed is enforced. Inside that range the body is left
@@ -221,9 +221,9 @@ public partial class Enemy : CharacterBody2D, IShootable
 		if (manager == null)
 			return;
 
-		BodyScene ??= GD.Load<PackedScene>("res://scenes/enemy.tscn");
+		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 
-		var child = BodyScene.Instantiate<Enemy>();
+		var child = BodyScene.Instantiate<Body>();
 		child.Configure(kind);
 		child.GlobalPosition = GlobalPosition;
 		child.Drift = Drift * 0.4f + launch;
@@ -261,9 +261,9 @@ public partial class Enemy : CharacterBody2D, IShootable
 	{
 		GameManager.Of(this)?.SpawnBlast(GlobalPosition, radius, BurstColor);
 
-		foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
 		{
-			if (node is not Enemy other || other == this || !IsInstanceValid(other))
+			if (node is not Body other || other == this || !IsInstanceValid(other))
 				continue;
 
 			if (GlobalPosition.DistanceTo(other.GlobalPosition) <= radius)

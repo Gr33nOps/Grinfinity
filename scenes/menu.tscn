@@ -99,6 +99,26 @@ text = "CREDITS"
 flat = true
 alignment = 0
 
+[node name="BestLabel" type="Label" parent="UI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -720.0
+offset_top = -190.0
+offset_right = -60.0
+offset_bottom = -60.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("11_font")
+theme_override_font_sizes/font_size = 44
+text = "BEST 0
+LONGEST 00:00"
+horizontal_alignment = 2
+vertical_alignment = 1
+
 [node name="QuitConfirm" type="ConfirmationDialog" parent="."]
 title = "Quit Grinfinity"
 initial_position = 2

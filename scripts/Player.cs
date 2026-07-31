@@ -142,15 +142,15 @@ public partial class Player : CharacterBody2D
 
 		var manager = GameManager.Of(this);
 
-		foreach (Node node in GetTree().GetNodesInGroup("enemies"))
+		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
 		{
-			if (node is not Enemy body)
+			if (node is not Body body)
 				continue;
 
 			if (GlobalPosition.DistanceTo(body.GlobalPosition) > NovaRadius)
 				continue;
 
-			Enemy.Remains remains = body.GetRemains();
+			Body.Remains remains = body.GetRemains();
 			Vector2 outward = (body.GlobalPosition - GlobalPosition).Normalized();
 
 			// The mass is already spent on the blast, so these kills score but
@@ -222,11 +222,11 @@ public partial class Player : CharacterBody2D
 		Velocity = Velocity.Lerp(targetVelocity, t);
 	}
 
-	private void OnHitBoxBodyEntered(Node2D body)
+	private void OnHitBoxBodyEntered(Node2D hit)
 	{
 		// "hazards" covers things that are lethal on contact but are not bodies —
 		// bosses, and whatever M4's arena hazards turn out to be.
-		if (body.IsInGroup("enemies") || body.IsInGroup("hazards"))
+		if (hit.IsInGroup("bodies") || hit.IsInGroup("hazards"))
 			Die();
 	}
 

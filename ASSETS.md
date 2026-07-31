@@ -265,8 +265,11 @@ Boss 1 — The Coil:
 ### M7 — Ship
 
 **Art**
-- [ ] **`icon.png` needs redrawing square.** It's currently 312×233 — Windows and
-      Steam both want square. Export 512×512 and 256×256.
+- [x] **`icon.png` is square.** Was 312×233; now 512×512, padded around the art
+      and scaled once so the aspect ratio is exact. **It is an upscale of the
+      existing raster**, so it is slightly soft — invisible at the 32–256 px an
+      app icon is actually seen at, but re-export from the vector master at
+      512×512 when convenient and this becomes crisp for free.
 - [ ] Steam capsules: 616×353 (small), 460×215 (header), 1920×620 (hero),
       374×448 (vertical), 3840×1240 (page background)
 - [ ] itch.io cover: 630×500
@@ -327,7 +330,7 @@ parallax layers that transform how the whole game looks.
 3. **Degun the 12 skins + draw one gun.** Unblocks all of M3 and costs a day.
 4. **M1 particles** (6 sprites) — hitstop and shake are in and running on
    in-engine stand-ins, so these are polish now, not blockers.
-5. **Square `icon.png`** — 20 minutes, and it's a launch blocker sitting there today.
+5. ~~**Square `icon.png`**~~ — done, though it wants a crisp re-export.
 6. Then follow the milestones in order.
 
 Batch by type, not by milestone, once you're past M2: drawing 20 icons in one
