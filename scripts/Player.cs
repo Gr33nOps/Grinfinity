@@ -224,7 +224,9 @@ public partial class Player : CharacterBody2D
 
 	private void OnHitBoxBodyEntered(Node2D body)
 	{
-		if (body.IsInGroup("enemies"))
+		// "hazards" covers things that are lethal on contact but are not bodies —
+		// bosses, and whatever M4's arena hazards turn out to be.
+		if (body.IsInGroup("enemies") || body.IsInGroup("hazards"))
 			Die();
 	}
 

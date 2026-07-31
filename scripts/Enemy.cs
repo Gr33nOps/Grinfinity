@@ -7,7 +7,7 @@ using Godot;
 /// flashing and culling. What differs per kind lives in a <see cref="BodyBehaviour"/>,
 /// which this hands the wheel to once a frame.
 /// </summary>
-public partial class Enemy : CharacterBody2D
+public partial class Enemy : CharacterBody2D, IShootable
 {
 	// How far outside the viewport a body may drift before it is culled.
 	private const float CullMargin = 700.0f;

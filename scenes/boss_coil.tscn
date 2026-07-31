@@ -1,0 +1,40 @@
+[gd_scene load_steps=4 format=3 uid="uid://c1grinbosscoil"]
+
+[ext_resource type="Script" path="res://scripts/BossCoil.cs" id="1_coil"]
+[ext_resource type="PackedScene" uid="uid://bw0u5kimoedt1" path="res://scenes/bullet.tscn" id="2_bullet"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_coil"]
+radius = 62.0
+
+[node name="BossCoil" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 0
+modulate = Color(0.86, 0.72, 1, 1)
+script = ExtResource("1_coil")
+BulletScene = ExtResource("2_bullet")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_coil")
+
+[node name="Core" type="Polygon2D" parent="."]
+color = Color(0.55, 0.32, 0.72, 1)
+polygon = PackedVector2Array(62, 0, 53.7, 31, 31, 53.7, 0, 62, -31, 53.7, -53.7, 31, -62, 0, -53.7, -31, -31, -53.7, 0, -62, 31, -53.7, 53.7, -31)
+
+[node name="Inner" type="Polygon2D" parent="."]
+scale = Vector2(0.62, 0.62)
+color = Color(0.95, 0.86, 1, 1)
+polygon = PackedVector2Array(62, 0, 53.7, 31, 31, 53.7, 0, 62, -31, 53.7, -53.7, 31, -62, 0, -53.7, -31, -31, -53.7, 0, -62, 31, -53.7, 53.7, -31)
+
+[node name="ArmA" type="Polygon2D" parent="."]
+color = Color(0.72, 0.5, 0.92, 1)
+polygon = PackedVector2Array(-96, -9, 96, -9, 96, 9, -96, 9)
+
+[node name="ArmB" type="Polygon2D" parent="."]
+rotation = 1.5708
+color = Color(0.72, 0.5, 0.92, 1)
+polygon = PackedVector2Array(-96, -9, 96, -9, 96, 9, -96, 9)
+
+[node name="Eye" type="Polygon2D" parent="."]
+scale = Vector2(0.26, 0.26)
+color = Color(0.28, 0.12, 0.36, 1)
+polygon = PackedVector2Array(62, 0, 53.7, 31, 31, 53.7, 0, 62, -31, 53.7, -53.7, 31, -62, 0, -53.7, -31, -31, -53.7, 0, -62, 31, -53.7, 53.7, -31)

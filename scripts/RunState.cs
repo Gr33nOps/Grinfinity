@@ -133,6 +133,15 @@ public partial class RunState : Node
 		EmitSignal(SignalName.StreakChanged, Streak, milestone);
 	}
 
+	/// <summary>
+	/// A flat award — beating a boss. Not multiplied by mass: a boss is worth the
+	/// same whether it was fought light or heavy.
+	/// </summary>
+	public void AddBonus(int points)
+	{
+		score += Mathf.Max(points, 0);
+	}
+
 	/// <summary>Absorbing debris. The only way mass goes up.</summary>
 	public void AddMass(float amount)
 	{

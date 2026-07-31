@@ -94,6 +94,11 @@ public partial class EnemySpawner : Node
 		if (EnemyScene == null)
 			return;
 
+		// A boss fight is about the boss. Trash on top of it would only make the
+		// safe gaps unreadable, which is the one thing The Coil teaches.
+		if (GameManager.Of(this)?.BossActive == true)
+			return;
+
 		if (GetTree().GetNodeCountInGroup("enemies") >= MaxEnemyCount)
 			return;
 

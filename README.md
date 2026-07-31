@@ -30,15 +30,23 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 ## Features
 
 - Gravity, not pathfinding: bodies orbit, overshoot, clump and slingshot
+- Three weapons, chosen at orbit start: Comet, Debris Cannon, Ion Lance
+- Seven body kinds that each teach something — splitting, armoured, orbiting,
+  detonating — plus **The Coil**, a boss of spinning rings with one safe gap
 - Mass as a single risk-and-reward dial — rings, moons, venting and a live
   score multiplier all read from it
 - Score, survival timer, kill count and streak counter, saved as personal bests
 - Death recap: score, time, kills, best streak, mass at death and moons held
-- Three enemy types that unlock as a run goes on:
-  - **Chaser** — the baseline, walks straight at you
-  - **Swarmer** — small and fast, arrives in packs (from 20s)
-  - **Tank** — large and slow, takes four hits (from 45s)
-- Ramping enemy speed and spawn rate
+- Bodies unlock as an orbit goes on:
+  - **Drifter** — the baseline, falls straight in
+  - **Shard** — small and fast, arrives in packs (0:18)
+  - **Planetoid** — large and slow, takes four hits (0:40)
+  - **Fracture** — breaks into three Splinters when killed (1:02)
+  - **Bulwark** — armoured across its leading face; flank it (1:25)
+  - **Satellite** — holds a ring at fixed range and shoots inward (1:48)
+  - **Flare** — detonates lethally on death; kill it at a distance (2:10)
+  - **The Coil** — the first boss, at 3:00
+- Ramping body speed and spawn rate
 - Random player skins and enemy variants
 - Dash and rapid-fire abilities
 - Hitstop, trauma-based screen shake, bullet trails, muzzle flash and per-enemy

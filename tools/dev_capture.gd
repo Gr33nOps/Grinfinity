@@ -30,6 +30,12 @@ func _ready() -> void:
 	if world and OS.get_environment("GRIN_MORTAL") == "":
 		world.set("Invulnerable", true)
 
+	# GRIN_BOSS brings The Coil forward, so a boss fight can be checked without
+	# sitting through three minutes of orbit first.
+	var boss_at := OS.get_environment("GRIN_BOSS")
+	if boss_at != "":
+		scene.set("BossTime", float(boss_at))
+
 	_capture(world != null)
 
 func _capture(is_gameplay: bool) -> void:

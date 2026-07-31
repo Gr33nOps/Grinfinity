@@ -221,24 +221,39 @@ a **distinct silhouette**, since they are all tinted variations of one sprite to
 
 | Body | Behaviour | Teaches |
 |---|---|---|
-| **Drifter** ✅ | Straight in | Baseline |
+| **Drifter** ✅ | Falls straight in | Baseline |
 | **Shard** ✅ | Fast, arrives in packs | Crowd control |
 | **Planetoid** ✅ | Slow, four hits | Target priority |
-| **Fracture** | Dies into three smaller bodies | Don't kill it point-blank |
-| **Satellite** | Holds a fixed orbit radius, fires inward | Punishes lazy aim |
-| **Flare** | Detonates in a radius on death | Spacing |
-| **Bulwark** | Armoured front arc | Flanking |
+| **Fracture** ✅ | Dies into three Splinters | Don't kill it point-blank |
+| **Satellite** ✅ | Holds a fixed orbit radius, fires inward | Punishes lazy aim |
+| **Flare** ✅ | Detonates in a radius on death | Spacing |
+| **Bulwark** ✅ | Armoured front arc | Flanking |
 | **Pulsar** | Telegraphed beam from off-screen | Never stand still |
 
 **First boss — The Coil.** Spinning projectile rings with safe gaps; teaches dash
 timing. Appears around 3:00 in Endless Orbit.
 
-- [ ] Weapon system + first three weapons, chosen at orbit start
-- [ ] Four new body kinds
-- [ ] **Enemy behaviour refactor** — strategy per kind, not one `if` ladder
-- [ ] The Coil + boss music sting + slow-mo on kill
+- [x] **Weapon system + first three weapons**, chosen at orbit start. Weapons are
+      data rather than subclasses, so the Mass Driver and Solar Flare are a table
+      entry plus whatever field they genuinely need. Range is expressed as shot
+      lifetime, which is what makes the Debris Cannon short-ranged without making
+      it slow. Chosen between menu and game, never between death and restart.
+- [x] **Five new body kinds** — Fracture, its Splinters, Satellite, Flare and
+      Bulwark. Only Pulsar is left.
+- [x] **Enemy behaviour refactor** — `BodyBehaviour`, one stateless strategy per
+      kind covering stats, steering, damage rules and death rules. `EnemyKind`
+      became `BodyKind` with the design names.
+- [x] **The Coil** — rings of slow shots with one walking safe gap, faster as it
+      is wounded, drifting so the gap is never twice in the same place. Trash
+      spawning stands down for the fight. Slow-mo on the kill, out of the same
+      machinery as hitstop. **The sting is a placeholder**: `music_boss.ogg` and
+      `boss_defeat.ogg` do not exist yet.
 
 **Done when:** two orbits with different weapons play noticeably differently.
+
+**Status:** done. Still on placeholder audio, and the eight kinds still share
+nine face sprites — `BodyMark` draws the distinguishing shapes (plate arcs, fins,
+seams, a pulsing fuse) in-engine until the silhouettes in `ASSETS.md` exist.
 
 ---
 
@@ -366,10 +381,20 @@ Firm. Revisit only if a shipped game earns the right.
    the art, so they are now cropped and the key is drawn live from the input map
    — which also fixes rebinding silently lying about itself.
 3. ~~**M1**: tune the existing numbers → hitstop → screen shake → parallax space.~~
-   Done, and **M2 is done too** — see both above. Next is **M3: the arsenal and
-   bestiary**, starting with the weapon system and the enemy behaviour refactor,
-   which the per-kind gravity constants in `Enemy.Configure` are already
-   straining against.
+   Done — and **M2 and M3 with it**. Next is **M4: orbits that feel unique**,
+   starting with power-ups and relics.
+
+### The two things code cannot finish
+
+1. **Audio.** Every consumer is wired and will pick its file up on drop-in:
+   `kill_small`, `kill_big`, `hit_chip`, the three `streak_*` stings,
+   `music_intense` (same tempo and key as `background_music.ogg`), `music_boss`
+   and `boss_defeat`. This is the single biggest perceived-quality jump left.
+2. **A playtest.** M1's "feels good with the sound off", M2's "can explain why
+   they went heavy", and whether The Coil's gap is fair are all things only hands
+   on the game can answer. `MaxMass`, the ring and moon thresholds,
+   `HeavyPullMultiplier`, `Drag` and `BossCoil.RingInterval` are the knobs most
+   likely to want moving, and all of them are `[Export]`.
 
 ### Recording the M1 audio
 

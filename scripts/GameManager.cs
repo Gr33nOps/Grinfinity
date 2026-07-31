@@ -18,6 +18,15 @@ public partial class GameManager : Node2D
 	/// <summary>Ceiling on live motes, so a wipe cannot flood the arena.</summary>
 	[Export] public int MaxDebris { get; set; } = 220;
 
+	[ExportGroup("Bosses")]
+	[Export] public PackedScene BossScene { get; set; }
+	/// <summary>Seconds into an orbit before The Coil arrives.</summary>
+	[Export] public float BossTime { get; set; } = 180.0f;
+	[Export] public int BossScoreBonus { get; set; } = 5000;
+	/// <summary>Time scale held while a boss dies. Slow motion, not a freeze.</summary>
+	[Export] public float BossKillSlowMo { get; set; } = 0.22f;
+	[Export] public float BossKillSlowMoTime { get; set; } = 1.1f;
+
 	private PauseMenu pauseMenu;
 	private RunState run;
 	private EnemySpawner enemySpawner;
@@ -37,7 +46,15 @@ public partial class GameManager : Node2D
 	private bool hitstopActive = false;
 	private ulong hitstopEndMsec = 0;
 
+	private BossCoil boss;
+	private bool bossSpawned;
+	private Control bossBar;
+	private ProgressBar bossHealth;
+
 	public bool IsPaused => isPaused;
+
+	/// <summary>True while a boss is on the field. The spawner stands down.</summary>
+	public bool BossActive => boss != null && IsInstanceValid(boss);
 
 	/// <summary>The live orbit: time, kills, streak, mass, moons and score.</summary>
 	public RunState Run => run;
@@ -79,6 +96,12 @@ public partial class GameManager : Node2D
 
 		DebrisScene ??= GD.Load<PackedScene>("res://scenes/debris.tscn");
 		BurstScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
+		BossScene ??= GD.Load<PackedScene>("res://scenes/boss_coil.tscn");
+
+		bossBar = GetNodeOrNull<Control>("UI/BossBar");
+		bossHealth = GetNodeOrNull<ProgressBar>("UI/BossBar/Health");
+		if (bossBar != null)
+			bossBar.Visible = false;
 
 		enemySpawner = AddPausableChild(new EnemySpawner());
 		uiManager = AddPausableChild(new UIManager());
@@ -143,11 +166,60 @@ public partial class GameManager : Node2D
 	// time: delta is scaled by Engine.TimeScale and would stretch with it.
 	public override void _Process(double delta)
 	{
+		if (!isPaused && !isGameOver && !bossSpawned && RunTime >= BossTime)
+			SpawnBoss();
+
 		if (!hitstopActive)
 			return;
 
 		if (isPaused || isGameOver || Time.GetTicksMsec() >= hitstopEndMsec)
 			EndHitstop();
+	}
+
+	private void SpawnBoss()
+	{
+		if (BossScene == null)
+			return;
+
+		bossSpawned = true;
+		boss = BossScene.Instantiate<BossCoil>();
+
+		// Arrives off to one side rather than on top of the player.
+		Vector2 bounds = GetViewportRect().Size;
+		boss.GlobalPosition = new Vector2(bounds.X * 0.5f, bounds.Y * 0.22f);
+
+		boss.HealthChanged += OnBossHealthChanged;
+		boss.Defeated += OnBossDefeated;
+		AddEntity(boss);
+
+		if (bossBar != null)
+			bossBar.Visible = true;
+		OnBossHealthChanged(1.0f);
+
+		Shake(0.5f);
+		PlayStreakSting(0.6f);
+	}
+
+	private void OnBossHealthChanged(float fraction)
+	{
+		if (bossHealth != null)
+			bossHealth.Value = fraction * 100.0;
+	}
+
+	private void OnBossDefeated()
+	{
+		if (bossBar != null)
+			bossBar.Visible = false;
+
+		Vector2 at = IsInstanceValid(boss) ? boss.GlobalPosition : Vector2.Zero;
+		boss = null;
+
+		// Slow motion rather than a freeze: the payoff is watching it come apart.
+		Hitstop(BossKillSlowMoTime, BossKillSlowMo);
+		Shake(0.9f);
+		SpawnBlast(at, 420.0f, new Color(0.86f, 0.72f, 1.0f));
+		run?.AddBonus(BossScoreBonus);
+		PlayStreakSting(0.45f);
 	}
 
 	public override void _ExitTree()
@@ -179,7 +251,11 @@ public partial class GameManager : Node2D
 	/// Briefly drops the engine time scale so an impact lands. Overlapping calls
 	/// extend the freeze rather than cutting it short.
 	/// </summary>
-	public void Hitstop(float seconds)
+	/// <param name="scale">
+	/// Time scale to hold. Defaults to a near-freeze; a boss kill passes a
+	/// higher value to get slow motion out of the same machinery.
+	/// </param>
+	public void Hitstop(float seconds, float scale = -1f)
 	{
 		if (isGameOver || seconds <= 0f || isPaused)
 			return;
@@ -189,12 +265,8 @@ public partial class GameManager : Node2D
 			return;
 
 		hitstopEndMsec = end;
-
-		if (!hitstopActive)
-		{
-			hitstopActive = true;
-			Engine.TimeScale = HitstopScale;
-		}
+		hitstopActive = true;
+		Engine.TimeScale = scale > 0f ? scale : HitstopScale;
 	}
 
 	private void EndHitstop()
@@ -386,11 +458,21 @@ public partial class GameManager : Node2D
 			return;
 
 		// Each milestone lands a step higher, capped so it stays musical.
-		float step = streak >= 25 ? 2.0f : streak >= 10 ? 1.7f : 1.45f;
-		streakSound.PitchScale = step;
-		streakSound.Play();
-
+		PlayStreakSting(streak >= 25 ? 2.0f : streak >= 10 ? 1.7f : 1.45f);
 		Shake(0.12f);
+	}
+
+	/// <summary>
+	/// One sample doing several jobs: streak milestones ring up, boss arrival and
+	/// defeat ring down. Placeholder until the real stings exist.
+	/// </summary>
+	private void PlayStreakSting(float pitch)
+	{
+		if (streakSound == null)
+			return;
+
+		streakSound.PitchScale = pitch;
+		streakSound.Play();
 	}
 
 	public void PlayButtonSound()

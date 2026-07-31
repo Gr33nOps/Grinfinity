@@ -102,7 +102,27 @@ public partial class Bullet : Area2D
 		}
 
 		if (body is not Enemy enemy)
+		{
+			// Bosses take damage but are not bodies: no score, no debris, no burst.
+			// What a kill is worth there is the boss's own business.
+			if (body is IShootable target)
+			{
+				target.TakeDamage(Damage, Direction);
+				SpawnBurst(10, 0.4f, new Color(1.0f, 0.95f, 0.8f), 0.5f);
+
+				if (Pierce > 0)
+				{
+					Pierce--;
+					return;
+				}
+
+				hasHit = true;
+				SetDeferred(Area2D.PropertyName.Monitoring, false);
+				QueueFree();
+			}
+
 			return;
+		}
 
 		// Captured before the hit, because a lethal one queues the body for free.
 		Enemy.Remains remains = enemy.GetRemains();
