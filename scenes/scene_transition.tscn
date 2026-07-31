@@ -40,7 +40,7 @@ _data = {
 &"dissolve": SubResource("Animation_264po")
 }
 
-[node name="scene transition" type="CanvasLayer"]
+[node name="SceneTransition" type="CanvasLayer"]
 layer = 39
 script = ExtResource("1_0wykx")
 

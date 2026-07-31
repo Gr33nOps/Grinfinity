@@ -1,26 +1,22 @@
 using Godot;
 
+/// <summary>
+/// Dash and rapid-fire state machine. Tuning lives on <see cref="Player"/> so it
+/// stays editable from the inspector.
+/// </summary>
 public class PlayerAbilities
 {
-	private Player player;
-
-	private const float DashSpeed = 600.0f;
-	private const float DashDuration = 0.2f;
-	private const float DashCooldown = 2.0f;
-	private const float NormalFireRate = 0.3f;
-	private const float RapidFireRate = 0.08f;
-	private const float RapidFireDuration = 3.0f;
-	private const float RapidFireCooldown = 5.0f;
+	private readonly Player player;
 
 	private float dashTimer = 0.0f;
-	private bool isDashing = false;
 	private float dashTimeLeft = 0.0f;
+	private bool isDashing = false;
 	private Vector2 dashDirection = Vector2.Zero;
 
 	private float rapidFireTimer = 0.0f;
+	private float rapidFireTimeLeft = 0.0f;
 	private float shootTimer = 0.0f;
 	private bool isRapidFiring = false;
-	private float rapidFireTimeLeft = 0.0f;
 	private bool canShoot = true;
 
 	public PlayerAbilities(Player playerRef)
@@ -39,31 +35,23 @@ public class PlayerAbilities
 		float deltaF = (float)delta;
 
 		if (dashTimer > 0)
-		{
 			dashTimer -= deltaF;
-		}
 
 		if (rapidFireTimer > 0)
-		{
 			rapidFireTimer -= deltaF;
-		}
 
 		if (shootTimer > 0)
 		{
 			shootTimer -= deltaF;
 			if (shootTimer <= 0)
-			{
 				canShoot = true;
-			}
 		}
 
 		if (isDashing)
 		{
 			dashTimeLeft -= deltaF;
 			if (dashTimeLeft <= 0)
-			{
 				isDashing = false;
-			}
 		}
 
 		if (isRapidFiring)
@@ -72,7 +60,7 @@ public class PlayerAbilities
 			if (rapidFireTimeLeft <= 0)
 			{
 				isRapidFiring = false;
-				rapidFireTimer = RapidFireCooldown;
+				rapidFireTimer = player.RapidFireCooldown;
 			}
 		}
 	}
@@ -80,14 +68,10 @@ public class PlayerAbilities
 	private void HandleInput()
 	{
 		if (Input.IsActionJustPressed("dash") && dashTimer <= 0 && !isDashing)
-		{
 			StartDash();
-		}
 
 		if (Input.IsActionJustPressed("rapid_fire") && rapidFireTimer <= 0 && !isRapidFiring)
-		{
 			StartRapidFire();
-		}
 	}
 
 	private void StartDash()
@@ -99,39 +83,33 @@ public class PlayerAbilities
 
 		if (inputDirection == Vector2.Zero)
 		{
-			inputDirection = (player.GetGlobalMousePosition() - player.GlobalPosition).Normalized();
+			inputDirection = (player.AimPosition - player.GlobalPosition).Normalized();
 		}
 
 		dashDirection = inputDirection;
 		isDashing = true;
-		dashTimeLeft = DashDuration;
-		dashTimer = DashCooldown;
+		dashTimeLeft = player.DashDuration;
+		dashTimer = player.DashCooldown;
 		player.CreateDashEffect();
 	}
 
 	private void StartRapidFire()
 	{
 		isRapidFiring = true;
-		rapidFireTimeLeft = RapidFireDuration;
+		rapidFireTimeLeft = player.RapidFireDuration;
 		player.CreateRapidFireEffect();
 	}
 
-	public void HandleShooting(Vector2 mousePos)
+	public void HandleShooting(Vector2 aimPosition)
 	{
-		if (Input.IsActionPressed("shoot") && canShoot)
-		{
-			player.ShootBullet(mousePos);
-			if (isRapidFiring)
-			{
-				shootTimer = RapidFireRate;
-			}
-			else
-			{
-				shootTimer = NormalFireRate;
-			}
-			canShoot = false;
-			player.PlayShootSound(isRapidFiring);
-		}
+		if (!Input.IsActionPressed("shoot") || !canShoot)
+			return;
+
+		player.ShootBullet(aimPosition);
+		player.PlayShootSound(isRapidFiring);
+
+		shootTimer = isRapidFiring ? player.RapidFireRate : player.NormalFireRate;
+		canShoot = false;
 	}
 
 	public bool IsDashing()
@@ -141,7 +119,7 @@ public class PlayerAbilities
 
 	public Vector2 GetDashVelocity()
 	{
-		return dashDirection * DashSpeed;
+		return dashDirection * player.DashSpeed;
 	}
 
 	public bool IsRapidFiring()
@@ -149,20 +127,13 @@ public class PlayerAbilities
 		return isRapidFiring;
 	}
 
-	public float GetRapidFireTimeLeft()
-	{
-		return rapidFireTimeLeft;
-	}
-
 	public float GetDashCooldownPercent()
 	{
-		float percent = 1.0f - (dashTimer / DashCooldown);
-		return Mathf.Clamp(percent, 0.0f, 1.0f);
+		return Mathf.Clamp(1.0f - (dashTimer / player.DashCooldown), 0.0f, 1.0f);
 	}
 
 	public float GetRapidFireCooldownPercent()
 	{
-		float percent = 1.0f - (rapidFireTimer / RapidFireCooldown);
-		return Mathf.Clamp(percent, 0.0f, 1.0f);
+		return Mathf.Clamp(1.0f - (rapidFireTimer / player.RapidFireCooldown), 0.0f, 1.0f);
 	}
 }

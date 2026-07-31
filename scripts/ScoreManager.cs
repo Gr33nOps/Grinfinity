@@ -2,50 +2,39 @@ using Godot;
 
 public partial class ScoreManager : Node
 {
+	private const string SavePath = "user://highscore.cfg";
+	private const string LegacySavePath = "user://highscore.save";
+	private const string Section = "score";
+	private const int SaveVersion = 1;
+	private const float MaxPlausibleTime = 36000.0f;
+
+	private static float bestTime = 0.0f;
+	private static bool isLoaded = false;
+
 	private float survivalTime = 0.0f;
 	private Label scoreLabel;
 	private Label highScoreLabel;
 
-	private const string SaveFile = "user://highscore.save";
-	private static float bestTime = 0.0f;
-	private static ScoreManager instance;
-
 	public override void _Ready()
 	{
-		instance = this;
-		LoadHighScore();
+		EnsureLoaded();
 
-		var gameManager = GetTree().GetFirstNodeInGroup("game_manager");
-		if (gameManager != null)
-		{
-			scoreLabel = gameManager.GetNodeOrNull<Label>("UI/ScoreLabel");
-			highScoreLabel = gameManager.GetNodeOrNull<Label>("UI/HighScoreLabel");
-		}
+		var gameRoot = GetParent();
+		scoreLabel = gameRoot?.GetNodeOrNull<Label>("UI/ScoreLabel");
+		highScoreLabel = gameRoot?.GetNodeOrNull<Label>("UI/HighScoreLabel");
+
+		// The best time cannot change mid-run, so it only needs writing once.
+		if (highScoreLabel != null)
+			highScoreLabel.Text = GetFormattedHighScore();
+
 	}
 
 	public override void _Process(double delta)
 	{
 		survivalTime += (float)delta;
-		UpdateScoreDisplay();
-		UpdateHighScoreDisplay();
-	}
 
-	private void UpdateScoreDisplay()
-	{
 		if (scoreLabel != null)
-		{
-			int minutes = (int)(survivalTime / 60);
-			int seconds = (int)(survivalTime % 60);
-			scoreLabel.Text = $"{minutes:D2}:{seconds:D2}";
-		}
-	}
-
-	private void UpdateHighScoreDisplay()
-	{
-		if (highScoreLabel != null)
-		{
-			highScoreLabel.Text = GetFormattedHighScore();
-		}
+			scoreLabel.Text = FormatTime(survivalTime);
 	}
 
 	public float GetSurvivalTime()
@@ -53,69 +42,73 @@ public partial class ScoreManager : Node
 		return survivalTime;
 	}
 
-	public void ResetScore()
+	public static string FormatTime(float seconds)
 	{
-		survivalTime = 0.0f;
+		int minutes = (int)(seconds / 60);
+		int remainder = (int)(seconds % 60);
+		return $"{minutes:D2}:{remainder:D2}";
 	}
 
-	public static ScoreManager GetInstance()
+	public static string GetFormattedHighScore()
 	{
-		return instance;
+		EnsureLoaded();
+		return $"BEST: {FormatTime(bestTime)}";
 	}
 
-	public void SaveHighScore(float time)
+	public static void SaveHighScore(float time)
 	{
-		if (time > bestTime)
-		{
-			bestTime = time;
-			SaveToFile();
-		}
-	}
+		EnsureLoaded();
 
-	public float GetHighScore()
-	{
-		return bestTime;
-	}
-
-	public string GetFormattedHighScore()
-	{
-		if (bestTime <= 0)
-			return "BEST: 00:00";
-
-		int minutes = (int)(bestTime / 60);
-		int seconds = (int)(bestTime % 60);
-		return $"BEST: {minutes:D2}:{seconds:D2}";
-	}
-
-	private void SaveToFile()
-	{
-		var file = FileAccess.Open(SaveFile, FileAccess.ModeFlags.Write);
-		if (file != null)
-		{
-			file.StoreFloat(bestTime);
-			file.Close();
-		}
-	}
-
-	private void LoadHighScore()
-	{
-		var file = FileAccess.Open(SaveFile, FileAccess.ModeFlags.Read);
-		if (file == null)
+		if (time <= bestTime)
 			return;
 
-		bestTime = file.GetFloat();
-		file.Close();
+		bestTime = time;
+		SaveToFile();
+	}
 
-		if (bestTime < 0 || bestTime > 36000)
+	private static void EnsureLoaded()
+	{
+		if (isLoaded)
+			return;
+
+		isLoaded = true;
+
+		var config = new ConfigFile();
+		if (config.Load(SavePath) == Error.Ok)
+		{
+			bestTime = config.GetValue(Section, "best_time", 0.0f).AsSingle();
+		}
+		else if (FileAccess.FileExists(LegacySavePath))
+		{
+			// Carry a pre-existing best time over from the old raw-float format.
+			bestTime = ReadLegacyBestTime();
+			if (bestTime > 0)
+				SaveToFile();
+		}
+
+		if (!float.IsFinite(bestTime) || bestTime < 0 || bestTime > MaxPlausibleTime)
 		{
 			bestTime = 0;
-			SaveToFile();
 		}
 	}
 
-	public void ResetHighScore()
+	private static float ReadLegacyBestTime()
 	{
-		bestTime = 0;
-		SaveToFile();
+		using var file = FileAccess.Open(LegacySavePath, FileAccess.ModeFlags.Read);
+		if (file == null || file.GetLength() < sizeof(float))
+			return 0f;
+
+		return file.GetFloat();
+	}
+
+	private static void SaveToFile()
+	{
+		var config = new ConfigFile();
+		config.SetValue(Section, "version", SaveVersion);
+		config.SetValue(Section, "best_time", bestTime);
+
+		Error error = config.Save(SavePath);
+		if (error != Error.Ok)
+			GD.PushWarning($"ScoreManager: could not write '{SavePath}' ({error}).");
 	}
 }
