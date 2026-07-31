@@ -2,21 +2,23 @@ using Godot;
 
 public partial class EnemySpawner : Node
 {
-	[Export] public float StartSpeed { get; set; } = 100.0f;
-	[Export] public float MaxSpeed { get; set; } = 200.0f;
-	[Export] public float SpeedIncreasePerSecond { get; set; } = 1.0f;
-	[Export] public float StartSpawnInterval { get; set; } = 1.5f;
-	[Export] public float MinSpawnInterval { get; set; } = 0.5f;
-	[Export] public int MaxEnemyCount { get; set; } = 100;
+	// Tuned for a 2-6 minute orbit: the ramp tops out around 2:00, which is when
+	// the spawn interval is also at its floor, so the back half is flat-out.
+	[Export] public float StartSpeed { get; set; } = 110.0f;
+	[Export] public float MaxSpeed { get; set; } = 215.0f;
+	[Export] public float SpeedIncreasePerSecond { get; set; } = 0.9f;
+	[Export] public float StartSpawnInterval { get; set; } = 1.35f;
+	[Export] public float MinSpawnInterval { get; set; } = 0.38f;
+	[Export] public int MaxEnemyCount { get; set; } = 90;
 	[Export] public float SpawnMargin { get; set; } = 100.0f;
 	[Export] public PackedScene EnemyScene { get; set; }
 
 	[ExportGroup("Enemy variety")]
 	/// <summary>Seconds before swarmers start appearing.</summary>
-	[Export] public float SwarmerUnlockTime { get; set; } = 20.0f;
+	[Export] public float SwarmerUnlockTime { get; set; } = 18.0f;
 	/// <summary>Seconds before tanks start appearing.</summary>
-	[Export] public float TankUnlockTime { get; set; } = 45.0f;
-	[Export] public int SwarmerPackSize { get; set; } = 3;
+	[Export] public float TankUnlockTime { get; set; } = 40.0f;
+	[Export] public int SwarmerPackSize { get; set; } = 4;
 
 	/// <summary>Current ramped chase speed, read by living enemies each frame.</summary>
 	public static float CurrentSpeed { get; private set; } = 100.0f;

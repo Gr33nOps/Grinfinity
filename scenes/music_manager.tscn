@@ -1,14 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://cqkvyhyhf0kqw"]
+[gd_scene load_steps=3 format=3 uid="uid://cqkvyhyhf0kqw"]
 
 [ext_resource type="AudioStream" uid="uid://c8ag5t6tu4efm" path="res://sounds/background_music.ogg" id="1_tn5dr"]
+[ext_resource type="Script" path="res://scripts/MusicManager.cs" id="2_music"]
 
 [node name="MusicManager" type="Node"]
 process_mode = 3
+script = ExtResource("2_music")
 
 [node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
 process_mode = 3
 stream = ExtResource("1_tn5dr")
-volume_db = -12.0
+volume_db = -13.0
 autoplay = true
 bus = &"Music"
 parameters/looping = true

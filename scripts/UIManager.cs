@@ -5,6 +5,8 @@ public partial class UIManager : Node
 	private Sprite2D crosshair;
 	private Sprite2D dashIcon;
 	private Sprite2D rapidFireIcon;
+	private Label dashKeyLabel;
+	private Label rapidFireKeyLabel;
 	private Player player;
 
 	public override void _Ready()
@@ -15,17 +17,43 @@ public partial class UIManager : Node
 		crosshair = gameRoot?.GetNodeOrNull<Sprite2D>("CrosshairLayer/Crosshair");
 		dashIcon = gameRoot?.GetNodeOrNull<Sprite2D>("UI/dash");
 		rapidFireIcon = gameRoot?.GetNodeOrNull<Sprite2D>("UI/rapid_fire");
+		dashKeyLabel = gameRoot?.GetNodeOrNull<Label>("UI/DashKey");
+		rapidFireKeyLabel = gameRoot?.GetNodeOrNull<Label>("UI/RapidFireKey");
 		player = gameRoot?.GetNodeOrNull<Player>("player");
 
+		RefreshKeyLabels();
 		HideCursor();
+	}
+
+	/// <summary>
+	/// The icon art bakes a key name into its top third, which goes stale the
+	/// moment anything is rebound. The sprites are cropped to the icon itself and
+	/// the key is drawn here instead, read from the live input map.
+	/// </summary>
+	private void RefreshKeyLabels()
+	{
+		SetKeyLabel(dashKeyLabel, "dash");
+		SetKeyLabel(rapidFireKeyLabel, "rapid_fire");
+	}
+
+	private static void SetKeyLabel(Label label, string action)
+	{
+		if (label == null)
+			return;
+
+		Key key = GameSettings.GetActionKey(action);
+		label.Text = key == Key.None ? "—" : OS.GetKeycodeString(key).ToUpperInvariant();
 	}
 
 	// This node is pausable, so _Process stops while the pause menu is open and
 	// the icon states set by ShowCursor() are left alone.
 	public override void _Process(double delta)
 	{
+		// The crosshair lives on a CanvasLayer, which ignores the camera. Aim is a
+		// world position, so it has to be pushed through the canvas transform or
+		// the reticle would drift with every screen shake.
 		if (crosshair != null && crosshair.Visible && player != null)
-			crosshair.GlobalPosition = player.AimPosition;
+			crosshair.GlobalPosition = GetViewport().CanvasTransform * player.AimPosition;
 
 		UpdateAbilityIcons();
 	}
@@ -35,11 +63,20 @@ public partial class UIManager : Node
 		if (player == null)
 			return;
 
-		if (dashIcon != null)
-			dashIcon.Visible = player.GetDashCooldownPercent() >= 1.0f;
+		bool dashReady = player.GetDashCooldownPercent() >= 1.0f;
+		bool rapidReady = player.GetRapidFireCooldownPercent() >= 1.0f && !player.IsRapidFiring();
 
-		if (rapidFireIcon != null)
-			rapidFireIcon.Visible = player.GetRapidFireCooldownPercent() >= 1.0f && !player.IsRapidFiring();
+		SetAbilityVisible(dashIcon, dashKeyLabel, dashReady);
+		SetAbilityVisible(rapidFireIcon, rapidFireKeyLabel, rapidReady);
+	}
+
+	private static void SetAbilityVisible(Sprite2D icon, Label key, bool visible)
+	{
+		if (icon != null)
+			icon.Visible = visible;
+
+		if (key != null)
+			key.Visible = visible;
 	}
 
 	public void ShowCursor()
@@ -59,10 +96,7 @@ public partial class UIManager : Node
 		if (crosshair != null)
 			crosshair.Visible = visible;
 
-		if (dashIcon != null)
-			dashIcon.Visible = visible;
-
-		if (rapidFireIcon != null)
-			rapidFireIcon.Visible = visible;
+		SetAbilityVisible(dashIcon, dashKeyLabel, visible);
+		SetAbilityVisible(rapidFireIcon, rapidFireKeyLabel, visible);
 	}
 }

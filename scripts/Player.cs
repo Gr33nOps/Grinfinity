@@ -2,20 +2,25 @@ using Godot;
 
 public partial class Player : CharacterBody2D
 {
-	[Export] public float MoveSpeed { get; set; } = 200.0f;
-	[Export] public float MoveSmoothing { get; set; } = 12.0f;
+	[Export] public float MoveSpeed { get; set; } = 235.0f;
+	[Export] public float MoveSmoothing { get; set; } = 14.0f;
 	[Export] public float ScreenBorder { get; set; } = 50.0f;
 	[Export] public PackedScene BulletScene { get; set; }
 	[Export] public PackedScene DeathEffectScene { get; set; }
 
 	[ExportGroup("Abilities")]
-	[Export] public float DashSpeed { get; set; } = 600.0f;
-	[Export] public float DashDuration { get; set; } = 0.2f;
-	[Export] public float DashCooldown { get; set; } = 2.0f;
-	[Export] public float NormalFireRate { get; set; } = 0.3f;
-	[Export] public float RapidFireRate { get; set; } = 0.08f;
-	[Export] public float RapidFireDuration { get; set; } = 3.0f;
-	[Export] public float RapidFireCooldown { get; set; } = 5.0f;
+	[Export] public float DashSpeed { get; set; } = 880.0f;
+	[Export] public float DashDuration { get; set; } = 0.16f;
+	[Export] public float DashCooldown { get; set; } = 1.4f;
+	[Export] public float NormalFireRate { get; set; } = 0.22f;
+	[Export] public float RapidFireRate { get; set; } = 0.07f;
+	[Export] public float RapidFireDuration { get; set; } = 3.5f;
+	[Export] public float RapidFireCooldown { get; set; } = 7.0f;
+
+	[ExportGroup("Feel")]
+	/// <summary>Screen shake added by a dash. Small — it happens constantly.</summary>
+	[Export] public float DashTrauma { get; set; } = 0.14f;
+	[Export] public float MuzzleFlashTime { get; set; } = 0.055f;
 
 	// How far in front of the player the gamepad aim point sits.
 	private const float GamepadAimDistance = 400.0f;
@@ -23,6 +28,8 @@ public partial class Player : CharacterBody2D
 
 	private Node2D shootyPart;
 	private Sprite2D playerSprite;
+	private Node2D muzzleFlash;
+	private Tween muzzleTween;
 	private AudioStreamPlayer2D shootSound;
 	private Area2D hitBox;
 	private PlayerAbilities abilities;
@@ -43,6 +50,10 @@ public partial class Player : CharacterBody2D
 		playerSprite = FindPlayerSprite();
 		shootSound = GetNodeOrNull<AudioStreamPlayer2D>("ShootSound");
 		abilities = new PlayerAbilities(this);
+
+		muzzleFlash = shootyPart.GetNodeOrNull<Node2D>("MuzzleFlash");
+		if (muzzleFlash != null)
+			muzzleFlash.Visible = false;
 
 		hitBox = GetNodeOrNull<Area2D>("HitBox");
 		if (hitBox != null)
@@ -138,8 +149,7 @@ public partial class Player : CharacterBody2D
 		Velocity = Vector2.Zero;
 		SpawnDeathEffect();
 
-		var gameManager = GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
-		gameManager?.TriggerGameOver();
+		GameManager.Of(this)?.OnPlayerKilled();
 	}
 
 	private void SpawnDeathEffect()
@@ -149,9 +159,10 @@ public partial class Player : CharacterBody2D
 
 		var effect = DeathEffectScene.Instantiate<CpuParticles2D>();
 		effect.GlobalPosition = GlobalPosition;
-		effect.Amount = 120;
-		effect.Lifetime = 0.8f;
-		effect.Modulate = new Color(1f, 0.85f, 0.4f);
+		effect.Amount = 180;
+		effect.Scale = new Vector2(2.2f, 2.2f);
+		effect.Lifetime = 0.9f;
+		effect.Color = new Color(1f, 0.82f, 0.35f);
 		effect.Emitting = true;
 		GameManager.Spawn(this,effect);
 
@@ -188,6 +199,27 @@ public partial class Player : CharacterBody2D
 		bullet.GlobalPosition = shootyPart.GlobalPosition;
 		bullet.Direction = (aimPosition - GlobalPosition).Normalized();
 		GameManager.Spawn(this,bullet);
+		FlashMuzzle();
+	}
+
+	/// <summary>
+	/// One frame of light at the barrel. Randomised scale and roll so a held
+	/// trigger does not look like a strobing decal.
+	/// </summary>
+	private void FlashMuzzle()
+	{
+		if (muzzleFlash == null)
+			return;
+
+		muzzleTween?.Kill();
+		muzzleFlash.Visible = true;
+		muzzleFlash.Rotation = (float)GD.RandRange(-0.5, 0.5);
+		muzzleFlash.Scale = Vector2.One * (float)GD.RandRange(0.85, 1.2);
+		muzzleFlash.Modulate = new Color(1f, 1f, 1f, 1f);
+
+		muzzleTween = CreateTween();
+		muzzleTween.TweenProperty(muzzleFlash, "modulate:a", 0.0f, MuzzleFlashTime);
+		muzzleTween.TweenCallback(Callable.From(() => muzzleFlash.Visible = false));
 	}
 
 	public void PlayShootSound(bool isRapidFire = false)
@@ -201,6 +233,8 @@ public partial class Player : CharacterBody2D
 
 	public void CreateDashEffect()
 	{
+		GameManager.Of(this)?.Shake(DashTrauma);
+
 		if (playerSprite == null)
 			return;
 

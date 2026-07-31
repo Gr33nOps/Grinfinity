@@ -2,6 +2,17 @@ using Godot;
 
 public partial class ScoreManager : Node
 {
+	/// <summary>Raised when a streak crosses one of <see cref="StreakMilestones"/>.</summary>
+	[Signal]
+	public delegate void StreakMilestoneEventHandler(int combo);
+
+	/// <summary>Streak lengths worth shouting about, ascending.</summary>
+	private static readonly int[] StreakMilestones = { 5, 10, 25, 50, 100 };
+
+	/// <summary>Resting streak colour — the UI accent from the style guide.</summary>
+	private static readonly Color ComboIdle = new Color(1.0f, 0.72f, 0.32f);
+	private static readonly Color ComboFlash = Colors.White;
+
 	private const string SavePath = "user://highscore.cfg";
 	private const string LegacySavePath = "user://highscore.save";
 	private const string Section = "score";
@@ -21,11 +32,13 @@ public partial class ScoreManager : Node
 	private int combo = 0;
 	private int runBestCombo = 0;
 	private float comboTimer = 0.0f;
+	private int nextMilestone = 0;
 
 	private Label scoreLabel;
 	private Label highScoreLabel;
 	private Label killsLabel;
 	private Label comboLabel;
+	private Tween comboPop;
 
 	public override void _Ready()
 	{
@@ -40,6 +53,10 @@ public partial class ScoreManager : Node
 		// The best time cannot change mid-run, so it only needs writing once.
 		if (highScoreLabel != null)
 			highScoreLabel.Text = GetFormattedHighScore();
+
+		// Scale tweens have to grow from the middle of the banner, not its corner.
+		if (comboLabel != null)
+			comboLabel.PivotOffset = comboLabel.Size * 0.5f;
 
 		RefreshKills();
 		RefreshCombo();
@@ -58,6 +75,7 @@ public partial class ScoreManager : Node
 			if (comboTimer <= 0 && combo > 0)
 			{
 				combo = 0;
+				nextMilestone = 0;
 				RefreshCombo();
 			}
 		}
@@ -74,6 +92,35 @@ public partial class ScoreManager : Node
 
 		RefreshKills();
 		RefreshCombo();
+
+		bool milestone = nextMilestone < StreakMilestones.Length
+			&& combo >= StreakMilestones[nextMilestone];
+
+		// A milestone gets a much bigger punch so it reads without being counted.
+		PopCombo(milestone ? 1.85f : 1.26f);
+
+		if (milestone)
+		{
+			EmitSignal(SignalName.StreakMilestone, StreakMilestones[nextMilestone]);
+			nextMilestone++;
+		}
+	}
+
+	/// <summary>Scale-and-flash punch on the streak banner, restarted on every kill.</summary>
+	private void PopCombo(float scale)
+	{
+		if (comboLabel == null || !comboLabel.Visible)
+			return;
+
+		comboPop?.Kill();
+		comboLabel.Scale = new Vector2(scale, scale);
+		comboLabel.AddThemeColorOverride("font_color", ComboFlash);
+
+		comboPop = CreateTween().SetParallel();
+		comboPop.TweenProperty(comboLabel, "scale", Vector2.One, 0.24f)
+			.SetTrans(Tween.TransitionType.Back)
+			.SetEase(Tween.EaseType.Out);
+		comboPop.TweenProperty(comboLabel, "theme_override_colors/font_color", ComboIdle, 0.3f);
 	}
 
 	private void RefreshKills()
@@ -88,8 +135,17 @@ public partial class ScoreManager : Node
 			return;
 
 		// A streak of one is just a kill; only shout about actual chains.
+		bool wasVisible = comboLabel.Visible;
 		comboLabel.Visible = combo >= 2;
 		comboLabel.Text = $"x{combo} STREAK";
+
+		if (wasVisible && !comboLabel.Visible)
+		{
+			// A dropped streak must not leave the banner mid-pop for the next one.
+			comboPop?.Kill();
+			comboLabel.Scale = Vector2.One;
+			comboLabel.AddThemeColorOverride("font_color", ComboIdle);
+		}
 	}
 
 	public float GetSurvivalTime() => survivalTime;

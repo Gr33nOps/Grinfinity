@@ -29,10 +29,17 @@ public partial class GameSettings : Node
 	private const string MasterBus = "Master";
 	private const float MinAudibleLinear = 0.001f;
 
+	// v2 moved rapid fire off Q. Bumping the version lets LoadSettings drop the
+	// stale bind instead of restoring the key the migration exists to escape.
+	private const int SaveVersion = 2;
+
 	public float MasterVolume { get; private set; } = 1.0f;
 	public float MusicVolume { get; private set; } = 0.8f;
 	public float SfxVolume { get; private set; } = 1.0f;
 	public bool Fullscreen { get; private set; } = false;
+
+	/// <summary>Screen shake scale, 0 = off. Standing rule 2: shake ships with its slider.</summary>
+	public float ShakeIntensity { get; private set; } = 1.0f;
 
 	private readonly System.Collections.Generic.Dictionary<string, Key> defaultKeys = new();
 
@@ -148,6 +155,11 @@ public partial class GameSettings : Node
 		ApplyWindowMode();
 	}
 
+	public void SetShakeIntensity(float scale)
+	{
+		ShakeIntensity = Mathf.Clamp(scale, 0f, 1f);
+	}
+
 	private void ApplyAllVolumes()
 	{
 		ApplyBusVolume(MasterBus, MasterVolume);
@@ -178,10 +190,12 @@ public partial class GameSettings : Node
 	public void SaveSettings()
 	{
 		var config = new ConfigFile();
+		config.SetValue(Section, "version", SaveVersion);
 		config.SetValue(Section, "master_volume", MasterVolume);
 		config.SetValue(Section, "music_volume", MusicVolume);
 		config.SetValue(Section, "sfx_volume", SfxVolume);
 		config.SetValue(Section, "fullscreen", Fullscreen);
+		config.SetValue(Section, "shake_intensity", ShakeIntensity);
 
 		foreach (var (action, _) in RebindableActions)
 			config.SetValue(InputSection, action, (int)GetActionKey(action));
@@ -201,12 +215,22 @@ public partial class GameSettings : Node
 		MusicVolume = Mathf.Clamp(config.GetValue(Section, "music_volume", MusicVolume).AsSingle(), 0f, 1f);
 		SfxVolume = Mathf.Clamp(config.GetValue(Section, "sfx_volume", SfxVolume).AsSingle(), 0f, 1f);
 		Fullscreen = config.GetValue(Section, "fullscreen", Fullscreen).AsBool();
+		ShakeIntensity = Mathf.Clamp(config.GetValue(Section, "shake_intensity", ShakeIntensity).AsSingle(), 0f, 1f);
+
+		int version = config.GetValue(Section, "version", 1).AsInt32();
 
 		foreach (var (action, _) in RebindableActions)
 		{
 			var stored = config.GetValue(InputSection, action, 0).AsInt32();
-			if (stored != 0)
-				SetActionKey(action, (Key)stored);
+			if (stored == 0)
+				continue;
+
+			// v1 saves carry the old Q default for rapid fire. Some setups emit
+			// phantom Q presses, so restoring it would self-trigger the ability.
+			if (version < SaveVersion && action == "rapid_fire" && (Key)stored == Key.Q)
+				continue;
+
+			SetActionKey(action, (Key)stored);
 		}
 	}
 }

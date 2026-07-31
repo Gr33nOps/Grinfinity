@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://bi5oq2qgbb1cd"]
+[gd_scene load_steps=20 format=3 uid="uid://bi5oq2qgbb1cd"]
 
 [ext_resource type="Script" uid="uid://cjaaomehr1xjw" path="res://scripts/GameManager.cs" id="1_264po"]
 [ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
@@ -17,6 +17,7 @@
 [ext_resource type="AudioStream" uid="uid://dcr4vb45l3psr" path="res://sounds/button_hover.ogg" id="20_37s47"]
 [ext_resource type="AudioStream" uid="uid://cbrq0wkol4k67" path="res://sounds/kill.ogg" id="22_37s47"]
 [ext_resource type="Texture2D" uid="uid://ng7i3ihf6pe2" path="res://sprites/crosshair.png" id="23_crossh"]
+[ext_resource type="Script" path="res://scripts/GameCamera.cs" id="24_camera"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ca42v"]
 bg_color = Color(0, 0, 0, 0.686275)
@@ -73,6 +74,7 @@ offset_top = 120.0
 offset_right = 320.0
 offset_bottom = 196.0
 grow_horizontal = 2
+pivot_offset = Vector2(320, 38)
 theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
 theme_override_fonts/font = ExtResource("2_iywne")
 theme_override_font_sizes/font_size = 58
@@ -83,11 +85,39 @@ horizontal_alignment = 1
 position = Vector2(64, 66)
 scale = Vector2(0.3, 0.3)
 texture = ExtResource("3_ca42v")
+region_enabled = true
+region_rect = Rect2(0, 69, 226, 224)
 
 [node name="rapid_fire" type="Sprite2D" parent="UI"]
 position = Vector2(143, 66)
 scale = Vector2(0.3, 0.3)
 texture = ExtResource("4_ca42v")
+region_enabled = true
+region_rect = Rect2(0, 69, 226, 224)
+
+[node name="DashKey" type="Label" parent="UI"]
+offset_left = 25.0
+offset_top = 6.0
+offset_right = 103.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 22
+text = "SHIFT"
+horizontal_alignment = 1
+clip_text = true
+
+[node name="RapidFireKey" type="Label" parent="UI"]
+offset_left = 104.0
+offset_top = 6.0
+offset_right = 182.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 22
+text = "E"
+horizontal_alignment = 1
+clip_text = true
 
 [node name="PauseLayer" type="CanvasLayer" parent="."]
 
@@ -158,6 +188,10 @@ position = Vector2(967, 541)
 [node name="Entities" type="Node2D" parent="."]
 process_mode = 1
 
+[node name="GameCamera" type="Camera2D" parent="."]
+process_mode = 1
+script = ExtResource("24_camera")
+
 [node name="CrosshairLayer" type="CanvasLayer" parent="."]
 layer = 2
 
@@ -167,6 +201,12 @@ texture = ExtResource("23_crossh")
 [node name="KillSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("22_37s47")
 volume_db = -10.0
+bus = &"SFX"
+
+[node name="StreakSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("22_37s47")
+volume_db = -7.0
+pitch_scale = 1.45
 bus = &"SFX"
 
 [node name="ButtonSound" type="AudioStreamPlayer" parent="."]

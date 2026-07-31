@@ -12,7 +12,7 @@ Survive as long as you can while enemies spawn faster and get quicker over time.
 | Aim | Mouse | Right stick |
 | Shoot | Left mouse / `Space` | Right trigger |
 | Dash | `Shift` | B |
-| Rapid fire | `Q` | X |
+| Rapid fire | `E` | X |
 | Pause | `Esc` | Start |
 | Toggle fullscreen | `F11` | — |
 
@@ -30,8 +30,14 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 - Ramping enemy speed and spawn rate
 - Random player skins and enemy variants
 - Dash and rapid-fire abilities
+- Hitstop, trauma-based screen shake, bullet trails, muzzle flash and per-enemy
+  death bursts
+- Procedural deep-space background: a drifting nebula wash under three parallax
+  star layers, drawn entirely in a shader
+- Music that swells with how dangerous the run has become
 - Pause menu and game over flow
-- Settings: master / music / SFX volume, fullscreen, and key rebinding
+- Settings: master / music / SFX volume, screen shake intensity (0 = off),
+  fullscreen, and key rebinding
 - Gamepad support
 - Background music and SFX on separate audio buses
 
@@ -63,12 +69,24 @@ godot --headless --path . --import && dotnet build
 ## Project layout
 
 ```
-scenes/       Game, menu, settings, credits, player, enemies, UI
+scenes/       Game, menu, settings, credits, player, enemies, UI, shaders
 scripts/      C# gameplay systems
 sprites/      Art and UI textures (trimmed for runtime)
 art_source/   Untrimmed original art masters, excluded from the Godot import
 sounds/       Music and SFX
 fonts/        UI font
+tools/        Dev-only helpers, not part of the game
+```
+
+### Unattended screenshots
+
+`tools/dev_capture.tscn` runs a scene without a human at the keyboard and writes
+a PNG, which is how visual changes get checked. It plays the game for real —
+holding fire and sweeping the aim — with contact damage switched off so a run can
+reach its busy late minutes.
+
+```bash
+GRIN_SCENE=res://scenes/game.tscn GRIN_RUN=60 GRIN_SHOT=/tmp/shot.png godot --path . --windowed res://tools/dev_capture.tscn
 ```
 
 `art_source/` holds the full-canvas originals of the character sprites. The

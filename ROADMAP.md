@@ -125,24 +125,39 @@ exists because tuning an unfelt game wastes everything after it.
 
 *Tune and juice what exists. No new systems.*
 
-- [ ] **Live-tune every existing `[Export]`** — unlock times, pack sizes, tank
-      health, speed multipliers. These are all guesses today. Commit the values.
-- [ ] **Hitstop** — 40–60 ms freeze on kill. Cheapest feel upgrade available.
-- [ ] **Screen shake** — short and small on kill, larger on death. **Ships with
-      its intensity slider (0 = off) on day one.**
-- [ ] **Hit feedback** — flash on all bodies (tanks already have it), knockback
-      on non-fatal hits, punchier death bursts
-- [ ] **Muzzle flash, spark, bullet trail**
-- [ ] **Kill-chain banner that pops** — scale and punch, not just changing text
-- [ ] **Deep space look** — parallax starfield layers plus a slow nebula wash
-      behind them. The arena currently reads as a black box; three cheap layers
-      make it read as *space*. Highest look-per-effort item on the list.
-- [ ] **Audio layering** — distinct light/heavy kill sounds, streak milestone
-      stings, pitch variation so repetition doesn't fatigue
-- [ ] **Music intensity layer** — a second stem that fades in above a danger
-      threshold
+- [x] **Live-tune every existing `[Export]`** — unlock times, pack sizes, tank
+      health, speed multipliers. First committed pass: the ramp tops out around
+      2:00, swarmers at 0:18, tanks at 0:40, dash shortened and made punchier.
+- [x] **Hitstop** — `GameManager.Hitstop()` drops `Engine.TimeScale` for 45 ms on
+      a light kill, 85 ms on a tank, 140 ms on death. Measured against wall-clock
+      time, cancelled by pause and by the game-over transition.
+- [x] **Screen shake** — trauma-based, on `GameCamera`. Ships with its
+      **Settings → Screen Shake** slider (0 = OFF), persisted in `settings.cfg`.
+- [x] **Hit feedback** — flash and sprite punch on every survivable hit, longer
+      the closer to death; knockback scaled per kind; per-kind death bursts
+      (a swarmer pops, a tank detonates).
+- [x] **Muzzle flash, spark, bullet trail** — all in-engine: a randomised
+      two-part flash at the barrel, a pale spark on chip hits, and a tapering
+      `Line2D` trail behind every bullet.
+- [x] **Kill-chain banner that pops** — scale punch and colour flash on every
+      kill, much bigger at 5 / 10 / 25 / 50 / 100.
+- [x] **Deep space look** — done procedurally in `scenes/space.gdshader`: a slow
+      nebula wash plus three parallax star layers. No PNGs, resolution
+      independent, and it removes four items from `ASSETS.md`.
+- [x] **Audio layering** — light and heavy kills are pitched and levelled apart,
+      every kill gets jitter so a streak doesn't fatigue, and streak milestones
+      fire a rising sting. **Still on placeholders**: `kill_small.ogg`,
+      `kill_big.ogg`, `hit_chip.ogg` and the three `streak_*.ogg` stings do not
+      exist yet, so one sample is being re-pitched to stand in for all of them.
+- [x] **Music intensity layer** — `MusicManager` reads danger from run time and
+      arena crowding and swells the mix. It picks up `sounds/music_intense.ogg`
+      automatically **once that stem exists**; until then it drives the base
+      track's level only.
 
 **Done when:** killing one body feels good with the sound off, and great with it on.
+
+**Status:** mechanically done. The remaining gap is audio *content*, not audio
+*systems* — see the two notes above.
 
 ---
 
@@ -325,5 +340,18 @@ Firm. Revisit only if a shipped game earns the right.
 ## 7. Immediate next three
 
 1. Merge the `audit-fixes` PR and confirm the first CI run is green.
-2. Kill the phantom `Q` input (vJoy) so playtesting is honest.
-3. **M1**: tune the existing numbers → hitstop → screen shake → parallax space.
+2. ~~Kill the phantom `Q` input (vJoy) so playtesting is honest.~~ Done — rapid
+   fire defaults to `E`, and a `settings.cfg` version bump drops the stale `Q`
+   bind instead of restoring it. The HUD ability icons bake their key name into
+   the art, so they are now cropped and the key is drawn live from the input map
+   — which also fixes rebinding silently lying about itself.
+3. ~~**M1**: tune the existing numbers → hitstop → screen shake → parallax space.~~
+   Done; see M1 above. Next up is **M2 — the gravity spine**, starting with
+   `RunState` and pull-replaces-chase.
+
+### Recording the M1 audio
+
+The one thing M1 cannot finish in code. In priority order:
+`kill_small.ogg`, `kill_big.ogg`, then `music_intense.ogg` (same tempo and key as
+`background_music.ogg`), then `hit_chip.ogg` and the three streak stings. Every
+system that consumes them is already wired and will pick them up on drop-in.

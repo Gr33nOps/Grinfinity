@@ -1,7 +1,7 @@
 [gd_scene load_steps=2 format=3 uid="uid://bqbrm25rh4kjc"]
 
 [sub_resource type="Curve" id="Curve_tty04"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.0168662), 0.0, 0.0, 0, 0]
+_data = [Vector2(0, 1), 0.0, -2.2, 0, 0, Vector2(1, 0.0168662), 0.0, 0.0, 0, 0]
 point_count = 2
 
 [node name="CPUParticles2D" type="CPUParticles2D"]
@@ -9,12 +9,17 @@ emitting = false
 amount = 50
 lifetime = 0.4
 one_shot = true
-explosiveness = 0.85
+explosiveness = 0.95
+randomness = 0.35
 spread = 180.0
 gravity = Vector2(0, 0)
-initial_velocity_min = 100.0
-initial_velocity_max = 200.0
-scale_amount_min = 20.0
-scale_amount_max = 25.0
+initial_velocity_min = 170.0
+initial_velocity_max = 470.0
+angular_velocity_min = -420.0
+angular_velocity_max = 420.0
+damping_min = 190.0
+damping_max = 420.0
+scale_amount_min = 11.0
+scale_amount_max = 27.0
 scale_amount_curve = SubResource("Curve_tty04")
 color = Color(0.682353, 0.266667, 0.352941, 1)

@@ -27,14 +27,26 @@ collision_mask = 2
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
 shape = SubResource("CircleShape2D_player")
 
-[node name="shootyPart" type="Node2D" parent="."]
-position = Vector2(62, -6.5)
-
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(10, -7.5)
 scale = Vector2(0.273333, 0.273333)
 texture = ExtResource("2_dqkch")
 flip_h = true
+
+[node name="shootyPart" type="Node2D" parent="."]
+position = Vector2(62, -6.5)
+
+[node name="MuzzleFlash" type="Node2D" parent="shootyPart"]
+visible = false
+
+[node name="Spikes" type="Polygon2D" parent="shootyPart/MuzzleFlash"]
+scale = Vector2(1.5, 0.8)
+color = Color(1, 0.85, 0.4, 1)
+polygon = PackedVector2Array(26, 0, 3.54, 3.54, 0, 26, -3.54, 3.54, -26, 0, -3.54, -3.54, 0, -26, 3.54, -3.54)
+
+[node name="Core" type="Polygon2D" parent="shootyPart/MuzzleFlash"]
+color = Color(1, 1, 1, 1)
+polygon = PackedVector2Array(9, 0, 6.36, 6.36, 0, 9, -6.36, 6.36, -9, 0, -6.36, -6.36, 0, -9, 6.36, -6.36)
 
 [node name="ShootSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("4_dqkch")

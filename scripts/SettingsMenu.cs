@@ -5,9 +5,11 @@ public partial class SettingsMenu : Control
 	private HSlider masterSlider;
 	private HSlider musicSlider;
 	private HSlider sfxSlider;
+	private HSlider shakeSlider;
 	private Label masterValue;
 	private Label musicValue;
 	private Label sfxValue;
+	private Label shakeValue;
 	private Button fullscreenCheck;
 	private Button controlsButton;
 	private Button backButton;
@@ -17,9 +19,11 @@ public partial class SettingsMenu : Control
 		masterSlider = GetNode<HSlider>("Layout/MasterRow/Slider");
 		musicSlider = GetNode<HSlider>("Layout/MusicRow/Slider");
 		sfxSlider = GetNode<HSlider>("Layout/SfxRow/Slider");
+		shakeSlider = GetNode<HSlider>("Layout/ShakeRow/Slider");
 		masterValue = GetNode<Label>("Layout/MasterRow/Value");
 		musicValue = GetNode<Label>("Layout/MusicRow/Value");
 		sfxValue = GetNode<Label>("Layout/SfxRow/Value");
+		shakeValue = GetNode<Label>("Layout/ShakeRow/Value");
 		fullscreenCheck = GetNode<Button>("Layout/FullscreenRow/Check");
 		controlsButton = GetNode<Button>("Layout/ControlsButton");
 		backButton = GetNode<Button>("Layout/BackButton");
@@ -30,6 +34,7 @@ public partial class SettingsMenu : Control
 			masterSlider.Value = settings.MasterVolume;
 			musicSlider.Value = settings.MusicVolume;
 			sfxSlider.Value = settings.SfxVolume;
+			shakeSlider.Value = settings.ShakeIntensity;
 			fullscreenCheck.ButtonPressed = settings.Fullscreen;
 		}
 
@@ -39,6 +44,7 @@ public partial class SettingsMenu : Control
 		masterSlider.ValueChanged += OnMasterChanged;
 		musicSlider.ValueChanged += OnMusicChanged;
 		sfxSlider.ValueChanged += OnSfxChanged;
+		shakeSlider.ValueChanged += OnShakeChanged;
 		fullscreenCheck.Toggled += OnFullscreenToggled;
 		controlsButton.Pressed += OnControlsPressed;
 		backButton.Pressed += OnBackPressed;
@@ -74,6 +80,12 @@ public partial class SettingsMenu : Control
 		RefreshLabels();
 	}
 
+	private void OnShakeChanged(double value)
+	{
+		GameSettings.Instance?.SetShakeIntensity((float)value);
+		RefreshLabels();
+	}
+
 	private void OnFullscreenToggled(bool pressed)
 	{
 		GameSettings.Instance?.SetFullscreen(pressed);
@@ -85,6 +97,8 @@ public partial class SettingsMenu : Control
 		masterValue.Text = $"{Mathf.RoundToInt(masterSlider.Value * 100)}%";
 		musicValue.Text = $"{Mathf.RoundToInt(musicSlider.Value * 100)}%";
 		sfxValue.Text = $"{Mathf.RoundToInt(sfxSlider.Value * 100)}%";
+		// Zero is a supported answer, so say so rather than showing a bare "0%".
+		shakeValue.Text = shakeSlider.Value <= 0.0 ? "OFF" : $"{Mathf.RoundToInt(shakeSlider.Value * 100)}%";
 	}
 
 	private void OnControlsPressed()

@@ -1,23 +1,19 @@
-[gd_scene load_steps=4 format=3 uid="uid://crmtatdiobpq7"]
+[gd_scene load_steps=3 format=3 uid="uid://crmtatdiobpq7"]
 
-[ext_resource type="Shader" uid="uid://b65r3wnmkdkc6" path="res://scenes/background.gdshader" id="1_y0upk"]
-[ext_resource type="Texture2D" uid="uid://dw45en8kt2l7i" path="res://sprites/background.png" id="2_jougr"]
+[ext_resource type="Shader" path="res://scenes/space.gdshader" id="1_space"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_cbsqf"]
-shader = ExtResource("1_y0upk")
-shader_parameter/speed = 0.1
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_space"]
+shader = ExtResource("1_space")
 
 [node name="background" type="CanvasLayer"]
 layer = -100
 
-[node name="BackgroundRect" type="TextureRect" parent="."]
-texture_repeat = 2
-material = SubResource("ShaderMaterial_cbsqf")
+[node name="BackgroundRect" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_space")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("2_jougr")
-expand_mode = 1
+color = Color(0.0641172, 0.0110893, 0.0828401, 1)

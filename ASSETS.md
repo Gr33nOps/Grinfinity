@@ -98,21 +98,27 @@ edits that saves 48 sprites and every future weapon. Do it before M3 starts.
 
 ### M1 — Feel
 
-**Art (6)**
+**Art (6)** — all six now have a working in-engine stand-in, so these are
+upgrades rather than blockers.
 - [ ] `muzzle_flash.png` — 96×96, 1 frame, bright yellow-white starburst
+      *(currently two `Polygon2D` shapes under `shootyPart/MuzzleFlash`)*
 - [ ] `bullet_pea.png` — 32×32, replaces the current `Polygon2D`
 - [ ] `bullet_trail.png` — 64×16, soft tapered streak
+      *(currently a `Line2D` with a width curve and gradient — arguably better,
+      since it follows the real flight path; only swap if art beats it)*
 - [ ] `hit_spark.png` — 48×48, small radial burst for non-fatal hits
+      *(currently a small pale `CPUParticles2D` burst)*
 - [ ] `mote.png` — 16×16, single round particle for death bursts
 - [ ] `mote_square.png` — 12×12, chunky alt so bursts mix shapes
 
-**Deep space look (4)** — highest look-per-effort art on the whole list. The
-arena currently reads as a black box; layered parallax makes it read as *space*.
-- [ ] `stars_far.png` — 1920×1080, tiny dim dots, scrolls slowest
-- [ ] `stars_mid.png` — 1920×1080, sparser and brighter
-- [ ] `stars_near.png` — 1920×1080, few large dots, scrolls fastest
-- [ ] `nebula_wash.png` — 2048×1152, soft purple/magenta cloud, very low alpha,
-      drifts slowly across everything
+**Deep space look — cut, done in engine.** ~~4 sprites~~ **0**.
+`scenes/space.gdshader` draws the nebula wash and all three parallax star layers
+procedurally. It costs no VRAM, holds up at any resolution (which matters,
+because the stretch aspect is `expand`), and never tiles. Tune it through the
+shader's uniforms — `nebula_strength`, `star_cell`, `star_scroll`,
+`star_radius`, `star_brightness` — rather than by redrawing anything.
+
+~~`stars_far.png` / `stars_mid.png` / `stars_near.png` / `nebula_wash.png`~~
 
 **Audio (9)**
 - [ ] `kill_small.ogg` — light pop, for chasers/swarmers
@@ -310,11 +316,13 @@ parallax layers that transform how the whole game looks.
 
 ## 7. Order to work in
 
-1. **The parallax space layers** (4 sprites). Biggest visual change for the least
-   work in the entire document — the game stops looking like a black box.
-2. **Degun the 12 skins + draw one gun.** Unblocks all of M3 and costs a day.
-3. **M1 particles** (6 sprites) — needed the moment hitstop and shake go in.
-4. **M1 audio** (9 sounds) — the single biggest perceived-quality jump available.
+1. ~~**The parallax space layers** (4 sprites).~~ Done in a shader instead — see
+   M1 above. The game no longer looks like a black box.
+2. **M1 audio** (9 sounds) — now the single biggest perceived-quality jump
+   available, and the only M1 item still outstanding. Every consumer is wired.
+3. **Degun the 12 skins + draw one gun.** Unblocks all of M3 and costs a day.
+4. **M1 particles** (6 sprites) — hitstop and shake are in and running on
+   in-engine stand-ins, so these are polish now, not blockers.
 5. **Square `icon.png`** — 20 minutes, and it's a launch blocker sitting there today.
 6. Then follow the milestones in order.
 
