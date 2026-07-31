@@ -12,6 +12,13 @@ func _ready() -> void:
 	if target == "":
 		target = "res://scenes/game.tscn"
 
+	# GRIN_WEAPON picks the loadout by index, so each weapon can be captured.
+	var weapon := OS.get_environment("GRIN_WEAPON")
+	if weapon != "":
+		var settings := get_node_or_null("/root/GameSettings")
+		if settings:
+			settings.call("SetWeapon", int(weapon))
+
 	var scene: Node = (load(target) as PackedScene).instantiate()
 	add_child(scene)
 	await get_tree().process_frame

@@ -4,6 +4,8 @@ public partial class Bullet : Area2D
 {
 	[Export] public float Speed { get; set; } = 950.0f;
 	[Export] public int Damage { get; set; } = 1;
+	/// <summary>Extra bodies this shot survives after the first. 0 stops on contact.</summary>
+	[Export] public int Pierce { get; set; } = 0;
 	[Export] public PackedScene ExplosionScene { get; set; }
 
 	/// <summary>Points kept in the motion trail. More is longer and softer.</summary>
@@ -40,7 +42,27 @@ public partial class Bullet : Area2D
 
 		var lifetime = GetNodeOrNull<Timer>("Timer");
 		if (lifetime != null)
+		{
+			// Lifetime is how a weapon's range is expressed: the Debris Cannon's
+			// spread is not slow, it simply stops existing before it gets far.
+			if (Range > 0f)
+				lifetime.WaitTime = Range;
 			lifetime.Timeout += QueueFree;
+		}
+	}
+
+	/// <summary>Seconds this shot lives for. Zero keeps the scene's own setting.</summary>
+	[Export] public float Range { get; set; } = 0f;
+
+	/// <summary>Applies a weapon's look and behaviour to this shot.</summary>
+	public void ApplyProfile(WeaponProfile weapon)
+	{
+		Speed = weapon.Speed * (1f + (float)GD.RandRange(-weapon.SpeedJitter, weapon.SpeedJitter));
+		Damage = weapon.Damage;
+		Pierce = weapon.Pierce;
+		Range = weapon.Range;
+		Scale *= weapon.ShotScale;
+		Modulate = weapon.Tint;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -79,17 +101,13 @@ public partial class Bullet : Area2D
 			return;
 		}
 
-		// Two bodies can overlap the bullet in the same frame; only the first counts.
 		if (body is not Enemy enemy)
 			return;
-
-		hasHit = true;
-		SetDeferred(Area2D.PropertyName.Monitoring, false);
 
 		// Captured before the hit, because a lethal one queues the body for free.
 		Enemy.Remains remains = enemy.GetRemains();
 
-		// Tanks survive several hits, so the kill only scores when it lands.
+		// Armoured bodies survive several hits, so the kill only scores when it lands.
 		if (enemy.TakeDamage(Damage, Direction))
 		{
 			GameManager.Of(this)?.RegisterKill(remains, GlobalPosition);
@@ -101,6 +119,17 @@ public partial class Bullet : Area2D
 			SpawnBurst(14, 0.45f, new Color(1.0f, 0.95f, 0.8f), 0.55f);
 		}
 
+		// A piercing shot carries on through the clump. Area2D only reports each
+		// body once per entry, so nothing can be hit twice by the same lance.
+		if (Pierce > 0)
+		{
+			Pierce--;
+			return;
+		}
+
+		// Two bodies can overlap the shot in the same frame; only the first counts.
+		hasHit = true;
+		SetDeferred(Area2D.PropertyName.Monitoring, false);
 		QueueFree();
 	}
 

@@ -16,6 +16,7 @@ public partial class GameOver : Control
 	private TextureButton restartButton;
 	private TextureButton menuButton;
 	private Label scoreLabel;
+	private Label scoreCaption;
 	private Label statsLabel;
 	private Label highScoreLabel;
 	private AudioStreamPlayer buttonSound;
@@ -25,6 +26,7 @@ public partial class GameOver : Control
 	public override void _Ready()
 	{
 		scoreLabel = GetNode<Label>("Recap/ScoreLabel");
+		scoreCaption = GetNodeOrNull<Label>("Recap/ScoreCaption");
 		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
 		restartButton = GetNode<TextureButton>("GameOverMenu/RestartButton");
@@ -48,6 +50,11 @@ public partial class GameOver : Control
 	private void ShowRecap()
 	{
 		scoreLabel.Text = $"{ScoreToShow:N0}";
+
+		// Which weapon it was scored with, because comparing two orbits without
+		// that is comparing nothing.
+		if (scoreCaption != null)
+			scoreCaption.Text = $"ORBIT SCORE  ·  {Loadout.Profile.Name}";
 
 		if (statsLabel != null)
 		{

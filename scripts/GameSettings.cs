@@ -42,6 +42,9 @@ public partial class GameSettings : Node
 	/// <summary>Screen shake scale, 0 = off. Standing rule 2: shake ships with its slider.</summary>
 	public float ShakeIntensity { get; private set; } = 1.0f;
 
+	/// <summary>Last weapon taken into an orbit.</summary>
+	public WeaponId Weapon { get; private set; } = WeaponId.Comet;
+
 	private readonly System.Collections.Generic.Dictionary<string, Key> defaultKeys = new();
 
 	public override void _Ready()
@@ -161,6 +164,18 @@ public partial class GameSettings : Node
 		ShakeIntensity = Mathf.Clamp(scale, 0f, 1f);
 	}
 
+	/// <summary>
+	/// Remembers the weapon so a restart does not ask again. Also pushes it into
+	/// <see cref="Loadout"/>: persisting without doing so left the file and the
+	/// live choice one launch out of step.
+	/// </summary>
+	public void SetWeapon(WeaponId weapon)
+	{
+		Weapon = weapon;
+		Loadout.Restore(weapon);
+		SaveSettings();
+	}
+
 	private void ApplyAllVolumes()
 	{
 		ApplyBusVolume(MasterBus, MasterVolume);
@@ -197,6 +212,7 @@ public partial class GameSettings : Node
 		config.SetValue(Section, "sfx_volume", SfxVolume);
 		config.SetValue(Section, "fullscreen", Fullscreen);
 		config.SetValue(Section, "shake_intensity", ShakeIntensity);
+		config.SetValue(Section, "weapon", (int)Weapon);
 
 		foreach (var (action, _) in RebindableActions)
 			config.SetValue(InputSection, action, (int)GetActionKey(action));
@@ -217,6 +233,13 @@ public partial class GameSettings : Node
 		SfxVolume = Mathf.Clamp(config.GetValue(Section, "sfx_volume", SfxVolume).AsSingle(), 0f, 1f);
 		Fullscreen = config.GetValue(Section, "fullscreen", Fullscreen).AsBool();
 		ShakeIntensity = Mathf.Clamp(config.GetValue(Section, "shake_intensity", ShakeIntensity).AsSingle(), 0f, 1f);
+
+		int storedWeapon = config.GetValue(Section, "weapon", 0).AsInt32();
+		if (System.Enum.IsDefined(typeof(WeaponId), storedWeapon))
+		{
+			Weapon = (WeaponId)storedWeapon;
+			Loadout.Restore(Weapon);
+		}
 
 		int version = config.GetValue(Section, "version", 1).AsInt32();
 

@@ -17,7 +17,8 @@ public partial class Menu : Node
 		var settingsButton = GetNode<Button>("UI/SideMenu/SettingsButton");
 		var creditsButton = GetNode<Button>("UI/SideMenu/CreditsButton");
 
-		playButton.Pressed += () => GoTo("res://scenes/game.tscn");
+		// Play goes through the weapon choice; only a restart skips it.
+		playButton.Pressed += () => GoTo("res://scenes/weapon_select.tscn");
 		settingsButton.Pressed += () => GoTo("res://scenes/settings.tscn");
 		creditsButton.Pressed += () => GoTo("res://scenes/credits.tscn");
 		quitButton.Pressed += OnQuitButtonPressed;

@@ -17,8 +17,6 @@ public partial class Player : CharacterBody2D
 	[Export] public float DashSpeed { get; set; } = 880.0f;
 	[Export] public float DashDuration { get; set; } = 0.16f;
 	[Export] public float DashCooldown { get; set; } = 1.4f;
-	[Export] public float NormalFireRate { get; set; } = 0.22f;
-	[Export] public float RapidFireRate { get; set; } = 0.07f;
 	[Export] public float RapidFireDuration { get; set; } = 3.5f;
 	[Export] public float RapidFireCooldown { get; set; } = 7.0f;
 
@@ -289,12 +287,35 @@ public partial class Player : CharacterBody2D
 		return null;
 	}
 
+	/// <summary>The weapon carried into this orbit, chosen before it started.</summary>
+	public WeaponProfile Weapon => Loadout.Profile;
+
+	/// <summary>Seconds until this weapon can fire again.</summary>
+	public float FireInterval(bool rapidFiring)
+	{
+		return Weapon.FireInterval * (rapidFiring ? Weapon.RapidFireScale : 1.0f);
+	}
+
 	public void ShootBullet(Vector2 aimPosition)
 	{
-		var bullet = BulletScene.Instantiate<Bullet>();
-		bullet.GlobalPosition = shootyPart.GlobalPosition;
-		bullet.Direction = (aimPosition - GlobalPosition).Normalized();
-		GameManager.Spawn(this,bullet);
+		WeaponProfile weapon = Weapon;
+		Vector2 aim = (aimPosition - GlobalPosition).Normalized();
+
+		// Pellets are spread evenly across the cone rather than randomly, so a
+		// shotgun pattern is something a player can learn to place.
+		for (int i = 0; i < weapon.Pellets; i++)
+		{
+			float offset = weapon.Pellets <= 1
+				? 0f
+				: weapon.Spread * (i / (float)(weapon.Pellets - 1) - 0.5f);
+
+			var bullet = BulletScene.Instantiate<Bullet>();
+			bullet.ApplyProfile(weapon);
+			bullet.GlobalPosition = shootyPart.GlobalPosition;
+			bullet.Direction = aim.Rotated(offset);
+			GameManager.Spawn(this, bullet);
+		}
+
 		FlashMuzzle();
 	}
 

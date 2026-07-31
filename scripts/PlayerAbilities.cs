@@ -117,7 +117,8 @@ public class PlayerAbilities
 		player.ShootBullet(aimPosition);
 		player.PlayShootSound(isRapidFiring);
 
-		shootTimer = isRapidFiring ? player.RapidFireRate : player.NormalFireRate;
+		// The weapon owns its cadence; rapid fire scales whatever that is.
+		shootTimer = player.FireInterval(isRapidFiring);
 		canShoot = false;
 	}
 
