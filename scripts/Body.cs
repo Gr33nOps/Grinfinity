@@ -170,7 +170,13 @@ public partial class Body : CharacterBody2D, IShootable
 			return;
 
 		float step = (float)delta;
-		behaviour.Steer(this, step);
+
+		// Freeze stops the steering, not the node: knockback still resolves, so
+		// a frozen body being shot still visibly takes the hit.
+		if (run == null || !run.Frozen)
+			behaviour.Steer(this, step);
+		else
+			Drift = Drift.MoveToward(Vector2.Zero, 900f * step);
 
 		Velocity = Drift + knockback;
 		FaceTravel();

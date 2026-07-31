@@ -22,6 +22,8 @@ public partial class Debris : Node2D
 	[Export] public float GrabTime { get; set; } = 1.1f;
 	[Export] public float Drag { get; set; } = 1.5f;
 	[Export] public float AbsorbRadius { get; set; } = 46.0f;
+	/// <summary>How much harder the Magnet pickup pulls.</summary>
+	[Export] public float MagnetFactor { get; set; } = 5.0f;
 	/// <summary>Hard stop, so a mote can never outlive the body that shed it.</summary>
 	[Export] public float Lifetime { get; set; } = 6.0f;
 
@@ -70,6 +72,11 @@ public partial class Debris : Node2D
 		// The pull ramps with age rather than with distance alone: the mote gets
 		// its orbit, then the world reels it in on a deadline.
 		float grab = Mathf.Lerp(1.0f, FinalAccelerationFactor, Mathf.Clamp(age / GrabTime, 0f, 1f));
+
+		// Magnet skips the orbit entirely — that is the whole point of it.
+		if (run != null && run.Magnetised)
+			grab *= MagnetFactor;
+
 		velocity += (toWorld / distance) * BaseAcceleration * grab * step;
 		velocity *= Mathf.Max(1.0f - Drag * step, 0f);
 

@@ -15,6 +15,8 @@ public partial class RunState : Node
 	[Signal] public delegate void KillsChangedEventHandler(int kills);
 	[Signal] public delegate void StreakChangedEventHandler(int streak, bool milestone);
 	[Signal] public delegate void RingTierChangedEventHandler(int tier);
+	/// <summary>Raised when a pickup is taken or one of its timers runs out.</summary>
+	[Signal] public delegate void EffectsChangedEventHandler();
 
 	/// <summary>Streak lengths worth shouting about, ascending.</summary>
 	public static readonly int[] StreakMilestones = { 5, 10, 25, 50, 100 };
@@ -84,6 +86,84 @@ public partial class RunState : Node
 	private int nextMilestone;
 	private float massTimeIntegral;
 
+	// --- Pickups ---------------------------------------------------------
+	// Every timed effect is one float of remaining seconds. Systems that care
+	// ask this class rather than keeping their own copy, for the same reason
+	// mass lives here: one owner, no drift.
+
+	private float freezeLeft;
+	private float magnetLeft;
+	private float damageLeft;
+
+	/// <summary>A shield absorbs one hit. It has no timer — it waits.</summary>
+	public bool HasShield { get; private set; }
+
+	public bool Frozen => freezeLeft > 0f;
+	public bool Magnetised => magnetLeft > 0f;
+	public bool Overcharged => damageLeft > 0f;
+
+	/// <summary>Extra damage on every shot while Overcharge is up.</summary>
+	[Export] public int OverchargeBonus { get; set; } = 1;
+
+	/// <summary>Seconds left on a pickup, for the HUD. Zero when it is not up.</summary>
+	public float TimeLeft(PowerUpKind kind) => kind switch
+	{
+		PowerUpKind.Freeze => freezeLeft,
+		PowerUpKind.Magnet => magnetLeft,
+		PowerUpKind.Damage => damageLeft,
+		_ => 0f
+	};
+
+	/// <summary>Starts a pickup's effect. Taking one already up refreshes it.</summary>
+	public void GrantPowerUp(PowerUpKind kind)
+	{
+		float duration = PowerUps.Get(kind).Duration;
+
+		switch (kind)
+		{
+			case PowerUpKind.Shield: HasShield = true; break;
+			case PowerUpKind.Freeze: freezeLeft = Mathf.Max(freezeLeft, duration); break;
+			case PowerUpKind.Magnet: magnetLeft = Mathf.Max(magnetLeft, duration); break;
+			case PowerUpKind.Damage: damageLeft = Mathf.Max(damageLeft, duration); break;
+			// Nuke is instant; GameManager does the clearing.
+		}
+
+		EmitSignal(SignalName.EffectsChanged);
+	}
+
+	/// <summary>Spends the shield, if there is one.</summary>
+	/// <returns>True if a hit was absorbed and the world survives.</returns>
+	public bool ConsumeShield()
+	{
+		if (!HasShield)
+			return false;
+
+		HasShield = false;
+		EmitSignal(SignalName.EffectsChanged);
+		return true;
+	}
+
+	private void TickEffects(float delta)
+	{
+		bool changed = false;
+		changed |= Countdown(ref freezeLeft, delta);
+		changed |= Countdown(ref magnetLeft, delta);
+		changed |= Countdown(ref damageLeft, delta);
+
+		if (changed)
+			EmitSignal(SignalName.EffectsChanged);
+	}
+
+	/// <returns>True on the frame the timer reaches zero.</returns>
+	private static bool Countdown(ref float timer, float delta)
+	{
+		if (timer <= 0f)
+			return false;
+
+		timer -= delta;
+		return timer <= 0f;
+	}
+
 	public override void _Ready()
 	{
 		Mass = Mathf.Clamp(StartMass, 0f, MaxMass);
@@ -96,6 +176,7 @@ public partial class RunState : Node
 		// pass for having played the whole orbit heavy.
 		massTimeIntegral += MassNormalised * (float)delta;
 		score += PointsPerSecond * ScoreMultiplier * (float)delta;
+		TickEffects((float)delta);
 
 		if (streakTimer <= 0f)
 			return;

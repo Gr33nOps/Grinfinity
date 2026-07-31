@@ -241,6 +241,17 @@ public partial class Player : CharacterBody2D
 		if (isDead || Invulnerable)
 			return;
 
+		// A shield is spent here rather than at each call site, so every source
+		// of death — contact, blast, hostile shot — is covered by one check.
+		if (run != null && run.ConsumeShield())
+		{
+			var manager = GameManager.Of(this);
+			manager?.Shake(0.45f);
+			manager?.Hitstop(0.08f);
+			manager?.SpawnBlast(GlobalPosition, 200f, PowerUps.Shield.Colour);
+			return;
+		}
+
 		isDead = true;
 		Velocity = Vector2.Zero;
 		SpawnDeathEffect();
@@ -313,6 +324,12 @@ public partial class Player : CharacterBody2D
 
 			var bullet = BulletScene.Instantiate<Bullet>();
 			bullet.ApplyProfile(weapon);
+
+			// Overcharge stacks on top of whatever the weapon already does, so it
+			// is worth the same to every weapon rather than only to the slow ones.
+			if (run != null && run.Overcharged)
+				bullet.Damage += run.OverchargeBonus;
+
 			bullet.GlobalPosition = shootyPart.GlobalPosition;
 			bullet.Direction = aim.Rotated(offset);
 			GameManager.Spawn(this, bullet);

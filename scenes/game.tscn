@@ -83,6 +83,25 @@ theme_override_font_sizes/font_size = 40
 text = "0   x1.0"
 horizontal_alignment = 1
 
+[node name="EffectsLabel" type="Label" parent="UI"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -600.0
+offset_top = -96.0
+offset_right = 600.0
+offset_bottom = -34.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.72, 0.92, 1, 1)
+theme_override_fonts/font = ExtResource("2_iywne")
+theme_override_font_sizes/font_size = 40
+text = "SHIELD"
+horizontal_alignment = 1
+
 [node name="KillsLabel" type="Label" parent="UI"]
 anchors_preset = 0
 offset_left = 30.0

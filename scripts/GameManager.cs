@@ -18,6 +18,15 @@ public partial class GameManager : Node2D
 	/// <summary>Ceiling on live motes, so a wipe cannot flood the arena.</summary>
 	[Export] public int MaxDebris { get; set; } = 220;
 
+	[ExportGroup("Pickups")]
+	[Export] public PackedScene PowerUpScene { get; set; }
+	/// <summary>Chance a killed body leaves a pickup. "Short, loud, frequent."</summary>
+	[Export] public float PowerUpDropChance { get; set; } = 0.05f;
+	/// <summary>Tougher bodies are likelier to drop, so a hard kill pays twice.</summary>
+	[Export] public float HeavyDropBonus { get; set; } = 0.14f;
+	/// <summary>Radius a Nuke clears. Generous — it is meant to feel like relief.</summary>
+	[Export] public float NukeRadius { get; set; } = 1400.0f;
+
 	[ExportGroup("Bosses")]
 	[Export] public PackedScene BossScene { get; set; }
 	/// <summary>Seconds into an orbit before The Coil arrives.</summary>
@@ -97,6 +106,7 @@ public partial class GameManager : Node2D
 		DebrisScene ??= GD.Load<PackedScene>("res://scenes/debris.tscn");
 		BurstScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 		BossScene ??= GD.Load<PackedScene>("res://scenes/boss_coil.tscn");
+		PowerUpScene ??= GD.Load<PackedScene>("res://scenes/power_up.tscn");
 
 		bossBar = GetNodeOrNull<Control>("UI/BossBar");
 		bossHealth = GetNodeOrNull<ProgressBar>("UI/BossBar/Health");
@@ -353,7 +363,10 @@ public partial class GameManager : Node2D
 		run?.AddKill();
 
 		if (shedDebris)
+		{
 			ShedDebris(remains, at);
+			MaybeDropPowerUp(remains, at, heavy);
+		}
 
 		PlayKillSound(heavy);
 		Hitstop(heavy ? HeavyKillHitstop : LightKillHitstop);
@@ -405,6 +418,68 @@ public partial class GameManager : Node2D
 			mote.AddToGroup("debris");
 			AddEntity(mote);
 		}
+	}
+
+	private void MaybeDropPowerUp(in Body.Remains remains, Vector2 at, bool heavy)
+	{
+		if (PowerUpScene == null)
+			return;
+
+		float chance = PowerUpDropChance + (heavy ? HeavyDropBonus : 0f);
+		if (GD.Randf() > chance)
+			return;
+
+		var pickup = PowerUpScene.Instantiate<PowerUp>();
+		pickup.Configure(PowerUps.Roll());
+		pickup.GlobalPosition = at;
+
+		// Kills happen inside collision callbacks, and inserting an Area2D while
+		// the physics server is flushing queries is an error.
+		Callable.From(() =>
+		{
+			if (IsInstanceValid(this) && IsInstanceValid(pickup))
+				AddEntity(pickup);
+			else
+				pickup.QueueFree();
+		}).CallDeferred();
+	}
+
+	/// <summary>Applies a taken pickup. Nuke is the only one that acts immediately.</summary>
+	public void CollectPowerUp(PowerUpKind kind, Vector2 at)
+	{
+		PowerUps.Profile profile = PowerUps.Get(kind);
+
+		run?.GrantPowerUp(kind);
+		SpawnBlast(at, 170f, profile.Colour);
+		Shake(0.18f);
+		PlayStreakSting(1.75f);
+
+		if (kind == PowerUpKind.Nuke)
+			DetonateNuke(at);
+	}
+
+	/// <summary>
+	/// Clears the arena. These kills score — the pickup was earned — but shed no
+	/// debris, or a Nuke would hand back more mass than a nova costs.
+	/// </summary>
+	private void DetonateNuke(Vector2 at)
+	{
+		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
+		{
+			if (node is not Body body || !IsInstanceValid(body))
+				continue;
+
+			if (at.DistanceTo(body.GlobalPosition) > NukeRadius)
+				continue;
+
+			Body.Remains remains = body.GetRemains();
+			if (body.TakeDamage(9999, (body.GlobalPosition - at).Normalized()))
+				RegisterKill(remains, body.GlobalPosition, shedDebris: false);
+		}
+
+		SpawnBlast(at, NukeRadius * 0.5f, PowerUps.Nuke.Colour);
+		Hitstop(0.16f);
+		Shake(1.0f);
 	}
 
 	/// <summary>A mote reaching the world. Tiny by design: this fires constantly.</summary>

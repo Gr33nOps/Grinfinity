@@ -70,6 +70,12 @@ func _ready() -> void:
 	if boss_at != "":
 		scene.set("BossTime", float(boss_at))
 
+	# GRIN_DROPS forces the pickup drop rate, so all five can be seen at once.
+	var drops := OS.get_environment("GRIN_DROPS")
+	if drops != "":
+		scene.set("PowerUpDropChance", float(drops))
+		scene.set("HeavyDropBonus", 0.0)
+
 	_capture(world != null)
 
 func _capture(is_gameplay: bool) -> void:

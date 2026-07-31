@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
@@ -10,6 +11,9 @@ public partial class UIManager : Node
 	private static readonly Color StreakIdle = new Color(1.0f, 0.72f, 0.32f);
 	private static readonly Color StreakFlash = Colors.White;
 
+	// Reused rather than reallocated; the effects readout runs every frame.
+	private readonly List<string> effects = new();
+
 	private Sprite2D crosshair;
 	private Sprite2D dashIcon;
 	private Sprite2D rapidFireIcon;
@@ -20,6 +24,7 @@ public partial class UIManager : Node
 	private Label killsLabel;
 	private Label streakLabel;
 	private Label scoreLabel;
+	private Label effectsLabel;
 	private Player player;
 	private RunState run;
 	private Tween streakPop;
@@ -39,6 +44,7 @@ public partial class UIManager : Node
 		killsLabel = gameRoot?.GetNodeOrNull<Label>("UI/KillsLabel");
 		streakLabel = gameRoot?.GetNodeOrNull<Label>("UI/ComboLabel");
 		scoreLabel = gameRoot?.GetNodeOrNull<Label>("UI/RunScoreLabel");
+		effectsLabel = gameRoot?.GetNodeOrNull<Label>("UI/EffectsLabel");
 		player = gameRoot?.GetNodeOrNull<Player>("player");
 		run = GameManager.Of(this)?.Run;
 
@@ -117,6 +123,37 @@ public partial class UIManager : Node
 		// place the player can see what carrying mass is actually buying them.
 		if (scoreLabel != null)
 			scoreLabel.Text = $"{run.Score:N0}   x{run.ScoreMultiplier:0.0}";
+
+		RefreshEffects();
+	}
+
+	/// <summary>
+	/// What is currently up, and for how long. Counting down beats a static icon:
+	/// the decision a pickup creates is "how long have I got", not "do I have it".
+	/// </summary>
+	private void RefreshEffects()
+	{
+		if (effectsLabel == null)
+			return;
+
+		effects.Clear();
+
+		if (run.HasShield)
+			effects.Add(PowerUps.Shield.Name);
+
+		AppendTimed(PowerUpKind.Freeze);
+		AppendTimed(PowerUpKind.Magnet);
+		AppendTimed(PowerUpKind.Damage);
+
+		effectsLabel.Visible = effects.Count > 0;
+		effectsLabel.Text = string.Join("   ", effects);
+	}
+
+	private void AppendTimed(PowerUpKind kind)
+	{
+		float left = run.TimeLeft(kind);
+		if (left > 0f)
+			effects.Add($"{PowerUps.Get(kind).Name} {Mathf.CeilToInt(left)}");
 	}
 
 	private void OnKillsChanged(int kills)
