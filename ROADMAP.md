@@ -1,326 +1,329 @@
 # Grinfinity — Design & Development Roadmap
 
-The plan we build to, start to finish. Supersedes `LAUNCH_TODO.md` (folded in
-here; the original is in git history).
+Gravity-first. The plan we build to, start to finish.
+Supersedes `LAUNCH_TODO.md` (folded in here; the original is in git history).
 
-Written against the actual codebase: Godot 4.4 / C#, `GameManager` +
+Written against the real codebase: Godot 4.4 / C#, `GameManager` +
 `EnemySpawner` + `PlayerAbilities` + `ScoreManager` + `GameSettings`.
 
 ---
 
-## 1. What this game is
+## Core fantasy (non-negotiable)
 
 > **You are a small, cheerful planet with a gun. Your gravity is why they come.**
 
-That one sentence should decide every argument from here on. It is not a
-re-skin — it is a mechanic waiting to be built. Right now enemies "chase" the
-player because a script points them at it. The moment they are *pulled* instead,
-the game has an identity nothing else in the genre has.
+Everything orbits, falls, slingshots or clumps around you. That single idea
+settles every design argument from here on.
 
 ### Pillars
 
-| Pillar | Meaning | What it rules out |
+| Pillar | Meaning | Rules out |
 |---|---|---|
-| **Gravity is the fantasy** | Everything orbits, falls, slingshots, clumps | Enemies that ignore physics; a static arena |
-| **Cheerful violence** | Bright, round, grinning; carnage without grimness | Gore, horror framing, muddy palettes |
-| **One more run** | 2–6 minute runs, instant restart, visible progress | Long levels, cutscenes, save-scumming |
-| **Readable chaos** | 100 things on screen, still legible at a glance | Visual noise that hides threats |
+| **Gravity is the fantasy** | Everything is pulled by your mass | Enemies that ignore physics, static arenas |
+| **Cheerful violence** | Bright, round, grinning carnage | Gore, horror framing, muddy palettes |
+| **One more orbit** | 2–6 min runs, under 2 s restart | Long levels, cutscenes, save-scumming |
+| **Readable chaos** | 100 things on screen, still legible | Visual noise that hides threats |
 
 ### Session shape
 
-Target run: **2–6 minutes**. Restart in **under 2 seconds** from death. A play
-session is 20–40 minutes of repeated runs.
+Target orbit: **2–6 minutes**. Restart in **under 2 seconds**. A session is
+20–40 minutes of repeated orbits.
+
+### Naming
+
+The fiction stays consistent everywhere — code, UI and docs. You are a **world**.
+Enemies are **bodies**. A run is an **orbit**. Currency is **stardust**.
+Never introduce a name that could belong to any other genre.
 
 ---
 
-## 2. Where we stand today
+## 1. Current state
 
-Honest inventory so nothing gets rebuilt.
-
-**Done and working**
+**Working**
 - Core loop: move, aim, shoot, dash, rapid fire, survive, die, restart
-- Pause, game over, scene transitions, settings, credits, key rebinding
-- Kill count + streak tracking, death recap with new-record callout
-- Three enemy kinds (Chaser / Swarmer / Tank) unlocking over a run
-- Bullets deal damage; tanks take four hits with a hit flash
-- Ramping speed and spawn rate
-- Versioned save (`highscore.cfg` v2), settings save, audio buses, gamepad
-- Windows + Linux export presets, CI that fails on import errors
+- Pause / game over / settings / credits / key rebinding / gamepad
+- Kill count + streak + death recap + new-record callout
+- Three enemy kinds unlocking mid-orbit
+- Ramping speed and spawn rate, versioned save, audio buses
+- Windows + Linux exports, CI that fails on import errors
 
-**Deliberately not built yet** — everything below.
-
-**Known debt to watch**
-- Bullets and enemies are instantiated per spawn — no pooling yet
-- Enemy behaviour is one `_PhysicsProcess` branch; will need a state/strategy
-  split once there are 6+ kinds
-- No object for "the run" — run state lives across `GameManager` and
-  `ScoreManager`. A `RunState` owner should appear in M2.
+**Known debt**
+- No object pooling — bullets, enemies and debris all instantiate per spawn
+- Enemy behaviour is a single `_PhysicsProcess` branch; needs a per-kind split
+  once there are six or more
+- No `RunState` owner — mass, score and modifiers will otherwise smear across
+  `GameManager` and `ScoreManager`
 
 ---
 
-## 3. The gravity spine
+## 2. The gravity spine
 
-The single most important system to build. Everything in M3+ hangs off it.
+The game's identity. Everything after M1 hangs off this.
 
-### 3.1 Mass
+### Mass
 
-The player has **Mass**. It starts small and grows as you absorb debris from
-kills.
+You start light. Every kill sheds debris, your gravity draws it in, you absorb
+it. **Mass is the risk dial and the score multiplier — the same number.**
 
-| Higher mass | Lower mass |
+| Heavy | Light |
 |---|---|
-| Larger pull radius → more enemies converge | Fewer enemies, calmer screen |
+| Stronger, wider pull | Weaker pull, calmer screen |
 | Higher score multiplier | Lower multiplier |
 | Larger hitbox | Small, nimble hitbox |
-| Slower movement, longer dash cooldown | Fast, twitchy |
+| Slower movement, longer dash cooldown | Fast and twitchy |
+| **Gains moons** (see below) | No moons |
 
-Mass is **the risk dial the player controls**, and it is the same dial as the
-score multiplier. That is the whole game in one number.
+### Venting
 
-### 3.2 Venting
+Abilities spend Mass rather than sitting on pure cooldowns. Dash vents a little;
+nova vents a lot. The loop becomes:
 
-Abilities **spend Mass** rather than sitting on pure cooldowns. Dash vents a
-little; a nova vents a lot. So the loop becomes:
+> pull → kill → absorb → grow heavier and more dangerous → **choose** when to
+> cash mass out as power → repeat
 
-> pull enemies in → kill → absorb → get heavier and more dangerous to yourself →
-> choose when to cash mass out as power → repeat
+### Pull, not chase
 
-This gives every run an arc the player authors, instead of a difficulty curve
-that just happens to them.
+Replace the beeline in `Enemy._PhysicsProcess` with acceleration toward the
+player scaled by mass and distance. Bodies gain momentum, overshoot and swing
+back. Keep a hard minimum approach speed so nothing stalls out of reach.
 
-### 3.3 Pull, not chase
+This is the **biggest identity gap today**. Until bodies orbit, overshoot and
+clump, this is still a re-skinned arena shooter.
 
-Replace the beeline in `Enemy._PhysicsProcess` with an acceleration toward the
-player scaled by mass and distance. Enemies gain momentum, overshoot, and swing
-back — free visual interest, and it makes dashing *through* a cluster feel great.
+### Moons — the payoff for going heavy
 
-Keep a hard "minimum approach speed" so nothing stalls out of reach.
+Without a reward, heavy mass is pure downside plus points. So: at mass
+thresholds you gain a **moon** that orbits you, body-blocks one hit, and fires
+on its own cadence. Lose mass and the moon breaks away.
 
-### 3.4 Emergent toys this unlocks
+Moons make the risk dial *desirable* rather than merely scoring, and they are
+the most legible possible statement of "I am a planet."
 
-- **Clumping** — heavy mass bunches enemies, rewarding a single well-placed shot
+### Rings — diegetic mass display
+
+Rather than a bar in a corner, heavy worlds grow **visible rings**. The player
+reads their own risk from their own silhouette. A HUD ring around the player is
+the fallback if rings prove unreadable in motion.
+
+### Emergent toys this unlocks
+
+- **Clumping** — heavy mass bunches bodies, rewarding one well-placed shot
 - **Slingshot dash** — dash past a cluster and drag it off course
 - **Gravity wells** — arena hazards that fight your pull
-- **Rival wells** — the Black Hole boss (see M4)
+- **Rival wells** — the Black Hole boss
 
 ---
 
-## 4. Milestones
+## 3. Milestones
 
-Ordered so each one leaves a better game than the last. Do not skip ahead —
-M1 exists because tuning an unfelt game wastes the work in M2+.
-
----
-
-### M1 — Make it feel good *(before adding anything)*
-
-**Goal:** the current game, but every action is satisfying.
-
-- [ ] **Playtest and tune existing numbers.** Swarmer/tank unlock times, tank
-      health, pack size, speed multipliers are all *guesses* and all `[Export]`s.
-      Tune them live in the inspector, then commit the values.
-- [ ] **Hitstop** — 40–60 ms freeze on kill. Single cheapest feel upgrade.
-- [ ] **Screen shake** — short, small, on kill; larger on player death. Must have
-      an intensity slider (0 = off) from day one.
-- [ ] **Hit feedback** — enemy flash (done for tanks, extend to all), knockback
-      on non-fatal hits, punchier death particles.
-- [ ] **Muzzle flash + shell/spark on fire**, bullet trail.
-- [ ] **Kill chain banner** — the streak counter should *pop* and scale, not just
-      change text.
-- [ ] **Audio layering** — separate kill / big-kill / streak-milestone sounds;
-      pitch variation so repetition doesn't fatigue.
-- [ ] **Music intensity** — second music layer that fades in above a danger
-      threshold.
-
-**Done when:** killing one enemy feels good with the sound off, and feels great
-with it on.
+Ordered so each leaves a better game than the last. Do not skip ahead — M1
+exists because tuning an unfelt game wastes everything after it.
 
 ---
 
-### M2 — The gravity spine
+### M1 — Make the current game feel good
 
-**Goal:** the fantasy becomes the mechanic.
+*Tune and juice what exists. No new systems.*
 
-- [ ] **`RunState`** — one owner for mass, kills, streak, time, modifiers.
-      Extract from `GameManager`/`ScoreManager`.
-- [ ] **Mass meter** on the HUD — a ring around the player, not a bar in a corner.
-- [ ] **Debris pickups** — kills drop motes; motes are pulled in by *your* gravity
-      (self-demonstrating mechanic), absorbed on contact, grant mass.
-- [ ] **Pull replaces chase** in `Enemy._PhysicsProcess`, scaled by mass.
-- [ ] **Mass affects** hitbox scale, move speed, score multiplier, spawn rate.
-- [ ] **Venting** — dash and nova consume mass.
-- [ ] **Score rework** — score = f(time, kills, streak, average mass). Bump save
-      to v3.
+- [ ] **Live-tune every existing `[Export]`** — unlock times, pack sizes, tank
+      health, speed multipliers. These are all guesses today. Commit the values.
+- [ ] **Hitstop** — 40–60 ms freeze on kill. Cheapest feel upgrade available.
+- [ ] **Screen shake** — short and small on kill, larger on death. **Ships with
+      its intensity slider (0 = off) on day one.**
+- [ ] **Hit feedback** — flash on all bodies (tanks already have it), knockback
+      on non-fatal hits, punchier death bursts
+- [ ] **Muzzle flash, spark, bullet trail**
+- [ ] **Kill-chain banner that pops** — scale and punch, not just changing text
+- [ ] **Deep space look** — parallax starfield layers plus a slow nebula wash
+      behind them. The arena currently reads as a black box; three cheap layers
+      make it read as *space*. Highest look-per-effort item on the list.
+- [ ] **Audio layering** — distinct light/heavy kill sounds, streak milestone
+      stings, pitch variation so repetition doesn't fatigue
+- [ ] **Music intensity layer** — a second stem that fades in above a danger
+      threshold
+
+**Done when:** killing one body feels good with the sound off, and great with it on.
+
+---
+
+### M2 — Gravity becomes the mechanic
+
+- [ ] **`RunState`** — one owner for mass, kills, streak, time and modifiers.
+      Extract from `GameManager` / `ScoreManager`.
+- [ ] **Pull replaces chase**, scaled by mass
+- [ ] **Debris motes** — shed on death, pulled in by *your* gravity. They should
+      **orbit you briefly before being absorbed** — the mechanic demonstrating
+      itself, and free satisfaction.
+- [ ] **Mass affects** hitbox scale, move speed, dash cooldown, score multiplier,
+      spawn rate
+- [ ] **Rings** — visible mass on the world itself
+- [ ] **Moons** — gained at mass thresholds; orbit, block one hit, fire
+      independently; break away when mass drops
+- [ ] **Venting** — dash and nova consume mass
+- [ ] **Score rework** — `f(time, kills, streak, average mass)`; bump save to v3
 
 **Done when:** a player can explain, unprompted, why they chose to stay light or
-go heavy.
+go heavy — and wants a moon.
 
 ---
 
 ### M3 — Arsenal and bestiary
 
-**Goal:** runs differ by *how* you fight.
+*How you fight starts to differ.*
 
-**Weapons** — pick one at run start; 3 at first, 5 later.
+**Weapons** — one chosen at orbit start. Three first, five later.
 
 | Weapon | Fantasy | Tradeoff |
 |---|---|---|
-| Pea Shooter | Current gun, reliable | Baseline |
-| Scatter | Shotgun cone, deletes swarms | Useless at range |
-| Lance | Piercing line through a whole clump | Slow fire, needs lining up |
-| Heavy | One big slow shot, huge knockback | Punishing to miss |
-| Overheat | Hold to charge; overheats and locks | High skill ceiling |
+| **Comet** | Baseline shot with a trail | Reliable, unremarkable |
+| **Debris Cannon** | Shotgun spray of rock | Deletes swarms, useless at range |
+| **Ion Lance** | Piercing beam through a whole clump | Slow, needs lining up |
+| **Mass Driver** | One huge slug, enormous knockback | Punishing to miss |
+| **Solar Flare** | Hold to charge, overheats and locks | Highest skill ceiling |
 
-**Enemies** — extend `EnemyKind` and split behaviour out of one method.
+**Bodies** — new kinds teach gravity literacy, not just raise numbers. Each needs
+a **distinct silhouette**, since they are all tinted variations of one sprite today.
 
-| Enemy | Behaviour | Teaches |
+| Body | Behaviour | Teaches |
 |---|---|---|
-| Chaser ✅ | Straight in | Baseline |
-| Swarmer ✅ | Fast, packs | Crowd control |
-| Tank ✅ | Slow, 4 HP | Target priority |
-| **Splitter** | Dies into 3 minis | Don't kill it point-blank |
-| **Orbiter** | Circles at fixed radius, fires inward | Punishes lazy aim |
-| **Exploder** | Detonates in a radius on death | Spacing |
-| **Shielded** | Armoured front arc | Positioning / flanking |
-| **Sniper** | Telegraphed laser from off-screen | Don't stand still |
+| **Drifter** ✅ | Straight in | Baseline |
+| **Shard** ✅ | Fast, arrives in packs | Crowd control |
+| **Planetoid** ✅ | Slow, four hits | Target priority |
+| **Fracture** | Dies into three smaller bodies | Don't kill it point-blank |
+| **Satellite** | Holds a fixed orbit radius, fires inward | Punishes lazy aim |
+| **Flare** | Detonates in a radius on death | Spacing |
+| **Bulwark** | Armoured front arc | Flanking |
+| **Pulsar** | Telegraphed beam from off-screen | Never stand still |
 
-**First boss — The Coil.** Spins projectile rings with safe gaps; teaches dash
-timing. Appears at 3:00 in Classic.
+**First boss — The Coil.** Spinning projectile rings with safe gaps; teaches dash
+timing. Appears around 3:00 in Endless Orbit.
 
-- [ ] Weapon system + 3 weapons, selectable at run start
-- [ ] 4 new enemy kinds
-- [ ] Enemy behaviour refactor (strategy per kind, not one `if` ladder)
-- [ ] The Coil boss + boss music sting + slow-mo on kill
+- [ ] Weapon system + first three weapons, chosen at orbit start
+- [ ] Four new body kinds
+- [ ] **Enemy behaviour refactor** — strategy per kind, not one `if` ladder
+- [ ] The Coil + boss music sting + slow-mo on kill
 
-**Done when:** two runs with different weapons play noticeably differently.
+**Done when:** two orbits with different weapons play noticeably differently.
 
 ---
 
-### M4 — Runs that differ
+### M4 — Orbits that feel unique
 
-**Goal:** in-run choices, not just execution.
+*In-orbit choices, not just execution.*
 
-- [ ] **Power-up pickups** — shield, freeze, magnet, nuke, damage boost. Short,
-      loud, frequent.
-- [ ] **Relics** — one random passive per run (piercing shots, vampiric dash,
-      slow aura, double debris). Roguelike spice without a meta tree.
-- [ ] **Arena events** — 20-second modifiers announced on screen: *double speed*,
-      *no dash*, *giant bullets*, *inverted gravity*.
-- [ ] **Gravity wells** — map hazards that pull bullets and enemies; dash escapes.
-- [ ] **Boss 2 — Swarm Queen** (spawns swarmers; DPS + movement check)
-- [ ] **Boss 3 — The Black Hole** — a rival gravity well that steals your pull
-      and your bullets. The thematic centrepiece; build it last and build it well.
+- [ ] **Power-ups** — short, loud, frequent: shield, freeze, magnet, nuke,
+      damage boost
+- [ ] **Relics** — one random passive per orbit (piercing, vampiric dash, slow
+      aura, double debris). Roguelike spice without a meta tree.
+- [ ] **Arena events** — 20-second announced modifiers: *solar wind* (constant
+      drift), *no dash*, *giant slugs*, *inverted gravity* (you repel instead of
+      pull — the single most on-theme modifier available)
+- [ ] **Gravity wells** — hazards that pull bullets and bodies; dash escapes
+- [ ] **Comet flybys** — a fast body crosses the arena on a fixed arc, hurting
+      anything in its path including enemies. Free spectacle, pure space.
+- [ ] **Boss 2 — The Brood.** Spawns shards continuously; a DPS and movement check.
+- [ ] **Boss 3 — The Black Hole.** A rival gravity well that steals your pull
+      *and* your bullets. The thematic centrepiece — build it last, build it well.
 
-**Done when:** a player can describe a run by what happened in it, not just how
+**Done when:** a player describes an orbit by what happened in it, not just how
 long it lasted.
 
 ---
 
 ### M5 — Meta and retention
 
-**Goal:** a reason to close the game *and come back*.
-
 - [ ] **Stardust** — currency from time, kills and streaks
-- [ ] **Unlocks** — the 12 player skins become *pilots* with names and bios,
-      unlocked by challenges. The art already exists; this is nearly free content.
-- [ ] **Light permanent upgrades** — soft-capped: move speed, dash cooldown,
-      starting mass. Must never trivialise a run.
-- [ ] **Achievements** — Survive 5:00, 100 kills, x25 streak, no-hit minute,
-      beat each boss, max mass.
-- [ ] **Local top-10 leaderboard** — per mode, with date and weapon used.
-- [ ] **Stats screen** — lifetime kills, runs, favourite weapon, time played.
+- [ ] **Worlds** — the existing 12 skins become named, unlockable worlds with a
+      line of flavour each, earned by challenges. The art already exists; this is
+      the cheapest content in the whole plan.
+- [ ] **Soft-capped permanent upgrades** — move speed, dash cooldown, starting
+      mass. Must never trivialise an orbit.
+- [ ] **Achievements** — survive 5:00, 100 kills, x25 streak, no-hit minute, beat
+      each boss, reach max mass, finish an orbit at minimum mass
+- [ ] **Local top-10 leaderboard** — per mode, with weapon, world and date
+- [ ] **Lifetime stats** — orbits, kills, favourite weapon, time played,
+      heaviest mass reached
 
-**Done when:** there is a visible reason to start run #20.
+**Done when:** there is a visible reason to start orbit #20.
 
 ---
 
 ### M6 — Modes
 
-**Goal:** different reasons to play, same core.
-
 | Mode | Shape | Why |
 |---|---|---|
-| **Classic** ✅ | Endless survival | The default |
-| **Hot Minute** | 60 seconds, max score | Perfect for "one more" |
-| **Daily Seed** | Fixed seed, one attempt, shared leaderboard | Reason to return daily |
-| **Boss Rush** | Three bosses, no trash | Showcases M3/M4 work |
-| **Glass Cannon** | One-hit death, huge damage | Ranked, for the skilled |
+| **Endless Orbit** ✅ | Endless survival | The default |
+| **Flyby** | 60 seconds, max score | Perfect for "one more" |
+| **Daily Alignment** | Fixed seed, one attempt | Reason to return daily |
+| **Convergence** | Three bosses, no trash | Showcases M3/M4 work |
+| **Glass Planet** | One-hit death, huge damage | Ranked, for the skilled |
 
 - [ ] Mode select on the main menu
-- [ ] Seeded RNG (`RandomNumberGenerator` with explicit seed, not `GD.Rand*`)
+- [ ] **Seeded RNG** — `RandomNumberGenerator` with an explicit seed, not `GD.Rand*`
 - [ ] Per-mode high scores in the save
-- [ ] **Difficulty select** — Easy / Normal / Hard affecting spawn rate, enemy
-      speed and contact radius (not player damage)
+- [ ] **Difficulty select** — Easy / Normal / Hard, affecting spawn rate, body
+      speed and contact radius. Never player damage.
 
-**Done when:** Daily Seed produces identical runs across two machines.
+**Done when:** Daily Alignment produces identical orbits across two machines.
 
 ---
 
 ### M7 — Ship it
 
-- [ ] **Options completion** — resolution, vsync, FPS cap, shake intensity, UI
-      scale, damage numbers toggle, gamepad aim assist
-- [ ] **Accessibility** — colourblind-safe enemy palette, high-contrast outline
-      mode, hold-vs-toggle rapid fire, assist mode (slower enemies), shake off
+- [ ] **Options** — resolution, vsync, FPS cap, shake intensity, UI scale,
+      damage numbers toggle, gamepad aim assist
+- [ ] **Accessibility** — colourblind-safe body palette, high-contrast outlines,
+      hold-vs-toggle rapid fire, assist mode (slower bodies), shake off
 - [ ] **Localisation-ready** — all UI strings through a translation table
-- [ ] **Object pooling** for bullets, enemies and debris if frame time suffers
-- [ ] **Steamworks** — overlay, achievements sync, cloud saves
-- [ ] **Store assets** — trailer, 6–8 screenshots, capsule art, description
-- [ ] **QA pass** — 1080p/1440p/ultrawide, gamepad-only run, keyboard-only run,
-      fresh-install run with no save file
-- [ ] **itch.io build** as a soft launch before Steam
+- [ ] **Object pooling** for bullets, bodies and debris if frame time suffers
+- [ ] **Steamworks** — overlay, achievements, cloud saves
+- [ ] **Store assets** — trailer, 6–8 screenshots, capsules, description
+- [ ] **QA matrix** — 1080p / 1440p / ultrawide, gamepad-only, keyboard-only,
+      fresh install with no save
+- [ ] **itch.io soft launch** before Steam
 
 **Done when:** someone who has never seen the game can install, play and quit
 without confusion.
 
 ---
 
-## 5. Standing rules
-
-Things that apply to every milestone, not one of them.
+## 4. Standing rules
 
 1. **Everything tunable is `[Export]`.** No gameplay constant gets buried.
-2. **Every new toggle ships with its options entry.** Screen shake without a
-   slider is a bug.
-3. **Readability beats spectacle.** If a new effect hides a threat, it's wrong.
-4. **New save fields bump the version and migrate.** `ScoreManager` already
-   models this; keep it.
+2. **Every new toggle ships with its options entry.** Shake without a slider is a bug.
+3. **Readability beats spectacle.** If an effect hides a threat, it's wrong.
+4. **New save fields bump the version and migrate.** `ScoreManager` models this.
 5. **Runtime spawns go through `GameManager.Spawn()`** so they stay pausable.
-6. **Test a fresh install** — no save file, no settings — before every release.
-7. **CI must stay green.** A red import is a broken game, not a warning.
+6. **Test a fresh install** — no save, no settings — before every release.
+7. **CI stays green.** A red import is a broken game, not a warning.
+8. **Nothing gets a name that could belong to another genre.**
 
 ---
 
-## 6. Explicitly out of scope
+## 5. Explicitly out of scope
 
-Say no now, save the argument later.
+Online multiplayer or co-op · open world, levels or campaign · deep RPG inventory
+or crafting · story, dialogue, cutscenes · mobile touch controls · procedurally
+generated art.
 
-- Online multiplayer / co-op
-- Open world, levels, or a campaign
-- Deep RPG inventory or crafting
-- Story, dialogue, cutscenes
-- Mobile touch controls (revisit only if Android becomes a real target)
-- Procedurally generated art
+Firm. Revisit only if a shipped game earns the right.
 
 ---
 
-## 7. What to watch
+## 6. What to watch
 
-If we ever want to know whether a change worked:
-
-- **Median run length** — should sit at 2–6 min. Under 90s is punishing; over
-  10 min is boring.
-- **Restart rate** — % of deaths followed by an immediate restart. This is the
-  "one more run" pillar, measured.
-- **Weapon spread** — if one weapon takes >50% of picks, it's overtuned.
-- **Deaths by enemy type** — reveals which enemies are unreadable rather than
-  hard.
+- **Median orbit length** — target 2–6 min. Under 90 s is punishing; over 10 is boring.
+- **Restart rate** — deaths followed by an immediate restart. The "one more orbit"
+  pillar, measured.
+- **Weapon spread** — one weapon over 50% of picks means it's overtuned.
+- **Deaths by body type** — reveals which bodies are *unreadable* rather than hard.
 - **Mass at death** — tells us whether the risk dial is being used at all.
+- **Moons held at death** — tells us whether going heavy is actually worth it.
 
 ---
 
-## 8. Immediate next three
+## 7. Immediate next three
 
 1. Merge the `audit-fixes` PR and confirm the first CI run is green.
-2. Kill the phantom `Q` input on the dev machine (vJoy) so playtesting is honest.
-3. **M1**: tune the existing numbers, then hitstop and screen shake.
+2. Kill the phantom `Q` input (vJoy) so playtesting is honest.
+3. **M1**: tune the existing numbers → hitstop → screen shake → parallax space.

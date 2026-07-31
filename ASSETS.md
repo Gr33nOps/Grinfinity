@@ -106,6 +106,14 @@ edits that saves 48 sprites and every future weapon. Do it before M3 starts.
 - [ ] `mote.png` — 16×16, single round particle for death bursts
 - [ ] `mote_square.png` — 12×12, chunky alt so bursts mix shapes
 
+**Deep space look (4)** — highest look-per-effort art on the whole list. The
+arena currently reads as a black box; layered parallax makes it read as *space*.
+- [ ] `stars_far.png` — 1920×1080, tiny dim dots, scrolls slowest
+- [ ] `stars_mid.png` — 1920×1080, sparser and brighter
+- [ ] `stars_near.png` — 1920×1080, few large dots, scrolls fastest
+- [ ] `nebula_wash.png` — 2048×1152, soft purple/magenta cloud, very low alpha,
+      drifts slowly across everything
+
 **Audio (9)**
 - [ ] `kill_small.ogg` — light pop, for chasers/swarmers
 - [ ] `kill_big.ogg` — heavier thud, for tanks
@@ -129,6 +137,15 @@ edits that saves 48 sprites and every future weapon. Do it before M3 starts.
 - [ ] `mass_ring_segment.png` — 256×256 arc, optional; the meter can be drawn
       in-engine instead — **try `draw_arc()` first and skip this if it works**
 
+**Rings and moons (7)** — the diegetic mass display and its payoff.
+- [ ] `world_ring_1.png` / `world_ring_2.png` / `world_ring_3.png` — 512×160,
+      three tiers of planetary ring that appear on the player as mass grows.
+      Drawn flat and slightly elliptical so they read as rings at a glance.
+- [ ] `moon_small.png` — 64×64, orbits the player at low mass tiers
+- [ ] `moon_large.png` — 96×96, higher tier
+- [ ] `moon_break.png` — 96×96, cracked variant for the frame it detaches
+- [ ] `moon_shot.png` — 24×24, the moon's own projectile
+
 **Audio (4)**
 - [ ] `debris_absorb.ogg` — very short tick, pitched up by streak in code
 - [ ] `mass_vent.ogg` — release/whoosh when spending mass
@@ -143,32 +160,32 @@ edits that saves 48 sprites and every future weapon. Do it before M3 starts.
 **Art (28)**
 
 Weapons — assuming the split above:
-- [ ] 5 × gun sprites, 200×80: `weapon_pea`, `weapon_scatter`, `weapon_lance`,
-      `weapon_heavy`, `weapon_overheat`
+- [ ] 5 × gun sprites, 200×80: `weapon_comet`, `weapon_debris_cannon`,
+      `weapon_ion_lance`, `weapon_mass_driver`, `weapon_solar_flare`
 - [ ] 5 × weapon select icons, 128×128, flat silhouette on a disc
-- [ ] 5 × bullet sprites, 32×32 (lance is 96×24, heavy is 64×64)
-- [ ] `overheat_gauge.png` — 256×32, fills as the overheat weapon charges
+- [ ] 5 × projectile sprites, 32×32 (Ion Lance is 96×24, Mass Driver is 64×64)
+- [ ] `flare_gauge.png` — 256×32, fills as Solar Flare charges
 
-Enemies — new kinds need **distinct silhouettes**, not just recolours:
-- [ ] `enemy_splitter.png` — visibly segmented, reads as "will break apart"
-- [ ] `enemy_orbiter.png` — has a directional fin so its facing is legible
-- [ ] `enemy_exploder.png` — bloated, lit fuse or crack pattern
-- [ ] `enemy_shielded.png` — plated front arc, obviously flankable
-- [ ] `enemy_sniper.png` — single big eye, long thin body
-- [ ] `enemy_splitter_mini.png` — 128×112, the split children
+Bodies — new kinds need **distinct silhouettes**, not just recolours:
+- [ ] `body_fracture.png` — visibly segmented, reads as "will break apart"
+- [ ] `body_satellite.png` — directional fin so its facing is legible
+- [ ] `body_flare.png` — bloated, lit crack pattern
+- [ ] `body_bulwark.png` — plated front arc, obviously flankable
+- [ ] `body_pulsar.png` — single big eye, long thin body
+- [ ] `body_fracture_mini.png` — 128×112, the split children
 
 Boss 1 — The Coil:
 - [ ] `boss_coil_core.png` — 512×512
 - [ ] `boss_coil_ring.png` — 768×768, the rotating projectile ring
 - [ ] `boss_coil_hurt.png` — damaged/cracked variant
-- [ ] `telegraph_line.png` — 512×32, sniper aim warning
+- [ ] `telegraph_line.png` — 512×32, Pulsar beam warning
 - [ ] `telegraph_ring.png` — 512×512, incoming-ring warning
 - [ ] `boss_healthbar_frame.png` — 1200×64
 
 **Audio (11)**
 - [ ] 5 × weapon fire sounds — each must be identifiable blind
-- [ ] `splitter_split.ogg`, `exploder_boom.ogg`, `shield_deflect.ogg`
-- [ ] `sniper_charge.ogg` — telegraph
+- [ ] `fracture_split.ogg`, `flare_boom.ogg`, `bulwark_deflect.ogg`
+- [ ] `pulsar_charge.ogg` — telegraph
 - [ ] `music_boss.ogg` — full track
 - [ ] `boss_defeat.ogg` — payoff sting
 
@@ -184,8 +201,10 @@ Boss 1 — The Coil:
 - [ ] 10 × relic icons, 128×128
 - [ ] `event_banner.png` — 1200×140, frame for arena event announcements
 - [ ] `gravity_well.png` — 384×384 (pair with a swirl shader)
-- [ ] Boss 2 Swarm Queen: `boss_queen.png` 640×640 + `boss_queen_hurt.png`
-- [ ] Boss 3 Black Hole: `boss_blackhole.png` 512×512 + accretion ring
+- [ ] `comet_flyby.png` — 256×96, bright head with a long tail, for the comet
+      that crosses the arena and hurts everything in its path
+- [ ] Boss 2 The Brood: `boss_brood.png` 640×640 + `boss_brood_hurt.png`
+- [ ] Boss 3 The Black Hole: `boss_blackhole.png` 512×512 + accretion ring
       768×768. Mostly shader work — keep the sprite simple.
 
 **Audio (10)**
@@ -193,16 +212,17 @@ Boss 1 — The Coil:
 - [ ] `event_announce.ogg`
 - [ ] `nuke_blast.ogg`
 - [ ] `freeze_hit.ogg`
-- [ ] `music_boss_queen.ogg`, `music_boss_blackhole.ogg`
+- [ ] `comet_pass.ogg` — doppler whoosh
+- [ ] `music_boss_brood.ogg`, `music_boss_blackhole.ogg`
 
 ---
 
 ### M5 — Meta and retention
 
 **Art (~40, mostly small)**
-- [ ] `pilot_card_frame.png` — 400×560. The 12 skins become pilots; you only
-      need the **frame**, reusing existing skin art inside it.
-- [ ] `pilot_card_locked.png` — same size, silhouette state
+- [ ] `world_card_frame.png` — 400×560. The 12 skins become unlockable **worlds**;
+      you only need the **frame**, reusing existing skin art inside it.
+- [ ] `world_card_locked.png` — same size, silhouette state
 - [ ] `stardust_icon.png` 64×64 + `stardust_mote.png` 16×16
 - [ ] 20 × achievement icons, 128×128
 - [ ] `achievement_toast.png` — 640×140 popup frame
@@ -221,8 +241,8 @@ Boss 1 — The Coil:
 ### M6 — Modes
 
 **Art (11)**
-- [ ] 5 × mode select cards, 480×640: Classic, Hot Minute, Daily Seed, Boss Rush,
-      Glass Cannon
+- [ ] 5 × mode select cards, 480×640: Endless Orbit, Flyby, Daily Alignment,
+      Convergence, Glass Planet
 - [ ] 3 × difficulty icons, 96×96
 - [ ] `daily_badge.png` — 128×128, with a completed-today state
 - [ ] `mode_locked.png`
@@ -260,7 +280,8 @@ Save yourself the work — these are better done in engine:
 - **Glow / bloom** — removed project-wide; don't bake fake glow into sprites
 - **Explosion sprite sheets** — `CPUParticles2D` already handles bursts; you only
   need the small mote textures listed in M1
-- **Starfield** — the existing scrolling `background.png` plus its shader covers it
+- **Starfield motion** — the existing scrolling shader handles the movement; you
+  only need to supply the three parallax layers, not animate them
 - **Button states** — you already have normal/hover/pressed for all five button
   sets; new buttons should be **flat text in Bubblegum** (that's what Settings,
   Credits and Controls already use) rather than more painted buttons
@@ -273,26 +294,29 @@ Save yourself the work — these are better done in engine:
 | Milestone | Art | Audio | Notes |
 |---|---|---|---|
 | Structural | 13 | — | Degunned skins + first weapon sprite |
-| M1 | 6 | 9 | Small; mostly particles and stings |
-| M2 | 6 | 4 | One may be skippable (in-engine arc) |
-| M3 | 28 | 11 | Biggest art milestone — 3 bosses' worth of detail |
-| M4 | 26 | 10 | Bosses are shader-heavy, sprites stay simple |
+| M1 | 10 | 9 | Particles, stings, and the parallax space layers |
+| M2 | 13 | 4 | Rings and moons; one item may be skippable (in-engine arc) |
+| M3 | 28 | 11 | Biggest art milestone — a boss's worth of detail |
+| M4 | 27 | 11 | Bosses are shader-heavy, sprites stay simple |
 | M5 | ~40 | 4 | Mostly 128×128 icons; fast to batch |
 | M6 | 11 | 1 | Mode cards can reuse gameplay screenshots |
 | M7 | Store set | 2 | Marketing, not gameplay |
 
-**Rough total: ~130 art assets, ~41 audio.** Front-loaded work is small — M1 and
-M2 together are 12 sprites and 13 sounds.
+**Rough total: ~142 art assets, ~42 audio.** Front-loaded work stays small — M1
+and M2 together are 23 sprites and 13 sounds, and 4 of those sprites are the
+parallax layers that transform how the whole game looks.
 
 ---
 
 ## 7. Order to work in
 
-1. **Degun the 12 skins + draw one gun.** Unblocks all of M3 and costs a day.
-2. **M1 particles** (6 sprites) — needed the moment hitstop and shake go in.
-3. **M1 audio** (9 sounds) — the single biggest perceived-quality jump available.
-4. **Square `icon.png`** — 20 minutes, and it's a launch blocker sitting there today.
-5. Then follow the milestones in order.
+1. **The parallax space layers** (4 sprites). Biggest visual change for the least
+   work in the entire document — the game stops looking like a black box.
+2. **Degun the 12 skins + draw one gun.** Unblocks all of M3 and costs a day.
+3. **M1 particles** (6 sprites) — needed the moment hitstop and shake go in.
+4. **M1 audio** (9 sounds) — the single biggest perceived-quality jump available.
+5. **Square `icon.png`** — 20 minutes, and it's a launch blocker sitting there today.
+6. Then follow the milestones in order.
 
 Batch by type, not by milestone, once you're past M2: drawing 20 icons in one
 sitting is far faster than 20 icons spread across four weeks.
