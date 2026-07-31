@@ -1,0 +1,72 @@
+name: CI
+
+# Catches the failure mode that broke this project once already: assets or
+# scripts that no longer import cleanly. A stale/missing import silently turns
+# into "referenced non-existent resource" at runtime, which is easy to miss
+# locally because the editor keeps a warm cache.
+
+on:
+  push:
+    branches: [main, master, development]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.4.1
+
+jobs:
+  build:
+    name: Import and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache Godot binary
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-mono-${{ env.GODOT_VERSION }}
+
+      - name: Download Godot (.NET)
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot && cd ~/godot
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          NAME="Godot_v${GODOT_VERSION}-stable_mono_linux_x86_64"
+          curl -fsSL -o godot.zip "$BASE/${NAME}.zip"
+          unzip -q godot.zip
+          mv "$NAME" godot-mono
+
+      - name: Add Godot to PATH
+        run: echo "$HOME/godot/godot-mono" >> "$GITHUB_PATH"
+
+      - name: Restore and build C#
+        run: dotnet build --configuration Debug
+
+      - name: Import assets and fail on any error
+        run: |
+          BIN="$HOME/godot/godot-mono/Godot_v${GODOT_VERSION}-stable_mono_linux.x86_64"
+          # Godot writes import diagnostics to stderr and still exits 0, so the
+          # error stream is what has to be inspected.
+          "$BIN" --headless --path . --import 2>import-errors.log || true
+          if grep -qE '^(ERROR|SCRIPT ERROR)' import-errors.log; then
+            echo "::error::Godot reported import errors:"
+            grep -E '^(ERROR|SCRIPT ERROR)' -A 2 import-errors.log
+            exit 1
+          fi
+          echo "Import clean."
+
+      - name: Upload import log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: import-errors
+          path: import-errors.log
+          if-no-files-found: ignore
