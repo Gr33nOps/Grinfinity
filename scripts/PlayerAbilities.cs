@@ -68,7 +68,7 @@ public class PlayerAbilities
 
 	private void HandleInput()
 	{
-		if (Input.IsActionJustPressed("dash") && dashTimer <= 0 && !isDashing)
+		if (Input.IsActionJustPressed("dash") && dashTimer <= 0 && !isDashing && player.CanDash)
 			StartDash();
 
 		if (Input.IsActionJustPressed("rapid_fire") && rapidFireTimer <= 0 && !isRapidFiring)

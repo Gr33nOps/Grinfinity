@@ -32,6 +32,15 @@ public partial class Body : CharacterBody2D, IShootable
 	[Export] public float SlowAuraRadius { get; set; } = 340.0f;
 	[Export] public float SlowAuraStrength { get; set; } = 3.2f;
 
+	[ExportGroup("Arena events")]
+	/// <summary>Push per second during Solar Wind.</summary>
+	[Export] public float SolarWindForce { get; set; } = 340.0f;
+	/// <summary>How hard Inversion pushes, relative to the pull it replaces.</summary>
+	[Export] public float InversionStrength { get; set; } = 0.75f;
+	/// <summary>Size and slowness multipliers during Heavy Weather.</summary>
+	[Export] public float GiantScale { get; set; } = 1.55f;
+	[Export] public float GiantSlowdown { get; set; } = 0.55f;
+
 	[ExportGroup("Armed bodies")]
 	[Export] public PackedScene BulletScene { get; set; }
 	[Export] public float BulletSpeed { get; set; } = 420.0f;
@@ -137,6 +146,17 @@ public partial class Body : CharacterBody2D, IShootable
 			spriteBaseScale = sprite.Scale;
 
 		OrbitDirection = GD.Randf() < 0.5f ? -1.0f : 1.0f;
+
+		// Heavy Weather applies at birth, not continuously, so the bodies it
+		// produced stay giant for their whole life and the change is legible.
+		if (run != null && run.During(ArenaEventId.GiantSlugs))
+		{
+			BaseScale *= GiantScale;
+			SpeedMultiplier *= GiantSlowdown;
+			AccelMultiplier *= GiantSlowdown;
+			Scale = BaseScale;
+		}
+
 		LaunchIntoOrbit();
 	}
 
@@ -225,7 +245,16 @@ public partial class Body : CharacterBody2D, IShootable
 		float acceleration = BaseAcceleration * AccelMultiplier * massPull * falloff
 			* BodySpawner.SpeedScale;
 
+		// Inversion flips the sign of the one force the whole game is built on.
+		bool inverted = run != null && run.During(ArenaEventId.InvertedGravity);
+		if (inverted)
+			acceleration = -acceleration * InversionStrength;
+
 		Vector2 drift = Drift + towards * acceleration * delta;
+
+		if (run != null && run.During(ArenaEventId.SolarWind))
+			drift += run.WindDirection * SolarWindForce * delta;
+
 		drift *= Mathf.Max(1.0f - Drag * delta, 0f);
 
 		float baseSpeed = BodySpawner.CurrentSpeed * SpeedMultiplier;
@@ -233,7 +262,8 @@ public partial class Body : CharacterBody2D, IShootable
 		// Far out, orbiting forever would just mean drifting off-screen, so a
 		// minimum closing speed is enforced. Inside that range the body is left
 		// alone: overshooting and swinging back is the behaviour we want.
-		if (distance > StrandingDistance)
+		// Suspended during Inversion, which is meant to scatter bodies outward.
+		if (distance > StrandingDistance && !inverted)
 		{
 			float approach = drift.Dot(towards);
 			float minApproach = baseSpeed * 0.5f;

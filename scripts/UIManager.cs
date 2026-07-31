@@ -138,6 +138,11 @@ public partial class UIManager : Node
 
 		effects.Clear();
 
+		// The event first and in its own colour: it is a rule change, not a buff,
+		// and the player needs to know how long they are living under it.
+		if (run.Event != ArenaEventId.Calm)
+			effects.Add($"{ArenaEvents.Get(run.Event).Name} {Mathf.CeilToInt(run.EventTimeLeft)}");
+
 		if (run.HasShield)
 			effects.Add(PowerUps.Shield.Name);
 

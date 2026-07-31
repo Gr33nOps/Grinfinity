@@ -37,6 +37,9 @@ public partial class Player : CharacterBody2D
 	/// <summary>Mass spent by a dash.</summary>
 	[Export] public float DashVent { get; set; } = 4.0f;
 
+	/// <summary>How hard Solar Wind shoves the world about.</summary>
+	[Export] public float SolarWindPush { get; set; } = 95.0f;
+
 	[ExportGroup("Nova")]
 	/// <summary>Mass spent by a nova. Deliberately steep — it is the big cash-out.</summary>
 	[Export] public float NovaVent { get; set; } = 35.0f;
@@ -72,6 +75,9 @@ public partial class Player : CharacterBody2D
 
 	/// <summary>Dash cooldown after mass has lengthened it.</summary>
 	public float CurrentDashCooldown => DashCooldown * Mathf.Lerp(1.0f, HeavyDashCooldown, MassNormalised);
+
+	/// <summary>False while Thrusters Out is running — the escape hatch is closed.</summary>
+	public bool CanDash => run == null || !run.During(ArenaEventId.NoDash);
 
 	public override void _Ready()
 	{
@@ -228,6 +234,11 @@ public partial class Player : CharacterBody2D
 			Input.GetAxis("left", "right"),
 			Input.GetAxis("up", "down")
 		) * CurrentMoveSpeed;
+
+		// The wind pushes the world too, not just the bodies — otherwise it is a
+		// change to them rather than to the arena.
+		if (run != null && run.During(ArenaEventId.SolarWind))
+			targetVelocity += run.WindDirection * SolarWindPush;
 
 		float t = 1f - Mathf.Exp(-MoveSmoothing * (float)delta);
 		Velocity = Velocity.Lerp(targetVelocity, t);

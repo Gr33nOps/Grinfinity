@@ -39,6 +39,7 @@ public partial class GameManager : Node2D
 	private PauseMenu pauseMenu;
 	private RunState run;
 	private BodySpawner bodySpawner;
+	private EventDirector eventDirector;
 	private UIManager uiManager;
 	private PlayerManager playerManager;
 	private GameCamera gameCamera;
@@ -116,6 +117,7 @@ public partial class GameManager : Node2D
 			bossBar.Visible = false;
 
 		bodySpawner = AddPausableChild(new BodySpawner());
+		eventDirector = AddPausableChild(new EventDirector());
 		uiManager = AddPausableChild(new UIManager());
 		playerManager = AddPausableChild(new PlayerManager());
 	}
@@ -125,6 +127,9 @@ public partial class GameManager : Node2D
 	private T AddPausableChild<T>(T node) where T : Node
 	{
 		node.ProcessMode = ProcessModeEnum.Pausable;
+		// Named after its type rather than left with Godot's generated name, so
+		// these show up legibly in the remote scene tree and can be addressed.
+		node.Name = typeof(T).Name;
 		AddChild(node);
 		return node;
 	}

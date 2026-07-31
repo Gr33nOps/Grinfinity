@@ -70,6 +70,16 @@ func _ready() -> void:
 	if boss_at != "":
 		scene.set("BossTime", float(boss_at))
 
+	# GRIN_EVENT brings the first arena event forward from its usual minute.
+	var event_at := OS.get_environment("GRIN_EVENT")
+	if event_at != "":
+		await get_tree().process_frame
+		var director := scene.get_node_or_null("EventDirector")
+		if director:
+			director.set("FirstEventTime", float(event_at))
+			director.set("GapMin", float(event_at))
+			director.set("GapMax", float(event_at) + 2.0)
+
 	# GRIN_DROPS forces the pickup drop rate, so all five can be seen at once.
 	var drops := OS.get_environment("GRIN_DROPS")
 	if drops != "":

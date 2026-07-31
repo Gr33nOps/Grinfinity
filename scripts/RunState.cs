@@ -69,6 +69,27 @@ public partial class RunState : Node
 
 	public bool Has(RelicId relic) => Relic == relic;
 
+	/// <summary>The arena event currently running, or Calm.</summary>
+	public ArenaEventId Event { get; private set; } = ArenaEventId.Calm;
+	public float EventTimeLeft { get; private set; }
+
+	public bool During(ArenaEventId id) => Event == id;
+
+	/// <summary>Direction the Solar Wind is blowing this orbit. Fixed, so it can be learned.</summary>
+	public Vector2 WindDirection { get; private set; } = Vector2.Right;
+
+	/// <summary>Starts an event, or ends one by passing Calm.</summary>
+	public void StartEvent(ArenaEventId id, float duration)
+	{
+		Event = id;
+		EventTimeLeft = duration;
+
+		if (id == ArenaEventId.SolarWind)
+			WindDirection = Vector2.FromAngle(GD.Randf() * Mathf.Tau);
+
+		EmitSignal(SignalName.EffectsChanged);
+	}
+
 	/// <summary>Mass as 0..1. This is what every other system should read.</summary>
 	public float MassNormalised => MaxMass <= 0f ? 0f : Mathf.Clamp(Mass / MaxMass, 0f, 1f);
 
@@ -150,6 +171,9 @@ public partial class RunState : Node
 
 	private void TickEffects(float delta)
 	{
+		if (EventTimeLeft > 0f)
+			EventTimeLeft -= delta;
+
 		bool changed = false;
 		changed |= Countdown(ref freezeLeft, delta);
 		changed |= Countdown(ref magnetLeft, delta);
