@@ -48,6 +48,24 @@ public partial class Body : CharacterBody2D, IShootable
 	/// <summary>This same scene, for kinds that break apart into more of themselves.</summary>
 	[Export] public PackedScene BodyScene { get; set; }
 
+	/// <summary>
+	/// The nine face sprites, loaded once and shared by every body. Centralised
+	/// here rather than kept per-spawner, so every path that creates a body —
+	/// the spawner, a Fracture's splinters, a boss's broodlings — gets the same
+	/// correct face instead of only the spawner's own spawns being dressed.
+	/// </summary>
+	private static Texture2D[] faceTextures;
+
+	private static void EnsureFacesLoaded()
+	{
+		if (faceTextures != null)
+			return;
+
+		faceTextures = new Texture2D[9];
+		for (int i = 0; i < faceTextures.Length; i++)
+			faceTextures[i] = GD.Load<Texture2D>($"res://sprites/enemy {i + 1}.png");
+	}
+
 	private Node2D world;
 	private RunState run;
 	private Sprite2D sprite;
@@ -145,6 +163,8 @@ public partial class Body : CharacterBody2D, IShootable
 		if (sprite != null)
 			spriteBaseScale = sprite.Scale;
 
+		ApplyFace();
+
 		OrbitDirection = GD.Randf() < 0.5f ? -1.0f : 1.0f;
 
 		// Heavy Weather applies at birth, not continuously, so the bodies it
@@ -158,6 +178,34 @@ public partial class Body : CharacterBody2D, IShootable
 		}
 
 		LaunchIntoOrbit();
+	}
+
+	/// <summary>
+	/// Picks this body's face. Most kinds pin one via <see cref="TextureIndex"/>
+	/// so they stay recognisable between orbits; only the baseline Drifter is
+	/// left to vary. Runs in _Ready, so GlobalPosition must already be set —
+	/// every spawn path sets it before adding the body to the tree.
+	/// </summary>
+	private void ApplyFace()
+	{
+		if (sprite == null)
+			return;
+
+		EnsureFacesLoaded();
+
+		int index = TextureIndex >= 0
+			? Mathf.Min(TextureIndex, faceTextures.Length - 1)
+			: GD.RandRange(0, Mathf.Min(2, faceTextures.Length - 1));
+		sprite.Texture = faceTextures[index];
+
+		// Bodies spawned past the bottom-right edge get flipped, purely for
+		// variety — otherwise every off-screen arrival on that side looks identical.
+		Vector2 viewportSize = GetViewportRect().Size;
+		if (GlobalPosition.X > viewportSize.X || GlobalPosition.Y > viewportSize.Y)
+		{
+			sprite.FlipV = true;
+			sprite.FlipH = true;
+		}
 	}
 
 	/// <summary>

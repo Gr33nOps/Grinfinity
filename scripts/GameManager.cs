@@ -28,9 +28,18 @@ public partial class GameManager : Node2D
 	[Export] public float NukeRadius { get; set; } = 1400.0f;
 
 	[ExportGroup("Bosses")]
-	[Export] public PackedScene BossScene { get; set; }
+	[Export] public PackedScene CoilScene { get; set; }
 	/// <summary>Seconds into an orbit before The Coil arrives.</summary>
-	[Export] public float BossTime { get; set; } = 180.0f;
+	[Export] public float CoilTime { get; set; } = 180.0f;
+	[Export] public PackedScene BroodScene { get; set; }
+	/// <summary>Seconds into an orbit before The Brood arrives, once the Coil is dealt with.</summary>
+	[Export] public float BroodTime { get; set; } = 330.0f;
+	/// <summary>
+	/// Which boss is next: 0 Coil, 1 Brood, 2 none left. Export rather than a
+	/// plain field so a boss can be skipped straight to for tuning, without
+	/// having to survive and beat everything before it first.
+	/// </summary>
+	[Export] public int NextBossIndex { get; set; } = 0;
 	[Export] public int BossScoreBonus { get; set; } = 5000;
 	/// <summary>Time scale held while a boss dies. Slow motion, not a freeze.</summary>
 	[Export] public float BossKillSlowMo { get; set; } = 0.22f;
@@ -57,10 +66,10 @@ public partial class GameManager : Node2D
 	private bool hitstopActive = false;
 	private ulong hitstopEndMsec = 0;
 
-	private BossCoil boss;
-	private bool bossSpawned;
+	private Boss boss;
 	private Control bossBar;
 	private ProgressBar bossHealth;
+	private Label bossNameLabel;
 	private Announcer announcer;
 
 	public bool IsPaused => isPaused;
@@ -108,12 +117,14 @@ public partial class GameManager : Node2D
 
 		DebrisScene ??= GD.Load<PackedScene>("res://scenes/debris.tscn");
 		BurstScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
-		BossScene ??= GD.Load<PackedScene>("res://scenes/boss_coil.tscn");
+		CoilScene ??= GD.Load<PackedScene>("res://scenes/boss_coil.tscn");
+		BroodScene ??= GD.Load<PackedScene>("res://scenes/boss_brood.tscn");
 		PowerUpScene ??= GD.Load<PackedScene>("res://scenes/power_up.tscn");
 
 		announcer = GetNodeOrNull<Announcer>("UI/Announcer");
 		bossBar = GetNodeOrNull<Control>("UI/BossBar");
 		bossHealth = GetNodeOrNull<ProgressBar>("UI/BossBar/Health");
+		bossNameLabel = GetNodeOrNull<Label>("UI/BossBar/Name");
 		if (bossBar != null)
 			bossBar.Visible = false;
 
@@ -203,8 +214,13 @@ public partial class GameManager : Node2D
 	// time: delta is scaled by Engine.TimeScale and would stretch with it.
 	public override void _Process(double delta)
 	{
-		if (!isPaused && !isGameOver && !bossSpawned && RunTime >= BossTime)
-			SpawnBoss();
+		if (!isPaused && !isGameOver && !BossActive)
+		{
+			if (NextBossIndex == 0 && RunTime >= CoilTime)
+				SpawnBoss(CoilScene, "THE COIL");
+			else if (NextBossIndex == 1 && RunTime >= BroodTime)
+				SpawnBoss(BroodScene, "THE BROOD");
+		}
 
 		if (!hitstopActive)
 			return;
@@ -213,13 +229,12 @@ public partial class GameManager : Node2D
 			EndHitstop();
 	}
 
-	private void SpawnBoss()
+	private void SpawnBoss(PackedScene scene, string encounterName)
 	{
-		if (BossScene == null)
+		if (scene == null)
 			return;
 
-		bossSpawned = true;
-		boss = BossScene.Instantiate<BossCoil>();
+		boss = scene.Instantiate<Boss>();
 
 		// Arrives off to one side rather than on top of the player.
 		Vector2 bounds = GetViewportRect().Size;
@@ -229,10 +244,26 @@ public partial class GameManager : Node2D
 		boss.Defeated += OnBossDefeated;
 		AddEntity(boss);
 
+		if (bossNameLabel != null)
+			bossNameLabel.Text = encounterName;
 		if (bossBar != null)
 			bossBar.Visible = true;
+		if (bossHealth != null)
+		{
+			// A fresh stylebox per encounter, so each boss reads in its own
+			// colour instead of every bar defaulting to the Coil's lilac.
+			bossHealth.AddThemeStyleboxOverride("fill", new StyleBoxFlat
+			{
+				BgColor = boss.BossColor,
+				CornerRadiusTopLeft = 6,
+				CornerRadiusTopRight = 6,
+				CornerRadiusBottomRight = 6,
+				CornerRadiusBottomLeft = 6
+			});
+		}
 		OnBossHealthChanged(1.0f);
 
+		Announce(encounterName, boss.ArrivalLine, boss.BossColor);
 		Shake(0.5f);
 		PlayStreakSting(0.6f);
 	}
@@ -249,12 +280,14 @@ public partial class GameManager : Node2D
 			bossBar.Visible = false;
 
 		Vector2 at = IsInstanceValid(boss) ? boss.GlobalPosition : Vector2.Zero;
+		Color colour = IsInstanceValid(boss) ? boss.BossColor : new Color(0.86f, 0.72f, 1.0f);
 		boss = null;
+		NextBossIndex++;
 
 		// Slow motion rather than a freeze: the payoff is watching it come apart.
 		Hitstop(BossKillSlowMoTime, BossKillSlowMo);
 		Shake(0.9f);
-		SpawnBlast(at, 420.0f, new Color(0.86f, 0.72f, 1.0f));
+		SpawnBlast(at, 420.0f, colour);
 		run?.AddBonus(BossScoreBonus);
 		PlayStreakSting(0.45f);
 	}

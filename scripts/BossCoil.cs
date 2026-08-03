@@ -6,18 +6,16 @@ using Godot;
 /// It throws rings of slow shots with one safe gap, and the gap moves. There is
 /// no way through except by reading where the gap will be and dashing into it,
 /// which is the single skill the rest of the game never forces you to practise.
-///
-/// It is deliberately not a body: it is not in the "bodies" group, so it does
-/// not count toward the spawn cap, cannot be absorbed by a nova, is not targeted
-/// by moons, and sheds no debris. Beating it has to be worth something other
-/// than mass.
+/// A pattern check, not a DPS check — see <see cref="BossBrood"/> for the other half.
 /// </summary>
-public partial class BossCoil : CharacterBody2D, IShootable
+public partial class BossCoil : Boss
 {
-	[Signal] public delegate void HealthChangedEventHandler(float fraction);
-	[Signal] public delegate void DefeatedEventHandler();
+	public BossCoil()
+	{
+		BossName = "THE COIL";
+		ArrivalLine = "Read the gap. Dash through it.";
+	}
 
-	[Export] public int MaxHealth { get; set; } = 90;
 	[Export] public float SpinSpeed { get; set; } = 1.1f;
 	/// <summary>Seconds between rings. Falls toward the floor as health drops.</summary>
 	[Export] public float RingInterval { get; set; } = 2.4f;
@@ -29,24 +27,13 @@ public partial class BossCoil : CharacterBody2D, IShootable
 	[Export] public float DriftSpeed { get; set; } = 46.0f;
 	[Export] public PackedScene BulletScene { get; set; }
 
-	private int health;
 	private float ringTimer;
 	private float gapAngle;
 	private Vector2 driftTarget;
-	private Node2D world;
-	private Tween hitFlash;
-	private bool defeated;
 
-	public float HealthFraction => MaxHealth <= 0 ? 0f : (float)health / MaxHealth;
-
-	public override void _Ready()
+	protected override void OnBossReady()
 	{
 		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
-		health = MaxHealth;
-
-		world = GameManager.Of(this)?.GetNodeOrNull<Node2D>("player");
-		AddToGroup("hazards");
-
 		ringTimer = 1.4f;
 		gapAngle = GD.Randf() * Mathf.Tau;
 		PickDriftTarget();
@@ -106,33 +93,5 @@ public partial class BossCoil : CharacterBody2D, IShootable
 			shot.MakeHostile();
 			GameManager.Spawn(this, shot);
 		}
-	}
-
-	public bool TakeDamage(int amount, Vector2 impactDirection = default)
-	{
-		if (defeated)
-			return false;
-
-		health -= amount;
-		EmitSignal(SignalName.HealthChanged, HealthFraction);
-
-		if (health > 0)
-		{
-			FlashHit();
-			return false;
-		}
-
-		defeated = true;
-		EmitSignal(SignalName.Defeated);
-		QueueFree();
-		return true;
-	}
-
-	private void FlashHit()
-	{
-		hitFlash?.Kill();
-		Modulate = Colors.White;
-		hitFlash = CreateTween();
-		hitFlash.TweenProperty(this, "modulate", new Color(0.86f, 0.72f, 1.0f), 0.12f);
 	}
 }

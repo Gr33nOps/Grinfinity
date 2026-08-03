@@ -35,7 +35,6 @@ public partial class BodySpawner : Node
 	public static float SpeedScale { get; private set; } = 1.0f;
 
 	private Timer spawnTimer;
-	private Texture2D[] bodyTextures;
 	private RunState run;
 	private float enemySpeed;
 	private float elapsed;
@@ -47,7 +46,7 @@ public partial class BodySpawner : Node
 		SpeedScale = 1.0f;
 		elapsed = 0f;
 		run = GameManager.Of(this)?.Run;
-		LoadBodyResources();
+		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 		SetupSpawnTimer();
 	}
 
@@ -65,17 +64,6 @@ public partial class BodySpawner : Node
 		// tightens the spawn interval on top of the time ramp.
 		float massRate = Mathf.Lerp(1.0f, HeavySpawnRate, run?.MassNormalised ?? 0f);
 		spawnTimer.WaitTime = Mathf.Lerp(StartSpawnInterval, MinSpawnInterval, progress) * massRate;
-	}
-
-	private void LoadBodyResources()
-	{
-		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
-
-		bodyTextures = new Texture2D[9];
-		for (int i = 0; i < bodyTextures.Length; i++)
-		{
-			bodyTextures[i] = GD.Load<Texture2D>($"res://sprites/enemy {i + 1}.png");
-		}
 	}
 
 	private void SetupSpawnTimer()
@@ -162,29 +150,7 @@ public partial class BodySpawner : Node
 
 		body.Configure(kind);
 		body.GlobalPosition = position;
-		SetRandomTexture(body);
 		GameManager.Spawn(this, body);
-	}
-
-	private void SetRandomTexture(Body body)
-	{
-		var sprite = body.GetNodeOrNull<Sprite2D>("Sprite2D");
-		if (sprite == null || bodyTextures.Length == 0)
-			return;
-
-		// Most kinds pin a face so they stay recognisable between orbits; only
-		// the baseline Drifter is left to vary.
-		int index = body.TextureIndex >= 0
-			? Mathf.Min(body.TextureIndex, bodyTextures.Length - 1)
-			: GD.RandRange(0, Mathf.Min(2, bodyTextures.Length - 1));
-		sprite.Texture = bodyTextures[index];
-
-		Vector2 viewportSize = GetViewport().GetVisibleRect().Size;
-		if (body.GlobalPosition.X > viewportSize.X || body.GlobalPosition.Y > viewportSize.Y)
-		{
-			sprite.FlipV = true;
-			sprite.FlipH = true;
-		}
 	}
 
 	private Vector2 GetSpawnPosition()

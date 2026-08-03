@@ -66,9 +66,17 @@ func _ready() -> void:
 
 	# GRIN_BOSS brings The Coil forward, so a boss fight can be checked without
 	# sitting through three minutes of orbit first.
+	# GRIN_BOSS brings the Coil forward; GRIN_BROOD brings the Brood forward
+	# (relative to whenever the Coil is dealt with, same as in real play).
 	var boss_at := OS.get_environment("GRIN_BOSS")
 	if boss_at != "":
-		scene.set("BossTime", float(boss_at))
+		scene.set("CoilTime", float(boss_at))
+	var brood_at := OS.get_environment("GRIN_BROOD")
+	if brood_at != "":
+		scene.set("BroodTime", float(brood_at))
+		# Skip straight to the Brood so it can be checked without first beating
+		# the Coil in an unattended run.
+		scene.set("NextBossIndex", 1)
 
 	# GRIN_EVENT brings the first arena event forward from its usual minute.
 	var event_at := OS.get_environment("GRIN_EVENT")
