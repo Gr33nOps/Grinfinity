@@ -384,6 +384,7 @@ public partial class GameManager : Node2D
 		GameOver.ScoreToShow = run.Score;
 		GameOver.MassAtDeath = run.MassNormalised;
 		GameOver.MoonsAtDeath = run.Moons;
+		GameOver.StardustEarned = run.StardustEarned;
 
 		// Every moon breaks away with the world that held them.
 		run.ClearTiers();
@@ -391,6 +392,8 @@ public partial class GameManager : Node2D
 		var records = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak, run.Score);
 		GameOver.IsNewBestScore = records.NewBestScore;
 		GameOver.IsNewBestTime = records.NewBestTime;
+
+		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakMassNormalised, Loadout.Weapon);
 
 		SceneTransition.Instance.ChangeScene("res://scenes/gameOver.tscn");
 	}

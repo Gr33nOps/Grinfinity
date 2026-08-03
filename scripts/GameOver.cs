@@ -10,6 +10,7 @@ public partial class GameOver : Control
 	public static float MassAtDeath = 0f;
 	/// <summary>Moons still held when the orbit ended — whether going heavy paid.</summary>
 	public static int MoonsAtDeath = 0;
+	public static int StardustEarned = 0;
 	public static bool IsNewBestTime = false;
 	public static bool IsNewBestScore = false;
 
@@ -18,6 +19,7 @@ public partial class GameOver : Control
 	private Label scoreLabel;
 	private Label scoreCaption;
 	private Label statsLabel;
+	private Label stardustLabel;
 	private Label highScoreLabel;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
@@ -28,6 +30,7 @@ public partial class GameOver : Control
 		scoreLabel = GetNode<Label>("Recap/ScoreLabel");
 		scoreCaption = GetNodeOrNull<Label>("Recap/ScoreCaption");
 		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
+		stardustLabel = GetNodeOrNull<Label>("Recap/StardustLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
 		restartButton = GetNode<TextureButton>("GameOverMenu/RestartButton");
 		menuButton = GetNode<TextureButton>("GameOverMenu/MenuButton");
@@ -65,6 +68,11 @@ public partial class GameOver : Control
 				$"STREAK: x{BestComboToShow}     MASS: {Mathf.RoundToInt(MassAtDeath * 100)}%     " +
 				$"MOONS: {MoonsAtDeath}";
 		}
+
+		// The running total, not just what was earned this orbit — "one more
+		// orbit" needs the balance to visibly grow, not just flash and vanish.
+		if (stardustLabel != null)
+			stardustLabel.Text = $"+{StardustEarned:N0} STARDUST  ·  {PlayerProfile.Stardust:N0} TOTAL";
 
 		if (highScoreLabel == null)
 			return;

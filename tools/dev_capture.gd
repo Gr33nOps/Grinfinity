@@ -53,17 +53,18 @@ func _ready() -> void:
 		if settings:
 			settings.call("SetWeapon", int(weapon))
 
-	# Parented under root as a sibling of the loaded scene, not as its ancestor,
-	# and handed current_scene explicitly: GameManager's death path calls
-	# change_scene_to_file(), which frees whatever current_scene points to. If
-	# that were this wrapper (the default when it is the CLI-launched main
-	# scene), a mortal run would tear itself down mid-capture the moment the
-	# player died, silently, with no screenshot and no report. Reparenting first
-	# means only the game gets replaced; this node and its coroutine survive to
-	# capture whatever scene the transition lands on — the recap included.
+	# GameManager's death path calls change_scene_to_file(), which frees
+	# whatever current_scene points to. Since this wrapper IS current_scene (it
+	# is the CLI-launched main scene), a mortal run that reaches death loses the
+	# capture coroutine along with the game, silently: no screenshot, no report.
+	# An earlier attempt to fix this by reparenting the loaded scene under root
+	# and reassigning current_scene broke ordinary (non-mortal) capture outright
+	# — the scene never finished initialising, nothing ever spawned. Reverted;
+	# use GRIN_MORTAL to exercise the death path in the live editor instead
+	# (mcp__godot__run_project on scenes/game.tscn directly), not through this
+	# tool.
 	var scene: Node = (load(target) as PackedScene).instantiate()
-	get_tree().root.add_child(scene)
-	get_tree().current_scene = scene
+	add_child(scene)
 	await get_tree().process_frame
 
 	# Death would change the scene out from under this node, and the interesting
@@ -176,7 +177,15 @@ func _axis(negative: String, positive: String, value: float) -> void:
 
 
 func _aim_at_nearest() -> void:
-	var world: Node2D = get_tree().get_first_node_in_group("game_manager").get_node_or_null("player")
+	# A mortal run can die mid-loop to an ordinary body, not just a boss. Once
+	# that happens the game scene is gone, so both lookups have to be guarded —
+	# calling get_node_or_null on a null game_manager was spamming a script
+	# error every tick for the rest of a mortal run instead of quietly no-oping.
+	var manager: Node = get_tree().get_first_node_in_group("game_manager")
+	if manager == null:
+		return
+
+	var world: Node2D = manager.get_node_or_null("player")
 	if world == null:
 		return
 

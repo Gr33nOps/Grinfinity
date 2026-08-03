@@ -313,7 +313,11 @@ first beating the ones before it. Still on placeholder audio throughout — see 
 
 ### M5 — Meta and retention
 
-- [ ] **Stardust** — currency from time, kills and streaks
+- [x] **Stardust** — currency from time, kills and streaks. `PlayerProfile`
+      owns it (and lifetime stats, unlocks and upgrade levels) the way
+      `ScoreManager` owns records: one static store, one save file. Awarded
+      once, in `GameManager.TriggerGameOver`, alongside the existing
+      `ScoreManager.SaveRun` call.
 - [ ] **Worlds** — the existing 12 skins become named, unlockable worlds with a
       line of flavour each, earned by challenges. The art already exists; this is
       the cheapest content in the whole plan.

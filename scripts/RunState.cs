@@ -56,6 +56,11 @@ public partial class RunState : Node
 	/// <summary>How long a streak survives without a kill before it resets.</summary>
 	[Export] public float StreakWindow { get; set; } = 2.5f;
 
+	[ExportGroup("Stardust")]
+	[Export] public float StardustPerSecond { get; set; } = 0.4f;
+	[Export] public int StardustPerKill { get; set; } = 2;
+	[Export] public int StardustPerStreakBest { get; set; } = 3;
+
 	public float SurvivalTime { get; private set; }
 	public int Kills { get; private set; }
 	public int Streak { get; private set; }
@@ -99,6 +104,9 @@ public partial class RunState : Node
 	/// <summary>Mean normalised mass over the orbit — how heavy the run was played.</summary>
 	public float AverageMassNormalised => SurvivalTime <= 0f ? 0f : massTimeIntegral / SurvivalTime;
 
+	/// <summary>Highest normalised mass reached this orbit — a high-water mark, not the mass at any one moment.</summary>
+	public float PeakMassNormalised { get; private set; }
+
 	/// <summary>
 	/// Accumulated as it is earned, at whatever the multiplier was at that
 	/// moment. A total computed at the end from average mass would make the
@@ -106,6 +114,14 @@ public partial class RunState : Node
 	/// seconds pay more than light ones.
 	/// </summary>
 	public int Score => Mathf.RoundToInt(score);
+
+	/// <summary>
+	/// Stardust this orbit has earned so far — from time, kills and streaks, per
+	/// the roadmap. Live rather than end-of-orbit only, so it can sit on the HUD
+	/// if a future pass wants it there.
+	/// </summary>
+	public int StardustEarned => Mathf.RoundToInt(SurvivalTime * StardustPerSecond)
+		+ Kills * StardustPerKill + BestStreak * StardustPerStreakBest;
 
 	private float score;
 	private float streakTimer;
@@ -282,6 +298,7 @@ public partial class RunState : Node
 			return;
 
 		Mass = clamped;
+		PeakMassNormalised = Mathf.Max(PeakMassNormalised, MassNormalised);
 		EmitSignal(SignalName.MassChanged, Mass, MassNormalised);
 
 		RefreshTier(RingThresholds, RingTier, SignalName.RingTierChanged, tier =>

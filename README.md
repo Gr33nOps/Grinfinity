@@ -36,6 +36,7 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 - Mass as a single risk-and-reward dial — rings, moons, venting and a live
   score multiplier all read from it
 - Score, survival timer, kill count and streak counter, saved as personal bests
+- Stardust, earned from time, kills and streaks, carried across every orbit
 - Death recap: score, time, kills, best streak, mass at death and moons held
 - Bodies unlock as an orbit goes on:
   - **Drifter** — the baseline, falls straight in
