@@ -11,6 +11,7 @@ public partial class GameOver : Control
 	/// <summary>Moons still held when the orbit ended — whether going heavy paid.</summary>
 	public static int MoonsAtDeath = 0;
 	public static int StardustEarned = 0;
+	public static System.Collections.Generic.List<Worlds.Profile> NewlyUnlockedWorlds = new();
 	public static bool IsNewBestTime = false;
 	public static bool IsNewBestScore = false;
 
@@ -20,6 +21,7 @@ public partial class GameOver : Control
 	private Label scoreCaption;
 	private Label statsLabel;
 	private Label stardustLabel;
+	private Label worldUnlockLabel;
 	private Label highScoreLabel;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
@@ -31,6 +33,7 @@ public partial class GameOver : Control
 		scoreCaption = GetNodeOrNull<Label>("Recap/ScoreCaption");
 		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
 		stardustLabel = GetNodeOrNull<Label>("Recap/StardustLabel");
+		worldUnlockLabel = GetNodeOrNull<Label>("Recap/WorldUnlockLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
 		restartButton = GetNode<TextureButton>("GameOverMenu/RestartButton");
 		menuButton = GetNode<TextureButton>("GameOverMenu/MenuButton");
@@ -73,6 +76,16 @@ public partial class GameOver : Control
 		// orbit" needs the balance to visibly grow, not just flash and vanish.
 		if (stardustLabel != null)
 			stardustLabel.Text = $"+{StardustEarned:N0} STARDUST  ·  {PlayerProfile.Stardust:N0} TOTAL";
+
+		if (worldUnlockLabel != null)
+		{
+			worldUnlockLabel.Visible = NewlyUnlockedWorlds.Count > 0;
+			if (worldUnlockLabel.Visible)
+			{
+				string names = string.Join(", ", NewlyUnlockedWorlds.ConvertAll(w => w.Name));
+				worldUnlockLabel.Text = $"NEW WORLD UNLOCKED: {names}";
+			}
+		}
 
 		if (highScoreLabel == null)
 			return;

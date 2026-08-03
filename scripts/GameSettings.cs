@@ -45,6 +45,9 @@ public partial class GameSettings : Node
 	/// <summary>Last weapon taken into an orbit.</summary>
 	public WeaponId Weapon { get; private set; } = WeaponId.Comet;
 
+	/// <summary>Last world (skin) taken into an orbit.</summary>
+	public int World { get; private set; } = 1;
+
 	private readonly System.Collections.Generic.Dictionary<string, Key> defaultKeys = new();
 
 	public override void _Ready()
@@ -176,6 +179,14 @@ public partial class GameSettings : Node
 		SaveSettings();
 	}
 
+	/// <summary>Remembers the chosen world the same way <see cref="SetWeapon"/> remembers the weapon.</summary>
+	public void SetWorld(int worldId)
+	{
+		World = worldId;
+		Loadout.RestoreWorld(worldId);
+		SaveSettings();
+	}
+
 	private void ApplyAllVolumes()
 	{
 		ApplyBusVolume(MasterBus, MasterVolume);
@@ -213,6 +224,7 @@ public partial class GameSettings : Node
 		config.SetValue(Section, "fullscreen", Fullscreen);
 		config.SetValue(Section, "shake_intensity", ShakeIntensity);
 		config.SetValue(Section, "weapon", (int)Weapon);
+		config.SetValue(Section, "world", World);
 
 		foreach (var (action, _) in RebindableActions)
 			config.SetValue(InputSection, action, (int)GetActionKey(action));
@@ -239,6 +251,13 @@ public partial class GameSettings : Node
 		{
 			Weapon = (WeaponId)storedWeapon;
 			Loadout.Restore(Weapon);
+		}
+
+		int storedWorld = config.GetValue(Section, "world", 1).AsInt32();
+		if (storedWorld is >= 1 and <= 12)
+		{
+			World = storedWorld;
+			Loadout.RestoreWorld(World);
 		}
 
 		int version = config.GetValue(Section, "version", 1).AsInt32();

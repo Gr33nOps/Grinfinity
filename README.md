@@ -52,6 +52,8 @@ Every keyboard binding above can be changed in **Settings → Controls**.
     centrepiece, once dealt with
 - Power-ups (Shield, Freeze, Magnet, Nuke, Overcharge), a relic rolled per
   orbit, 20-second arena events, gravity wells and comet flybys
+- Twelve named, unlockable worlds — chosen before an orbit and held for the
+  whole of it
 - Ramping body speed and spawn rate
 - Random player skins and enemy variants
 - Dash and rapid-fire abilities

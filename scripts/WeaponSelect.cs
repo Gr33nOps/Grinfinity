@@ -19,6 +19,16 @@ public partial class WeaponSelect : Control
 
 	private readonly Dictionary<WeaponId, Button> buttons = new();
 
+	// --- World carousel ---------------------------------------------------
+	// A weapon needs a full card each (fantasy, tradeoff); twelve of those would
+	// not fit on one screen. Browsing one at a time keeps this to a single row
+	// regardless of how many worlds the roadmap eventually adds.
+	private Label worldNameLabel;
+	private Label worldDetailLabel;
+	private Button worldPrevButton;
+	private Button worldNextButton;
+	private int browsedWorldId;
+
 	public override void _Ready()
 	{
 		rows = GetNode<VBoxContainer>("Layout/Rows");
@@ -27,6 +37,8 @@ public partial class WeaponSelect : Control
 
 		BuildRows();
 		backButton.Pressed += OnBackPressed;
+
+		BuildWorldPicker();
 
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 		buttons[Loadout.Weapon].GrabFocus();
@@ -115,5 +127,48 @@ public partial class WeaponSelect : Control
 	private void OnBackPressed()
 	{
 		SceneTransition.Instance.ChangeScene("res://scenes/menu.tscn");
+	}
+
+	private void BuildWorldPicker()
+	{
+		worldNameLabel = GetNode<Label>("Layout/WorldRow/Center/Name");
+		worldDetailLabel = GetNode<Label>("Layout/WorldRow/Center/Detail");
+		worldPrevButton = GetNode<Button>("Layout/WorldRow/Prev");
+		worldNextButton = GetNode<Button>("Layout/WorldRow/Next");
+
+		Style(worldPrevButton, 44, Idle);
+		Style(worldNextButton, 44, Idle);
+		worldPrevButton.Pressed += () => BrowseWorld(-1);
+		worldNextButton.Pressed += () => BrowseWorld(1);
+
+		browsedWorldId = Loadout.World;
+		RefreshWorldPicker();
+	}
+
+	private void BrowseWorld(int direction)
+	{
+		int count = Worlds.All.Length;
+		browsedWorldId = ((browsedWorldId - 1 + direction) % count + count) % count + 1;
+		RefreshWorldPicker();
+	}
+
+	private void RefreshWorldPicker()
+	{
+		Worlds.Profile world = Worlds.Get(browsedWorldId);
+		bool unlocked = PlayerProfile.IsWorldUnlocked(world.Id);
+
+		// Landing on an unlocked world selects it immediately — there is no
+		// second confirming click here, unlike the weapon, because there is
+		// nothing to commit to: the world is cosmetic, so browsing to it is
+		// choosing it. A locked one can still be browsed to, to see what it
+		// takes, without changing what is actually equipped.
+		if (unlocked)
+			Loadout.World = world.Id;
+
+		worldNameLabel.Text = world.Name;
+		worldNameLabel.AddThemeColorOverride("font_color", unlocked ? Chosen : Idle);
+		worldDetailLabel.Text = unlocked ? world.Flavour : $"LOCKED — {world.UnlockHint}";
+		worldDetailLabel.AddThemeColorOverride("font_color",
+			unlocked ? new Color(0.78f, 0.78f, 0.85f) : new Color(0.55f, 0.55f, 0.6f));
 	}
 }

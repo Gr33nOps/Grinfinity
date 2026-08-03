@@ -120,6 +120,17 @@ func _ready() -> void:
 				hazards.set("CometGapMax", float(comet_at) + 2.0)
 
 	# GRIN_DROPS forces the pickup drop rate, so all five can be seen at once.
+	# GRIN_WORLD_NAV clicks Next this many times on the weapon/world select
+	# screen, so a locked world's card can be captured directly.
+	var world_nav := OS.get_environment("GRIN_WORLD_NAV")
+	if world_nav != "":
+		await get_tree().process_frame
+		var next_button := scene.get_node_or_null("Layout/WorldRow/Next")
+		if next_button:
+			for i in int(world_nav):
+				next_button.emit_signal("pressed")
+				await get_tree().process_frame
+
 	var drops := OS.get_environment("GRIN_DROPS")
 	if drops != "":
 		scene.set("PowerUpDropChance", float(drops))

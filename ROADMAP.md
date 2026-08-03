@@ -318,9 +318,17 @@ first beating the ones before it. Still on placeholder audio throughout — see 
       `ScoreManager` owns records: one static store, one save file. Awarded
       once, in `GameManager.TriggerGameOver`, alongside the existing
       `ScoreManager.SaveRun` call.
-- [ ] **Worlds** — the existing 12 skins become named, unlockable worlds with a
-      line of flavour each, earned by challenges. The art already exists; this is
-      the cheapest content in the whole plan.
+- [x] **Worlds** — the existing 12 skins are now named, unlockable worlds with a
+      line of flavour each: Embertide (free), then Driftlight, Palefrost,
+      Cinderbloom, Hollowmere, Duskwarden, Verdant Halo, Ashen Coil, Glasswake,
+      Moltencrown, Voidkin, Starforged — gated by orbit count, lifetime kills,
+      best score, best time, heaviest mass and lifetime playtime. Chosen on the
+      weapon-select screen, which now has a one-at-a-time world carousel below
+      the weapon cards rather than a second full screen. **Behaviour change**:
+      the player sprite no longer randomly cycles through all 12 skins every
+      few seconds — that placeholder made sense when skins were purely
+      cosmetic, but undercuts a world as a chosen identity. It now shows
+      whichever world was picked, for the whole orbit.
 - [ ] **Soft-capped permanent upgrades** — move speed, dash cooldown, starting
       mass. Must never trivialise an orbit.
 - [ ] **Achievements** — survive 5:00, 100 kills, x25 streak, no-hit minute, beat

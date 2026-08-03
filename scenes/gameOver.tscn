@@ -98,7 +98,7 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -560.0
-offset_top = -308.0
+offset_top = -344.0
 offset_right = 560.0
 offset_bottom = -14.0
 grow_horizontal = 2
@@ -134,6 +134,15 @@ theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
 theme_override_fonts/font = ExtResource("1_ewvvw")
 theme_override_font_sizes/font_size = 30
 text = "+0 STARDUST  ·  0 TOTAL"
+horizontal_alignment = 1
+
+[node name="WorldUnlockLabel" type="Label" parent="Recap"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.95, 1, 1)
+theme_override_fonts/font = ExtResource("1_ewvvw")
+theme_override_font_sizes/font_size = 30
+text = "NEW WORLD UNLOCKED: DRIFTLIGHT"
 horizontal_alignment = 1
 
 [node name="HighScoreLabel" type="Label" parent="Recap"]

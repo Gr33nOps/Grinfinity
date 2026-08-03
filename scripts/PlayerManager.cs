@@ -1,35 +1,26 @@
 using Godot;
 
+/// <summary>
+/// Applies the world chosen before the orbit to the player's sprite.
+///
+/// Used to randomly cycle through all twelve skins every few seconds — a
+/// pre-M5 placeholder from when the skins were purely cosmetic. Now that a
+/// world is a chosen, unlockable identity (see <see cref="Worlds"/>), cycling
+/// away from it mid-orbit would undercut the choice, so this simply sets the
+/// chosen skin once.
+/// </summary>
 public partial class PlayerManager : Node
 {
-	[Export] public float SpriteInterval { get; set; } = 5.0f;
-
-	private const int SkinCount = 12;
-
-	private Sprite2D playerSprite;
-	private Texture2D[] playerTextures;
-	private float spriteTimer = 0f;
-
 	public override void _Ready()
 	{
-		LoadPlayerTextures();
-
 		var player = GetParent()?.GetNodeOrNull<Node2D>("player");
-		if (player != null)
-			playerSprite = FindPlayerSprite(player);
-	}
-
-	public override void _Process(double delta)
-	{
-		if (playerSprite == null)
+		Sprite2D sprite = player != null ? FindPlayerSprite(player) : null;
+		if (sprite == null)
 			return;
 
-		spriteTimer += (float)delta;
-		if (spriteTimer >= SpriteInterval)
-		{
-			ChangePlayerSprite();
-			spriteTimer = 0f;
-		}
+		Texture2D texture = GD.Load<Texture2D>($"res://sprites/player {Loadout.World}.png");
+		if (texture != null)
+			sprite.Texture = texture;
 	}
 
 	private static Sprite2D FindPlayerSprite(Node2D player)
@@ -44,31 +35,5 @@ public partial class PlayerManager : Node
 		}
 
 		return null;
-	}
-
-	private void LoadPlayerTextures()
-	{
-		playerTextures = new Texture2D[SkinCount];
-		for (int i = 0; i < SkinCount; i++)
-		{
-			playerTextures[i] = GD.Load<Texture2D>($"res://sprites/player {i + 1}.png");
-		}
-	}
-
-	private void ChangePlayerSprite()
-	{
-		if (playerTextures == null || playerTextures.Length == 0)
-			return;
-
-		Texture2D currentTexture = playerSprite.Texture;
-		Texture2D newTexture;
-
-		do
-		{
-			int randomIndex = GD.RandRange(0, playerTextures.Length - 1);
-			newTexture = playerTextures[randomIndex];
-		} while (newTexture == currentTexture && playerTextures.Length > 1);
-
-		playerSprite.Texture = newTexture;
 	}
 }

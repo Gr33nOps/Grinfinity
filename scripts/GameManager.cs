@@ -395,6 +395,11 @@ public partial class GameManager : Node2D
 
 		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakMassNormalised, Loadout.Weapon);
 
+		// Checked after RecordOrbit, not before: a world can be earned by the
+		// very orbit that satisfies it, and the recap is the only place left to
+		// say so before the scene changes out from under the in-game Announcer.
+		GameOver.NewlyUnlockedWorlds = Worlds.RefreshUnlocks();
+
 		SceneTransition.Instance.ChangeScene("res://scenes/gameOver.tscn");
 	}
 
