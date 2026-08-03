@@ -335,8 +335,14 @@ first beating the ones before it. Still on placeholder audio throughout — see 
       felt, never enough to trivialise an orbit. Bought on a new Upgrades
       screen off the main menu; applied once, at orbit start, folded into the
       base stat the mass factor already multiplies on top of.
-- [ ] **Achievements** — survive 5:00, 100 kills, x25 streak, no-hit minute, beat
-      each boss, reach max mass, finish an orbit at minimum mass
+- [x] **Achievements** — all nine from this list. Five are polled live by the
+      new `AchievementTracker` (survive 5:00, 100 kills, x25 streak, a no-hit
+      minute via a new `Player.HitTaken` signal, max mass); the three boss
+      defeats fire from `OnBossDefeated`, which already knew which boss;
+      finishing at minimum mass is checked once, in `TriggerGameOver`, because
+      there is no earlier moment "the orbit is over" is true. Unlocks
+      announce live except that last one, which lands on the recap screen
+      instead — same reasoning as the world-unlock line next to it.
 - [ ] **Local top-10 leaderboard** — per mode, with weapon, world and date
 - [ ] **Lifetime stats** — orbits, kills, favourite weapon, time played,
       heaviest mass reached

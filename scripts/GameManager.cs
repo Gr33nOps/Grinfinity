@@ -55,6 +55,7 @@ public partial class GameManager : Node2D
 	private BodySpawner bodySpawner;
 	private EventDirector eventDirector;
 	private HazardDirector hazardDirector;
+	private AchievementTracker achievementTracker;
 	private UIManager uiManager;
 	private PlayerManager playerManager;
 	private GameCamera gameCamera;
@@ -137,6 +138,7 @@ public partial class GameManager : Node2D
 		bodySpawner = AddPausableChild(new BodySpawner());
 		eventDirector = AddPausableChild(new EventDirector());
 		hazardDirector = AddPausableChild(new HazardDirector());
+		achievementTracker = AddPausableChild(new AchievementTracker());
 		uiManager = AddPausableChild(new UIManager());
 		playerManager = AddPausableChild(new PlayerManager());
 	}
@@ -289,7 +291,8 @@ public partial class GameManager : Node2D
 
 		Vector2 at = IsInstanceValid(boss) ? boss.GlobalPosition : Vector2.Zero;
 		Color colour = IsInstanceValid(boss) ? boss.BossColor : new Color(0.86f, 0.72f, 1.0f);
-		bool wasFinalBoss = NextBossIndex == 2;
+		int defeatedIndex = NextBossIndex;
+		bool wasFinalBoss = defeatedIndex == 2;
 		boss = null;
 		NextBossIndex++;
 
@@ -299,6 +302,22 @@ public partial class GameManager : Node2D
 		SpawnBlast(at, wasFinalBoss ? 620.0f : 420.0f, colour);
 		run?.AddBonus(wasFinalBoss ? BlackHoleScoreBonus : BossScoreBonus);
 		PlayStreakSting(0.45f);
+
+		UnlockBossAchievement(defeatedIndex switch
+		{
+			0 => AchievementId.BeatCoil,
+			1 => AchievementId.BeatBrood,
+			_ => AchievementId.BeatBlackHole
+		});
+	}
+
+	private void UnlockBossAchievement(AchievementId id)
+	{
+		if (!PlayerProfile.UnlockAchievement(id))
+			return;
+
+		Achievements.Profile profile = Achievements.Get(id);
+		Announce(profile.Name, profile.Description, new Color(1.0f, 0.72f, 0.32f));
 	}
 
 	public override void _ExitTree()
@@ -399,6 +418,14 @@ public partial class GameManager : Node2D
 		// very orbit that satisfies it, and the recap is the only place left to
 		// say so before the scene changes out from under the in-game Announcer.
 		GameOver.NewlyUnlockedWorlds = Worlds.RefreshUnlocks();
+
+		// Finish-time achievement: has to be checked here, not in
+		// AchievementTracker, because there is no earlier moment at which "the
+		// orbit is over" is true. A near-zero threshold, not exactly zero — a
+		// moon block or Deep Well can leave mass at some vanishing fraction of
+		// a unit that should still read as "finished light".
+		if (run.Mass <= 0.01f && PlayerProfile.UnlockAchievement(AchievementId.MinMassFinish))
+			GameOver.NewlyUnlockedAchievement = Achievements.Get(AchievementId.MinMassFinish);
 
 		SceneTransition.Instance.ChangeScene("res://scenes/gameOver.tscn");
 	}

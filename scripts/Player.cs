@@ -2,6 +2,9 @@ using Godot;
 
 public partial class Player : CharacterBody2D
 {
+	/// <summary>Raised on every real contact attempt — shield-blocked or lethal.</summary>
+	[Signal] public delegate void HitTakenEventHandler();
+
 	[Export] public float MoveSpeed { get; set; } = 235.0f;
 	[Export] public float MoveSmoothing { get; set; } = 14.0f;
 	[Export] public float ScreenBorder { get; set; } = 50.0f;
@@ -296,6 +299,11 @@ public partial class Player : CharacterBody2D
 	{
 		if (isDead || Invulnerable)
 			return;
+
+		// Fires on every real contact attempt, shield-blocked or lethal — the
+		// Untouched achievement cares whether you were hit, not whether it cost
+		// you the run.
+		EmitSignal(SignalName.HitTaken);
 
 		// A shield is spent here rather than at each call site, so every source
 		// of death — contact, blast, hostile shot — is covered by one check.

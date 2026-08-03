@@ -12,6 +12,8 @@ public partial class GameOver : Control
 	public static int MoonsAtDeath = 0;
 	public static int StardustEarned = 0;
 	public static System.Collections.Generic.List<Worlds.Profile> NewlyUnlockedWorlds = new();
+	/// <summary>The one achievement that can only be known at the exact moment an orbit ends.</summary>
+	public static Achievements.Profile NewlyUnlockedAchievement = null;
 	public static bool IsNewBestTime = false;
 	public static bool IsNewBestScore = false;
 
@@ -79,12 +81,20 @@ public partial class GameOver : Control
 
 		if (worldUnlockLabel != null)
 		{
-			worldUnlockLabel.Visible = NewlyUnlockedWorlds.Count > 0;
+			// Both are "something new just unlocked" — the only one that can only
+			// be known at this exact moment is the achievement, so they share one
+			// line rather than fighting for space with their own captions.
+			var lines = new System.Collections.Generic.List<string>();
+
+			if (NewlyUnlockedWorlds.Count > 0)
+				lines.Add($"NEW WORLD: {string.Join(", ", NewlyUnlockedWorlds.ConvertAll(w => w.Name))}");
+
+			if (NewlyUnlockedAchievement != null)
+				lines.Add($"ACHIEVEMENT: {NewlyUnlockedAchievement.Name}");
+
+			worldUnlockLabel.Visible = lines.Count > 0;
 			if (worldUnlockLabel.Visible)
-			{
-				string names = string.Join(", ", NewlyUnlockedWorlds.ConvertAll(w => w.Name));
-				worldUnlockLabel.Text = $"NEW WORLD UNLOCKED: {names}";
-			}
+				worldUnlockLabel.Text = string.Join("   ·   ", lines);
 		}
 
 		if (highScoreLabel == null)

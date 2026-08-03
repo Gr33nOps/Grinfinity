@@ -38,6 +38,7 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 - Score, survival timer, kill count and streak counter, saved as personal bests
 - Stardust, earned from time, kills and streaks, carried across every orbit
 - Three soft-capped permanent upgrades bought with stardust: Thrust, Coolant, Ballast
+- Nine achievements, tracked live and persisted
 - Death recap: score, time, kills, best streak, mass at death and moons held
 - Bodies unlock as an orbit goes on:
   - **Drifter** — the baseline, falls straight in
