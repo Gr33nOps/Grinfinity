@@ -45,7 +45,12 @@ Every keyboard binding above can be changed in **Settings → Controls**.
   - **Bulwark** — armoured across its leading face; flank it (1:25)
   - **Satellite** — holds a ring at fixed range and shoots inward (1:48)
   - **Flare** — detonates lethally on death; kill it at a distance (2:10)
-  - **The Coil** — the first boss, at 3:00
+  - **The Coil** — spinning rings with one safe gap, at 3:00
+  - **The Brood** — spawns Shards continuously until it dies, once dealt with
+  - **The Black Hole** — a rival gravity well with health, the thematic
+    centrepiece, once dealt with
+- Power-ups (Shield, Freeze, Magnet, Nuke, Overcharge), a relic rolled per
+  orbit, 20-second arena events, gravity wells and comet flybys
 - Ramping body speed and spawn rate
 - Random player skins and enemy variants
 - Dash and rapid-fire abilities

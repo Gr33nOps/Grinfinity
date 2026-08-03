@@ -271,22 +271,43 @@ seams, a pulsing fuse) in-engine until the silhouettes in `ASSETS.md` exist.
 
 *In-orbit choices, not just execution.*
 
-- [ ] **Power-ups** — short, loud, frequent: shield, freeze, magnet, nuke,
-      damage boost
-- [ ] **Relics** — one random passive per orbit (piercing, vampiric dash, slow
-      aura, double debris). Roguelike spice without a meta tree.
-- [ ] **Arena events** — 20-second announced modifiers: *solar wind* (constant
-      drift), *no dash*, *giant slugs*, *inverted gravity* (you repel instead of
-      pull — the single most on-theme modifier available)
-- [ ] **Gravity wells** — hazards that pull bullets and bodies; dash escapes
-- [ ] **Comet flybys** — a fast body crosses the arena on a fixed arc, hurting
-      anything in its path including enemies. Free spectacle, pure space.
-- [ ] **Boss 2 — The Brood.** Spawns shards continuously; a DPS and movement check.
-- [ ] **Boss 3 — The Black Hole.** A rival gravity well that steals your pull
-      *and* your bullets. The thematic centrepiece — build it last, build it well.
+- [x] **Power-ups** — Shield, Freeze, Magnet, Nuke, Overcharge. Every timed one
+      is a float of remaining seconds on `RunState`; the HUD counts them down
+      rather than showing a static icon, since the question a pickup creates is
+      "how long have I got".
+- [x] **Relics** — Long Shot, Greedy Dash, Deep Well, Rich Seam. One rolled at
+      `_Ready` and announced by name and effect. No "None" entry — every orbit
+      gets one, or the roll becomes a thing to be unlucky about.
+- [x] **Arena events** — Solar Wind, Thrusters Out, Heavy Weather, Inversion —
+      your gravity pushes instead of pulling, the single most on-theme modifier
+      available. `EventDirector` leaves the opening minute alone and stands
+      down during boss fights.
+- [x] **Gravity wells** — `GravityWell`, a rival source of gravity that pulls
+      bodies, debris and the world's own shots (never hostile ones). Touching
+      the core is lethal; the pull on the player is weak enough that a single
+      dash always escapes it, because dash sets velocity outright rather than
+      blending toward it.
+- [x] **Comet flybys** — crosses the arena edge-to-edge on a straight arc and
+      destroys whatever it touches, bodies included. Scores nothing for the
+      player, or loitering near the crossing would out-earn fighting.
+- [x] **Boss 2 — The Brood.** Chases slowly and spawns a Shard continuously for
+      as long as it lives — no gap to read, no telegraph to time; the only way
+      to stop the flood is keeping damage on it while staying alive among what
+      it has already spawned.
+- [x] **Boss 3 — The Black Hole.** A rival gravity well with health: bodies fall
+      toward *it*, the world's own shots bend toward it, and the motes needed
+      for mass get dragged in before they can be reached. Wounded means
+      hungrier, not weaker — its pull strengthens as its health drops. Built
+      last, on top of a shared `Boss` base the other two were refactored onto.
 
 **Done when:** a player describes an orbit by what happened in it, not just how
 long it lasted.
+
+**Status:** done. `Boss` is a new abstract base (health, `TakeDamage`, the hit
+flash, the two signals `GameManager` listens for) that `BossCoil`, `BossBrood`
+and `BossBlackHole` all sit on; `GameManager.NextBossIndex` sequences the three
+and is itself `[Export]`, so any single boss can be tuned in isolation without
+first beating the ones before it. Still on placeholder audio throughout — see M1.
 
 ---
 
@@ -393,8 +414,9 @@ Firm. Revisit only if a shipped game earns the right.
    the art, so they are now cropped and the key is drawn live from the input map
    — which also fixes rebinding silently lying about itself.
 3. ~~**M1**: tune the existing numbers → hitstop → screen shake → parallax space.~~
-   Done — and **M2 and M3 with it**. Next is **M4: orbits that feel unique**,
-   starting with power-ups and relics.
+   Done — and **M2, M3 and M4 with it**. Every milestone through "orbits that
+   feel unique" is built. Next is **M5: meta and retention** — stardust, named
+   worlds, soft-capped upgrades, achievements, a local leaderboard.
 
 ### The two things code cannot finish
 

@@ -34,13 +34,18 @@ public partial class GameManager : Node2D
 	[Export] public PackedScene BroodScene { get; set; }
 	/// <summary>Seconds into an orbit before The Brood arrives, once the Coil is dealt with.</summary>
 	[Export] public float BroodTime { get; set; } = 330.0f;
+	[Export] public PackedScene BlackHoleScene { get; set; }
+	/// <summary>Seconds into an orbit before The Black Hole arrives, once the Brood is dealt with.</summary>
+	[Export] public float BlackHoleTime { get; set; } = 480.0f;
 	/// <summary>
-	/// Which boss is next: 0 Coil, 1 Brood, 2 none left. Export rather than a
-	/// plain field so a boss can be skipped straight to for tuning, without
-	/// having to survive and beat everything before it first.
+	/// Which boss is next: 0 Coil, 1 Brood, 2 Black Hole, 3 none left. Export
+	/// rather than a plain field so a boss can be skipped straight to for
+	/// tuning, without having to survive and beat everything before it first.
 	/// </summary>
 	[Export] public int NextBossIndex { get; set; } = 0;
 	[Export] public int BossScoreBonus { get; set; } = 5000;
+	/// <summary>The Black Hole is the climax; beating it pays out accordingly.</summary>
+	[Export] public int BlackHoleScoreBonus { get; set; } = 12000;
 	/// <summary>Time scale held while a boss dies. Slow motion, not a freeze.</summary>
 	[Export] public float BossKillSlowMo { get; set; } = 0.22f;
 	[Export] public float BossKillSlowMoTime { get; set; } = 1.1f;
@@ -119,6 +124,7 @@ public partial class GameManager : Node2D
 		BurstScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 		CoilScene ??= GD.Load<PackedScene>("res://scenes/boss_coil.tscn");
 		BroodScene ??= GD.Load<PackedScene>("res://scenes/boss_brood.tscn");
+		BlackHoleScene ??= GD.Load<PackedScene>("res://scenes/boss_black_hole.tscn");
 		PowerUpScene ??= GD.Load<PackedScene>("res://scenes/power_up.tscn");
 
 		announcer = GetNodeOrNull<Announcer>("UI/Announcer");
@@ -220,6 +226,8 @@ public partial class GameManager : Node2D
 				SpawnBoss(CoilScene, "THE COIL");
 			else if (NextBossIndex == 1 && RunTime >= BroodTime)
 				SpawnBoss(BroodScene, "THE BROOD");
+			else if (NextBossIndex == 2 && RunTime >= BlackHoleTime)
+				SpawnBoss(BlackHoleScene, "THE BLACK HOLE");
 		}
 
 		if (!hitstopActive)
@@ -281,14 +289,15 @@ public partial class GameManager : Node2D
 
 		Vector2 at = IsInstanceValid(boss) ? boss.GlobalPosition : Vector2.Zero;
 		Color colour = IsInstanceValid(boss) ? boss.BossColor : new Color(0.86f, 0.72f, 1.0f);
+		bool wasFinalBoss = NextBossIndex == 2;
 		boss = null;
 		NextBossIndex++;
 
 		// Slow motion rather than a freeze: the payoff is watching it come apart.
 		Hitstop(BossKillSlowMoTime, BossKillSlowMo);
-		Shake(0.9f);
-		SpawnBlast(at, 420.0f, colour);
-		run?.AddBonus(BossScoreBonus);
+		Shake(wasFinalBoss ? 1.3f : 0.9f);
+		SpawnBlast(at, wasFinalBoss ? 620.0f : 420.0f, colour);
+		run?.AddBonus(wasFinalBoss ? BlackHoleScoreBonus : BossScoreBonus);
 		PlayStreakSting(0.45f);
 	}
 

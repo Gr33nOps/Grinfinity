@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://clp1ut6qw1y47"]
+
+[ext_resource type="Script" path="res://scripts/BossBlackHole.cs" id="1_hole"]
+[ext_resource type="PackedScene" uid="uid://bw0u5kimoedt1" path="res://scenes/bullet.tscn" id="2_bullet"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hole"]
+radius = 50.0
+
+[node name="BossBlackHole" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_hole")
+BulletScene = ExtResource("2_bullet")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_hole")

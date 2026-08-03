@@ -53,8 +53,17 @@ func _ready() -> void:
 		if settings:
 			settings.call("SetWeapon", int(weapon))
 
+	# Parented under root as a sibling of the loaded scene, not as its ancestor,
+	# and handed current_scene explicitly: GameManager's death path calls
+	# change_scene_to_file(), which frees whatever current_scene points to. If
+	# that were this wrapper (the default when it is the CLI-launched main
+	# scene), a mortal run would tear itself down mid-capture the moment the
+	# player died, silently, with no screenshot and no report. Reparenting first
+	# means only the game gets replaced; this node and its coroutine survive to
+	# capture whatever scene the transition lands on — the recap included.
 	var scene: Node = (load(target) as PackedScene).instantiate()
-	add_child(scene)
+	get_tree().root.add_child(scene)
+	get_tree().current_scene = scene
 	await get_tree().process_frame
 
 	# Death would change the scene out from under this node, and the interesting
@@ -77,6 +86,11 @@ func _ready() -> void:
 		# Skip straight to the Brood so it can be checked without first beating
 		# the Coil in an unattended run.
 		scene.set("NextBossIndex", 1)
+
+	var blackhole_at := OS.get_environment("GRIN_BLACKHOLE")
+	if blackhole_at != "":
+		scene.set("BlackHoleTime", float(blackhole_at))
+		scene.set("NextBossIndex", 2)
 
 	# GRIN_EVENT brings the first arena event forward from its usual minute.
 	var event_at := OS.get_environment("GRIN_EVENT")
@@ -191,6 +205,8 @@ func _release_all() -> void:
 		path = "user://capture.png"
 	image.save_png(path)
 	print("captured -> ", path)
+	var landed: Node = get_tree().current_scene
+	print("landed on -> ", landed.scene_file_path if landed else "<none>")
 	_report_load()
 	# Hitstop drives Engine.time_scale globally. If it ever fails to hand the
 	# value back the whole game runs in slow motion, so the run reports it.
