@@ -40,6 +40,7 @@ public partial class GameManager : Node2D
 	private RunState run;
 	private BodySpawner bodySpawner;
 	private EventDirector eventDirector;
+	private HazardDirector hazardDirector;
 	private UIManager uiManager;
 	private PlayerManager playerManager;
 	private GameCamera gameCamera;
@@ -118,6 +119,7 @@ public partial class GameManager : Node2D
 
 		bodySpawner = AddPausableChild(new BodySpawner());
 		eventDirector = AddPausableChild(new EventDirector());
+		hazardDirector = AddPausableChild(new HazardDirector());
 		uiManager = AddPausableChild(new UIManager());
 		playerManager = AddPausableChild(new PlayerManager());
 	}

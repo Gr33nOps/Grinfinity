@@ -80,6 +80,22 @@ func _ready() -> void:
 			director.set("GapMin", float(event_at))
 			director.set("GapMax", float(event_at) + 2.0)
 
+	# GRIN_WELL / GRIN_COMET bring the environmental hazards forward.
+	var well_at := OS.get_environment("GRIN_WELL")
+	var comet_at := OS.get_environment("GRIN_COMET")
+	if well_at != "" or comet_at != "":
+		await get_tree().process_frame
+		var hazards := scene.get_node_or_null("HazardDirector")
+		if hazards:
+			if well_at != "":
+				hazards.set("FirstWellTime", float(well_at))
+				hazards.set("WellGapMin", float(well_at))
+				hazards.set("WellGapMax", float(well_at) + 2.0)
+			if comet_at != "":
+				hazards.set("FirstCometTime", float(comet_at))
+				hazards.set("CometGapMin", float(comet_at))
+				hazards.set("CometGapMax", float(comet_at) + 2.0)
+
 	# GRIN_DROPS forces the pickup drop rate, so all five can be seen at once.
 	var drops := OS.get_environment("GRIN_DROPS")
 	if drops != "":

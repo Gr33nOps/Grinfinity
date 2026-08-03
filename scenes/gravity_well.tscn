@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c1grinwell0001"]
+
+[ext_resource type="Script" path="res://scripts/GravityWell.cs" id="1_well"]
+
+[node name="GravityWell" type="Node2D"]
+z_index = -1
+script = ExtResource("1_well")

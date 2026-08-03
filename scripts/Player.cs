@@ -59,6 +59,7 @@ public partial class Player : CharacterBody2D
 	private PlayerAbilities abilities;
 	private RunState run;
 	private Vector2 baseScale = Vector2.One;
+	private Vector2 externalPush = Vector2.Zero;
 	private Vector2 lastMousePosition;
 	private Vector2 gamepadAimDirection = Vector2.Right;
 	private bool usingGamepadAim = false;
@@ -222,11 +223,24 @@ public partial class Player : CharacterBody2D
 		abilities.HandleShooting(aimPosition);
 	}
 
+	/// <summary>
+	/// A push from outside — currently only a gravity well. Accumulated rather
+	/// than applied immediately, since it may arrive from another node's
+	/// _PhysicsProcess in either order relative to this one's.
+	/// </summary>
+	public void ApplyExternalPush(Vector2 accel)
+	{
+		externalPush += accel;
+	}
+
 	private void HandleMovement(double delta)
 	{
 		if (abilities.IsDashing())
 		{
+			// Dash sets velocity outright, which is exactly why it is the escape
+			// from a well's pull: nothing accumulated here can outrun it.
 			Velocity = abilities.GetDashVelocity();
+			externalPush = Vector2.Zero;
 			return;
 		}
 
@@ -239,6 +253,9 @@ public partial class Player : CharacterBody2D
 		// change to them rather than to the arena.
 		if (run != null && run.During(ArenaEventId.SolarWind))
 			targetVelocity += run.WindDirection * SolarWindPush;
+
+		targetVelocity += externalPush;
+		externalPush = Vector2.Zero;
 
 		float t = 1f - Mathf.Exp(-MoveSmoothing * (float)delta);
 		Velocity = Velocity.Lerp(targetVelocity, t);

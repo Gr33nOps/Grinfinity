@@ -37,6 +37,12 @@ public partial class Bullet : Area2D
 		ExplosionScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 		BodyEntered += OnBodyEntered;
 
+		// Not just the player's own gun: moon shots count too, since both are
+		// "your side". A gravity well bending only the Comet and ignoring a moon
+		// would be an arbitrary distinction nobody could learn.
+		if (!hostile)
+			AddToGroup("player_bullets");
+
 		trail = GetNodeOrNull<Line2D>("Trail");
 		trail?.ClearPoints();
 
@@ -69,6 +75,22 @@ public partial class Bullet : Area2D
 	{
 		GlobalPosition += Direction * Speed * (float)delta;
 		UpdateTrail();
+	}
+
+	/// <summary>
+	/// Bends this shot toward a point. A well that pulled bodies but let shots fly
+	/// straight through would not read as gravity at all — it has to bend
+	/// everything or it is just a damage zone.
+	/// </summary>
+	public void Attract(Vector2 acceleration, float delta)
+	{
+		Vector2 velocity = Direction * Speed + acceleration * delta;
+		float speed = velocity.Length();
+		if (speed < 0.01f)
+			return;
+
+		Speed = speed;
+		Direction = velocity / speed;
 	}
 
 	// The trail is top_level, so its points live in global space and do not have

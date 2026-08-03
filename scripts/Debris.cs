@@ -86,6 +86,12 @@ public partial class Debris : Node2D
 		Rotation += step * 6.0f;
 	}
 
+	/// <summary>An external push, for anything that wants to nudge a mote off its path — a well, later a magnet field.</summary>
+	public void Nudge(Vector2 acceleration)
+	{
+		velocity += acceleration;
+	}
+
 	/// <summary>
 	/// Called by Greedy Dash. Skips the mote past its orbit phase and throws it
 	/// at the world, rather than teleporting it — the pull has to stay visible.
