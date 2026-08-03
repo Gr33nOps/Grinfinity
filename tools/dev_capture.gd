@@ -131,6 +131,19 @@ func _ready() -> void:
 				next_button.emit_signal("pressed")
 				await get_tree().process_frame
 
+	# GRIN_BUY clicks the first upgrade's buy button this many times, on the
+	# upgrades screen, so a purchase can be verified end to end.
+	var buy_count := OS.get_environment("GRIN_BUY")
+	if buy_count != "":
+		await get_tree().process_frame
+		var rows := scene.get_node_or_null("Layout/Rows")
+		if rows and rows.get_child_count() > 0:
+			var first_card: Node = rows.get_child(0)
+			var buy_button: Node = first_card.get_child(first_card.get_child_count() - 1)
+			for i in int(buy_count):
+				buy_button.emit_signal("pressed")
+				await get_tree().process_frame
+
 	var drops := OS.get_environment("GRIN_DROPS")
 	if drops != "":
 		scene.set("PowerUpDropChance", float(drops))

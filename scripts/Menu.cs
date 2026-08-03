@@ -14,16 +14,18 @@ public partial class Menu : Node
 
 		var playButton = GetNode<TextureButton>("UI/Buttons/PlayButton");
 		var quitButton = GetNode<TextureButton>("UI/Buttons/QuitButton");
+		var upgradesButton = GetNode<Button>("UI/SideMenu/UpgradesButton");
 		var settingsButton = GetNode<Button>("UI/SideMenu/SettingsButton");
 		var creditsButton = GetNode<Button>("UI/SideMenu/CreditsButton");
 
 		// Play goes through the weapon choice; only a restart skips it.
 		playButton.Pressed += () => GoTo("res://scenes/weapon_select.tscn");
+		upgradesButton.Pressed += () => GoTo("res://scenes/upgrades.tscn");
 		settingsButton.Pressed += () => GoTo("res://scenes/settings.tscn");
 		creditsButton.Pressed += () => GoTo("res://scenes/credits.tscn");
 		quitButton.Pressed += OnQuitButtonPressed;
 
-		foreach (var button in new BaseButton[] { playButton, settingsButton, creditsButton, quitButton })
+		foreach (var button in new BaseButton[] { playButton, upgradesButton, settingsButton, creditsButton, quitButton })
 		{
 			button.MouseEntered += PlayHoverSound;
 		}

@@ -211,7 +211,11 @@ public partial class RunState : Node
 
 	public override void _Ready()
 	{
-		Mass = Mathf.Clamp(StartMass, 0f, MaxMass);
+		Upgrades.Profile ballast = Upgrades.StartMass;
+		float boughtMass = ballast.PerLevel * PlayerProfile.UpgradeLevel(ballast.Id);
+
+		Mass = Mathf.Clamp(StartMass + boughtMass, 0f, MaxMass);
+		PeakMassNormalised = MassNormalised;
 		Relic = Relics.Roll();
 	}
 

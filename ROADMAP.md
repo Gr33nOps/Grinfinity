@@ -329,8 +329,12 @@ first beating the ones before it. Still on placeholder audio throughout — see 
       few seconds — that placeholder made sense when skins were purely
       cosmetic, but undercuts a world as a chosen identity. It now shows
       whichever world was picked, for the whole orbit.
-- [ ] **Soft-capped permanent upgrades** — move speed, dash cooldown, starting
-      mass. Must never trivialise an orbit.
+- [x] **Soft-capped permanent upgrades** — Thrust (move speed), Coolant (dash
+      cooldown), Ballast (starting mass). Five levels each, quadratically
+      pricier per level, capped at +15% / -17.5% / +30 flat mass — genuinely
+      felt, never enough to trivialise an orbit. Bought on a new Upgrades
+      screen off the main menu; applied once, at orbit start, folded into the
+      base stat the mass factor already multiplies on top of.
 - [ ] **Achievements** — survive 5:00, 100 kills, x25 streak, no-hit minute, beat
       each boss, reach max mass, finish an orbit at minimum mass
 - [ ] **Local top-10 leaderboard** — per mode, with weapon, world and date
