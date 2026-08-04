@@ -136,33 +136,33 @@ exists because tuning an unfelt game wastes everything after it.
 *Tune and juice what exists. No new systems.*
 
 - [x] **Live-tune every existing `[Export]`** — unlock times, pack sizes, tank
-      health, speed multipliers. First committed pass: the ramp tops out around
-      2:00, swarmers at 0:18, tanks at 0:40, dash shortened and made punchier.
+	  health, speed multipliers. First committed pass: the ramp tops out around
+	  2:00, swarmers at 0:18, tanks at 0:40, dash shortened and made punchier.
 - [x] **Hitstop** — `GameManager.Hitstop()` drops `Engine.TimeScale` for 45 ms on
-      a light kill, 85 ms on a tank, 140 ms on death. Measured against wall-clock
-      time, cancelled by pause and by the game-over transition.
+	  a light kill, 85 ms on a tank, 140 ms on death. Measured against wall-clock
+	  time, cancelled by pause and by the game-over transition.
 - [x] **Screen shake** — trauma-based, on `GameCamera`. Ships with its
-      **Settings → Screen Shake** slider (0 = OFF), persisted in `settings.cfg`.
+	  **Settings → Screen Shake** slider (0 = OFF), persisted in `settings.cfg`.
 - [x] **Hit feedback** — flash and sprite punch on every survivable hit, longer
-      the closer to death; knockback scaled per kind; per-kind death bursts
-      (a swarmer pops, a tank detonates).
+	  the closer to death; knockback scaled per kind; per-kind death bursts
+	  (a swarmer pops, a tank detonates).
 - [x] **Muzzle flash, spark, bullet trail** — all in-engine: a randomised
-      two-part flash at the barrel, a pale spark on chip hits, and a tapering
-      `Line2D` trail behind every bullet.
+	  two-part flash at the barrel, a pale spark on chip hits, and a tapering
+	  `Line2D` trail behind every bullet.
 - [x] **Kill-chain banner that pops** — scale punch and colour flash on every
-      kill, much bigger at 5 / 10 / 25 / 50 / 100.
+	  kill, much bigger at 5 / 10 / 25 / 50 / 100.
 - [x] **Deep space look** — done procedurally in `scenes/space.gdshader`: a slow
-      nebula wash plus three parallax star layers. No PNGs, resolution
-      independent, and it removes four items from `ASSETS.md`.
+	  nebula wash plus three parallax star layers. No PNGs, resolution
+	  independent, and it removes four items from `ASSETS.md`.
 - [x] **Audio layering** — light and heavy kills are pitched and levelled apart,
-      every kill gets jitter so a streak doesn't fatigue, and streak milestones
-      fire a rising sting. **Still on placeholders**: `kill_small.ogg`,
-      `kill_big.ogg`, `hit_chip.ogg` and the three `streak_*.ogg` stings do not
-      exist yet, so one sample is being re-pitched to stand in for all of them.
+	  every kill gets jitter so a streak doesn't fatigue, and streak milestones
+	  fire a rising sting. **Still on placeholders**: `kill_small.ogg`,
+	  `kill_big.ogg`, `hit_chip.ogg` and the three `streak_*.ogg` stings do not
+	  exist yet, so one sample is being re-pitched to stand in for all of them.
 - [x] **Music intensity layer** — `MusicManager` reads danger from run time and
-      arena crowding and swells the mix. It picks up `sounds/music_intense.ogg`
-      automatically **once that stem exists**; until then it drives the base
-      track's level only.
+	  arena crowding and swells the mix. It picks up `sounds/music_intense.ogg`
+	  automatically **once that stem exists**; until then it drives the base
+	  track's level only.
 
 **Done when:** killing one body feels good with the sound off, and great with it on.
 
@@ -174,33 +174,33 @@ exists because tuning an unfelt game wastes everything after it.
 ### M2 — Gravity becomes the mechanic
 
 - [x] **`RunState`** — one owner for mass, kills, streak, time, moons and score,
-      raising signals rather than touching labels. `ScoreManager` is now
-      persistent records only, and `UIManager` owns every HUD element.
+	  raising signals rather than touching labels. `ScoreManager` is now
+	  persistent records only, and `UIManager` owns every HUD element.
 - [x] **Pull replaces chase**, scaled by mass — bodies accelerate toward the
-      world under a softened falloff, gain momentum, overshoot and clump. Each
-      one is launched with a sideways nudge at birth, without which they fall
-      dead straight and never orbit. A minimum closing speed is enforced only
-      beyond 700 px, so nothing strands while near-range orbits survive.
+	  world under a softened falloff, gain momentum, overshoot and clump. Each
+	  one is launched with a sideways nudge at birth, without which they fall
+	  dead straight and never orbit. A minimum closing speed is enforced only
+	  beyond 700 px, so nothing strands while near-range orbits survive.
 - [x] **Debris motes** — shed per kind (a swarmer leaves one, a tank six), flung
-      out, caught by the world's gravity, and reeled in on a ramping deadline so
-      they orbit before they are absorbed.
+	  out, caught by the world's gravity, and reeled in on a ramping deadline so
+	  they orbit before they are absorbed.
 - [x] **Mass affects** body scale, move speed, dash cooldown, score multiplier
-      and spawn interval.
+	  and spawn interval.
 - [x] **Rings** — drawn in-engine on the world itself, far half behind the
-      sprite and near half in front, with a brightness sweep so a solid band
-      still reads as spinning. Detached from the world's transform, or they
-      would swing with the aim.
+	  sprite and near half in front, with a brightness sweep so a solid band
+	  still reads as spinning. Detached from the world's transform, or they
+	  would swing with the aim.
 - [x] **Moons** — gained at mass thresholds; they orbit, fire at the nearest
-      body on their own cadence, and body-block one hit. Blocking drops mass
-      below the threshold that granted the moon, so the save costs the risk that
-      earned it and cannot immediately repeat.
+	  body on their own cadence, and body-block one hit. Blocking drops mass
+	  below the threshold that granted the moon, so the save costs the risk that
+	  earned it and cannot immediately repeat.
 - [x] **Venting** — dash vents a little, nova vents a lot. Nova is the mass
-      cash-out: a radial wipe whose kills score but shed no debris, or it would
-      refund itself. Bound to `R`, rebindable like everything else.
+	  cash-out: a radial wipe whose kills score but shed no debris, or it would
+	  refund itself. Bound to `R`, rebindable like everything else.
 - [x] **Score rework** — accumulated as it is earned at the live multiplier,
-      rather than computed at the end from average mass, so the multiplier on the
-      HUD is literally true. Streak links pay extra up to a cap. Save is at v3
-      and v2 files migrate.
+	  rather than computed at the end from average mass, so the multiplier on the
+	  HUD is literally true. Streak links pay extra up to a cap. Save is at v3
+	  and v2 files migrate.
 
 **Done when:** a player can explain, unprompted, why they chose to stay light or
 go heavy — and wants a moon.
@@ -244,20 +244,20 @@ a **distinct silhouette**, since they are all tinted variations of one sprite to
 timing. Appears around 3:00 in Endless Orbit.
 
 - [x] **Weapon system + first three weapons**, chosen at orbit start. Weapons are
-      data rather than subclasses, so the Mass Driver and Solar Flare are a table
-      entry plus whatever field they genuinely need. Range is expressed as shot
-      lifetime, which is what makes the Debris Cannon short-ranged without making
-      it slow. Chosen between menu and game, never between death and restart.
+	  data rather than subclasses, so the Mass Driver and Solar Flare are a table
+	  entry plus whatever field they genuinely need. Range is expressed as shot
+	  lifetime, which is what makes the Debris Cannon short-ranged without making
+	  it slow. Chosen between menu and game, never between death and restart.
 - [x] **Five new body kinds** — Fracture, its Splinters, Satellite, Flare and
-      Bulwark. Only Pulsar is left.
+	  Bulwark. Only Pulsar is left.
 - [x] **Enemy behaviour refactor** — `BodyBehaviour`, one stateless strategy per
-      kind covering stats, steering, damage rules and death rules. `EnemyKind`
-      became `BodyKind` with the design names.
+	  kind covering stats, steering, damage rules and death rules. `EnemyKind`
+	  became `BodyKind` with the design names.
 - [x] **The Coil** — rings of slow shots with one walking safe gap, faster as it
-      is wounded, drifting so the gap is never twice in the same place. Trash
-      spawning stands down for the fight. Slow-mo on the kill, out of the same
-      machinery as hitstop. **The sting is a placeholder**: `music_boss.ogg` and
-      `boss_defeat.ogg` do not exist yet.
+	  is wounded, drifting so the gap is never twice in the same place. Trash
+	  spawning stands down for the fight. Slow-mo on the kill, out of the same
+	  machinery as hitstop. **The sting is a placeholder**: `music_boss.ogg` and
+	  `boss_defeat.ogg` do not exist yet.
 
 **Done when:** two orbits with different weapons play noticeably differently.
 
@@ -272,33 +272,33 @@ seams, a pulsing fuse) in-engine until the silhouettes in `ASSETS.md` exist.
 *In-orbit choices, not just execution.*
 
 - [x] **Power-ups** — Shield, Freeze, Magnet, Nuke, Overcharge. Every timed one
-      is a float of remaining seconds on `RunState`; the HUD counts them down
-      rather than showing a static icon, since the question a pickup creates is
-      "how long have I got".
+	  is a float of remaining seconds on `RunState`; the HUD counts them down
+	  rather than showing a static icon, since the question a pickup creates is
+	  "how long have I got".
 - [x] **Relics** — Long Shot, Greedy Dash, Deep Well, Rich Seam. One rolled at
-      `_Ready` and announced by name and effect. No "None" entry — every orbit
-      gets one, or the roll becomes a thing to be unlucky about.
+	  `_Ready` and announced by name and effect. No "None" entry — every orbit
+	  gets one, or the roll becomes a thing to be unlucky about.
 - [x] **Arena events** — Solar Wind, Thrusters Out, Heavy Weather, Inversion —
-      your gravity pushes instead of pulling, the single most on-theme modifier
-      available. `EventDirector` leaves the opening minute alone and stands
-      down during boss fights.
+	  your gravity pushes instead of pulling, the single most on-theme modifier
+	  available. `EventDirector` leaves the opening minute alone and stands
+	  down during boss fights.
 - [x] **Gravity wells** — `GravityWell`, a rival source of gravity that pulls
-      bodies, debris and the world's own shots (never hostile ones). Touching
-      the core is lethal; the pull on the player is weak enough that a single
-      dash always escapes it, because dash sets velocity outright rather than
-      blending toward it.
+	  bodies, debris and the world's own shots (never hostile ones). Touching
+	  the core is lethal; the pull on the player is weak enough that a single
+	  dash always escapes it, because dash sets velocity outright rather than
+	  blending toward it.
 - [x] **Comet flybys** — crosses the arena edge-to-edge on a straight arc and
-      destroys whatever it touches, bodies included. Scores nothing for the
-      player, or loitering near the crossing would out-earn fighting.
+	  destroys whatever it touches, bodies included. Scores nothing for the
+	  player, or loitering near the crossing would out-earn fighting.
 - [x] **Boss 2 — The Brood.** Chases slowly and spawns a Shard continuously for
-      as long as it lives — no gap to read, no telegraph to time; the only way
-      to stop the flood is keeping damage on it while staying alive among what
-      it has already spawned.
+	  as long as it lives — no gap to read, no telegraph to time; the only way
+	  to stop the flood is keeping damage on it while staying alive among what
+	  it has already spawned.
 - [x] **Boss 3 — The Black Hole.** A rival gravity well with health: bodies fall
-      toward *it*, the world's own shots bend toward it, and the motes needed
-      for mass get dragged in before they can be reached. Wounded means
-      hungrier, not weaker — its pull strengthens as its health drops. Built
-      last, on top of a shared `Boss` base the other two were refactored onto.
+	  toward *it*, the world's own shots bend toward it, and the motes needed
+	  for mass get dragged in before they can be reached. Wounded means
+	  hungrier, not weaker — its pull strengthens as its health drops. Built
+	  last, on top of a shared `Boss` base the other two were refactored onto.
 
 **Done when:** a player describes an orbit by what happened in it, not just how
 long it lasted.
@@ -314,38 +314,44 @@ first beating the ones before it. Still on placeholder audio throughout — see 
 ### M5 — Meta and retention
 
 - [x] **Stardust** — currency from time, kills and streaks. `PlayerProfile`
-      owns it (and lifetime stats, unlocks and upgrade levels) the way
-      `ScoreManager` owns records: one static store, one save file. Awarded
-      once, in `GameManager.TriggerGameOver`, alongside the existing
-      `ScoreManager.SaveRun` call.
+	  owns it (and lifetime stats, unlocks and upgrade levels) the way
+	  `ScoreManager` owns records: one static store, one save file. Awarded
+	  once, in `GameManager.TriggerGameOver`, alongside the existing
+	  `ScoreManager.SaveRun` call.
 - [x] **Worlds** — the existing 12 skins are now named, unlockable worlds with a
-      line of flavour each: Embertide (free), then Driftlight, Palefrost,
-      Cinderbloom, Hollowmere, Duskwarden, Verdant Halo, Ashen Coil, Glasswake,
-      Moltencrown, Voidkin, Starforged — gated by orbit count, lifetime kills,
-      best score, best time, heaviest mass and lifetime playtime. Chosen on the
-      weapon-select screen, which now has a one-at-a-time world carousel below
-      the weapon cards rather than a second full screen. **Behaviour change**:
-      the player sprite no longer randomly cycles through all 12 skins every
-      few seconds — that placeholder made sense when skins were purely
-      cosmetic, but undercuts a world as a chosen identity. It now shows
-      whichever world was picked, for the whole orbit.
+	  line of flavour each: Embertide (free), then Driftlight, Palefrost,
+	  Cinderbloom, Hollowmere, Duskwarden, Verdant Halo, Ashen Coil, Glasswake,
+	  Moltencrown, Voidkin, Starforged — gated by orbit count, lifetime kills,
+	  best score, best time, heaviest mass and lifetime playtime. Chosen on the
+	  weapon-select screen, which now has a one-at-a-time world carousel below
+	  the weapon cards rather than a second full screen. **Behaviour change**:
+	  the player sprite no longer randomly cycles through all 12 skins every
+	  few seconds — that placeholder made sense when skins were purely
+	  cosmetic, but undercuts a world as a chosen identity. It now shows
+	  whichever world was picked, for the whole orbit.
 - [x] **Soft-capped permanent upgrades** — Thrust (move speed), Coolant (dash
-      cooldown), Ballast (starting mass). Five levels each, quadratically
-      pricier per level, capped at +15% / -17.5% / +30 flat mass — genuinely
-      felt, never enough to trivialise an orbit. Bought on a new Upgrades
-      screen off the main menu; applied once, at orbit start, folded into the
-      base stat the mass factor already multiplies on top of.
+	  cooldown), Ballast (starting mass). Five levels each, quadratically
+	  pricier per level, capped at +15% / -17.5% / +30 flat mass — genuinely
+	  felt, never enough to trivialise an orbit. Bought on a new Upgrades
+	  screen off the main menu; applied once, at orbit start, folded into the
+	  base stat the mass factor already multiplies on top of.
 - [x] **Achievements** — all nine from this list. Five are polled live by the
-      new `AchievementTracker` (survive 5:00, 100 kills, x25 streak, a no-hit
-      minute via a new `Player.HitTaken` signal, max mass); the three boss
-      defeats fire from `OnBossDefeated`, which already knew which boss;
-      finishing at minimum mass is checked once, in `TriggerGameOver`, because
-      there is no earlier moment "the orbit is over" is true. Unlocks
-      announce live except that last one, which lands on the recap screen
-      instead — same reasoning as the world-unlock line next to it.
-- [ ] **Local top-10 leaderboard** — per mode, with weapon, world and date
+	  new `AchievementTracker` (survive 5:00, 100 kills, x25 streak, a no-hit
+	  minute via a new `Player.HitTaken` signal, max mass); the three boss
+	  defeats fire from `OnBossDefeated`, which already knew which boss;
+	  finishing at minimum mass is checked once, in `TriggerGameOver`, because
+	  there is no earlier moment "the orbit is over" is true. Unlocks
+	  announce live except that last one, which lands on the recap screen
+	  instead — same reasoning as the world-unlock line next to it.
+- [x] **Local top-10 leaderboard** — score, survival time, kills, weapon, world
+      and date per entry, in `user://leaderboard.cfg`. Separate from
+      `ScoreManager`'s single best, because a leaderboard has to keep the
+      ninth-best run even after a tenth arrives to bump someone off it. New
+      screen off the main menu; a placing orbit's rank also shows on the recap.
+      Per-mode is moot until M6 adds a second mode — Endless Orbit is the only
+      one that exists.
 - [ ] **Lifetime stats** — orbits, kills, favourite weapon, time played,
-      heaviest mass reached
+	  heaviest mass reached
 
 **Done when:** there is a visible reason to start orbit #20.
 
@@ -365,7 +371,7 @@ first beating the ones before it. Still on placeholder audio throughout — see 
 - [ ] **Seeded RNG** — `RandomNumberGenerator` with an explicit seed, not `GD.Rand*`
 - [ ] Per-mode high scores in the save
 - [ ] **Difficulty select** — Easy / Normal / Hard, affecting spawn rate, body
-      speed and contact radius. Never player damage.
+	  speed and contact radius. Never player damage.
 
 **Done when:** Daily Alignment produces identical orbits across two machines.
 
@@ -374,17 +380,17 @@ first beating the ones before it. Still on placeholder audio throughout — see 
 ### M7 — Ship it
 
 - [ ] **Options** — resolution, vsync, FPS cap, shake intensity, UI scale,
-      damage numbers toggle, gamepad aim assist
+	  damage numbers toggle, gamepad aim assist
 - [ ] **Accessibility** — colourblind-safe body palette, high-contrast outlines,
-      hold-vs-toggle rapid fire, assist mode (slower bodies), shake off
+	  hold-vs-toggle rapid fire, assist mode (slower bodies), shake off
 - [ ] **Localisation-ready** — all UI strings through a translation table
 - [ ] ~~**Object pooling** for bullets, bodies and debris if frame time suffers~~
-      — measured in M3 and it does not. See "Known debt" above; re-measure
-      rather than assuming.
+	  — measured in M3 and it does not. See "Known debt" above; re-measure
+	  rather than assuming.
 - [ ] **Steamworks** — overlay, achievements, cloud saves
 - [ ] **Store assets** — trailer, 6–8 screenshots, capsules, description
 - [ ] **QA matrix** — 1080p / 1440p / ultrawide, gamepad-only, keyboard-only,
-      fresh install with no save
+	  fresh install with no save
 - [ ] **itch.io soft launch** before Steam
 
 **Done when:** someone who has never seen the game can install, play and quit

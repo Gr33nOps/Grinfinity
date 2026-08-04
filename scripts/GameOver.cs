@@ -14,6 +14,8 @@ public partial class GameOver : Control
 	public static System.Collections.Generic.List<Worlds.Profile> NewlyUnlockedWorlds = new();
 	/// <summary>The one achievement that can only be known at the exact moment an orbit ends.</summary>
 	public static Achievements.Profile NewlyUnlockedAchievement = null;
+	/// <summary>1-based leaderboard placement this orbit earned, or -1 if it did not place.</summary>
+	public static int LeaderboardRank = -1;
 	public static bool IsNewBestTime = false;
 	public static bool IsNewBestScore = false;
 
@@ -24,6 +26,7 @@ public partial class GameOver : Control
 	private Label statsLabel;
 	private Label stardustLabel;
 	private Label worldUnlockLabel;
+	private Label leaderboardLabel;
 	private Label highScoreLabel;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
@@ -36,6 +39,7 @@ public partial class GameOver : Control
 		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
 		stardustLabel = GetNodeOrNull<Label>("Recap/StardustLabel");
 		worldUnlockLabel = GetNodeOrNull<Label>("Recap/WorldUnlockLabel");
+		leaderboardLabel = GetNodeOrNull<Label>("Recap/LeaderboardLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
 		restartButton = GetNode<TextureButton>("GameOverMenu/RestartButton");
 		menuButton = GetNode<TextureButton>("GameOverMenu/MenuButton");
@@ -95,6 +99,13 @@ public partial class GameOver : Control
 			worldUnlockLabel.Visible = lines.Count > 0;
 			if (worldUnlockLabel.Visible)
 				worldUnlockLabel.Text = string.Join("   ·   ", lines);
+		}
+
+		if (leaderboardLabel != null)
+		{
+			leaderboardLabel.Visible = LeaderboardRank > 0;
+			if (leaderboardLabel.Visible)
+				leaderboardLabel.Text = $"#{LeaderboardRank} ON THE LEADERBOARD";
 		}
 
 		if (highScoreLabel == null)

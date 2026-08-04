@@ -39,6 +39,7 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 - Stardust, earned from time, kills and streaks, carried across every orbit
 - Three soft-capped permanent upgrades bought with stardust: Thrust, Coolant, Ballast
 - Nine achievements, tracked live and persisted
+- A local top-10 leaderboard: score, time, kills, weapon, world and date
 - Death recap: score, time, kills, best streak, mass at death and moons held
 - Bodies unlock as an orbit goes on:
   - **Drifter** — the baseline, falls straight in
@@ -51,7 +52,7 @@ Every keyboard binding above can be changed in **Settings → Controls**.
   - **The Coil** — spinning rings with one safe gap, at 3:00
   - **The Brood** — spawns Shards continuously until it dies, once dealt with
   - **The Black Hole** — a rival gravity well with health, the thematic
-    centrepiece, once dealt with
+	centrepiece, once dealt with
 - Power-ups (Shield, Freeze, Magnet, Nuke, Overcharge), a relic rolled per
   orbit, 20-second arena events, gravity wells and comet flybys
 - Twelve named, unlockable worlds — chosen before an orbit and held for the
