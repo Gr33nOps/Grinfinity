@@ -2,6 +2,25 @@ using Godot;
 
 public partial class BodySpawner : Node
 {
+	/// <summary>
+	/// Raised the moment a wave's pack is cleared and the arena has gone quiet.
+	/// The calm window that follows is the only time upgrades are on offer.
+	/// </summary>
+	[Signal] public delegate void WaveClearedEventHandler(int waveNumber);
+
+	/// <summary>Raised when the next pack starts arriving and the window shuts.</summary>
+	[Signal] public delegate void WaveStartedEventHandler(int waveNumber);
+
+	[ExportGroup("Waves")]
+	/// <summary>Bodies in the opening pack. Small enough to be read, not survived.</summary>
+	[Export] public int StartWaveSize { get; set; } = 6;
+	/// <summary>Extra bodies added to the pack per wave cleared.</summary>
+	[Export] public float WaveSizeGrowth { get; set; } = 2.2f;
+	/// <summary>Ceiling on pack size, so a long run escalates by composition rather than by sheer count.</summary>
+	[Export] public int MaxWaveSize { get; set; } = 46;
+	/// <summary>Seconds of quiet between a pack being cleared and the next arriving.</summary>
+	[Export] public float CalmDuration { get; set; } = 7.0f;
+
 	// Tuned for a 2-6 minute orbit: the primary ramp tops out around 2:00. See
 	// "Late-game escalation" below for what happens to an orbit that outlasts it.
 	[Export] public float StartSpeed { get; set; } = 110.0f;
@@ -57,6 +76,16 @@ public partial class BodySpawner : Node
 	private float lateGameMinSpawnInterval;
 	private float lateGameSpeedIncreasePerSecond;
 
+	// --- Waves --------------------------------------------------------------
+	/// <summary>1-based. The pack currently arriving, or the one just cleared.</summary>
+	public int WaveNumber { get; private set; } = 1;
+	/// <summary>True during the quiet window between packs.</summary>
+	public bool InCalm { get; private set; }
+
+	private int waveBudget;
+	private int spawnedThisWave;
+	private float calmTimer;
+
 	public override void _Ready()
 	{
 		// Difficulty scales the ramp and the spawn cadence, and only those —
@@ -87,12 +116,55 @@ public partial class BodySpawner : Node
 		elapsed = 0f;
 		run = GameManager.Of(this)?.Run;
 		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
+		waveBudget = StartWaveSize;
 		SetupSpawnTimer();
+	}
+
+	/// <summary>How many bodies the given wave sends, before the cap.</summary>
+	private int BudgetFor(int wave) =>
+		Mathf.Min(Mathf.RoundToInt(StartWaveSize + WaveSizeGrowth * (wave - 1)), MaxWaveSize);
+
+	/// <summary>
+	/// A wave is over once its whole pack has been sent and none of it is left
+	/// standing. Checked against the live group rather than a kill counter, so a
+	/// body that leaves the field by any means still counts as dealt with.
+	/// </summary>
+	private void UpdateWaves(float delta)
+	{
+		// A boss is its own encounter. Wave accounting stands down for it, the
+		// same way trash spawning already does.
+		if (GameManager.Of(this)?.BossActive == true)
+			return;
+
+		if (InCalm)
+		{
+			calmTimer -= delta;
+			if (calmTimer > 0f)
+				return;
+
+			InCalm = false;
+			WaveNumber++;
+			waveBudget = BudgetFor(WaveNumber);
+			spawnedThisWave = 0;
+			EmitSignal(SignalName.WaveStarted, WaveNumber);
+			return;
+		}
+
+		if (spawnedThisWave < waveBudget)
+			return;
+
+		if (GetTree().GetNodeCountInGroup("bodies") > 0)
+			return;
+
+		InCalm = true;
+		calmTimer = CalmDuration;
+		EmitSignal(SignalName.WaveCleared, WaveNumber);
 	}
 
 	public override void _Process(double delta)
 	{
 		elapsed += (float)delta;
+		UpdateWaves((float)delta);
 
 		// The primary ramp reaches MaxSpeed around 2:00, tuned to feel like a
 		// deliberate escalation. Once there, the far slower late-game ramp
@@ -140,6 +212,11 @@ public partial class BodySpawner : Node
 		if (GameManager.Of(this)?.BossActive == true)
 			return;
 
+		// The quiet between packs is the whole point of the wave break. Nothing
+		// arrives during it, or there is no window to decide in.
+		if (InCalm || spawnedThisWave >= waveBudget)
+			return;
+
 		if (GetTree().GetNodeCountInGroup("bodies") >= MaxBodyCount)
 			return;
 
@@ -148,16 +225,21 @@ public partial class BodySpawner : Node
 		if (kind == BodyKind.Shard)
 		{
 			// Shards are only threatening in numbers, so they arrive together.
+			// The whole pack counts against the budget, or a wave of shards
+			// would be several times the size of any other.
 			Vector2 origin = GetSpawnPosition();
-			for (int i = 0; i < ShardPackSize; i++)
+			int count = Mathf.Min(ShardPackSize, waveBudget - spawnedThisWave);
+			for (int i = 0; i < count; i++)
 			{
 				Vector2 jitter = new Vector2(RunState.Rng.RandiRange(-90, 90), RunState.Rng.RandiRange(-90, 90));
 				SpawnOne(kind, origin + jitter);
+				spawnedThisWave++;
 			}
 			return;
 		}
 
 		SpawnOne(kind, GetSpawnPosition());
+		spawnedThisWave++;
 	}
 
 	/// <summary>

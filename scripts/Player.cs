@@ -84,8 +84,9 @@ public partial class Player : CharacterBody2D
 	/// <summary>Move speed after the weight of the world is taken off it.</summary>
 	public float CurrentMoveSpeed => MoveSpeed * Mathf.Lerp(1.0f, HeavyMoveScale, MassNormalised);
 
-	/// <summary>Dash cooldown after mass has lengthened it.</summary>
-	public float CurrentDashCooldown => DashCooldown * Mathf.Lerp(1.0f, HeavyDashCooldown, MassNormalised);
+	/// <summary>Dash cooldown after mass has lengthened it and upgrades have cut it.</summary>
+	public float CurrentDashCooldown =>
+		DashCooldown * Mathf.Lerp(1.0f, HeavyDashCooldown, MassNormalised) * (run?.DashCooldownScale ?? 1.0f);
 
 	/// <summary>False while Thrusters Out is running — the escape hatch is closed.</summary>
 	public bool CanDash => run == null || !run.During(ArenaEventId.NoDash);
@@ -171,13 +172,14 @@ public partial class Player : CharacterBody2D
 			return false;
 
 		var manager = GameManager.Of(this);
+		float radius = NovaRadius * run.NovaRadiusScale;
 
 		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
 		{
 			if (node is not Body body)
 				continue;
 
-			if (GlobalPosition.DistanceTo(body.GlobalPosition) > NovaRadius)
+			if (GlobalPosition.DistanceTo(body.GlobalPosition) > radius)
 				continue;
 
 			Body.Remains remains = body.GetRemains();
@@ -189,7 +191,7 @@ public partial class Player : CharacterBody2D
 				manager?.RegisterKill(remains, body.GlobalPosition, shedDebris: false);
 		}
 
-		manager?.SpawnBlast(GlobalPosition, NovaRadius, new Color(1f, 0.86f, 0.5f));
+		manager?.SpawnBlast(GlobalPosition, radius, new Color(1f, 0.86f, 0.5f));
 		manager?.Hitstop(0.12f);
 		manager?.Shake(NovaTrauma);
 		return true;
@@ -409,7 +411,9 @@ public partial class Player : CharacterBody2D
 	/// <summary>Seconds until this weapon can fire again.</summary>
 	public float FireInterval(bool rapidFiring)
 	{
-		return Weapon.FireInterval * (rapidFiring ? Weapon.RapidFireScale : 1.0f);
+		return Weapon.FireInterval
+			* (rapidFiring ? Weapon.RapidFireScale : 1.0f)
+			* (run?.FireIntervalScale ?? 1.0f);
 	}
 
 	public void ShootBullet(Vector2 aimPosition)

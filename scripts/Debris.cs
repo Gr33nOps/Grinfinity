@@ -65,7 +65,11 @@ public partial class Debris : Node2D
 		Vector2 toWorld = world.GlobalPosition - GlobalPosition;
 		float distance = toWorld.Length();
 
-		if (distance <= AbsorbRadius)
+		// A run that has bought into the pull catches motes from further out and
+		// reels them harder — the mass economy paying to feed itself faster.
+		float pull = run?.PullScale ?? 1.0f;
+
+		if (distance <= AbsorbRadius * pull)
 		{
 			Absorb();
 			return;
@@ -73,7 +77,7 @@ public partial class Debris : Node2D
 
 		// The pull ramps with age rather than with distance alone: the mote gets
 		// its orbit, then the world reels it in on a deadline.
-		float grab = Mathf.Lerp(1.0f, FinalAccelerationFactor, Mathf.Clamp(age / GrabTime, 0f, 1f));
+		float grab = Mathf.Lerp(1.0f, FinalAccelerationFactor, Mathf.Clamp(age / GrabTime, 0f, 1f)) * pull;
 
 		// Magnet skips the orbit entirely — that is the whole point of it.
 		if (run != null && run.Magnetised)

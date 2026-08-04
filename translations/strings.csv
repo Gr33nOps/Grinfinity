@@ -132,3 +132,20 @@ STATS_WORLDSUNLOCKED,WORLDS UNLOCKED
 STATS_ACHIEVEMENTS,ACHIEVEMENTS
 STATS_STARDUSTBANKED,STARDUST BANKED
 UI_MINUTES_SHORT,min
+UI_UPGRADE_HEADING,WAVE CLEAR  ·  {0} STARDUST
+UPG_FireRate_NAME,FASTER SHOTS
+UPG_FireRate_EFFECT,Shoot more often.
+UPG_Piercing_NAME,PIERCING SHOTS
+UPG_Piercing_EFFECT,Shots pass through two more bodies.
+UPG_QuickerDash_NAME,QUICKER DASH
+UPG_QuickerDash_EFFECT,Dash again sooner.
+UPG_BiggerNova_NAME,BIGGER NOVA
+UPG_BiggerNova_EFFECT,Nova reaches further.
+UPG_HungryDash_NAME,HUNGRY DASH
+UPG_HungryDash_EFFECT,Dashing drags all debris to you.
+UPG_WiderPull_NAME,WIDER PULL
+UPG_WiderPull_EFFECT,Catch debris from further out.
+UPG_RichDebris_NAME,RICH DEBRIS
+UPG_RichDebris_EFFECT,Bodies drop twice the debris.
+UPG_SlowField_NAME,SLOW FIELD
+UPG_SlowField_EFFECT,Bodies near you move slower.

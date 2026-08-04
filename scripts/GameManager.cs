@@ -77,6 +77,7 @@ public partial class GameManager : Node2D
 	private ProgressBar bossHealth;
 	private Label bossNameLabel;
 	private Announcer announcer;
+	private UpgradePrompt upgradePrompt;
 
 	public bool IsPaused => isPaused;
 
@@ -129,6 +130,7 @@ public partial class GameManager : Node2D
 		PowerUpScene ??= GD.Load<PackedScene>("res://scenes/power_up.tscn");
 
 		announcer = GetNodeOrNull<Announcer>("UI/Announcer");
+		upgradePrompt = GetNodeOrNull<UpgradePrompt>("UI/UpgradePrompt");
 		bossBar = GetNodeOrNull<Control>("UI/BossBar");
 		bossHealth = GetNodeOrNull<ProgressBar>("UI/BossBar/Health");
 		bossNameLabel = GetNodeOrNull<Label>("UI/BossBar/Name");
@@ -141,6 +143,11 @@ public partial class GameManager : Node2D
 		achievementTracker = AddPausableChild(new AchievementTracker());
 		uiManager = AddPausableChild(new UIManager());
 		playerManager = AddPausableChild(new PlayerManager());
+
+		// Wired after the spawner exists: the prompt listens for its wave
+		// signals rather than polling, so the offer appears on the same frame
+		// the arena actually goes quiet.
+		upgradePrompt?.Bind(run, bodySpawner);
 	}
 
 	// The game root runs with ProcessMode.Always so it can still read the pause

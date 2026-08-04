@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
@@ -82,10 +83,12 @@ public partial class RunState : Node
 	public int Moons { get; private set; }
 	public int RingTier { get; private set; }
 
-	/// <summary>This orbit's passive. Rolled once, in _Ready, and never changes.</summary>
-	public RelicId Relic { get; private set; }
-
-	public bool Has(RelicId relic) => Relic == relic;
+	/// <summary>
+	/// Whether this orbit has earned a given passive. A run can hold several at
+	/// once now — they are bought at wave breaks rather than rolled once at the
+	/// top, so there is no reason to limit a long run to one.
+	/// </summary>
+	public bool Has(RelicId relic) => passives.Contains(relic);
 
 	/// <summary>The arena event currently running, or Calm.</summary>
 	public ArenaEventId Event { get; private set; } = ArenaEventId.Calm;
@@ -129,12 +132,72 @@ public partial class RunState : Node
 	public int Score => Mathf.RoundToInt(score);
 
 	/// <summary>
-	/// Stardust this orbit has earned so far — from time, kills and streaks, per
-	/// the roadmap. Live rather than end-of-orbit only, so it can sit on the HUD
-	/// if a future pass wants it there.
+	/// Stardust this orbit has earned so far — from time, kills and streaks.
+	/// Never goes down: this is what the run produced, and what the recap and
+	/// the lifetime tally are both interested in.
 	/// </summary>
 	public int StardustEarned => Mathf.RoundToInt(SurvivalTime * StardustPerSecond)
 		+ Kills * StardustPerKill + BestStreak * StardustPerStreakBest;
+
+	/// <summary>Stardust already spent on upgrades this orbit.</summary>
+	public int StardustSpent { get; private set; }
+
+	/// <summary>
+	/// What is actually available to spend right now. Derived rather than
+	/// accumulated, so the balance can never drift out of step with what the
+	/// run earned.
+	/// </summary>
+	public int Stardust => Mathf.Max(StardustEarned - StardustSpent, 0);
+
+	private readonly HashSet<RelicId> passives = new();
+	private readonly Dictionary<RunUpgradeId, int> upgradeLevels = new();
+
+	/// <summary>How many times an upgrade has been taken this orbit.</summary>
+	public int LevelOf(RunUpgradeId id) => upgradeLevels.GetValueOrDefault(id, 0);
+
+	/// <summary>True once the run can no longer take this one any further.</summary>
+	public bool IsMaxed(RunUpgradeId id) => LevelOf(id) >= RunUpgrades.Get(id).MaxLevel;
+
+	/// <summary>
+	/// Buys one level, if the run can afford it and has not maxed it. Returns
+	/// false rather than throwing, because the offer UI and the purchase can
+	/// disagree by a frame's worth of earned stardust.
+	/// </summary>
+	public bool TryBuy(RunUpgradeId id)
+	{
+		RunUpgrades.Profile profile = RunUpgrades.Get(id);
+		if (profile == null || IsMaxed(id))
+			return false;
+
+		int cost = profile.CostAt(LevelOf(id));
+		if (cost > Stardust)
+			return false;
+
+		StardustSpent += cost;
+		upgradeLevels[id] = LevelOf(id) + 1;
+
+		if (profile.Grants != RelicId.None)
+			passives.Add(profile.Grants);
+
+		EmitSignal(SignalName.EffectsChanged);
+		return true;
+	}
+
+	// --- Derived multipliers ------------------------------------------------
+	// Read every frame by the things they modify, so a purchase takes effect on
+	// the next shot rather than at the next orbit.
+
+	/// <summary>Shots come this much closer together. Below 1 is faster.</summary>
+	public float FireIntervalScale => Mathf.Pow(0.86f, LevelOf(RunUpgradeId.FireRate));
+
+	/// <summary>Dash comes back this much sooner. Below 1 is quicker.</summary>
+	public float DashCooldownScale => Mathf.Pow(0.87f, LevelOf(RunUpgradeId.QuickerDash));
+
+	/// <summary>Nova reaches this much further.</summary>
+	public float NovaRadiusScale => 1.0f + 0.22f * LevelOf(RunUpgradeId.BiggerNova);
+
+	/// <summary>Debris is caught from this much further out.</summary>
+	public float PullScale => 1.0f + 0.25f * LevelOf(RunUpgradeId.WiderPull);
 
 	private float score;
 	private float streakTimer;
