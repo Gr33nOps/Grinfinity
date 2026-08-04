@@ -44,14 +44,6 @@ EVENT_GiantSlugs_NAME,HEAVY WEATHER
 EVENT_GiantSlugs_EFFECT,"New enemies are bigger and slower than normal."
 EVENT_InvertedGravity_NAME,INVERSION
 EVENT_InvertedGravity_EFFECT,"Your gravity now pushes enemies away instead of pulling them in."
-RELIC_Piercing_NAME,LONG SHOT
-RELIC_Piercing_EFFECT,"Your shots pass through two extra enemies before stopping."
-RELIC_VampiricDash_NAME,GREEDY DASH
-RELIC_VampiricDash_EFFECT,"Dashing pulls in every piece of debris on screen."
-RELIC_SlowAura_NAME,DEEP WELL
-RELIC_SlowAura_EFFECT,"Enemies move slower when they get close to you."
-RELIC_DoubleDebris_NAME,RICH SEAM
-RELIC_DoubleDebris_EFFECT,"Enemies drop twice as much debris when killed."
 WORLD_1_NAME,EMBERTIDE
 WORLD_1_FLAVOUR,"Warm, small, and entirely unbothered by what it is about to do."
 WORLD_1_HINT,Unlocked from the start.
@@ -88,22 +80,6 @@ WORLD_11_HINT,1 hour of lifetime playtime.
 WORLD_12_NAME,STARFORGED
 WORLD_12_FLAVOUR,"Every world before this one, pressed into something that survived."
 WORLD_12_HINT,"{0} lifetime orbits and {1} score in one."
-MODE_EndlessOrbit_NAME,ENDLESS ORBIT
-MODE_EndlessOrbit_FLAVOUR,"Survive as long as you can. The standard way to play."
-MODE_Flyby_NAME,FLYBY
-MODE_Flyby_FLAVOUR,"You have 60 seconds. Score as many points as you can."
-MODE_DailyAlignment_NAME,DAILY ALIGNMENT
-MODE_DailyAlignment_FLAVOUR,"Everyone plays the exact same run today. You only get one try."
-MODE_Convergence_NAME,CONVERGENCE
-MODE_Convergence_FLAVOUR,"Fight all three bosses in a row. No regular enemies in between."
-MODE_GlassPlanet_NAME,GLASS PLANET
-MODE_GlassPlanet_FLAVOUR,"One hit kills you — but your weapon deals 5 times the damage."
-DIFFICULTY_Easy_NAME,EASY
-DIFFICULTY_Easy_FLAVOUR,"Enemies are slower and appear less often."
-DIFFICULTY_Normal_NAME,NORMAL
-DIFFICULTY_Normal_FLAVOUR,The standard difficulty.
-DIFFICULTY_Hard_NAME,HARD
-DIFFICULTY_Hard_FLAVOUR,"Enemies are faster and appear more often."
 BOSS_Coil_ARRIVAL,Read the gap. Dash through it.
 BOSS_Brood_ARRIVAL,It will not stop spawning. Neither can you.
 BOSS_BlackHole_ARRIVAL,It is heavier than you. Do not let it prove it.
@@ -122,7 +98,6 @@ UI_LEADERBOARD_RANK,"#{0} ON THE LEADERBOARD"
 UI_NEW_BEST,NEW BEST!
 UI_LONGEST_YET,LONGEST ORBIT YET!
 UI_BEST_SCORE_LABEL,BEST: {0}
-UI_DAILY_LOCKED,"Come back tomorrow. Today's score: {0}."
 STATS_ORBITS,ORBITS
 STATS_KILLS,KILLS
 STATS_TIMEPLAYED,TIME PLAYED
@@ -130,7 +105,6 @@ STATS_HEAVIESTMASS,HEAVIEST MASS
 STATS_FAVOURITEWEAPON,FAVOURITE WEAPON
 STATS_WORLDSUNLOCKED,WORLDS UNLOCKED
 STATS_ACHIEVEMENTS,ACHIEVEMENTS
-STATS_STARDUSTBANKED,STARDUST BANKED
 UI_MINUTES_SHORT,min
 UI_UPGRADE_HEADING,WAVE CLEAR  ·  {0} STARDUST
 UPG_FireRate_NAME,FASTER SHOTS
@@ -152,3 +126,4 @@ UPG_SlowField_EFFECT,Bodies near you move slower.
 STATS_NAME,NAME
 STATS_STARDUSTEARNED,STARDUST EARNED
 UI_NAME_PROMPT,YOU PLACED — WHO WAS THAT?
+STATS_WORLD,WORLD

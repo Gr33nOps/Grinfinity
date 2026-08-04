@@ -29,6 +29,22 @@ public partial class UIManager : Node
 	private RunState run;
 	private Tween streakPop;
 
+	// The HUD lives in the two top corners, which the world can still fly into.
+	// Outlines keep the text readable over it, but nothing keeps the world
+	// readable under the text — so whichever corner is being occupied steps
+	// aside. Grouped rather than faded whole, so the far corner stays at full
+	// strength and the player never loses both readouts at once.
+	private readonly List<CanvasItem> leftCluster = new();
+	private readonly List<CanvasItem> rightCluster = new();
+	private float leftAlpha = 1f;
+	private float rightAlpha = 1f;
+
+	/// <summary>How far the HUD fades when the world is sitting on top of it.</summary>
+	private const float OccludedAlpha = 0.25f;
+	/// <summary>Corner box, in screen pixels, that counts as "the world is here".</summary>
+	private const float ClusterWidth = 660f;
+	private const float ClusterHeight = 300f;
+
 	public override void _Ready()
 	{
 		// Resolved relative to the game root rather than by absolute path, so
@@ -75,6 +91,56 @@ public partial class UIManager : Node
 
 		RefreshKeyLabels();
 		HideCursor();
+		BuildClusters();
+	}
+
+	private void BuildClusters()
+	{
+		foreach (CanvasItem item in new CanvasItem[] { dashIcon, rapidFireIcon, dashKeyLabel, rapidFireKeyLabel, killsLabel, streakLabel })
+		{
+			if (item != null)
+				leftCluster.Add(item);
+		}
+
+		foreach (CanvasItem item in new CanvasItem[] { timeLabel, scoreLabel, bestLabel })
+		{
+			if (item != null)
+				rightCluster.Add(item);
+		}
+	}
+
+	/// <summary>
+	/// Fades whichever top corner the world is currently sitting in. Eased
+	/// rather than switched, because a HUD that blinks on and off as the player
+	/// grazes the corner is worse than one that is simply in the way.
+	/// </summary>
+	private void UpdateHudFade(double delta)
+	{
+		if (player == null || leftCluster.Count == 0)
+			return;
+
+		Vector2 screen = GetViewport().CanvasTransform * player.GlobalPosition;
+		Vector2 size = GetViewport().GetVisibleRect().Size;
+
+		bool inLeft = screen.X < ClusterWidth && screen.Y < ClusterHeight;
+		bool inRight = screen.X > size.X - ClusterWidth && screen.Y < ClusterHeight;
+
+		float step = 1f - Mathf.Exp(-9f * (float)delta);
+		leftAlpha = Mathf.Lerp(leftAlpha, inLeft ? OccludedAlpha : 1f, step);
+		rightAlpha = Mathf.Lerp(rightAlpha, inRight ? OccludedAlpha : 1f, step);
+
+		Apply(leftCluster, leftAlpha);
+		Apply(rightCluster, rightAlpha);
+	}
+
+	private static void Apply(List<CanvasItem> cluster, float alpha)
+	{
+		foreach (CanvasItem item in cluster)
+		{
+			Color colour = item.Modulate;
+			colour.A = alpha;
+			item.Modulate = colour;
+		}
 	}
 
 	public override void _ExitTree()
@@ -118,6 +184,7 @@ public partial class UIManager : Node
 
 		UpdateAbilityIcons();
 		UpdateRunLabels();
+		UpdateHudFade(delta);
 	}
 
 	private void UpdateRunLabels()

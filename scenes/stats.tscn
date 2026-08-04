@@ -72,6 +72,30 @@ alignment = 2
 max_length = 12
 text = "PLAYER"
 
+[node name="WorldRow" type="HBoxContainer" parent="Layout/Rows"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Layout/Rows/WorldRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 38
+text = "WORLD"
+
+[node name="Value" type="Button" parent="Layout/Rows/WorldRow"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 38
+flat = true
+text = "EMBERTIDE"
+alignment = 2
+
 [node name="Orbits" type="HBoxContainer" parent="Layout/Rows"]
 layout_mode = 2
 

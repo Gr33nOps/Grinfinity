@@ -8,10 +8,13 @@ using Godot;
 public partial class StatsMenu : Control
 {
 	private LineEdit nameField;
+	private Button worldValue;
+	private int browsedWorld = 1;
 
 	public override void _Ready()
 	{
 		BuildNameField();
+		BuildWorldPicker();
 
 		SetRow("Orbits", $"{PlayerProfile.TotalOrbits:N0}");
 		SetRow("Kills", $"{PlayerProfile.TotalKills:N0}");
@@ -51,6 +54,62 @@ public partial class StatsMenu : Control
 	private void OnNameChanged(string text)
 	{
 		PlayerProfile.SetPlayerName(text);
+	}
+
+	/// <summary>
+	/// Which world the player wears. Cosmetic, applied on the spot, and never on
+	/// the way into a run — worlds were unlocking with nowhere to see or wear
+	/// them once the pre-run carousel went, which made every unlock the recap
+	/// celebrated a reward the player could not actually collect.
+	///
+	/// Only unlocked worlds are reachable: a locked one on the carousel is a
+	/// menu entry that exists to say no.
+	/// </summary>
+	private void BuildWorldPicker()
+	{
+		worldValue = GetNodeOrNull<Button>("Layout/Rows/WorldRow/Value");
+		if (worldValue == null)
+			return;
+
+		var label = GetNodeOrNull<Label>("Layout/Rows/WorldRow/Label");
+		if (label != null)
+			label.Text = TranslationServer.Translate("STATS_WORLD");
+
+		browsedWorld = GameSettings.Instance?.World ?? 1;
+		if (!PlayerProfile.IsWorldUnlocked(browsedWorld))
+			browsedWorld = 1;
+
+		worldValue.Pressed += CycleWorld;
+		RefreshWorld();
+	}
+
+	/// <summary>
+	/// Tap the name to wear the next one. A pair of arrows would be two more
+	/// controls for a choice with no wrong answer, and this is the one-tap
+	/// picker the design asked for.
+	/// </summary>
+	private void CycleWorld()
+	{
+		int count = Worlds.All.Length;
+		int id = browsedWorld;
+
+		// Step until the next unlocked one. Bounded by the roster size so a
+		// profile with exactly one world unlocked cannot spin forever.
+		for (int i = 0; i < count; i++)
+		{
+			id = id % count + 1;
+			if (PlayerProfile.IsWorldUnlocked(id))
+				break;
+		}
+
+		browsedWorld = id;
+		GameSettings.Instance?.SetWorld(id);
+		RefreshWorld();
+	}
+
+	private void RefreshWorld()
+	{
+		worldValue.Text = Worlds.Get(browsedWorld).Name;
 	}
 
 	public override void _UnhandledInput(InputEvent inputEvent)
