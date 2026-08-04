@@ -43,10 +43,6 @@ public partial class GameManager : Node2D
 	/// tuning, without having to survive and beat everything before it first.
 	/// </summary>
 	[Export] public int NextBossIndex { get; set; } = 0;
-	/// <summary>Convergence only: seconds before The Coil arrives, replacing <see cref="CoilTime"/>.</summary>
-	[Export] public float ConvergenceIntroTime { get; set; } = 6.0f;
-	/// <summary>Convergence only: pause between a boss's defeat blast and the next one's arrival.</summary>
-	[Export] public float ConvergenceChainDelay { get; set; } = 2.0f;
 	[Export] public int BossScoreBonus { get; set; } = 5000;
 	/// <summary>The Black Hole is the climax; beating it pays out accordingly.</summary>
 	[Export] public int BlackHoleScoreBonus { get; set; } = 12000;
@@ -99,10 +95,6 @@ public partial class GameManager : Node2D
 	public override void _EnterTree()
 	{
 		AddToGroup("game_manager");
-		// Reseeded before RunState (or anything that rolls against it) exists,
-		// so every roll this orbit — spawns, relics, hazards, everything — comes
-		// from the same stream Daily Alignment fixes.
-		Modes.SeedRun(Loadout.Mode);
 		run = AddPausableChild(new RunState());
 	}
 
@@ -168,18 +160,6 @@ public partial class GameManager : Node2D
 		pauseMenu.ResumeGame += OnResumeGame;
 		pauseMenu.GiveUpGame += OnGiveUpGame;
 		run.StreakChanged += OnStreakChanged;
-
-		AnnounceRelic();
-	}
-
-	/// <summary>
-	/// Tells the player what they rolled. A passive nobody was told about is a
-	/// passive that does not exist.
-	/// </summary>
-	private void AnnounceRelic()
-	{
-		Relics.Profile relic = Relics.Get(run.Relic);
-		Announce(relic.Name, relic.Effect, relic.Colour);
 	}
 
 	/// <summary>Shouts something in the middle of the screen. See <see cref="Announcer"/>.</summary>
@@ -232,27 +212,15 @@ public partial class GameManager : Node2D
 	{
 		if (!isPaused && !isGameOver)
 		{
-			// Flyby ends cleanly the instant the clock runs out — not a death,
-			// just the orbit being over, so there is no hitstop or shake first,
-			// and no death cause left over from a previous orbit either.
-			float timeLimit = Loadout.ModeProfile.TimeLimit;
-			if (timeLimit > 0f && RunTime >= timeLimit)
+			// The run has no clock to run out and no final wave. Bosses simply
+			// interrupt on a rhythm, each gated on survival time.
+			if (!BossActive)
 			{
-				GameOver.DeathCause = "";
-				TriggerGameOver();
-			}
-
-			// Convergence chains its own bosses (see OnBossDefeated) and only
-			// needs this to fire the very first one; the other two modes gate
-			// every boss on survival time.
-			bool convergence = Loadout.Mode == GameMode.Convergence;
-			if (!isGameOver && !BossActive)
-			{
-				if (NextBossIndex == 0 && RunTime >= (convergence ? ConvergenceIntroTime : CoilTime))
+				if (NextBossIndex == 0 && RunTime >= CoilTime)
 					SpawnBoss(CoilScene, "THE COIL");
-				else if (!convergence && NextBossIndex == 1 && RunTime >= BroodTime)
+				else if (NextBossIndex == 1 && RunTime >= BroodTime)
 					SpawnBoss(BroodScene, "THE BROOD");
-				else if (!convergence && NextBossIndex == 2 && RunTime >= BlackHoleTime)
+				else if (NextBossIndex == 2 && RunTime >= BlackHoleTime)
 					SpawnBoss(BlackHoleScene, "THE BLACK HOLE");
 			}
 		}
@@ -335,26 +303,6 @@ public partial class GameManager : Node2D
 			_ => AchievementId.BeatBlackHole
 		});
 
-		if (Loadout.Mode == GameMode.Convergence && !wasFinalBoss)
-		{
-			PackedScene nextScene = NextBossIndex == 1 ? BroodScene : BlackHoleScene;
-			string nextName = NextBossIndex == 1 ? "THE BROOD" : "THE BLACK HOLE";
-			ChainNextBoss(nextScene, nextName);
-		}
-	}
-
-	/// <summary>
-	/// Convergence only: brings on the next boss a beat after the last one's
-	/// defeat blast, rather than waiting on a survival-time gate that mode
-	/// deliberately has none of.
-	/// </summary>
-	private async void ChainNextBoss(PackedScene scene, string encounterName)
-	{
-		await ToSignal(GetTree().CreateTimer(ConvergenceChainDelay, processAlways: true),
-			SceneTreeTimer.SignalName.Timeout);
-
-		if (IsInstanceValid(this) && !isGameOver)
-			SpawnBoss(scene, encounterName);
 	}
 
 	private void UnlockBossAchievement(AchievementId id)
@@ -454,19 +402,14 @@ public partial class GameManager : Node2D
 		// Every moon breaks away with the world that held them.
 		run.ClearTiers();
 
-		var records = ScoreManager.SaveRun(Loadout.Mode, run.SurvivalTime, run.Kills, run.BestStreak, run.Score);
+		var records = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak, run.Score);
 		GameOver.IsNewBestScore = records.NewBestScore;
 		GameOver.IsNewBestTime = records.NewBestTime;
 
 		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakMassNormalised, Loadout.Weapon);
 
-		// Daily Alignment's one attempt is spent the moment the orbit ends,
-		// win or lose — there is no second chance to make it count today.
-		if (Loadout.Mode == GameMode.DailyAlignment)
-			PlayerProfile.RecordDailyAlignment(run.Score);
-
 		GameOver.LeaderboardRank = Leaderboard.Submit(
-			Loadout.Mode, run.Score, run.SurvivalTime, run.Kills, Loadout.Weapon, Loadout.World);
+			PlayerProfile.PlayerName, run.Score, run.SurvivalTime, run.Kills);
 
 		// Checked after RecordOrbit, not before: a world can be earned by the
 		// very orbit that satisfies it, and the recap is the only place left to

@@ -1,15 +1,21 @@
 using Godot;
 
 /// <summary>
-/// One passive, rolled at the start of every orbit.
+/// A passive effect a run can be carrying.
 ///
-/// Roguelike spice without a meta tree: the player does not choose it and cannot
-/// build toward it, so it colours an orbit without turning the game into a
-/// progression screen. Explicitly no "None" — every orbit gets one, or the roll
-/// becomes a thing to be unlucky about.
+/// These used to be rolled once at the top of every orbit, which made them a
+/// pre-run-adjacent decision the player had no hand in. The roll is gone; the
+/// effects are not, because they are tested, they work, and they are the right
+/// shape for things a run can earn part-way through.
+///
+/// <see cref="None"/> is the zero value on purpose. Without it, a run that has
+/// earned nothing would default into the first entry and quietly hand out a
+/// permanent passive nobody asked for.
 /// </summary>
 public enum RelicId
 {
+	/// <summary>Nothing. The state every orbit now starts in.</summary>
+	None,
 	/// <summary>Shots pass through two extra bodies.</summary>
 	Piercing,
 	/// <summary>Dashing drags every mote on the field straight to you.</summary>
@@ -66,7 +72,20 @@ public static class Relics
 	// Declared last: static field initialisers run in source order.
 	public static readonly Profile[] All = { Piercing, VampiricDash, SlowAura, DoubleDebris };
 
-	public static Profile Get(RelicId id) => All[(int)id];
+	/// <summary>
+	/// The profile for an effect, or null for <see cref="RelicId.None"/>.
+	/// Indexed by search rather than by cast: None is the zero value, so a cast
+	/// would land on the first real entry and describe an effect that is not
+	/// actually running.
+	/// </summary>
+	public static Profile Get(RelicId id)
+	{
+		foreach (Profile profile in All)
+		{
+			if (profile.Id == id)
+				return profile;
+		}
 
-	public static RelicId Roll() => (RelicId)RunState.Rng.RandiRange(0, All.Length - 1);
+		return null;
+	}
 }

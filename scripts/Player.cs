@@ -106,8 +106,6 @@ public partial class Player : CharacterBody2D
 		if (muzzleFlash != null)
 			muzzleFlash.Visible = false;
 
-		ApplyUpgrades();
-
 		baseScale = Scale;
 		run = GameManager.Of(this)?.Run;
 
@@ -143,21 +141,6 @@ public partial class Player : CharacterBody2D
 	{
 		Vector2 target = baseScale * Mathf.Lerp(1.0f, HeavyBodyScale, MassNormalised);
 		Scale = Scale.Lerp(target, 1f - Mathf.Exp(-6f * (float)delta));
-	}
-
-	/// <summary>
-	/// Folds bought upgrade levels into the base stats they touch, once, at
-	/// orbit start. Applied here rather than kept as a separate multiplier so
-	/// CurrentMoveSpeed/CurrentDashCooldown do not need to know upgrades exist
-	/// on top of the mass factor they already apply.
-	/// </summary>
-	private void ApplyUpgrades()
-	{
-		Upgrades.Profile speed = Upgrades.MoveSpeed;
-		MoveSpeed *= 1.0f + speed.PerLevel * PlayerProfile.UpgradeLevel(speed.Id);
-
-		Upgrades.Profile cooldown = Upgrades.DashCooldown;
-		DashCooldown *= 1.0f - cooldown.PerLevel * PlayerProfile.UpgradeLevel(cooldown.Id);
 	}
 
 	/// <summary>Spends mass on a dash. Dashing with nothing to vent is still allowed.</summary>

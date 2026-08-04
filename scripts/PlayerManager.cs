@@ -18,7 +18,10 @@ public partial class PlayerManager : Node
 		if (sprite == null)
 			return;
 
-		Texture2D texture = GD.Load<Texture2D>($"res://sprites/player {Loadout.World}.png");
+		// Cosmetic only, and never picked on the way into a run — the world is
+		// whatever was last chosen on the Stats screen.
+		int worldId = GameSettings.Instance?.World ?? 1;
+		Texture2D texture = GD.Load<Texture2D>($"res://sprites/player {worldId}.png");
 		if (texture != null)
 			sprite.Texture = texture;
 	}

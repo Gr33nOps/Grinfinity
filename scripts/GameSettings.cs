@@ -57,14 +57,8 @@ public partial class GameSettings : Node
 	/// <summary>Last weapon taken into an orbit.</summary>
 	public WeaponId Weapon { get; private set; } = WeaponId.Comet;
 
-	/// <summary>Last world (skin) taken into an orbit.</summary>
+	/// <summary>Last world (skin) worn. Cosmetic only — never gates a run.</summary>
 	public int World { get; private set; } = 1;
-
-	/// <summary>Last mode taken into an orbit.</summary>
-	public GameMode Mode { get; private set; } = GameMode.EndlessOrbit;
-
-	/// <summary>Last difficulty taken into an orbit.</summary>
-	public Difficulty Difficulty { get; private set; } = Difficulty.Normal;
 
 	// --- Video --------------------------------------------------------------
 	/// <summary>Index into <see cref="Resolutions"/>. Only applied while not fullscreen.</summary>
@@ -223,23 +217,6 @@ public partial class GameSettings : Node
 	public void SetWorld(int worldId)
 	{
 		World = worldId;
-		Loadout.RestoreWorld(worldId);
-		SaveSettings();
-	}
-
-	/// <summary>Remembers the chosen mode the same way <see cref="SetWeapon"/> remembers the weapon.</summary>
-	public void SetMode(GameMode mode)
-	{
-		Mode = mode;
-		Loadout.RestoreMode(mode);
-		SaveSettings();
-	}
-
-	/// <summary>Remembers the chosen difficulty the same way <see cref="SetWeapon"/> remembers the weapon.</summary>
-	public void SetDifficulty(Difficulty difficulty)
-	{
-		Difficulty = difficulty;
-		Loadout.RestoreDifficulty(difficulty);
 		SaveSettings();
 	}
 
@@ -368,8 +345,6 @@ public partial class GameSettings : Node
 		config.SetValue(Section, "shake_intensity", ShakeIntensity);
 		config.SetValue(Section, "weapon", (int)Weapon);
 		config.SetValue(Section, "world", World);
-		config.SetValue(Section, "mode", (int)Mode);
-		config.SetValue(Section, "difficulty", (int)Difficulty);
 		config.SetValue(Section, "resolution_index", ResolutionIndex);
 		config.SetValue(Section, "vsync", VSyncEnabled);
 		config.SetValue(Section, "fps_cap_index", FpsCapIndex);
@@ -410,24 +385,11 @@ public partial class GameSettings : Node
 
 		int storedWorld = config.GetValue(Section, "world", 1).AsInt32();
 		if (storedWorld is >= 1 and <= 12)
-		{
 			World = storedWorld;
-			Loadout.RestoreWorld(World);
-		}
 
-		int storedMode = config.GetValue(Section, "mode", (int)GameMode.EndlessOrbit).AsInt32();
-		if (System.Enum.IsDefined(typeof(GameMode), storedMode))
-		{
-			Mode = (GameMode)storedMode;
-			Loadout.RestoreMode(Mode);
-		}
-
-		int storedDifficulty = config.GetValue(Section, "difficulty", (int)Difficulty.Normal).AsInt32();
-		if (System.Enum.IsDefined(typeof(Difficulty), storedDifficulty))
-		{
-			Difficulty = (Difficulty)storedDifficulty;
-			Loadout.RestoreDifficulty(Difficulty);
-		}
+		// "mode" and "difficulty" may still be sitting in an older settings
+		// file. They are read by nothing now and are left to rot rather than
+		// migrated — there is nothing they could be migrated into.
 
 		ResolutionIndex = Mathf.Clamp(config.GetValue(Section, "resolution_index", ResolutionIndex).AsInt32(), 0, Resolutions.Length - 1);
 		VSyncEnabled = config.GetValue(Section, "vsync", VSyncEnabled).AsBool();

@@ -140,10 +140,6 @@ public partial class BodySpawner : Node
 		if (GameManager.Of(this)?.BossActive == true)
 			return;
 
-		// Convergence is bosses only — nothing to hide behind between them.
-		if (Loadout.ModeProfile.NoTrash)
-			return;
-
 		if (GetTree().GetNodeCountInGroup("bodies") >= MaxBodyCount)
 			return;
 

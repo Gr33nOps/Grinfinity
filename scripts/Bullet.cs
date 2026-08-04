@@ -64,9 +64,7 @@ public partial class Bullet : Area2D
 	public void ApplyProfile(WeaponProfile weapon)
 	{
 		Speed = weapon.Speed * (1f + RunState.Rng.RandfRange(-weapon.SpeedJitter, weapon.SpeedJitter));
-		// Glass Planet's whole trade is here: one hit kills you, so your own
-		// shots hit back proportionally harder. Every other mode multiplies by 1.
-		Damage = Mathf.Max(Mathf.RoundToInt(weapon.Damage * Loadout.ModeProfile.DamageMultiplier), 1);
+		Damage = Mathf.Max(weapon.Damage, 1);
 		Pierce = weapon.Pierce;
 		Range = weapon.Range;
 		Scale *= weapon.ShotScale;

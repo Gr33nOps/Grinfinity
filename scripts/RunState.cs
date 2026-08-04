@@ -224,12 +224,11 @@ public partial class RunState : Node
 
 	public override void _Ready()
 	{
-		Upgrades.Profile ballast = Upgrades.StartMass;
-		float boughtMass = ballast.PerLevel * PlayerProfile.UpgradeLevel(ballast.Id);
-
-		Mass = Mathf.Clamp(StartMass + boughtMass, 0f, MaxMass);
+		// Every orbit now starts from the same place. Growth happens inside the
+		// run, not in a shop before it, so there is no bought mass to fold in
+		// and no relic rolled over the player's head at the top.
+		Mass = Mathf.Clamp(StartMass, 0f, MaxMass);
 		PeakMassNormalised = MassNormalised;
-		Relic = Relics.Roll();
 	}
 
 	public override void _Process(double delta)

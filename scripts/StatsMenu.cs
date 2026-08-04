@@ -16,7 +16,7 @@ public partial class StatsMenu : Control
 		SetRow("Favourite weapon", WeaponProfile.Get(PlayerProfile.FavouriteWeapon).Name);
 		SetRow("Worlds unlocked", $"{CountUnlockedWorlds()} / {Worlds.All.Length}");
 		SetRow("Achievements", $"{CountUnlockedAchievements()} / {Achievements.All.Length}");
-		SetRow("Stardust banked", $"{PlayerProfile.Stardust:N0}");
+		SetRow("Stardust earned", $"{PlayerProfile.StardustEarned:N0}");
 
 		var backButton = GetNode<Button>("Layout/BackButton");
 		backButton.Pressed += OnBackPressed;

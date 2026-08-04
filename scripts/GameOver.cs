@@ -67,10 +67,10 @@ public partial class GameOver : Control
 	{
 		scoreLabel.Text = $"{ScoreToShow:N0}";
 
-		// Which mode and weapon it was scored with, because comparing two
-		// orbits without that is comparing nothing.
+		// The weapon it was scored with. One mode means there is nothing else
+		// left to disambiguate a score against.
 		if (scoreCaption != null)
-			scoreCaption.Text = $"{Loadout.ModeProfile.Name}  ·  {Loadout.Profile.Name}";
+			scoreCaption.Text = Loadout.Profile.Name;
 
 		if (statsLabel != null)
 		{
@@ -94,7 +94,7 @@ public partial class GameOver : Control
 		// orbit" needs the balance to visibly grow, not just flash and vanish.
 		if (stardustLabel != null)
 			stardustLabel.Text = string.Format(TranslationServer.Translate("UI_STARDUST_LINE"),
-				StardustEarned.ToString("N0"), PlayerProfile.Stardust.ToString("N0"));
+				StardustEarned.ToString("N0"), PlayerProfile.StardustEarned.ToString("N0"));
 
 		if (worldUnlockLabel != null)
 		{
@@ -137,7 +137,7 @@ public partial class GameOver : Control
 		}
 		else
 		{
-			highScoreLabel.Text = string.Format(TranslationServer.Translate("UI_BEST_SCORE_LABEL"), ScoreManager.BestScoreFor(Loadout.Mode));
+			highScoreLabel.Text = string.Format(TranslationServer.Translate("UI_BEST_SCORE_LABEL"), ScoreManager.BestScore);
 		}
 	}
 
@@ -145,11 +145,9 @@ public partial class GameOver : Control
 	{
 		buttonSound?.Play();
 
-		// Daily Alignment has no restart — today's one attempt is already
-		// spent. Mode select is the honest next stop, not straight back in.
-		SceneTransition.Instance.ChangeScene(Loadout.Mode == GameMode.DailyAlignment
-			? "res://scenes/mode_select.tscn"
-			: "res://scenes/game.tscn");
+		// Straight back in. "One more orbit" should cost one button, not a
+		// trip back through a menu.
+		SceneTransition.Instance.ChangeScene("res://scenes/game.tscn");
 	}
 
 	private void OnMenuButtonPressed()

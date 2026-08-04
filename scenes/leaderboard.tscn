@@ -47,29 +47,6 @@ theme_override_font_sizes/font_size = 78
 text = "LEADERBOARD"
 horizontal_alignment = 1
 
-[node name="ModeRow" type="HBoxContainer" parent="Layout"]
-layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 24
-
-[node name="Prev" type="Button" parent="Layout/ModeRow"]
-layout_mode = 2
-flat = true
-text = "PREV"
-
-[node name="ModeLabel" type="Label" parent="Layout/ModeRow"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
-text = "ENDLESS ORBIT"
-horizontal_alignment = 1
-custom_minimum_size = Vector2(420, 0)
-
-[node name="Next" type="Button" parent="Layout/ModeRow"]
-layout_mode = 2
-flat = true
-text = "NEXT"
-
 [node name="EmptyLabel" type="Label" parent="Layout"]
 visible = false
 layout_mode = 2
