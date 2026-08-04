@@ -6,12 +6,18 @@ public partial class SettingsMenu : Control
 	private HSlider musicSlider;
 	private HSlider sfxSlider;
 	private HSlider shakeSlider;
+	private HSlider uiScaleSlider;
 	private Label masterValue;
 	private Label musicValue;
 	private Label sfxValue;
 	private Label shakeValue;
+	private Label uiScaleValue;
 	private Button fullscreenCheck;
+	private Button vsyncCheck;
+	private OptionButton resolutionOption;
+	private OptionButton fpsCapOption;
 	private Button controlsButton;
+	private Button accessibilityButton;
 	private Button backButton;
 
 	public override void _Ready()
@@ -20,13 +26,22 @@ public partial class SettingsMenu : Control
 		musicSlider = GetNode<HSlider>("Layout/MusicRow/Slider");
 		sfxSlider = GetNode<HSlider>("Layout/SfxRow/Slider");
 		shakeSlider = GetNode<HSlider>("Layout/ShakeRow/Slider");
+		uiScaleSlider = GetNode<HSlider>("Layout/UiScaleRow/Slider");
 		masterValue = GetNode<Label>("Layout/MasterRow/Value");
 		musicValue = GetNode<Label>("Layout/MusicRow/Value");
 		sfxValue = GetNode<Label>("Layout/SfxRow/Value");
 		shakeValue = GetNode<Label>("Layout/ShakeRow/Value");
+		uiScaleValue = GetNode<Label>("Layout/UiScaleRow/Value");
 		fullscreenCheck = GetNode<Button>("Layout/FullscreenRow/Check");
+		vsyncCheck = GetNode<Button>("Layout/VSyncRow/Check");
+		resolutionOption = GetNode<OptionButton>("Layout/ResolutionRow/Option");
+		fpsCapOption = GetNode<OptionButton>("Layout/FpsCapRow/Option");
 		controlsButton = GetNode<Button>("Layout/ControlsButton");
+		accessibilityButton = GetNode<Button>("Layout/AccessibilityButton");
 		backButton = GetNode<Button>("Layout/BackButton");
+
+		BuildResolutionOptions();
+		BuildFpsCapOptions();
 
 		var settings = GameSettings.Instance;
 		if (settings != null)
@@ -35,22 +50,45 @@ public partial class SettingsMenu : Control
 			musicSlider.Value = settings.MusicVolume;
 			sfxSlider.Value = settings.SfxVolume;
 			shakeSlider.Value = settings.ShakeIntensity;
+			uiScaleSlider.Value = settings.UiScale;
 			fullscreenCheck.ButtonPressed = settings.Fullscreen;
+			vsyncCheck.ButtonPressed = settings.VSyncEnabled;
+			resolutionOption.Selected = settings.ResolutionIndex;
+			fpsCapOption.Selected = settings.FpsCapIndex;
 		}
 
 		fullscreenCheck.Text = fullscreenCheck.ButtonPressed ? "ON" : "OFF";
+		vsyncCheck.Text = vsyncCheck.ButtonPressed ? "ON" : "OFF";
+		resolutionOption.Disabled = fullscreenCheck.ButtonPressed;
 		RefreshLabels();
 
 		masterSlider.ValueChanged += OnMasterChanged;
 		musicSlider.ValueChanged += OnMusicChanged;
 		sfxSlider.ValueChanged += OnSfxChanged;
 		shakeSlider.ValueChanged += OnShakeChanged;
+		uiScaleSlider.ValueChanged += OnUiScaleChanged;
 		fullscreenCheck.Toggled += OnFullscreenToggled;
+		vsyncCheck.Toggled += OnVSyncToggled;
+		resolutionOption.ItemSelected += OnResolutionSelected;
+		fpsCapOption.ItemSelected += OnFpsCapSelected;
 		controlsButton.Pressed += OnControlsPressed;
+		accessibilityButton.Pressed += OnAccessibilityPressed;
 		backButton.Pressed += OnBackPressed;
 
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 		backButton.GrabFocus();
+	}
+
+	private void BuildResolutionOptions()
+	{
+		foreach ((int width, int height) in GameSettings.Resolutions)
+			resolutionOption.AddItem($"{width} x {height}");
+	}
+
+	private void BuildFpsCapOptions()
+	{
+		foreach (int cap in GameSettings.FpsCaps)
+			fpsCapOption.AddItem(cap == 0 ? "UNCAPPED" : $"{cap} FPS");
 	}
 
 	public override void _UnhandledInput(InputEvent inputEvent)
@@ -90,6 +128,30 @@ public partial class SettingsMenu : Control
 	{
 		GameSettings.Instance?.SetFullscreen(pressed);
 		fullscreenCheck.Text = pressed ? "ON" : "OFF";
+		// Resolution only means anything in windowed mode.
+		resolutionOption.Disabled = pressed;
+	}
+
+	private void OnVSyncToggled(bool pressed)
+	{
+		GameSettings.Instance?.SetVSyncEnabled(pressed);
+		vsyncCheck.Text = pressed ? "ON" : "OFF";
+	}
+
+	private void OnResolutionSelected(long index)
+	{
+		GameSettings.Instance?.SetResolutionIndex((int)index);
+	}
+
+	private void OnFpsCapSelected(long index)
+	{
+		GameSettings.Instance?.SetFpsCapIndex((int)index);
+	}
+
+	private void OnUiScaleChanged(double value)
+	{
+		GameSettings.Instance?.SetUiScale((float)value);
+		RefreshLabels();
 	}
 
 	private void RefreshLabels()
@@ -99,12 +161,19 @@ public partial class SettingsMenu : Control
 		sfxValue.Text = $"{Mathf.RoundToInt(sfxSlider.Value * 100)}%";
 		// Zero is a supported answer, so say so rather than showing a bare "0%".
 		shakeValue.Text = shakeSlider.Value <= 0.0 ? "OFF" : $"{Mathf.RoundToInt(shakeSlider.Value * 100)}%";
+		uiScaleValue.Text = $"{Mathf.RoundToInt(uiScaleSlider.Value * 100)}%";
 	}
 
 	private void OnControlsPressed()
 	{
 		GameSettings.Instance?.SaveSettings();
 		SceneTransition.Instance.ChangeScene("res://scenes/controls.tscn");
+	}
+
+	private void OnAccessibilityPressed()
+	{
+		GameSettings.Instance?.SaveSettings();
+		SceneTransition.Instance.ChangeScene("res://scenes/accessibility.tscn");
 	}
 
 	private void OnBackPressed()

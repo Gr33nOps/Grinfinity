@@ -30,11 +30,21 @@ public partial class GameSettings : Node
 	private const string MasterBus = "Master";
 	private const float MinAudibleLinear = 0.001f;
 
-	// v2 moved rapid fire off Q. v3 adds mode and difficulty. Bumping the
-	// version lets LoadSettings drop the stale bind instead of restoring the
-	// key the migration exists to escape; a v2 file simply has no mode or
-	// difficulty on record and falls back to their defaults.
-	private const int SaveVersion = 3;
+	// v2 moved rapid fire off Q. v3 adds mode and difficulty. v4 adds every
+	// M7 option and accessibility toggle. Bumping the version lets
+	// LoadSettings drop the stale bind instead of restoring the key the
+	// migration exists to escape; an older save simply has none of the new
+	// fields on record and falls back to their defaults.
+	private const int SaveVersion = 4;
+
+	/// <summary>Windowed-mode choices. Fullscreen ignores this and uses the display's own size.</summary>
+	public static readonly (int Width, int Height)[] Resolutions =
+	{
+		(1280, 720), (1600, 900), (1920, 1080), (2560, 1440)
+	};
+
+	/// <summary>FPS cap choices. 0 is Godot's own sentinel for "uncapped".</summary>
+	public static readonly int[] FpsCaps = { 0, 30, 60, 120, 144 };
 
 	public float MasterVolume { get; private set; } = 1.0f;
 	public float MusicVolume { get; private set; } = 0.8f;
@@ -56,6 +66,26 @@ public partial class GameSettings : Node
 	/// <summary>Last difficulty taken into an orbit.</summary>
 	public Difficulty Difficulty { get; private set; } = Difficulty.Normal;
 
+	// --- Video --------------------------------------------------------------
+	/// <summary>Index into <see cref="Resolutions"/>. Only applied while not fullscreen.</summary>
+	public int ResolutionIndex { get; private set; } = 2;
+	public bool VSyncEnabled { get; private set; } = true;
+	/// <summary>Index into <see cref="FpsCaps"/>.</summary>
+	public int FpsCapIndex { get; private set; } = 0;
+	/// <summary>Scales the in-game HUD only — gameplay art stays at its native size.</summary>
+	public float UiScale { get; private set; } = 1.0f;
+
+	// --- Accessibility --------------------------------------------------------
+	public bool ShowDamageNumbers { get; private set; } = true;
+	/// <summary>Gently pulls gamepad aim toward the nearest body within a narrow cone.</summary>
+	public bool GamepadAimAssist { get; private set; } = false;
+	public bool ColourblindMode { get; private set; } = false;
+	public bool HighContrastOutlines { get; private set; } = false;
+	/// <summary>True: rapid fire only runs while the button is held. False (default): press once, it runs for its own duration.</summary>
+	public bool RapidFireHoldMode { get; private set; } = false;
+	/// <summary>An extra, gentler speed cut on top of whatever Difficulty already applies.</summary>
+	public bool AssistMode { get; private set; } = false;
+
 	private readonly System.Collections.Generic.Dictionary<string, Key> defaultKeys = new();
 
 	public override void _Ready()
@@ -69,6 +99,8 @@ public partial class GameSettings : Node
 		LoadSettings();
 		ApplyAllVolumes();
 		ApplyWindowMode();
+		ApplyVSync();
+		ApplyFpsCap();
 	}
 
 	private void CaptureDefaultKeys()
@@ -211,6 +243,69 @@ public partial class GameSettings : Node
 		SaveSettings();
 	}
 
+	public void SetResolutionIndex(int index)
+	{
+		ResolutionIndex = Mathf.Clamp(index, 0, Resolutions.Length - 1);
+		ApplyWindowMode();
+		SaveSettings();
+	}
+
+	public void SetVSyncEnabled(bool enabled)
+	{
+		VSyncEnabled = enabled;
+		ApplyVSync();
+		SaveSettings();
+	}
+
+	public void SetFpsCapIndex(int index)
+	{
+		FpsCapIndex = Mathf.Clamp(index, 0, FpsCaps.Length - 1);
+		ApplyFpsCap();
+		SaveSettings();
+	}
+
+	public void SetUiScale(float scale)
+	{
+		UiScale = Mathf.Clamp(scale, 0.85f, 1.3f);
+		SaveSettings();
+	}
+
+	public void SetShowDamageNumbers(bool enabled)
+	{
+		ShowDamageNumbers = enabled;
+		SaveSettings();
+	}
+
+	public void SetGamepadAimAssist(bool enabled)
+	{
+		GamepadAimAssist = enabled;
+		SaveSettings();
+	}
+
+	public void SetColourblindMode(bool enabled)
+	{
+		ColourblindMode = enabled;
+		SaveSettings();
+	}
+
+	public void SetHighContrastOutlines(bool enabled)
+	{
+		HighContrastOutlines = enabled;
+		SaveSettings();
+	}
+
+	public void SetRapidFireHoldMode(bool enabled)
+	{
+		RapidFireHoldMode = enabled;
+		SaveSettings();
+	}
+
+	public void SetAssistMode(bool enabled)
+	{
+		AssistMode = enabled;
+		SaveSettings();
+	}
+
 	private void ApplyAllVolumes()
 	{
 		ApplyBusVolume(MasterBus, MasterVolume);
@@ -220,9 +315,33 @@ public partial class GameSettings : Node
 
 	private void ApplyWindowMode()
 	{
-		DisplayServer.WindowSetMode(Fullscreen
-			? DisplayServer.WindowMode.Fullscreen
-			: DisplayServer.WindowMode.Maximized);
+		if (Fullscreen)
+		{
+			DisplayServer.WindowSetMode(DisplayServer.WindowMode.Fullscreen);
+			return;
+		}
+
+		DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+
+		(int width, int height) = Resolutions[Mathf.Clamp(ResolutionIndex, 0, Resolutions.Length - 1)];
+		var size = new Vector2I(width, height);
+		DisplayServer.WindowSetSize(size);
+
+		// A windowed resolution that opens off to one side reads as broken.
+		Vector2I screen = DisplayServer.ScreenGetSize();
+		DisplayServer.WindowSetPosition((screen - size) / 2);
+	}
+
+	private void ApplyVSync()
+	{
+		DisplayServer.WindowSetVsyncMode(VSyncEnabled
+			? DisplayServer.VSyncMode.Enabled
+			: DisplayServer.VSyncMode.Disabled);
+	}
+
+	private void ApplyFpsCap()
+	{
+		Engine.MaxFps = FpsCaps[Mathf.Clamp(FpsCapIndex, 0, FpsCaps.Length - 1)];
 	}
 
 	private static void ApplyBusVolume(string busName, float linear)
@@ -251,6 +370,16 @@ public partial class GameSettings : Node
 		config.SetValue(Section, "world", World);
 		config.SetValue(Section, "mode", (int)Mode);
 		config.SetValue(Section, "difficulty", (int)Difficulty);
+		config.SetValue(Section, "resolution_index", ResolutionIndex);
+		config.SetValue(Section, "vsync", VSyncEnabled);
+		config.SetValue(Section, "fps_cap_index", FpsCapIndex);
+		config.SetValue(Section, "ui_scale", UiScale);
+		config.SetValue(Section, "show_damage_numbers", ShowDamageNumbers);
+		config.SetValue(Section, "gamepad_aim_assist", GamepadAimAssist);
+		config.SetValue(Section, "colourblind_mode", ColourblindMode);
+		config.SetValue(Section, "high_contrast_outlines", HighContrastOutlines);
+		config.SetValue(Section, "rapid_fire_hold_mode", RapidFireHoldMode);
+		config.SetValue(Section, "assist_mode", AssistMode);
 
 		foreach (var (action, _) in RebindableActions)
 			config.SetValue(InputSection, action, (int)GetActionKey(action));
@@ -299,6 +428,17 @@ public partial class GameSettings : Node
 			Difficulty = (Difficulty)storedDifficulty;
 			Loadout.RestoreDifficulty(Difficulty);
 		}
+
+		ResolutionIndex = Mathf.Clamp(config.GetValue(Section, "resolution_index", ResolutionIndex).AsInt32(), 0, Resolutions.Length - 1);
+		VSyncEnabled = config.GetValue(Section, "vsync", VSyncEnabled).AsBool();
+		FpsCapIndex = Mathf.Clamp(config.GetValue(Section, "fps_cap_index", FpsCapIndex).AsInt32(), 0, FpsCaps.Length - 1);
+		UiScale = Mathf.Clamp(config.GetValue(Section, "ui_scale", UiScale).AsSingle(), 0.85f, 1.3f);
+		ShowDamageNumbers = config.GetValue(Section, "show_damage_numbers", ShowDamageNumbers).AsBool();
+		GamepadAimAssist = config.GetValue(Section, "gamepad_aim_assist", GamepadAimAssist).AsBool();
+		ColourblindMode = config.GetValue(Section, "colourblind_mode", ColourblindMode).AsBool();
+		HighContrastOutlines = config.GetValue(Section, "high_contrast_outlines", HighContrastOutlines).AsBool();
+		RapidFireHoldMode = config.GetValue(Section, "rapid_fire_hold_mode", RapidFireHoldMode).AsBool();
+		AssistMode = config.GetValue(Section, "assist_mode", AssistMode).AsBool();
 
 		int version = config.GetValue(Section, "version", 1).AsInt32();
 

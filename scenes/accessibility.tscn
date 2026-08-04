@@ -1,0 +1,217 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1grinaccess01"]
+
+[ext_resource type="Script" path="res://scripts/AccessibilityMenu.cs" id="1_accsc"]
+[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_font"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_access"]
+bg_color = Color(0, 0, 0, 0.686275)
+
+[node name="accessibility" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_accsc")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_access")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -460.0
+offset_top = -440.0
+offset_right = 460.0
+offset_bottom = 440.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Layout"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 78
+text = "ACCESSIBILITY"
+horizontal_alignment = 1
+
+[node name="Hint" type="Label" parent="Layout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.78, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 26
+text = "Screen shake has its own slider back in Settings."
+horizontal_alignment = 1
+
+[node name="ColourblindRow" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Layout/ColourblindRow"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "Colourblind-Safe Palette"
+
+[node name="Check" type="Button" parent="Layout/ColourblindRow"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "OFF"
+
+[node name="OutlinesRow" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Layout/OutlinesRow"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "High-Contrast Outlines"
+
+[node name="Check" type="Button" parent="Layout/OutlinesRow"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "OFF"
+
+[node name="RapidFireRow" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Layout/RapidFireRow"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "Rapid Fire: Hold To Use"
+
+[node name="Check" type="Button" parent="Layout/RapidFireRow"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "OFF"
+
+[node name="AssistRow" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Layout/AssistRow"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "Assist Mode: Slower Bodies"
+
+[node name="Check" type="Button" parent="Layout/AssistRow"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "OFF"
+
+[node name="DamageNumbersRow" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Layout/DamageNumbersRow"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "Damage Numbers"
+
+[node name="Check" type="Button" parent="Layout/DamageNumbersRow"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "ON"
+
+[node name="AimAssistRow" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="Layout/AimAssistRow"]
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "Gamepad Aim Assist"
+
+[node name="Check" type="Button" parent="Layout/AimAssistRow"]
+custom_minimum_size = Vector2(180, 56)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(0.65, 0.65, 0.7, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 32
+text = "OFF"
+
+[node name="BackButton" type="Button" parent="Layout"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.5, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 50
+flat = true
+text = "BACK"

@@ -71,13 +71,35 @@ public class PlayerAbilities
 		if (Input.IsActionJustPressed("dash") && dashTimer <= 0 && !isDashing && player.CanDash)
 			StartDash();
 
-		if (Input.IsActionJustPressed("rapid_fire") && rapidFireTimer <= 0 && !isRapidFiring)
+		if (GameSettings.Instance?.RapidFireHoldMode == true)
+			HandleRapidFireHold();
+		else if (Input.IsActionJustPressed("rapid_fire") && rapidFireTimer <= 0 && !isRapidFiring)
 			StartRapidFire();
 
 		// Nova has no cooldown of its own — mass *is* its cost, which is what
 		// makes spending it a decision rather than a timer.
 		if (Input.IsActionJustPressed("nova"))
 			player.TryNova();
+	}
+
+	/// <summary>
+	/// Accessibility alternative to the default press-once-it-runs-itself
+	/// activation: rapid fire only runs while the button stays down, and ends
+	/// the instant it is released rather than waiting out its own timer. Still
+	/// spends the same duration budget and pays the same cooldown, so it is a
+	/// different feel, not a stronger one.
+	/// </summary>
+	private void HandleRapidFireHold()
+	{
+		bool held = Input.IsActionPressed("rapid_fire");
+
+		if (held && !isRapidFiring && rapidFireTimer <= 0)
+			StartRapidFire();
+		else if (!held && isRapidFiring)
+		{
+			isRapidFiring = false;
+			rapidFireTimer = player.RapidFireCooldown;
+		}
 	}
 
 	private void StartDash()

@@ -50,6 +50,15 @@ public partial class BodySpawner : Node
 		StartSpawnInterval *= difficulty.SpawnIntervalMultiplier;
 		MinSpawnInterval *= difficulty.SpawnIntervalMultiplier;
 
+		// Assist Mode is a separate, gentler cut that stacks on top of whatever
+		// Difficulty already did — an accessibility preference, not a fourth
+		// difficulty tier, so it never touches spawn rate or contact radius.
+		if (GameSettings.Instance?.AssistMode == true)
+		{
+			StartSpeed *= 0.8f;
+			MaxSpeed *= 0.8f;
+		}
+
 		enemySpeed = StartSpeed;
 		CurrentSpeed = StartSpeed;
 		SpeedScale = 1.0f;

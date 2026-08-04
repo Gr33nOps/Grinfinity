@@ -48,6 +48,12 @@ public partial class UIManager : Node
 		player = gameRoot?.GetNodeOrNull<Player>("player");
 		run = GameManager.Of(this)?.Run;
 
+		// Scales the HUD alone — gameplay lives on Entities, a sibling of this
+		// CanvasLayer, so nothing about the arena itself changes size.
+		var uiLayer = gameRoot?.GetNodeOrNull<CanvasLayer>("UI");
+		if (uiLayer != null && GameSettings.Instance != null)
+			uiLayer.Scale = Vector2.One * GameSettings.Instance.UiScale;
+
 		// The best score cannot change mid-orbit, so it only needs writing once.
 		if (bestLabel != null)
 			bestLabel.Text = ScoreManager.GetFormattedHighScore();

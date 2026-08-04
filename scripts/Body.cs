@@ -161,7 +161,11 @@ public partial class Body : CharacterBody2D, IShootable
 
 		sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
 		if (sprite != null)
+		{
 			spriteBaseScale = sprite.Scale;
+			if (GameSettings.Instance?.HighContrastOutlines == true)
+				sprite.Material = OutlineMaterial.Get();
+		}
 
 		// Difficulty's contact radius scales the hitbox alone — the collision
 		// shape's own local scale, not the body's — so a Hard-mode Drifter looks
@@ -238,6 +242,12 @@ public partial class Body : CharacterBody2D, IShootable
 		Kind = kind;
 		behaviour = BodyBehaviours.For(kind);
 		behaviour.Apply(this);
+
+		if (GameSettings.Instance?.ColourblindMode == true)
+		{
+			BaseTint = ColourblindPalette.Tint(kind, BaseTint);
+			BurstColor = ColourblindPalette.Burst(kind, BurstColor);
+		}
 
 		Scale = BaseScale;
 		Modulate = BaseTint;

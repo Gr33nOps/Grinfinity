@@ -133,6 +133,7 @@ public partial class Bullet : Area2D
 			{
 				target.TakeDamage(Damage, Direction);
 				SpawnBurst(10, 0.4f, new Color(1.0f, 0.95f, 0.8f), 0.5f);
+				SpawnDamageNumber(GlobalPosition);
 
 				if (Pierce > 0)
 				{
@@ -162,6 +163,7 @@ public partial class Bullet : Area2D
 			// A chip hit gets a small pale spark instead of a full death burst.
 			SpawnBurst(14, 0.45f, new Color(1.0f, 0.95f, 0.8f), 0.55f);
 		}
+		SpawnDamageNumber(GlobalPosition);
 
 		// A piercing shot carries on through the clump. Area2D only reports each
 		// body once per entry, so nothing can be hit twice by the same lance.
@@ -175,6 +177,16 @@ public partial class Bullet : Area2D
 		hasHit = true;
 		SetDeferred(Area2D.PropertyName.Monitoring, false);
 		QueueFree();
+	}
+
+	private void SpawnDamageNumber(Vector2 at)
+	{
+		if (GameSettings.Instance?.ShowDamageNumbers != true)
+			return;
+
+		var number = new DamageNumber { Amount = Damage };
+		number.GlobalPosition = at + new Vector2(RunState.Rng.RandfRange(-10f, 10f), -10f);
+		GameManager.Spawn(this, number);
 	}
 
 	private void SpawnBurst(int amount, float scale, Color color, float lifetimeScale)

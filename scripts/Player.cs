@@ -53,6 +53,13 @@ public partial class Player : CharacterBody2D
 	private const float GamepadAimDistance = 400.0f;
 	private const float StickDeadzoneSq = 0.0625f;
 
+	// Aim assist only considers bodies within this half-angle of the stick's
+	// raw direction (~25 degrees) and this close, then softly pulls toward
+	// whichever one is most aligned — a nudge, not a snap.
+	private const float AimAssistConeCosine = 0.9f;
+	private const float AimAssistRange = 900.0f;
+	private const float AimAssistStrength = 0.35f;
+
 	private Node2D shootyPart;
 	private Sprite2D playerSprite;
 	private Node2D muzzleFlash;
@@ -90,6 +97,8 @@ public partial class Player : CharacterBody2D
 
 		shootyPart = GetNode<Node2D>("shootyPart");
 		playerSprite = FindPlayerSprite();
+		if (playerSprite != null && GameSettings.Instance?.HighContrastOutlines == true)
+			playerSprite.Material = OutlineMaterial.Get();
 		shootSound = GetNodeOrNull<AudioStreamPlayer2D>("ShootSound");
 		abilities = new PlayerAbilities(this);
 
@@ -216,7 +225,11 @@ public partial class Player : CharacterBody2D
 
 		if (stick.LengthSquared() > StickDeadzoneSq)
 		{
-			gamepadAimDirection = stick.Normalized();
+			Vector2 direction = stick.Normalized();
+			if (GameSettings.Instance?.GamepadAimAssist == true)
+				direction = ApplyAimAssist(direction);
+
+			gamepadAimDirection = direction;
 			usingGamepadAim = true;
 		}
 
@@ -230,6 +243,41 @@ public partial class Player : CharacterBody2D
 		return usingGamepadAim
 			? GlobalPosition + gamepadAimDirection * GamepadAimDistance
 			: mousePosition;
+	}
+
+	/// <summary>
+	/// Pulls a raw stick direction toward the nearest body within a narrow cone
+	/// ahead of it, if there is one. Purely a settings-gated convenience for
+	/// gamepad players — mouse aim is already exact and never touches this.
+	/// </summary>
+	private Vector2 ApplyAimAssist(Vector2 rawDirection)
+	{
+		Body best = null;
+		float bestAlignment = AimAssistConeCosine;
+
+		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
+		{
+			if (node is not Body body || !IsInstanceValid(body))
+				continue;
+
+			Vector2 toBody = body.GlobalPosition - GlobalPosition;
+			float distance = toBody.Length();
+			if (distance < 1f || distance > AimAssistRange)
+				continue;
+
+			float alignment = (toBody / distance).Dot(rawDirection);
+			if (alignment > bestAlignment)
+			{
+				bestAlignment = alignment;
+				best = body;
+			}
+		}
+
+		if (best == null)
+			return rawDirection;
+
+		Vector2 towardBest = (best.GlobalPosition - GlobalPosition).Normalized();
+		return rawDirection.Lerp(towardBest, AimAssistStrength).Normalized();
 	}
 
 	private void UpdatePlayer(Vector2 aimPosition, double delta)
