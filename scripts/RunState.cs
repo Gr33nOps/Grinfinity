@@ -35,6 +35,15 @@ public partial class RunState : Node
 	/// </summary>
 	public static RandomNumberGenerator Rng { get; } = new RandomNumberGenerator();
 
+	/// <summary>
+	/// How long the current orbit has lasted, reachable without a reference to
+	/// the run itself — the same shortcut <see cref="Rng"/> and
+	/// <see cref="BodySpawner.CurrentSpeed"/> already take. The escalation curve
+	/// is read by bodies at spawn, and a body has no route to its RunState at
+	/// that point.
+	/// </summary>
+	public static float ElapsedSeconds { get; private set; }
+
 	[ExportGroup("Mass")]
 	// Sized so a full dial is roughly 100 absorbed motes — about a hundred
 	// bodies. Reaching maximum should be an achievement of the back half of an
@@ -290,6 +299,7 @@ public partial class RunState : Node
 		// Every orbit now starts from the same place. Growth happens inside the
 		// run, not in a shop before it, so there is no bought mass to fold in
 		// and no relic rolled over the player's head at the top.
+		ElapsedSeconds = 0f;
 		Mass = Mathf.Clamp(StartMass, 0f, MaxMass);
 		PeakMassNormalised = MassNormalised;
 	}
@@ -297,6 +307,7 @@ public partial class RunState : Node
 	public override void _Process(double delta)
 	{
 		SurvivalTime += (float)delta;
+		ElapsedSeconds = SurvivalTime;
 		// Integrated rather than sampled, so a brief spike near the end cannot
 		// pass for having played the whole orbit heavy.
 		massTimeIntegral += MassNormalised * (float)delta;

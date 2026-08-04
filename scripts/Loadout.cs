@@ -34,10 +34,10 @@ public static class Loadout
 
 	/// <summary>
 	/// The body-scaling knobs that used to come from the Easy/Normal/Hard
-	/// picker. The picker is gone and the numbers are pinned to what Normal
-	/// used to be; the escalation curve replaces this with a function of
-	/// elapsed run time, at which point the hooks in Body and BodySpawner stay
-	/// exactly where they are and only this source changes.
+	/// picker. Now a function of how long the current orbit has lasted, read at
+	/// the moment a body is born. Falls back to neutral outside a run, so a body
+	/// spawned by a tool or a test has nothing to trip over.
 	/// </summary>
-	public static Difficulties.Profile DifficultyProfile => Difficulties.Baseline;
+	public static Difficulties.Profile DifficultyProfile =>
+		Difficulties.At(RunState.ElapsedSeconds);
 }

@@ -15,9 +15,14 @@ public partial class BodySpawner : Node
 	/// <summary>Bodies in the opening pack. Small enough to be read, not survived.</summary>
 	[Export] public int StartWaveSize { get; set; } = 6;
 	/// <summary>Extra bodies added to the pack per wave cleared.</summary>
-	[Export] public float WaveSizeGrowth { get; set; } = 2.2f;
-	/// <summary>Ceiling on pack size, so a long run escalates by composition rather than by sheer count.</summary>
-	[Export] public int MaxWaveSize { get; set; } = 46;
+	[Export] public float WaveSizeGrowth { get; set; } = 2.0f;
+	/// <summary>
+	/// Ceiling on pack size. Deliberately low enough to keep a wave punchy: past
+	/// this the run escalates by what is in the pack, not by how long it takes
+	/// to grind through it. A wave nobody can finish is not a harder wave, it is
+	/// a longer one.
+	/// </summary>
+	[Export] public int MaxWaveSize { get; set; } = 34;
 	/// <summary>Seconds of quiet between a pack being cleared and the next arriving.</summary>
 	[Export] public float CalmDuration { get; set; } = 7.0f;
 
@@ -48,15 +53,25 @@ public partial class BodySpawner : Node
 	[Export] public float LateGameRampDuration { get; set; } = 240.0f;
 
 	[ExportGroup("Bestiary")]
-	// One new kind roughly every 20 seconds. Each arrival is meant to be
-	// noticeable, and each one teaches something the previous ones did not.
-	[Export] public float ShardUnlockTime { get; set; } = 18.0f;
-	[Export] public float PlanetoidUnlockTime { get; set; } = 40.0f;
-	[Export] public float FractureUnlockTime { get; set; } = 62.0f;
-	[Export] public float BulwarkUnlockTime { get; set; } = 85.0f;
-	[Export] public float SatelliteUnlockTime { get; set; } = 108.0f;
-	[Export] public float FlareUnlockTime { get; set; } = 130.0f;
+	// One new kind every wave or two. Gated on waves rather than the clock so
+	// the escalation reads as progress the player made rather than time that
+	// passed — clearing fast now earns the next threat sooner, and a wave the
+	// player struggled with does not stack a new kind on top of it.
+	[Export] public int ShardUnlockWave { get; set; } = 2;
+	[Export] public int PlanetoidUnlockWave { get; set; } = 3;
+	[Export] public int FractureUnlockWave { get; set; } = 5;
+	[Export] public int BulwarkUnlockWave { get; set; } = 7;
+	[Export] public int SatelliteUnlockWave { get; set; } = 9;
+	[Export] public int FlareUnlockWave { get; set; } = 11;
 	[Export] public int ShardPackSize { get; set; } = 4;
+
+	/// <summary>
+	/// Wave by which the mix has shifted as far toward the dangerous kinds as it
+	/// ever will. Past the last unlock the roster stops growing, so composition
+	/// is the only thing left that can keep escalating without the run turning
+	/// into a pure stat check.
+	/// </summary>
+	[Export] public int CompositionPeakWave { get; set; } = 26;
 
 	[ExportGroup("Mass response")]
 	/// <summary>Spawn interval multiplier at full world mass. Under 1 means faster.</summary>
@@ -71,7 +86,6 @@ public partial class BodySpawner : Node
 	private Timer spawnTimer;
 	private RunState run;
 	private float enemySpeed;
-	private float elapsed;
 	private float lateGameMaxSpeed;
 	private float lateGameMinSpawnInterval;
 	private float lateGameSpeedIncreasePerSecond;
@@ -88,18 +102,14 @@ public partial class BodySpawner : Node
 
 	public override void _Ready()
 	{
-		// Difficulty scales the ramp and the spawn cadence, and only those —
-		// never player damage. A fresh spawner is made every orbit, so scaling
-		// the exported defaults in place here cannot compound across restarts.
-		Difficulties.Profile difficulty = Loadout.DifficultyProfile;
-		StartSpeed *= difficulty.SpeedMultiplier;
-		MaxSpeed *= difficulty.SpeedMultiplier;
-		StartSpawnInterval *= difficulty.SpawnIntervalMultiplier;
-		MinSpawnInterval *= difficulty.SpawnIntervalMultiplier;
+		// The two-stage ramp below is this spawner's own escalation curve, so
+		// there is nothing to scale here — Difficulties owns contact radius and
+		// deliberately not speed or cadence, or both would escalate twice.
 
-		// Assist Mode is a separate, gentler cut that stacks on top of whatever
-		// Difficulty already did — an accessibility preference, not a fourth
-		// difficulty tier, so it never touches spawn rate or contact radius.
+		// Assist Mode is an accessibility preference, not a difficulty tier: a
+		// flat speed cut a player turns on for themselves, independent of the
+		// curve everyone else plays. It never touches spawn rate or contact
+		// radius.
 		if (GameSettings.Instance?.AssistMode == true)
 		{
 			StartSpeed *= 0.8f;
@@ -113,7 +123,6 @@ public partial class BodySpawner : Node
 		enemySpeed = StartSpeed;
 		CurrentSpeed = StartSpeed;
 		SpeedScale = 1.0f;
-		elapsed = 0f;
 		run = GameManager.Of(this)?.Run;
 		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 		waveBudget = StartWaveSize;
@@ -131,22 +140,23 @@ public partial class BodySpawner : Node
 	/// </summary>
 	private void UpdateWaves(float delta)
 	{
-		// A boss is its own encounter. Wave accounting stands down for it, the
-		// same way trash spawning already does.
+		// A boss is its own encounter, and wave accounting stands down for it the
+		// same way trash spawning does. If one arrives mid-break the break ends
+		// with it: leaving the calm frozen left the upgrade prompt sitting over
+		// the boss fight for its whole duration, since the timer that closes the
+		// window had stopped running.
 		if (GameManager.Of(this)?.BossActive == true)
+		{
+			if (InCalm)
+				BeginNextWave();
 			return;
+		}
 
 		if (InCalm)
 		{
 			calmTimer -= delta;
-			if (calmTimer > 0f)
-				return;
-
-			InCalm = false;
-			WaveNumber++;
-			waveBudget = BudgetFor(WaveNumber);
-			spawnedThisWave = 0;
-			EmitSignal(SignalName.WaveStarted, WaveNumber);
+			if (calmTimer <= 0f)
+				BeginNextWave();
 			return;
 		}
 
@@ -161,9 +171,17 @@ public partial class BodySpawner : Node
 		EmitSignal(SignalName.WaveCleared, WaveNumber);
 	}
 
+	private void BeginNextWave()
+	{
+		InCalm = false;
+		WaveNumber++;
+		waveBudget = BudgetFor(WaveNumber);
+		spawnedThisWave = 0;
+		EmitSignal(SignalName.WaveStarted, WaveNumber);
+	}
+
 	public override void _Process(double delta)
 	{
-		elapsed += (float)delta;
 		UpdateWaves((float)delta);
 
 		// The primary ramp reaches MaxSpeed around 2:00, tuned to feel like a
@@ -243,40 +261,67 @@ public partial class BodySpawner : Node
 	}
 
 	/// <summary>
-	/// Introduces kinds over time so the opening stays readable and each new
+	/// Introduces kinds wave by wave so the opening stays readable and each new
 	/// threat is noticeable when it shows up. Weights are cumulative bands over
 	/// a single roll; anything not claimed by a band falls through to a Drifter.
+	///
+	/// Once the roster stops growing the bands keep widening instead, up to
+	/// <see cref="CompositionPeakWave"/> — a late wave is not the same wave with
+	/// more bodies in it, it is a wave made of worse ones.
 	/// </summary>
 	private BodyKind PickKind()
 	{
-		if (elapsed < ShardUnlockTime)
+		if (WaveNumber < ShardUnlockWave)
 			return BodyKind.Drifter;
+
+		// 0 at the last unlock, 1 by the peak. The dangerous share grows, the
+		// shard share shrinks, and drifters are what is left — which by the peak
+		// is nothing. Scaled to a target total rather than multiplied freely:
+		// bands that sum past 1.0 would mean the last few kinds could never be
+		// rolled at all, quietly deleting Planetoids and Shards from a long run
+		// instead of escalating it.
+		float bias = Mathf.Clamp(
+			(WaveNumber - FlareUnlockWave) / (float)Mathf.Max(CompositionPeakWave - FlareUnlockWave, 1),
+			0f, 1f);
+
+		float dangerous = Mathf.Lerp(BaseDangerousShare, PeakDangerousShare, bias);
+		float shardShare = Mathf.Lerp(BaseShardShare, PeakShardShare, bias);
+		float widen = dangerous / BaseDangerousShare;
 
 		float roll = RunState.Rng.Randf();
 		float band = 0f;
 
-		if (Unlocked(FlareUnlockTime) && roll < (band += 0.10f))
+		if (Unlocked(FlareUnlockWave) && roll < (band += 0.10f * widen))
 			return BodyKind.Flare;
 
-		if (Unlocked(SatelliteUnlockTime) && roll < (band += 0.10f))
+		if (Unlocked(SatelliteUnlockWave) && roll < (band += 0.10f * widen))
 			return BodyKind.Satellite;
 
-		if (Unlocked(BulwarkUnlockTime) && roll < (band += 0.12f))
+		if (Unlocked(BulwarkUnlockWave) && roll < (band += 0.12f * widen))
 			return BodyKind.Bulwark;
 
-		if (Unlocked(FractureUnlockTime) && roll < (band += 0.13f))
+		if (Unlocked(FractureUnlockWave) && roll < (band += 0.13f * widen))
 			return BodyKind.Fracture;
 
-		if (Unlocked(PlanetoidUnlockTime) && roll < (band += 0.13f))
+		if (Unlocked(PlanetoidUnlockWave) && roll < (band += 0.13f * widen))
 			return BodyKind.Planetoid;
 
-		if (roll < band + 0.26f)
+		if (roll < band + shardShare)
 			return BodyKind.Shard;
 
 		return BodyKind.Drifter;
 	}
 
-	private bool Unlocked(float at) => elapsed >= at;
+	// The five dangerous bands sum to this before any escalation, and to the
+	// peak share once composition has shifted as far as it goes. Peak plus the
+	// peak shard share comes to exactly 1.0, so drifters run out precisely when
+	// the mix is meant to have stopped being forgiving — never sooner.
+	private const float BaseDangerousShare = 0.58f;
+	private const float PeakDangerousShare = 0.80f;
+	private const float BaseShardShare = 0.26f;
+	private const float PeakShardShare = 0.20f;
+
+	private bool Unlocked(int wave) => WaveNumber >= wave;
 
 	private void SpawnOne(BodyKind kind, Vector2 position)
 	{
