@@ -59,7 +59,7 @@ public partial class SettingsMenu : Control
 
 		fullscreenCheck.Text = fullscreenCheck.ButtonPressed ? "ON" : "OFF";
 		vsyncCheck.Text = vsyncCheck.ButtonPressed ? "ON" : "OFF";
-		resolutionOption.Disabled = fullscreenCheck.ButtonPressed;
+		SetResolutionEnabled(!fullscreenCheck.ButtonPressed);
 		RefreshLabels();
 
 		masterSlider.ValueChanged += OnMasterChanged;
@@ -129,7 +129,20 @@ public partial class SettingsMenu : Control
 		GameSettings.Instance?.SetFullscreen(pressed);
 		fullscreenCheck.Text = pressed ? "ON" : "OFF";
 		// Resolution only means anything in windowed mode.
-		resolutionOption.Disabled = pressed;
+		SetResolutionEnabled(!pressed);
+	}
+
+	/// <summary>
+	/// Greys the whole resolution row together. Disabling only the dropdown
+	/// left its label at full brightness, which reads as an active row whose
+	/// control just happens to be unreadable, rather than an inactive one.
+	/// </summary>
+	private void SetResolutionEnabled(bool enabled)
+	{
+		resolutionOption.Disabled = !enabled;
+		var label = GetNodeOrNull<Label>("Layout/ResolutionRow/Label");
+		label?.AddThemeColorOverride("font_color",
+			enabled ? new Color(1f, 1f, 1f) : new Color(0.45f, 0.45f, 0.5f));
 	}
 
 	private void OnVSyncToggled(bool pressed)

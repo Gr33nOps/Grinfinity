@@ -37,6 +37,7 @@ offset_right = 420.0
 offset_bottom = 470.0
 grow_horizontal = 2
 grow_vertical = 2
+alignment = 1
 theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="Layout"]
