@@ -16,24 +16,29 @@ public partial class Menu : Node
 		var quitButton = GetNode<TextureButton>("UI/Buttons/QuitButton");
 		var upgradesButton = GetNode<Button>("UI/SideMenu/UpgradesButton");
 		var leaderboardButton = GetNode<Button>("UI/SideMenu/LeaderboardButton");
-		var statsButton = GetNode<Button>("UI/SideMenu/StatsButton");
+		// Optional: the side menu does not currently carry a stats entry, but
+		// nothing should crash the whole menu if a future pass adds one back.
+		var statsButton = GetNodeOrNull<Button>("UI/SideMenu/StatsButton");
 		var settingsButton = GetNode<Button>("UI/SideMenu/SettingsButton");
 		var creditsButton = GetNode<Button>("UI/SideMenu/CreditsButton");
 
-		// Play goes through the weapon choice; only a restart skips it.
-		playButton.Pressed += () => GoTo("res://scenes/weapon_select.tscn");
+		// Play goes through the mode and weapon choice; only a restart skips them.
+		playButton.Pressed += () => GoTo("res://scenes/mode_select.tscn");
 		upgradesButton.Pressed += () => GoTo("res://scenes/upgrades.tscn");
 		leaderboardButton.Pressed += () => GoTo("res://scenes/leaderboard.tscn");
-		statsButton.Pressed += () => GoTo("res://scenes/stats.tscn");
+		if (statsButton != null)
+			statsButton.Pressed += () => GoTo("res://scenes/stats.tscn");
 		settingsButton.Pressed += () => GoTo("res://scenes/settings.tscn");
 		creditsButton.Pressed += () => GoTo("res://scenes/credits.tscn");
 		quitButton.Pressed += OnQuitButtonPressed;
 
-		foreach (var button in new BaseButton[]
-			{ playButton, upgradesButton, leaderboardButton, statsButton, settingsButton, creditsButton, quitButton })
-		{
+		var hoverButtons = new System.Collections.Generic.List<BaseButton>
+			{ playButton, upgradesButton, leaderboardButton, settingsButton, creditsButton, quitButton };
+		if (statsButton != null)
+			hoverButtons.Add(statsButton);
+
+		foreach (var button in hoverButtons)
 			button.MouseEntered += PlayHoverSound;
-		}
 
 		if (quitConfirm != null)
 			quitConfirm.Confirmed += OnQuitConfirmed;
