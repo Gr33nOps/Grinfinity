@@ -290,14 +290,20 @@ public partial class UIManager : Node
 		if (player == null)
 			return;
 
-		bool dashReady = player.GetDashCooldownPercent() >= 1.0f;
-		bool rapidReady = player.GetRapidFireCooldownPercent() >= 1.0f && !player.IsRapidFiring();
+		// An ability the run has not bought yet shows nothing at all. Greying it
+		// out would advertise a key that does nothing, and the wave-break card
+		// is where the player is meant to find out it exists.
+		bool hasDash = run == null || run.HasDash;
+		bool hasRapid = run == null || run.HasRapidFire;
+
+		bool dashReady = hasDash && player.GetDashCooldownPercent() >= 1.0f;
+		bool rapidReady = hasRapid && player.GetRapidFireCooldownPercent() >= 1.0f && !player.IsRapidFiring();
 
 		SetAbilityVisible(dashIcon, dashKeyLabel, dashReady);
 		SetAbilityVisible(rapidFireIcon, rapidFireKeyLabel, rapidReady);
 	}
 
-	private static void SetAbilityVisible(Sprite2D icon, Label key, bool visible)
+	private void SetAbilityVisible(Sprite2D icon, Label key, bool visible)
 	{
 		if (icon != null)
 			icon.Visible = visible;

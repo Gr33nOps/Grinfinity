@@ -88,8 +88,14 @@ public partial class Player : CharacterBody2D
 	public float CurrentDashCooldown =>
 		DashCooldown * Mathf.Lerp(1.0f, HeavyDashCooldown, MassNormalised) * (run?.DashCooldownScale ?? 1.0f);
 
-	/// <summary>False while Thrusters Out is running — the escape hatch is closed.</summary>
-	public bool CanDash => run == null || !run.During(ArenaEventId.NoDash);
+	/// <summary>
+	/// Dash has to be earned this orbit, and Thrusters Out can close it again
+	/// afterwards. Outside a run — a tool, a test — it stays open.
+	/// </summary>
+	public bool CanDash => run == null || (run.HasDash && !run.During(ArenaEventId.NoDash));
+
+	/// <summary>Rapid fire has to be earned this orbit.</summary>
+	public bool CanRapidFire => run == null || run.HasRapidFire;
 
 	public override void _Ready()
 	{
@@ -168,7 +174,7 @@ public partial class Player : CharacterBody2D
 	/// <returns>False if there was not enough mass, and nothing happened.</returns>
 	public bool TryNova()
 	{
-		if (run == null || !run.Vent(NovaVent))
+		if (run == null || !run.HasNova || !run.Vent(NovaVent))
 			return false;
 
 		var manager = GameManager.Of(this);

@@ -127,3 +127,9 @@ STATS_NAME,NAME
 STATS_STARDUSTEARNED,STARDUST EARNED
 UI_NAME_PROMPT,YOU PLACED — WHO WAS THAT?
 STATS_WORLD,WORLD
+UPG_UnlockDash_NAME,DASH
+UPG_UnlockDash_EFFECT,Unlocks the dash.
+UPG_UnlockRapidFire_NAME,RAPID FIRE
+UPG_UnlockRapidFire_EFFECT,Unlocks a burst of fast shots.
+UPG_UnlockNova_NAME,NOVA
+UPG_UnlockNova_EFFECT,Unlocks the mass blast.

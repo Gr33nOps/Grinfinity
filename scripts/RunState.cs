@@ -196,6 +196,19 @@ public partial class RunState : Node
 	// Read every frame by the things they modify, so a purchase takes effect on
 	// the next shot rather than at the next orbit.
 
+	// --- Abilities the run has earned ---------------------------------------
+	// An orbit opens able to move and shoot and nothing else. Each of these is
+	// a verb the player buys back at a wave break, which gives the opening a
+	// teaching order it never had and gives the first few breaks something
+	// unmistakably worth stopping for.
+
+	/// <summary>Dash is available. False until it has been bought this orbit.</summary>
+	public bool HasDash => LevelOf(RunUpgradeId.UnlockDash) > 0;
+	/// <summary>Rapid fire is available.</summary>
+	public bool HasRapidFire => LevelOf(RunUpgradeId.UnlockRapidFire) > 0;
+	/// <summary>Nova is available.</summary>
+	public bool HasNova => LevelOf(RunUpgradeId.UnlockNova) > 0;
+
 	/// <summary>Shots come this much closer together. Below 1 is faster.</summary>
 	public float FireIntervalScale => Mathf.Pow(0.86f, LevelOf(RunUpgradeId.FireRate));
 

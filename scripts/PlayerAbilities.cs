@@ -71,7 +71,11 @@ public class PlayerAbilities
 		if (Input.IsActionJustPressed("dash") && dashTimer <= 0 && !isDashing && player.CanDash)
 			StartDash();
 
-		if (GameSettings.Instance?.RapidFireHoldMode == true)
+		if (!player.CanRapidFire)
+		{
+			// Nothing to hold and nothing to trigger until the run has bought it.
+		}
+		else if (GameSettings.Instance?.RapidFireHoldMode == true)
 			HandleRapidFireHold();
 		else if (Input.IsActionJustPressed("rapid_fire") && rapidFireTimer <= 0 && !isRapidFiring)
 			StartRapidFire();

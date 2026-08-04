@@ -3,6 +3,11 @@ using Godot;
 /// <summary>Everything a run can buy at a wave break.</summary>
 public enum RunUpgradeId
 {
+	// Abilities you do not start with. An orbit opens with move and shoot and
+	// nothing else; everything past that is earned at a wave break.
+	UnlockDash,
+	UnlockRapidFire,
+	UnlockNova,
 	// Weapon
 	FireRate,
 	Piercing,
@@ -45,9 +50,55 @@ public static class RunUpgrades
 		public RelicId Grants { get; init; } = RelicId.None;
 		/// <summary>Cost growth per level already owned. Flat for one-offs.</summary>
 		public float CostGrowth { get; init; } = 1.55f;
+		/// <summary>
+		/// Turns on something the player cannot do at all yet, rather than
+		/// improving something they can. The offer keeps one of these on the
+		/// table until they are all bought — a run that never rolled a dash
+		/// would be a run missing a verb, not a run that built differently.
+		/// </summary>
+		public bool IsUnlock { get; init; }
+		/// <summary>
+		/// An ability this improves, which the run has to own first. Offering
+		/// "dash again sooner" to someone with no dash is a card that cannot
+		/// mean anything to them yet.
+		/// </summary>
+		public RunUpgradeId? Requires { get; init; }
 
 		public int CostAt(int level) => Mathf.RoundToInt(BaseCost * Mathf.Pow(CostGrowth, level));
 	}
+
+	public static readonly Profile UnlockDash = new()
+	{
+		Id = RunUpgradeId.UnlockDash,
+		Family = UpgradeFamily.Ability,
+		Name = TranslationServer.Translate("UPG_UnlockDash_NAME"),
+		Effect = TranslationServer.Translate("UPG_UnlockDash_EFFECT"),
+		BaseCost = 18,
+		MaxLevel = 1,
+		IsUnlock = true
+	};
+
+	public static readonly Profile UnlockRapidFire = new()
+	{
+		Id = RunUpgradeId.UnlockRapidFire,
+		Family = UpgradeFamily.Ability,
+		Name = TranslationServer.Translate("UPG_UnlockRapidFire_NAME"),
+		Effect = TranslationServer.Translate("UPG_UnlockRapidFire_EFFECT"),
+		BaseCost = 30,
+		MaxLevel = 1,
+		IsUnlock = true
+	};
+
+	public static readonly Profile UnlockNova = new()
+	{
+		Id = RunUpgradeId.UnlockNova,
+		Family = UpgradeFamily.Ability,
+		Name = TranslationServer.Translate("UPG_UnlockNova_NAME"),
+		Effect = TranslationServer.Translate("UPG_UnlockNova_EFFECT"),
+		BaseCost = 45,
+		MaxLevel = 1,
+		IsUnlock = true
+	};
 
 	public static readonly Profile FireRate = new()
 	{
@@ -75,7 +126,8 @@ public static class RunUpgrades
 		Family = UpgradeFamily.Ability,
 		Name = TranslationServer.Translate("UPG_QuickerDash_NAME"),
 		Effect = TranslationServer.Translate("UPG_QuickerDash_EFFECT"),
-		BaseCost = 28
+		BaseCost = 28,
+		Requires = RunUpgradeId.UnlockDash
 	};
 
 	public static readonly Profile BiggerNova = new()
@@ -85,7 +137,8 @@ public static class RunUpgrades
 		Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
 		Effect = TranslationServer.Translate("UPG_BiggerNova_EFFECT"),
 		BaseCost = 45,
-		MaxLevel = 3
+		MaxLevel = 3,
+		Requires = RunUpgradeId.UnlockNova
 	};
 
 	public static readonly Profile HungryDash = new()
@@ -96,7 +149,8 @@ public static class RunUpgrades
 		Effect = TranslationServer.Translate("UPG_HungryDash_EFFECT"),
 		BaseCost = 80,
 		MaxLevel = 1,
-		Grants = RelicId.VampiricDash
+		Grants = RelicId.VampiricDash,
+		Requires = RunUpgradeId.UnlockDash
 	};
 
 	public static readonly Profile WiderPull = new()
@@ -133,6 +187,7 @@ public static class RunUpgrades
 	// Declared last: static field initialisers run in source order.
 	public static readonly Profile[] All =
 	{
+		UnlockDash, UnlockRapidFire, UnlockNova,
 		FireRate, Piercing, QuickerDash, BiggerNova, HungryDash, WiderPull, RichDebris, SlowField
 	};
 

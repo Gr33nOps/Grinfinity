@@ -74,23 +74,41 @@ public partial class UpgradePrompt : Control
 
 		var pool = new List<RunUpgradeId>();
 		var massPool = new List<RunUpgradeId>();
+		var unlockPool = new List<RunUpgradeId>();
 
 		foreach (RunUpgrades.Profile profile in RunUpgrades.All)
 		{
 			if (run.IsMaxed(profile.Id))
 				continue;
 
-			if (profile.Family == UpgradeFamily.Mass)
+			// An improvement to something the run cannot do yet is a card that
+			// cannot mean anything to the player reading it.
+			if (profile.Requires is RunUpgradeId required && run.LevelOf(required) == 0)
+				continue;
+
+			if (profile.IsUnlock)
+				unlockPool.Add(profile.Id);
+			else if (profile.Family == UpgradeFamily.Mass)
 				massPool.Add(profile.Id);
 			else
 				pool.Add(profile.Id);
 		}
 
+		// An ability the player does not have yet outranks a bigger number for
+		// one they do. While any verb is still missing, one is always on offer,
+		// so the opening breaks reliably hand back dash, then rapid fire, then
+		// nova, instead of leaving it to the roll.
+		if (unlockPool.Count > 0)
+			offer.Add(TakeCheapest(unlockPool));
+
 		if (massPool.Count > 0)
 			offer.Add(Take(massPool));
 
-		while (offer.Count < OfferCount && (pool.Count > 0 || massPool.Count > 0))
-			offer.Add(Take(pool.Count > 0 ? pool : massPool));
+		while (offer.Count < OfferCount && (pool.Count > 0 || massPool.Count > 0 || unlockPool.Count > 0))
+		{
+			List<RunUpgradeId> from = pool.Count > 0 ? pool : massPool.Count > 0 ? massPool : unlockPool;
+			offer.Add(Take(from));
+		}
 
 		GuaranteeSomethingAffordable();
 		BuildCards();
@@ -116,6 +134,9 @@ public partial class UpgradePrompt : Control
 		foreach (RunUpgrades.Profile profile in RunUpgrades.All)
 		{
 			if (run.IsMaxed(profile.Id) || offer.Contains(profile.Id))
+				continue;
+
+			if (profile.Requires is RunUpgradeId required && run.LevelOf(required) == 0)
 				continue;
 
 			int cost = profile.CostAt(run.LevelOf(profile.Id));
@@ -152,6 +173,32 @@ public partial class UpgradePrompt : Control
 		int index = RunState.Rng.RandiRange(0, from.Count - 1);
 		RunUpgradeId id = from[index];
 		from.RemoveAt(index);
+		return id;
+	}
+
+	/// <summary>
+	/// Takes the cheapest of a pool rather than a random one. Used for the
+	/// missing abilities, so they arrive in a sensible order — dash, then rapid
+	/// fire, then nova — instead of dangling the dearest one first at a player
+	/// who cannot yet afford any of them.
+	/// </summary>
+	private RunUpgradeId TakeCheapest(List<RunUpgradeId> from)
+	{
+		int best = 0;
+		int bestCost = int.MaxValue;
+
+		for (int i = 0; i < from.Count; i++)
+		{
+			int cost = RunUpgrades.Get(from[i]).CostAt(run.LevelOf(from[i]));
+			if (cost >= bestCost)
+				continue;
+
+			best = i;
+			bestCost = cost;
+		}
+
+		RunUpgradeId id = from[best];
+		from.RemoveAt(best);
 		return id;
 	}
 
