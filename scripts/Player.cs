@@ -341,8 +341,12 @@ public partial class Player : CharacterBody2D
 			Die(TranslationServer.Translate("DEATH_CAUSE_GravityWell"));
 	}
 
-	/// <summary>Killed by something other than contact — a Flare blast, a comet, or a hostile shot.</summary>
-	public void KillByBlast(string cause)
+	/// <summary>
+	/// Killed by something other than contact — a Flare blast, a comet, or a
+	/// hostile shot. Optional so any caller that predates the cause string
+	/// (or hasn't been told about it yet) still compiles and still kills.
+	/// </summary>
+	public void KillByBlast(string cause = "")
 	{
 		Die(cause);
 	}
