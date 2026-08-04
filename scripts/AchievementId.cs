@@ -24,31 +24,67 @@ public static class Achievements
 	}
 
 	public static readonly Profile SurviveFiveMinutes = new()
-	{ Id = AchievementId.SurviveFiveMinutes, Name = "LONG ORBIT", Description = "Survive 5:00." };
+	{
+		Id = AchievementId.SurviveFiveMinutes,
+		Name = TranslationServer.Translate("ACHIEVEMENT_SurviveFiveMinutes_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_SurviveFiveMinutes_DESC")
+	};
 
 	public static readonly Profile HundredKills = new()
-	{ Id = AchievementId.HundredKills, Name = "CENTURY", Description = "100 kills in one orbit." };
+	{
+		Id = AchievementId.HundredKills,
+		Name = TranslationServer.Translate("ACHIEVEMENT_HundredKills_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_HundredKills_DESC")
+	};
 
 	public static readonly Profile Streak25 = new()
-	{ Id = AchievementId.Streak25, Name = "UNBROKEN", Description = "A x25 streak." };
+	{
+		Id = AchievementId.Streak25,
+		Name = TranslationServer.Translate("ACHIEVEMENT_Streak25_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_Streak25_DESC")
+	};
 
 	public static readonly Profile NoHitMinute = new()
-	{ Id = AchievementId.NoHitMinute, Name = "UNTOUCHED", Description = "60 seconds without taking a hit." };
+	{
+		Id = AchievementId.NoHitMinute,
+		Name = TranslationServer.Translate("ACHIEVEMENT_NoHitMinute_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_NoHitMinute_DESC")
+	};
 
 	public static readonly Profile BeatCoil = new()
-	{ Id = AchievementId.BeatCoil, Name = "THREAD THE GAP", Description = "Beat The Coil." };
+	{
+		Id = AchievementId.BeatCoil,
+		Name = TranslationServer.Translate("ACHIEVEMENT_BeatCoil_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_BeatCoil_DESC")
+	};
 
 	public static readonly Profile BeatBrood = new()
-	{ Id = AchievementId.BeatBrood, Name = "STEM THE TIDE", Description = "Beat The Brood." };
+	{
+		Id = AchievementId.BeatBrood,
+		Name = TranslationServer.Translate("ACHIEVEMENT_BeatBrood_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_BeatBrood_DESC")
+	};
 
 	public static readonly Profile BeatBlackHole = new()
-	{ Id = AchievementId.BeatBlackHole, Name = "HEAVIER STILL", Description = "Beat The Black Hole." };
+	{
+		Id = AchievementId.BeatBlackHole,
+		Name = TranslationServer.Translate("ACHIEVEMENT_BeatBlackHole_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_BeatBlackHole_DESC")
+	};
 
 	public static readonly Profile MaxMass = new()
-	{ Id = AchievementId.MaxMass, Name = "FULL PLANET", Description = "Reach maximum mass." };
+	{
+		Id = AchievementId.MaxMass,
+		Name = TranslationServer.Translate("ACHIEVEMENT_MaxMass_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_MaxMass_DESC")
+	};
 
 	public static readonly Profile MinMassFinish = new()
-	{ Id = AchievementId.MinMassFinish, Name = "FEATHERWEIGHT", Description = "Finish an orbit at minimum mass." };
+	{
+		Id = AchievementId.MinMassFinish,
+		Name = TranslationServer.Translate("ACHIEVEMENT_MinMassFinish_NAME"),
+		Description = TranslationServer.Translate("ACHIEVEMENT_MinMassFinish_DESC")
+	};
 
 	// Declared last: static field initialisers run in source order.
 	public static readonly Profile[] All =

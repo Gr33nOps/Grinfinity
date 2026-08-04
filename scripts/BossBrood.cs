@@ -14,7 +14,7 @@ public partial class BossBrood : Boss
 	public BossBrood()
 	{
 		BossName = "THE BROOD";
-		ArrivalLine = "It will not stop spawning. Neither can you.";
+		ArrivalLine = TranslationServer.Translate("BOSS_Brood_ARRIVAL");
 		BossColor = new Color(0.58f, 0.82f, 0.4f);
 		MaxHealth = 140;
 	}

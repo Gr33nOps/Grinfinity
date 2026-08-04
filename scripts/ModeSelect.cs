@@ -72,7 +72,7 @@ public partial class ModeSelect : Control
 			card.AddChild(pick);
 
 			string caption = lockedToday
-				? $"Come back tomorrow. Today's score: {PlayerProfile.LastDailyAlignmentScore:N0}."
+				? string.Format(TranslationServer.Translate("UI_DAILY_LOCKED"), PlayerProfile.LastDailyAlignmentScore.ToString("N0"))
 				: mode.Flavour;
 			card.AddChild(Caption(caption, 26, lockedToday ? Locked : new Color(0.78f, 0.78f, 0.85f)));
 

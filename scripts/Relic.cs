@@ -34,32 +34,32 @@ public static class Relics
 	public static readonly Profile Piercing = new()
 	{
 		Id = RelicId.Piercing,
-		Name = "LONG SHOT",
-		Effect = "Your shots pass through two more bodies.",
+		Name = TranslationServer.Translate("RELIC_Piercing_NAME"),
+		Effect = TranslationServer.Translate("RELIC_Piercing_EFFECT"),
 		Colour = new Color(0.55f, 0.9f, 1.0f)
 	};
 
 	public static readonly Profile VampiricDash = new()
 	{
 		Id = RelicId.VampiricDash,
-		Name = "GREEDY DASH",
-		Effect = "Dashing drags every mote on the field to you.",
+		Name = TranslationServer.Translate("RELIC_VampiricDash_NAME"),
+		Effect = TranslationServer.Translate("RELIC_VampiricDash_EFFECT"),
 		Colour = new Color(1.0f, 0.6f, 0.75f)
 	};
 
 	public static readonly Profile SlowAura = new()
 	{
 		Id = RelicId.SlowAura,
-		Name = "DEEP WELL",
-		Effect = "Bodies that get close move sluggishly.",
+		Name = TranslationServer.Translate("RELIC_SlowAura_NAME"),
+		Effect = TranslationServer.Translate("RELIC_SlowAura_EFFECT"),
 		Colour = new Color(0.78f, 0.66f, 1.0f)
 	};
 
 	public static readonly Profile DoubleDebris = new()
 	{
 		Id = RelicId.DoubleDebris,
-		Name = "RICH SEAM",
-		Effect = "Everything you kill sheds twice the debris.",
+		Name = TranslationServer.Translate("RELIC_DoubleDebris_NAME"),
+		Effect = TranslationServer.Translate("RELIC_DoubleDebris_EFFECT"),
 		Colour = new Color(1.0f, 0.82f, 0.42f)
 	};
 

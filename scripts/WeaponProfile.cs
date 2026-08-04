@@ -54,9 +54,9 @@ public sealed class WeaponProfile
 	public static readonly WeaponProfile Comet = new()
 	{
 		Id = WeaponId.Comet,
-		Name = "COMET",
-		Fantasy = "A steady shot with a tail.",
-		Tradeoff = "Reliable. Unremarkable.",
+		Name = TranslationServer.Translate("WEAPON_Comet_NAME"),
+		Fantasy = TranslationServer.Translate("WEAPON_Comet_FANTASY"),
+		Tradeoff = TranslationServer.Translate("WEAPON_Comet_TRADEOFF"),
 		FireInterval = 0.22f,
 		Speed = 950f,
 		Range = 3.0f,
@@ -66,9 +66,9 @@ public sealed class WeaponProfile
 	public static readonly WeaponProfile DebrisCannon = new()
 	{
 		Id = WeaponId.DebrisCannon,
-		Name = "DEBRIS CANNON",
-		Fantasy = "A fistful of rock, all at once.",
-		Tradeoff = "Deletes a swarm. Useless at range.",
+		Name = TranslationServer.Translate("WEAPON_DebrisCannon_NAME"),
+		Fantasy = TranslationServer.Translate("WEAPON_DebrisCannon_FANTASY"),
+		Tradeoff = TranslationServer.Translate("WEAPON_DebrisCannon_TRADEOFF"),
 		FireInterval = 0.52f,
 		Pellets = 6,
 		Spread = Mathf.DegToRad(30f),
@@ -84,9 +84,9 @@ public sealed class WeaponProfile
 	public static readonly WeaponProfile IonLance = new()
 	{
 		Id = WeaponId.IonLance,
-		Name = "ION LANCE",
-		Fantasy = "One line, straight through a clump.",
-		Tradeoff = "Slow. Has to be lined up.",
+		Name = TranslationServer.Translate("WEAPON_IonLance_NAME"),
+		Fantasy = TranslationServer.Translate("WEAPON_IonLance_FANTASY"),
+		Tradeoff = TranslationServer.Translate("WEAPON_IonLance_TRADEOFF"),
 		FireInterval = 0.78f,
 		Speed = 1650f,
 		Damage = 2,

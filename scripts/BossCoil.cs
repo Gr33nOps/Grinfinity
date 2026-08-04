@@ -13,7 +13,7 @@ public partial class BossCoil : Boss
 	public BossCoil()
 	{
 		BossName = "THE COIL";
-		ArrivalLine = "Read the gap. Dash through it.";
+		ArrivalLine = TranslationServer.Translate("BOSS_Coil_ARRIVAL");
 	}
 
 	[Export] public float SpinSpeed { get; set; } = 1.1f;

@@ -63,7 +63,7 @@ public static class ScoreManager
 	public static string GetFormattedHighScore()
 	{
 		EnsureLoaded();
-		return $"BEST: {bestScore}";
+		return string.Format(TranslationServer.Translate("UI_BEST_SCORE_LABEL"), bestScore);
 	}
 
 	/// <summary>This mode's own best score, or 0 if it has never been played.</summary>

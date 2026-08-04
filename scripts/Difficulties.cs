@@ -27,8 +27,8 @@ public static class Difficulties
 	public static readonly Profile Easy = new()
 	{
 		Id = Difficulty.Easy,
-		Name = "EASY",
-		Flavour = "Slower, sparser, more room to dodge.",
+		Name = TranslationServer.Translate("DIFFICULTY_Easy_NAME"),
+		Flavour = TranslationServer.Translate("DIFFICULTY_Easy_FLAVOUR"),
 		SpawnIntervalMultiplier = 1.3f,
 		SpeedMultiplier = 0.82f,
 		ContactRadiusMultiplier = 0.85f
@@ -37,15 +37,15 @@ public static class Difficulties
 	public static readonly Profile Normal = new()
 	{
 		Id = Difficulty.Normal,
-		Name = "NORMAL",
-		Flavour = "The game as built."
+		Name = TranslationServer.Translate("DIFFICULTY_Normal_NAME"),
+		Flavour = TranslationServer.Translate("DIFFICULTY_Normal_FLAVOUR")
 	};
 
 	public static readonly Profile Hard = new()
 	{
 		Id = Difficulty.Hard,
-		Name = "HARD",
-		Flavour = "Faster, thicker, tighter margins.",
+		Name = TranslationServer.Translate("DIFFICULTY_Hard_NAME"),
+		Flavour = TranslationServer.Translate("DIFFICULTY_Hard_FLAVOUR"),
 		SpawnIntervalMultiplier = 0.78f,
 		SpeedMultiplier = 1.22f,
 		ContactRadiusMultiplier = 1.15f

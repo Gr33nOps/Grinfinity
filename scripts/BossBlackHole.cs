@@ -16,7 +16,7 @@ public partial class BossBlackHole : Boss
 	public BossBlackHole()
 	{
 		BossName = "THE BLACK HOLE";
-		ArrivalLine = "It is heavier than you. Do not let it prove it.";
+		ArrivalLine = TranslationServer.Translate("BOSS_BlackHole_ARRIVAL");
 		BossColor = new Color(0.62f, 0.32f, 0.82f);
 		MaxHealth = 170;
 	}

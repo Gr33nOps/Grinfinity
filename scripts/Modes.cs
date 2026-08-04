@@ -35,16 +35,16 @@ public static class Modes
 	public static readonly Profile EndlessOrbit = new()
 	{
 		Id = GameMode.EndlessOrbit,
-		Name = "ENDLESS ORBIT",
-		Flavour = "Survive as long as you can. The default.",
+		Name = TranslationServer.Translate("MODE_EndlessOrbit_NAME"),
+		Flavour = TranslationServer.Translate("MODE_EndlessOrbit_FLAVOUR"),
 		Colour = new Color(0.85f, 0.85f, 0.9f)
 	};
 
 	public static readonly Profile Flyby = new()
 	{
 		Id = GameMode.Flyby,
-		Name = "FLYBY",
-		Flavour = "60 seconds. Maximum score. Perfect for one more.",
+		Name = TranslationServer.Translate("MODE_Flyby_NAME"),
+		Flavour = TranslationServer.Translate("MODE_Flyby_FLAVOUR"),
 		Colour = new Color(0.55f, 0.9f, 1.0f),
 		TimeLimit = 60.0f
 	};
@@ -52,8 +52,8 @@ public static class Modes
 	public static readonly Profile DailyAlignment = new()
 	{
 		Id = GameMode.DailyAlignment,
-		Name = "DAILY ALIGNMENT",
-		Flavour = "The same orbit for everyone today. One attempt.",
+		Name = TranslationServer.Translate("MODE_DailyAlignment_NAME"),
+		Flavour = TranslationServer.Translate("MODE_DailyAlignment_FLAVOUR"),
 		Colour = new Color(1.0f, 0.82f, 0.42f),
 		OneAttemptPerDay = true
 	};
@@ -61,8 +61,8 @@ public static class Modes
 	public static readonly Profile Convergence = new()
 	{
 		Id = GameMode.Convergence,
-		Name = "CONVERGENCE",
-		Flavour = "Three bosses, back-to-back. No trash to hide behind.",
+		Name = TranslationServer.Translate("MODE_Convergence_NAME"),
+		Flavour = TranslationServer.Translate("MODE_Convergence_FLAVOUR"),
 		Colour = new Color(0.78f, 0.66f, 1.0f),
 		NoTrash = true,
 		RapidBosses = true
@@ -71,8 +71,8 @@ public static class Modes
 	public static readonly Profile GlassPlanet = new()
 	{
 		Id = GameMode.GlassPlanet,
-		Name = "GLASS PLANET",
-		Flavour = "One hit kills you. Your shots hit five times as hard.",
+		Name = TranslationServer.Translate("MODE_GlassPlanet_NAME"),
+		Flavour = TranslationServer.Translate("MODE_GlassPlanet_FLAVOUR"),
 		Colour = new Color(0.91f, 0.35f, 0.45f),
 		DamageMultiplier = 5.0f
 	};

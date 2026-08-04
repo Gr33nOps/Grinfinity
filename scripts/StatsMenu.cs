@@ -42,7 +42,7 @@ public partial class StatsMenu : Control
 	{
 		int totalMinutes = Mathf.FloorToInt(seconds / 60f);
 		if (totalMinutes < 60)
-			return $"{totalMinutes} min";
+			return $"{totalMinutes} {TranslationServer.Translate("UI_MINUTES_SHORT")}";
 
 		int hours = totalMinutes / 60;
 		int minutes = totalMinutes % 60;
@@ -73,10 +73,11 @@ public partial class StatsMenu : Control
 
 	private void SetRow(string label, string value)
 	{
-		var labelNode = GetNodeOrNull<Label>($"Layout/Rows/{label.Replace(" ", "")}/Label");
-		var valueNode = GetNodeOrNull<Label>($"Layout/Rows/{label.Replace(" ", "")}/Value");
+		string nodeName = label.Replace(" ", "");
+		var labelNode = GetNodeOrNull<Label>($"Layout/Rows/{nodeName}/Label");
+		var valueNode = GetNodeOrNull<Label>($"Layout/Rows/{nodeName}/Value");
 		if (labelNode != null)
-			labelNode.Text = label.ToUpperInvariant();
+			labelNode.Text = TranslationServer.Translate($"STATS_{nodeName.ToUpperInvariant()}");
 		if (valueNode != null)
 			valueNode.Text = value;
 	}

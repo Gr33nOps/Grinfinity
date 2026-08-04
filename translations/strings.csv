@@ -1,0 +1,124 @@
+keys,en
+WEAPON_Comet_NAME,COMET
+WEAPON_Comet_FANTASY,A steady shot with a tail.
+WEAPON_Comet_TRADEOFF,Reliable. Unremarkable.
+WEAPON_DebrisCannon_NAME,DEBRIS CANNON
+WEAPON_DebrisCannon_FANTASY,"A fistful of rock, all at once."
+WEAPON_DebrisCannon_TRADEOFF,Deletes a swarm. Useless at range.
+WEAPON_IonLance_NAME,ION LANCE
+WEAPON_IonLance_FANTASY,"One line, straight through a clump."
+WEAPON_IonLance_TRADEOFF,Slow. Has to be lined up.
+POWERUP_Shield_NAME,SHIELD
+POWERUP_Freeze_NAME,FREEZE
+POWERUP_Magnet_NAME,MAGNET
+POWERUP_Nuke_NAME,NUKE
+POWERUP_Damage_NAME,OVERCHARGE
+ACHIEVEMENT_SurviveFiveMinutes_NAME,LONG ORBIT
+ACHIEVEMENT_SurviveFiveMinutes_DESC,Survive 5:00.
+ACHIEVEMENT_HundredKills_NAME,CENTURY
+ACHIEVEMENT_HundredKills_DESC,100 kills in one orbit.
+ACHIEVEMENT_Streak25_NAME,UNBROKEN
+ACHIEVEMENT_Streak25_DESC,A x25 streak.
+ACHIEVEMENT_NoHitMinute_NAME,UNTOUCHED
+ACHIEVEMENT_NoHitMinute_DESC,60 seconds without taking a hit.
+ACHIEVEMENT_BeatCoil_NAME,THREAD THE GAP
+ACHIEVEMENT_BeatCoil_DESC,Beat The Coil.
+ACHIEVEMENT_BeatBrood_NAME,STEM THE TIDE
+ACHIEVEMENT_BeatBrood_DESC,Beat The Brood.
+ACHIEVEMENT_BeatBlackHole_NAME,HEAVIER STILL
+ACHIEVEMENT_BeatBlackHole_DESC,Beat The Black Hole.
+ACHIEVEMENT_MaxMass_NAME,FULL PLANET
+ACHIEVEMENT_MaxMass_DESC,Reach maximum mass.
+ACHIEVEMENT_MinMassFinish_NAME,FEATHERWEIGHT
+ACHIEVEMENT_MinMassFinish_DESC,Finish an orbit at minimum mass.
+EVENT_SolarWind_NAME,SOLAR WIND
+EVENT_SolarWind_EFFECT,Everything is being pushed.
+EVENT_NoDash_NAME,THRUSTERS OUT
+EVENT_NoDash_EFFECT,No dashing.
+EVENT_GiantSlugs_NAME,HEAVY WEATHER
+EVENT_GiantSlugs_EFFECT,Bodies arrive huge and slow.
+EVENT_InvertedGravity_NAME,INVERSION
+EVENT_InvertedGravity_EFFECT,Your gravity pushes instead of pulling.
+RELIC_Piercing_NAME,LONG SHOT
+RELIC_Piercing_EFFECT,Your shots pass through two more bodies.
+RELIC_VampiricDash_NAME,GREEDY DASH
+RELIC_VampiricDash_EFFECT,Dashing drags every mote on the field to you.
+RELIC_SlowAura_NAME,DEEP WELL
+RELIC_SlowAura_EFFECT,Bodies that get close move sluggishly.
+RELIC_DoubleDebris_NAME,RICH SEAM
+RELIC_DoubleDebris_EFFECT,Everything you kill sheds twice the debris.
+WORLD_1_NAME,EMBERTIDE
+WORLD_1_FLAVOUR,"Warm, small, and entirely unbothered by what it is about to do."
+WORLD_1_HINT,Unlocked from the start.
+WORLD_2_NAME,DRIFTLIGHT
+WORLD_2_FLAVOUR,"Barely holds an orbit together, and grins the whole time anyway."
+WORLD_2_HINT,Complete 3 orbits.
+WORLD_3_NAME,PALEFROST
+WORLD_3_FLAVOUR,"Cold enough that its own rings are ice, not rock."
+WORLD_3_HINT,Complete 6 orbits.
+WORLD_4_NAME,CINDERBLOOM
+WORLD_4_FLAVOUR,Every impact leaves a scorch mark it wears like a medal.
+WORLD_4_HINT,100 lifetime kills.
+WORLD_5_NAME,HOLLOWMERE
+WORLD_5_FLAVOUR,Something is missing from its core. It has stopped asking what.
+WORLD_5_HINT,300 lifetime kills.
+WORLD_6_NAME,DUSKWARDEN
+WORLD_6_FLAVOUR,"Keeps watch over nothing in particular, very seriously."
+WORLD_6_HINT,"Score {0} in one orbit."
+WORLD_7_NAME,VERDANT HALO
+WORLD_7_FLAVOUR,A green ring of something that used to be a lot of somethings.
+WORLD_7_HINT,"Score {0} in one orbit."
+WORLD_8_NAME,ASHEN COIL
+WORLD_8_FLAVOUR,Its rings spin the way a certain boss's rings spin. It remembers.
+WORLD_8_HINT,Survive 3:00 in one orbit.
+WORLD_9_NAME,GLASSWAKE
+WORLD_9_FLAVOUR,"Brittle, bright, and still here after everything that has hit it."
+WORLD_9_HINT,Survive 5:00 in one orbit.
+WORLD_10_NAME,MOLTENCROWN
+WORLD_10_FLAVOUR,"Went all the way to full mass once, and never quite came back down."
+WORLD_10_HINT,Reach maximum mass in one orbit.
+WORLD_11_NAME,VOIDKIN
+WORLD_11_FLAVOUR,Has spent so long out here it no longer remembers a horizon.
+WORLD_11_HINT,1 hour of lifetime playtime.
+WORLD_12_NAME,STARFORGED
+WORLD_12_FLAVOUR,"Every world before this one, pressed into something that survived."
+WORLD_12_HINT,"{0} lifetime orbits and {1} score in one."
+MODE_EndlessOrbit_NAME,ENDLESS ORBIT
+MODE_EndlessOrbit_FLAVOUR,Survive as long as you can. The default.
+MODE_Flyby_NAME,FLYBY
+MODE_Flyby_FLAVOUR,60 seconds. Maximum score. Perfect for one more.
+MODE_DailyAlignment_NAME,DAILY ALIGNMENT
+MODE_DailyAlignment_FLAVOUR,The same orbit for everyone today. One attempt.
+MODE_Convergence_NAME,CONVERGENCE
+MODE_Convergence_FLAVOUR,"Three bosses, back-to-back. No trash to hide behind."
+MODE_GlassPlanet_NAME,GLASS PLANET
+MODE_GlassPlanet_FLAVOUR,One hit kills you. Your shots hit five times as hard.
+DIFFICULTY_Easy_NAME,EASY
+DIFFICULTY_Easy_FLAVOUR,"Slower, sparser, more room to dodge."
+DIFFICULTY_Normal_NAME,NORMAL
+DIFFICULTY_Normal_FLAVOUR,The game as built.
+DIFFICULTY_Hard_NAME,HARD
+DIFFICULTY_Hard_FLAVOUR,"Faster, thicker, tighter margins."
+BOSS_Coil_ARRIVAL,Read the gap. Dash through it.
+BOSS_Brood_ARRIVAL,It will not stop spawning. Neither can you.
+BOSS_BlackHole_ARRIVAL,It is heavier than you. Do not let it prove it.
+UI_BEST_SCORE,BEST {0}
+UI_BEST_TIME,LONGEST {0}
+UI_RECAP_STATS,"{0}     KILLS: {1}     STREAK: x{2}     MASS: {3}%     MOONS: {4}"
+UI_STARDUST_LINE,"+{0} STARDUST  ·  {1} TOTAL"
+UI_NEW_WORLD,"NEW WORLD: {0}"
+UI_NEW_ACHIEVEMENT,"ACHIEVEMENT: {0}"
+UI_LEADERBOARD_RANK,"#{0} ON THE LEADERBOARD"
+UI_NEW_BEST,NEW BEST!
+UI_LONGEST_YET,LONGEST ORBIT YET!
+UI_BEST_SCORE_LABEL,BEST: {0}
+UI_DAILY_LOCKED,"Come back tomorrow. Today's score: {0}."
+STATS_ORBITS,ORBITS
+STATS_KILLS,KILLS
+STATS_TIMEPLAYED,TIME PLAYED
+STATS_HEAVIESTMASS,HEAVIEST MASS
+STATS_FAVOURITEWEAPON,FAVOURITE WEAPON
+STATS_WORLDSUNLOCKED,WORLDS UNLOCKED
+STATS_ACHIEVEMENTS,ACHIEVEMENTS
+STATS_STARDUSTBANKED,STARDUST BANKED
+UI_MINUTES_SHORT,min

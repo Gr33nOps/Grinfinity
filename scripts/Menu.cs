@@ -62,7 +62,9 @@ public partial class Menu : Node
 		// A fresh install has nothing to beat, and an empty scoreboard is worse
 		// than none at all.
 		label.Visible = ScoreManager.BestScore > 0 || ScoreManager.BestTime > 0f;
-		label.Text = $"BEST {ScoreManager.BestScore:N0}\nLONGEST {ScoreManager.FormatTime(ScoreManager.BestTime)}";
+		string bestLine = string.Format(TranslationServer.Translate("UI_BEST_SCORE"), ScoreManager.BestScore.ToString("N0"));
+		string timeLine = string.Format(TranslationServer.Translate("UI_BEST_TIME"), ScoreManager.FormatTime(ScoreManager.BestTime));
+		label.Text = $"{bestLine}\n{timeLine}";
 	}
 
 	private void GoTo(string scenePath)

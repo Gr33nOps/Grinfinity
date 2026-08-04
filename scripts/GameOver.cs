@@ -72,16 +72,16 @@ public partial class GameOver : Control
 		{
 			// Mass at death is on the recap deliberately: it is the one number
 			// that says whether the risk dial was used at all.
-			statsLabel.Text =
-				$"{ScoreManager.FormatTime(SurvivalTimeToShow)}     KILLS: {KillsToShow}     " +
-				$"STREAK: x{BestComboToShow}     MASS: {Mathf.RoundToInt(MassAtDeath * 100)}%     " +
-				$"MOONS: {MoonsAtDeath}";
+			statsLabel.Text = string.Format(TranslationServer.Translate("UI_RECAP_STATS"),
+				ScoreManager.FormatTime(SurvivalTimeToShow), KillsToShow, BestComboToShow,
+				Mathf.RoundToInt(MassAtDeath * 100), MoonsAtDeath);
 		}
 
 		// The running total, not just what was earned this orbit — "one more
 		// orbit" needs the balance to visibly grow, not just flash and vanish.
 		if (stardustLabel != null)
-			stardustLabel.Text = $"+{StardustEarned:N0} STARDUST  ·  {PlayerProfile.Stardust:N0} TOTAL";
+			stardustLabel.Text = string.Format(TranslationServer.Translate("UI_STARDUST_LINE"),
+				StardustEarned.ToString("N0"), PlayerProfile.Stardust.ToString("N0"));
 
 		if (worldUnlockLabel != null)
 		{
@@ -91,10 +91,11 @@ public partial class GameOver : Control
 			var lines = new System.Collections.Generic.List<string>();
 
 			if (NewlyUnlockedWorlds.Count > 0)
-				lines.Add($"NEW WORLD: {string.Join(", ", NewlyUnlockedWorlds.ConvertAll(w => w.Name))}");
+				lines.Add(string.Format(TranslationServer.Translate("UI_NEW_WORLD"),
+					string.Join(", ", NewlyUnlockedWorlds.ConvertAll(w => w.Name))));
 
 			if (NewlyUnlockedAchievement != null)
-				lines.Add($"ACHIEVEMENT: {NewlyUnlockedAchievement.Name}");
+				lines.Add(string.Format(TranslationServer.Translate("UI_NEW_ACHIEVEMENT"), NewlyUnlockedAchievement.Name));
 
 			worldUnlockLabel.Visible = lines.Count > 0;
 			if (worldUnlockLabel.Visible)
@@ -105,7 +106,7 @@ public partial class GameOver : Control
 		{
 			leaderboardLabel.Visible = LeaderboardRank > 0;
 			if (leaderboardLabel.Visible)
-				leaderboardLabel.Text = $"#{LeaderboardRank} ON THE LEADERBOARD";
+				leaderboardLabel.Text = string.Format(TranslationServer.Translate("UI_LEADERBOARD_RANK"), LeaderboardRank);
 		}
 
 		if (highScoreLabel == null)
@@ -113,17 +114,17 @@ public partial class GameOver : Control
 
 		if (IsNewBestScore)
 		{
-			highScoreLabel.Text = "NEW BEST!";
+			highScoreLabel.Text = TranslationServer.Translate("UI_NEW_BEST");
 			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
 		}
 		else if (IsNewBestTime)
 		{
-			highScoreLabel.Text = "LONGEST ORBIT YET!";
+			highScoreLabel.Text = TranslationServer.Translate("UI_LONGEST_YET");
 			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
 		}
 		else
 		{
-			highScoreLabel.Text = $"BEST: {ScoreManager.BestScoreFor(Loadout.Mode)}";
+			highScoreLabel.Text = string.Format(TranslationServer.Translate("UI_BEST_SCORE_LABEL"), ScoreManager.BestScoreFor(Loadout.Mode));
 		}
 	}
 

@@ -34,6 +34,10 @@ window/stretch/aspect="expand"
 
 project/assembly_name="Grinfinity"
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://translations/strings.en.translation")
+
 [global_group]
 
 bodies=""

@@ -33,32 +33,32 @@ public static class ArenaEvents
 	public static readonly Profile SolarWind = new()
 	{
 		Id = ArenaEventId.SolarWind,
-		Name = "SOLAR WIND",
-		Effect = "Everything is being pushed.",
+		Name = TranslationServer.Translate("EVENT_SolarWind_NAME"),
+		Effect = TranslationServer.Translate("EVENT_SolarWind_EFFECT"),
 		Colour = new Color(1.0f, 0.82f, 0.45f)
 	};
 
 	public static readonly Profile NoDash = new()
 	{
 		Id = ArenaEventId.NoDash,
-		Name = "THRUSTERS OUT",
-		Effect = "No dashing.",
+		Name = TranslationServer.Translate("EVENT_NoDash_NAME"),
+		Effect = TranslationServer.Translate("EVENT_NoDash_EFFECT"),
 		Colour = new Color(1.0f, 0.45f, 0.45f)
 	};
 
 	public static readonly Profile GiantSlugs = new()
 	{
 		Id = ArenaEventId.GiantSlugs,
-		Name = "HEAVY WEATHER",
-		Effect = "Bodies arrive huge and slow.",
+		Name = TranslationServer.Translate("EVENT_GiantSlugs_NAME"),
+		Effect = TranslationServer.Translate("EVENT_GiantSlugs_EFFECT"),
 		Colour = new Color(0.7f, 0.8f, 1.0f)
 	};
 
 	public static readonly Profile InvertedGravity = new()
 	{
 		Id = ArenaEventId.InvertedGravity,
-		Name = "INVERSION",
-		Effect = "Your gravity pushes instead of pulling.",
+		Name = TranslationServer.Translate("EVENT_InvertedGravity_NAME"),
+		Effect = TranslationServer.Translate("EVENT_InvertedGravity_EFFECT"),
 		Colour = new Color(0.86f, 0.6f, 1.0f)
 	};
 

@@ -30,7 +30,7 @@ public static class PowerUps
 	public static readonly Profile Shield = new()
 	{
 		Kind = PowerUpKind.Shield,
-		Name = "SHIELD",
+		Name = TranslationServer.Translate("POWERUP_Shield_NAME"),
 		Colour = new Color(0.55f, 0.85f, 1.0f),
 		Duration = 0f
 	};
@@ -38,7 +38,7 @@ public static class PowerUps
 	public static readonly Profile Freeze = new()
 	{
 		Kind = PowerUpKind.Freeze,
-		Name = "FREEZE",
+		Name = TranslationServer.Translate("POWERUP_Freeze_NAME"),
 		Colour = new Color(0.7f, 0.95f, 1.0f),
 		Duration = 3.5f
 	};
@@ -46,7 +46,7 @@ public static class PowerUps
 	public static readonly Profile Magnet = new()
 	{
 		Kind = PowerUpKind.Magnet,
-		Name = "MAGNET",
+		Name = TranslationServer.Translate("POWERUP_Magnet_NAME"),
 		Colour = new Color(1.0f, 0.72f, 0.35f),
 		Duration = 7.0f
 	};
@@ -54,7 +54,7 @@ public static class PowerUps
 	public static readonly Profile Nuke = new()
 	{
 		Kind = PowerUpKind.Nuke,
-		Name = "NUKE",
+		Name = TranslationServer.Translate("POWERUP_Nuke_NAME"),
 		Colour = new Color(1.0f, 0.45f, 0.35f),
 		Duration = 0f
 	};
@@ -62,7 +62,7 @@ public static class PowerUps
 	public static readonly Profile Damage = new()
 	{
 		Kind = PowerUpKind.Damage,
-		Name = "OVERCHARGE",
+		Name = TranslationServer.Translate("POWERUP_Damage_NAME"),
 		Colour = new Color(1.0f, 0.9f, 0.4f),
 		Duration = 8.0f
 	};
