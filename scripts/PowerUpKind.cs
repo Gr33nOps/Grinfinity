@@ -22,6 +22,8 @@ public static class PowerUps
 	{
 		public required PowerUpKind Kind { get; init; }
 		public required string Name { get; init; }
+		/// <summary>One line, shown when the pickup is taken. What it does, plainly.</summary>
+		public required string Effect { get; init; }
 		public required Color Colour { get; init; }
 		/// <summary>Seconds it lasts. Zero means instant or until spent.</summary>
 		public required float Duration { get; init; }
@@ -31,6 +33,7 @@ public static class PowerUps
 	{
 		Kind = PowerUpKind.Shield,
 		Name = TranslationServer.Translate("POWERUP_Shield_NAME"),
+		Effect = TranslationServer.Translate("POWERUP_Shield_EFFECT"),
 		Colour = new Color(0.55f, 0.85f, 1.0f),
 		Duration = 0f
 	};
@@ -39,6 +42,7 @@ public static class PowerUps
 	{
 		Kind = PowerUpKind.Freeze,
 		Name = TranslationServer.Translate("POWERUP_Freeze_NAME"),
+		Effect = TranslationServer.Translate("POWERUP_Freeze_EFFECT"),
 		Colour = new Color(0.7f, 0.95f, 1.0f),
 		Duration = 3.5f
 	};
@@ -47,6 +51,7 @@ public static class PowerUps
 	{
 		Kind = PowerUpKind.Magnet,
 		Name = TranslationServer.Translate("POWERUP_Magnet_NAME"),
+		Effect = TranslationServer.Translate("POWERUP_Magnet_EFFECT"),
 		Colour = new Color(1.0f, 0.72f, 0.35f),
 		Duration = 7.0f
 	};
@@ -55,6 +60,7 @@ public static class PowerUps
 	{
 		Kind = PowerUpKind.Nuke,
 		Name = TranslationServer.Translate("POWERUP_Nuke_NAME"),
+		Effect = TranslationServer.Translate("POWERUP_Nuke_EFFECT"),
 		Colour = new Color(1.0f, 0.45f, 0.35f),
 		Duration = 0f
 	};
@@ -63,6 +69,7 @@ public static class PowerUps
 	{
 		Kind = PowerUpKind.Damage,
 		Name = TranslationServer.Translate("POWERUP_Damage_NAME"),
+		Effect = TranslationServer.Translate("POWERUP_Damage_EFFECT"),
 		Colour = new Color(1.0f, 0.9f, 0.4f),
 		Duration = 8.0f
 	};

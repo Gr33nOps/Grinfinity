@@ -19,8 +19,8 @@ public partial class GameOver : Control
 	public static bool IsNewBestTime = false;
 	public static bool IsNewBestScore = false;
 
-	private TextureButton restartButton;
-	private TextureButton menuButton;
+	private Button restartButton;
+	private Button menuButton;
 	private Label scoreLabel;
 	private Label scoreCaption;
 	private Label statsLabel;
@@ -34,18 +34,18 @@ public partial class GameOver : Control
 
 	public override void _Ready()
 	{
-		scoreLabel = GetNode<Label>("Recap/ScoreLabel");
-		scoreCaption = GetNodeOrNull<Label>("Recap/ScoreCaption");
-		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
-		stardustLabel = GetNodeOrNull<Label>("Recap/StardustLabel");
-		worldUnlockLabel = GetNodeOrNull<Label>("Recap/WorldUnlockLabel");
-		leaderboardLabel = GetNodeOrNull<Label>("Recap/LeaderboardLabel");
-		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
-		restartButton = GetNode<TextureButton>("GameOverMenu/RestartButton");
-		menuButton = GetNode<TextureButton>("GameOverMenu/MenuButton");
-		buttonSound = GetNodeOrNull<AudioStreamPlayer>("GameOverMenu/ButtonSound");
-		hoverSound = GetNodeOrNull<AudioStreamPlayer>("GameOverMenu/HoverSound");
-		gameOverSound = GetNodeOrNull<AudioStreamPlayer>("GameOverMenu/GameOverSound");
+		scoreLabel = GetNode<Label>("Layout/Recap/ScoreLabel");
+		scoreCaption = GetNodeOrNull<Label>("Layout/Recap/ScoreCaption");
+		statsLabel = GetNodeOrNull<Label>("Layout/Recap/StatsLabel");
+		stardustLabel = GetNodeOrNull<Label>("Layout/Recap/StardustLabel");
+		worldUnlockLabel = GetNodeOrNull<Label>("Layout/Recap/WorldUnlockLabel");
+		leaderboardLabel = GetNodeOrNull<Label>("Layout/Recap/LeaderboardLabel");
+		highScoreLabel = GetNodeOrNull<Label>("Layout/Recap/HighScoreLabel");
+		restartButton = GetNode<Button>("Layout/ButtonRow/RestartButton");
+		menuButton = GetNode<Button>("Layout/ButtonRow/MenuButton");
+		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
+		hoverSound = GetNodeOrNull<AudioStreamPlayer>("HoverSound");
+		gameOverSound = GetNodeOrNull<AudioStreamPlayer>("GameOverSound");
 
 		gameOverSound?.Play();
 		ShowRecap();

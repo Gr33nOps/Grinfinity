@@ -608,6 +608,7 @@ public partial class GameManager : Node2D
 		PowerUps.Profile profile = PowerUps.Get(kind);
 
 		run?.GrantPowerUp(kind);
+		Announce(profile.Name, profile.Effect, profile.Colour);
 		SpawnBlast(at, 170f, profile.Colour);
 		Shake(0.18f);
 		PlayStreakSting(1.75f);

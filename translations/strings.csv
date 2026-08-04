@@ -9,16 +9,21 @@ WEAPON_IonLance_NAME,ION LANCE
 WEAPON_IonLance_FANTASY,"One line, straight through a clump."
 WEAPON_IonLance_TRADEOFF,Slow. Has to be lined up.
 POWERUP_Shield_NAME,SHIELD
+POWERUP_Shield_EFFECT,Blocks the next hit you take.
 POWERUP_Freeze_NAME,FREEZE
+POWERUP_Freeze_EFFECT,"Every enemy stops moving for a few seconds."
 POWERUP_Magnet_NAME,MAGNET
+POWERUP_Magnet_EFFECT,"Pulls in debris from anywhere on screen."
 POWERUP_Nuke_NAME,NUKE
+POWERUP_Nuke_EFFECT,Destroys every enemy on screen right now.
 POWERUP_Damage_NAME,OVERCHARGE
+POWERUP_Damage_EFFECT,"Your shots deal extra damage for a while."
 ACHIEVEMENT_SurviveFiveMinutes_NAME,LONG ORBIT
 ACHIEVEMENT_SurviveFiveMinutes_DESC,Survive 5:00.
 ACHIEVEMENT_HundredKills_NAME,CENTURY
 ACHIEVEMENT_HundredKills_DESC,100 kills in one orbit.
 ACHIEVEMENT_Streak25_NAME,UNBROKEN
-ACHIEVEMENT_Streak25_DESC,A x25 streak.
+ACHIEVEMENT_Streak25_DESC,"Get a 25-kill streak without missing."
 ACHIEVEMENT_NoHitMinute_NAME,UNTOUCHED
 ACHIEVEMENT_NoHitMinute_DESC,60 seconds without taking a hit.
 ACHIEVEMENT_BeatCoil_NAME,THREAD THE GAP
@@ -30,23 +35,23 @@ ACHIEVEMENT_BeatBlackHole_DESC,Beat The Black Hole.
 ACHIEVEMENT_MaxMass_NAME,FULL PLANET
 ACHIEVEMENT_MaxMass_DESC,Reach maximum mass.
 ACHIEVEMENT_MinMassFinish_NAME,FEATHERWEIGHT
-ACHIEVEMENT_MinMassFinish_DESC,Finish an orbit at minimum mass.
+ACHIEVEMENT_MinMassFinish_DESC,"Finish an orbit while still at minimum mass."
 EVENT_SolarWind_NAME,SOLAR WIND
-EVENT_SolarWind_EFFECT,Everything is being pushed.
+EVENT_SolarWind_EFFECT,"A steady wind pushes you and every enemy sideways."
 EVENT_NoDash_NAME,THRUSTERS OUT
-EVENT_NoDash_EFFECT,No dashing.
+EVENT_NoDash_EFFECT,You cannot dash until this ends.
 EVENT_GiantSlugs_NAME,HEAVY WEATHER
-EVENT_GiantSlugs_EFFECT,Bodies arrive huge and slow.
+EVENT_GiantSlugs_EFFECT,"New enemies are bigger and slower than normal."
 EVENT_InvertedGravity_NAME,INVERSION
-EVENT_InvertedGravity_EFFECT,Your gravity pushes instead of pulling.
+EVENT_InvertedGravity_EFFECT,"Your gravity now pushes enemies away instead of pulling them in."
 RELIC_Piercing_NAME,LONG SHOT
-RELIC_Piercing_EFFECT,Your shots pass through two more bodies.
+RELIC_Piercing_EFFECT,"Your shots pass through two extra enemies before stopping."
 RELIC_VampiricDash_NAME,GREEDY DASH
-RELIC_VampiricDash_EFFECT,Dashing drags every mote on the field to you.
+RELIC_VampiricDash_EFFECT,"Dashing pulls in every piece of debris on screen."
 RELIC_SlowAura_NAME,DEEP WELL
-RELIC_SlowAura_EFFECT,Bodies that get close move sluggishly.
+RELIC_SlowAura_EFFECT,"Enemies move slower when they get close to you."
 RELIC_DoubleDebris_NAME,RICH SEAM
-RELIC_DoubleDebris_EFFECT,Everything you kill sheds twice the debris.
+RELIC_DoubleDebris_EFFECT,"Enemies drop twice as much debris when killed."
 WORLD_1_NAME,EMBERTIDE
 WORLD_1_FLAVOUR,"Warm, small, and entirely unbothered by what it is about to do."
 WORLD_1_HINT,Unlocked from the start.
@@ -84,21 +89,21 @@ WORLD_12_NAME,STARFORGED
 WORLD_12_FLAVOUR,"Every world before this one, pressed into something that survived."
 WORLD_12_HINT,"{0} lifetime orbits and {1} score in one."
 MODE_EndlessOrbit_NAME,ENDLESS ORBIT
-MODE_EndlessOrbit_FLAVOUR,Survive as long as you can. The default.
+MODE_EndlessOrbit_FLAVOUR,"Survive as long as you can. The standard way to play."
 MODE_Flyby_NAME,FLYBY
-MODE_Flyby_FLAVOUR,60 seconds. Maximum score. Perfect for one more.
+MODE_Flyby_FLAVOUR,"You have 60 seconds. Score as many points as you can."
 MODE_DailyAlignment_NAME,DAILY ALIGNMENT
-MODE_DailyAlignment_FLAVOUR,The same orbit for everyone today. One attempt.
+MODE_DailyAlignment_FLAVOUR,"Everyone plays the exact same run today. You only get one try."
 MODE_Convergence_NAME,CONVERGENCE
-MODE_Convergence_FLAVOUR,"Three bosses, back-to-back. No trash to hide behind."
+MODE_Convergence_FLAVOUR,"Fight all three bosses in a row. No regular enemies in between."
 MODE_GlassPlanet_NAME,GLASS PLANET
-MODE_GlassPlanet_FLAVOUR,One hit kills you. Your shots hit five times as hard.
+MODE_GlassPlanet_FLAVOUR,"One hit kills you — but your weapon deals 5 times the damage."
 DIFFICULTY_Easy_NAME,EASY
-DIFFICULTY_Easy_FLAVOUR,"Slower, sparser, more room to dodge."
+DIFFICULTY_Easy_FLAVOUR,"Enemies are slower and appear less often."
 DIFFICULTY_Normal_NAME,NORMAL
-DIFFICULTY_Normal_FLAVOUR,The game as built.
+DIFFICULTY_Normal_FLAVOUR,The standard difficulty.
 DIFFICULTY_Hard_NAME,HARD
-DIFFICULTY_Hard_FLAVOUR,"Faster, thicker, tighter margins."
+DIFFICULTY_Hard_FLAVOUR,"Enemies are faster and appear more often."
 BOSS_Coil_ARRIVAL,Read the gap. Dash through it.
 BOSS_Brood_ARRIVAL,It will not stop spawning. Neither can you.
 BOSS_BlackHole_ARRIVAL,It is heavier than you. Do not let it prove it.

@@ -18,6 +18,11 @@ config/icon="uid://cgq7b3o6g7yae"
 [autoload]
 
 GameSettings="*res://scripts/GameSettings.cs"
+
+[gui]
+
+theme/custom="res://theme/ui_theme.tres"
+
 Background="*res://scenes/background.tscn"
 MusicManager="*res://scenes/music_manager.tscn"
 SceneTransition="*res://scenes/scene_transition.tscn"

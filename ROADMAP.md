@@ -344,16 +344,16 @@ first beating the ones before it. Still on placeholder audio throughout — see 
 	  announce live except that last one, which lands on the recap screen
 	  instead — same reasoning as the world-unlock line next to it.
 - [x] **Local top-10 leaderboard** — score, survival time, kills, weapon, world
-      and date per entry, in `user://leaderboard.cfg`. Separate from
-      `ScoreManager`'s single best, because a leaderboard has to keep the
-      ninth-best run even after a tenth arrives to bump someone off it. New
-      screen off the main menu; a placing orbit's rank also shows on the recap.
-      Per-mode is moot until M6 adds a second mode — Endless Orbit is the only
-      one that exists.
+	  and date per entry, in `user://leaderboard.cfg`. Separate from
+	  `ScoreManager`'s single best, because a leaderboard has to keep the
+	  ninth-best run even after a tenth arrives to bump someone off it. New
+	  screen off the main menu; a placing orbit's rank also shows on the recap.
+	  Per-mode is moot until M6 adds a second mode — Endless Orbit is the only
+	  one that exists.
 - [x] **Lifetime stats** — orbits, kills, time played, heaviest mass reached,
-      favourite weapon, plus worlds and achievements as fractions. Purely a
-      display screen — every number already lived on `PlayerProfile` from the
-      stardust work; this is just the first place a player can actually see it.
+	  favourite weapon, plus worlds and achievements as fractions. Purely a
+	  display screen — every number already lived on `PlayerProfile` from the
+	  stardust work; this is just the first place a player can actually see it.
 
 **Done when:** there is a visible reason to start orbit #20.
 
@@ -377,30 +377,30 @@ Nothing here is blocked on them.
 | **Glass Planet** ✅ | One-hit death, huge damage | Ranked, for the skilled |
 
 - [x] **Mode select on the main menu** — a new screen between the menu and the
-      weapon pick, `ModeSelect.cs`, same pick-then-pick-again pattern
-      `WeaponSelect` already uses. A Daily Alignment already played today shows
-      locked, with that attempt's score on the card, instead of being pickable.
+	  weapon pick, `ModeSelect.cs`, same pick-then-pick-again pattern
+	  `WeaponSelect` already uses. A Daily Alignment already played today shows
+	  locked, with that attempt's score on the card, instead of being pickable.
 - [x] **Seeded RNG** — `RunState.Rng`, a static `RandomNumberGenerator` every
-      gameplay roll now draws from instead of `GD.Rand*`: spawns, relics, arena
-      events, hazards, boss internals, bullet jitter, pickups. `GameManager`
-      reseeds it in `_EnterTree`, before `RunState` exists — Daily Alignment
-      gets a seed derived from today's UTC date (a plain integer, not
-      `string.GetHashCode()`, which .NET randomises per process), every other
-      mode gets fresh entropy via `Randomize()`. `GameCamera`'s shake-noise
-      seed deliberately stayed on `GD.Randi()` — it colours a texture, never
-      an orbit.
+	  gameplay roll now draws from instead of `GD.Rand*`: spawns, relics, arena
+	  events, hazards, boss internals, bullet jitter, pickups. `GameManager`
+	  reseeds it in `_EnterTree`, before `RunState` exists — Daily Alignment
+	  gets a seed derived from today's UTC date (a plain integer, not
+	  `string.GetHashCode()`, which .NET randomises per process), every other
+	  mode gets fresh entropy via `Randomize()`. `GameCamera`'s shake-noise
+	  seed deliberately stayed on `GD.Randi()` — it colours a texture, never
+	  an orbit.
 - [x] **Per-mode high scores in the save** — `ScoreManager` keeps a record per
-      `GameMode` (`highscore.cfg` v4) alongside the existing global "best of
-      any mode" the main menu shows; a Flyby run no longer has to out-score an
-      Endless Orbit marathon to earn "NEW BEST!". `Leaderboard`'s top-10
-      became per-mode too (v2), with a mode browser on the leaderboard screen —
-      the M5 status note called this "moot until M6 adds a second mode".
+	  `GameMode` (`highscore.cfg` v4) alongside the existing global "best of
+	  any mode" the main menu shows; a Flyby run no longer has to out-score an
+	  Endless Orbit marathon to earn "NEW BEST!". `Leaderboard`'s top-10
+	  became per-mode too (v2), with a mode browser on the leaderboard screen —
+	  the M5 status note called this "moot until M6 adds a second mode".
 - [x] **Difficulty select** — Easy / Normal / Hard, on the same screen as the
-      mode. Scales `BodySpawner`'s spawn interval and speed ramp, and each
-      `Body`'s collision shape (not its sprite, so a Hard Drifter looks
-      identical but is less forgiving to graze). Never player damage — that
-      axis belongs to Glass Planet's mode-level multiplier instead, applied in
-      `Bullet.ApplyProfile`.
+	  mode. Scales `BodySpawner`'s spawn interval and speed ramp, and each
+	  `Body`'s collision shape (not its sprite, so a Hard Drifter looks
+	  identical but is less forgiving to graze). Never player damage — that
+	  axis belongs to Glass Planet's mode-level multiplier instead, applied in
+	  `Bullet.ApplyProfile`.
 
 **Done when:** Daily Alignment produces identical orbits across two machines.
 **Verified**: two independent process launches on the same day produced the
