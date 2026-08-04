@@ -79,7 +79,7 @@ public partial class BossBrood : Boss
 			return;
 
 		shard.Configure(BodyKind.Shard);
-		shard.GlobalPosition = GlobalPosition + Vector2.FromAngle(GD.Randf() * Mathf.Tau) * SpawnRadius;
+		shard.GlobalPosition = GlobalPosition + Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * SpawnRadius;
 
 		liveBroodlings++;
 		shard.TreeExited += () => liveBroodlings--;

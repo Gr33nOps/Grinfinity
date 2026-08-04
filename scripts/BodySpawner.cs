@@ -98,7 +98,7 @@ public partial class BodySpawner : Node
 			Vector2 origin = GetSpawnPosition();
 			for (int i = 0; i < ShardPackSize; i++)
 			{
-				Vector2 jitter = new Vector2(GD.RandRange(-90, 90), GD.RandRange(-90, 90));
+				Vector2 jitter = new Vector2(RunState.Rng.RandiRange(-90, 90), RunState.Rng.RandiRange(-90, 90));
 				SpawnOne(kind, origin + jitter);
 			}
 			return;
@@ -117,7 +117,7 @@ public partial class BodySpawner : Node
 		if (elapsed < ShardUnlockTime)
 			return BodyKind.Drifter;
 
-		float roll = GD.Randf();
+		float roll = RunState.Rng.Randf();
 		float band = 0f;
 
 		if (Unlocked(FlareUnlockTime) && roll < (band += 0.10f))
@@ -156,13 +156,13 @@ public partial class BodySpawner : Node
 	private Vector2 GetSpawnPosition()
 	{
 		var viewportSize = GetViewport().GetVisibleRect().Size;
-		int side = GD.RandRange(0, 3);
+		int side = RunState.Rng.RandiRange(0, 3);
 		return side switch
 		{
-			0 => new Vector2(GD.RandRange(0, (int)viewportSize.X), -SpawnMargin),
-			1 => new Vector2(viewportSize.X + SpawnMargin, GD.RandRange(0, (int)viewportSize.Y)),
-			2 => new Vector2(GD.RandRange(0, (int)viewportSize.X), viewportSize.Y + SpawnMargin),
-			_ => new Vector2(-SpawnMargin, GD.RandRange(0, (int)viewportSize.Y))
+			0 => new Vector2(RunState.Rng.RandiRange(0, (int)viewportSize.X), -SpawnMargin),
+			1 => new Vector2(viewportSize.X + SpawnMargin, RunState.Rng.RandiRange(0, (int)viewportSize.Y)),
+			2 => new Vector2(RunState.Rng.RandiRange(0, (int)viewportSize.X), viewportSize.Y + SpawnMargin),
+			_ => new Vector2(-SpawnMargin, RunState.Rng.RandiRange(0, (int)viewportSize.Y))
 		};
 	}
 }

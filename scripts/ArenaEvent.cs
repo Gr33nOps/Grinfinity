@@ -68,5 +68,5 @@ public static class ArenaEvents
 
 	public static Profile Get(ArenaEventId id) => All[(int)id - 1];
 
-	public static ArenaEventId Roll() => (ArenaEventId)(GD.RandRange(0, All.Length - 1) + 1);
+	public static ArenaEventId Roll() => (ArenaEventId)(RunState.Rng.RandiRange(0, All.Length - 1) + 1);
 }

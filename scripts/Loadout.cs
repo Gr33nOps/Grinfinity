@@ -9,6 +9,8 @@ public static class Loadout
 {
 	private static WeaponId weapon = WeaponId.Comet;
 	private static int world = 1;
+	private static GameMode mode = GameMode.EndlessOrbit;
+	private static Difficulty difficulty = Difficulty.Normal;
 
 	public static WeaponId Weapon
 	{
@@ -17,6 +19,26 @@ public static class Loadout
 		{
 			weapon = value;
 			GameSettings.Instance?.SetWeapon(value);
+		}
+	}
+
+	public static GameMode Mode
+	{
+		get => mode;
+		set
+		{
+			mode = value;
+			GameSettings.Instance?.SetMode(value);
+		}
+	}
+
+	public static Difficulty Difficulty
+	{
+		get => difficulty;
+		set
+		{
+			difficulty = value;
+			GameSettings.Instance?.SetDifficulty(value);
 		}
 	}
 
@@ -43,6 +65,20 @@ public static class Loadout
 		world = PlayerProfile.IsWorldUnlocked(saved) ? saved : 1;
 	}
 
+	/// <summary>Restores the last mode without writing it back out again.</summary>
+	public static void RestoreMode(GameMode saved)
+	{
+		mode = saved;
+	}
+
+	/// <summary>Restores the last difficulty without writing it back out again.</summary>
+	public static void RestoreDifficulty(Difficulty saved)
+	{
+		difficulty = saved;
+	}
+
 	public static WeaponProfile Profile => WeaponProfile.Get(weapon);
 	public static Worlds.Profile WorldProfile => Worlds.Get(world);
+	public static Modes.Profile ModeProfile => Modes.Get(mode);
+	public static Difficulties.Profile DifficultyProfile => Difficulties.Get(difficulty);
 }

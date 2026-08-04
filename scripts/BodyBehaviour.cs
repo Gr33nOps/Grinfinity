@@ -126,7 +126,7 @@ public sealed class FractureBehaviour : BodyBehaviour
 	{
 		for (int i = 0; i < SplinterCount; i++)
 		{
-			float angle = Mathf.Tau * i / SplinterCount + (float)GD.RandRange(-0.4, 0.4);
+			float angle = Mathf.Tau * i / SplinterCount + RunState.Rng.RandfRange(-0.4f, 0.4f);
 			body.SpawnChild(BodyKind.Splinter, Vector2.FromAngle(angle) * SplinterSpread);
 		}
 	}
@@ -169,7 +169,7 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 		body.DebrisCount = 3;
 		body.SetBurst(60, 1.0f, new Color(1.0f, 0.82f, 0.5f));
 		body.TextureIndex = 7;
-		body.BehaviourTimer = (float)GD.RandRange(0.4, FireInterval);
+		body.BehaviourTimer = RunState.Rng.RandfRange(0.4f, FireInterval);
 	}
 
 	public override void Steer(Body body, float delta)

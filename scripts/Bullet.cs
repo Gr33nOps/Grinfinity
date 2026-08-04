@@ -63,7 +63,7 @@ public partial class Bullet : Area2D
 	/// <summary>Applies a weapon's look and behaviour to this shot.</summary>
 	public void ApplyProfile(WeaponProfile weapon)
 	{
-		Speed = weapon.Speed * (1f + (float)GD.RandRange(-weapon.SpeedJitter, weapon.SpeedJitter));
+		Speed = weapon.Speed * (1f + RunState.Rng.RandfRange(-weapon.SpeedJitter, weapon.SpeedJitter));
 		Damage = weapon.Damage;
 		Pierce = weapon.Pierce;
 		Range = weapon.Range;
@@ -187,7 +187,7 @@ public partial class Bullet : Area2D
 		// covers a swarmer pop and a tank detonation.
 		burst.Scale = new Vector2(scale, scale);
 		burst.Color = color;
-		burst.Lifetime = (float)GD.RandRange(0.5, 0.7) * lifetimeScale;
+		burst.Lifetime = RunState.Rng.RandfRange(0.5f, 0.7f) * lifetimeScale;
 		burst.Emitting = true;
 		// explosion.tscn is one_shot, so Finished fires once the burst is done.
 		burst.Finished += burst.QueueFree;

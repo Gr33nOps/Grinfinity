@@ -44,7 +44,7 @@ public partial class PowerUp : Area2D
 		CollisionMask = 1;
 		BodyEntered += OnBodyEntered;
 
-		velocity = Vector2.FromAngle(GD.Randf() * Mathf.Tau) * (float)GD.RandRange(60, 150);
+		velocity = Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * RunState.Rng.RandfRange(60, 150);
 		QueueRedraw();
 	}
 

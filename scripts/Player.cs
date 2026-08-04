@@ -416,8 +416,8 @@ public partial class Player : CharacterBody2D
 
 		muzzleTween?.Kill();
 		muzzleFlash.Visible = true;
-		muzzleFlash.Rotation = (float)GD.RandRange(-0.5, 0.5);
-		muzzleFlash.Scale = Vector2.One * (float)GD.RandRange(0.85, 1.2);
+		muzzleFlash.Rotation = RunState.Rng.RandfRange(-0.5f, 0.5f);
+		muzzleFlash.Scale = Vector2.One * RunState.Rng.RandfRange(0.85f, 1.2f);
 		muzzleFlash.Modulate = new Color(1f, 1f, 1f, 1f);
 
 		muzzleTween = CreateTween();

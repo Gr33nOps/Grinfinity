@@ -68,5 +68,5 @@ public static class Relics
 
 	public static Profile Get(RelicId id) => All[(int)id];
 
-	public static RelicId Roll() => (RelicId)GD.RandRange(0, All.Length - 1);
+	public static RelicId Roll() => (RelicId)RunState.Rng.RandiRange(0, All.Length - 1);
 }

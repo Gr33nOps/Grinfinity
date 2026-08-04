@@ -95,6 +95,10 @@ public partial class GameManager : Node2D
 	public override void _EnterTree()
 	{
 		AddToGroup("game_manager");
+		// Reseeded before RunState (or anything that rolls against it) exists,
+		// so every roll this orbit — spawns, relics, hazards, everything — comes
+		// from the same stream Daily Alignment fixes.
+		Modes.SeedRun(Loadout.Mode);
 		run = AddPausableChild(new RunState());
 	}
 
@@ -537,7 +541,7 @@ public partial class GameManager : Node2D
 			return;
 
 		float chance = PowerUpDropChance + (heavy ? HeavyDropBonus : 0f);
-		if (GD.Randf() > chance)
+		if (RunState.Rng.Randf() > chance)
 			return;
 
 		var pickup = PowerUpScene.Instantiate<PowerUp>();
@@ -599,7 +603,7 @@ public partial class GameManager : Node2D
 		if (absorbSound == null)
 			return;
 
-		absorbSound.PitchScale = (float)GD.RandRange(1.6, 2.1);
+		absorbSound.PitchScale = RunState.Rng.RandfRange(1.6f, 2.1f);
 		absorbSound.Play();
 	}
 
@@ -632,7 +636,7 @@ public partial class GameManager : Node2D
 	/// </summary>
 	private void PlayKillSound(bool heavy)
 	{
-		float jitter = (float)GD.RandRange(-0.06, 0.06);
+		float jitter = RunState.Rng.RandfRange(-0.06f, 0.06f);
 		killSound.PitchScale = (heavy ? 0.72f : 1.14f) + jitter;
 		killSound.VolumeDb = heavy ? -6.0f : -10.0f;
 		killSound.Play();

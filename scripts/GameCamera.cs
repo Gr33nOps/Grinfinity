@@ -32,6 +32,9 @@ public partial class GameCamera : Camera2D
 		ProcessMode = ProcessModeEnum.Pausable;
 		MakeCurrent();
 
+		// Deliberately not RunState.Rng: this only varies the shake texture's
+		// look, never an orbit outcome, so it stays off the seeded stream Daily
+		// Alignment fixes.
 		noise = new FastNoiseLite
 		{
 			NoiseType = FastNoiseLite.NoiseTypeEnum.Perlin,

@@ -42,13 +42,13 @@ public partial class Debris : Node2D
 		world = manager?.GetNodeOrNull<Node2D>("player");
 		run = manager?.Run;
 
-		float angle = GD.Randf() * Mathf.Tau;
-		float speed = (float)GD.RandRange(LaunchSpeedMin, LaunchSpeedMax);
+		float angle = RunState.Rng.Randf() * Mathf.Tau;
+		float speed = RunState.Rng.RandfRange(LaunchSpeedMin, LaunchSpeedMax);
 		velocity = Vector2.FromAngle(angle) * speed;
 
 		Rotation = angle;
 		// Scaled relative to the scene, so the size set there stays authoritative.
-		Scale *= (float)GD.RandRange(0.75, 1.25);
+		Scale *= RunState.Rng.RandfRange(0.75f, 1.25f);
 	}
 
 	public override void _PhysicsProcess(double delta)

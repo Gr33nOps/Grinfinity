@@ -73,6 +73,6 @@ public partial class EventDirector : Node
 	private void End()
 	{
 		run.StartEvent(ArenaEventId.Calm, 0f);
-		nextAt = run.SurvivalTime + (float)GD.RandRange(GapMin, GapMax);
+		nextAt = run.SurvivalTime + RunState.Rng.RandfRange(GapMin, GapMax);
 	}
 }

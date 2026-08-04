@@ -49,15 +49,15 @@ public partial class HazardDirector : Node
 	private void SpawnWell()
 	{
 		hadFirstWell = true;
-		nextWellAt = run.SurvivalTime + (float)GD.RandRange(WellGapMin, WellGapMax);
+		nextWellAt = run.SurvivalTime + RunState.Rng.RandfRange(WellGapMin, WellGapMax);
 
 		WellScene ??= GD.Load<PackedScene>("res://scenes/gravity_well.tscn");
 		var well = WellScene.Instantiate<GravityWell>();
 
 		Vector2 bounds = manager.GetViewportRect().Size;
 		well.GlobalPosition = new Vector2(
-			(float)GD.RandRange(bounds.X * 0.2, bounds.X * 0.8),
-			(float)GD.RandRange(bounds.Y * 0.2, bounds.Y * 0.8));
+			RunState.Rng.RandfRange(bounds.X * 0.2f, bounds.X * 0.8f),
+			RunState.Rng.RandfRange(bounds.Y * 0.2f, bounds.Y * 0.8f));
 
 		manager.AddEntity(well);
 		manager.Announce("GRAVITY WELL", "A rival pull has opened. Dash clear of the core.", new Color(0.72f, 0.4f, 0.9f));
@@ -66,30 +66,30 @@ public partial class HazardDirector : Node
 	private void SpawnComet()
 	{
 		hadFirstComet = true;
-		nextCometAt = run.SurvivalTime + (float)GD.RandRange(CometGapMin, CometGapMax);
+		nextCometAt = run.SurvivalTime + RunState.Rng.RandfRange(CometGapMin, CometGapMax);
 
 		Vector2 bounds = manager.GetViewportRect().Size;
 		float margin = 160f;
 
 		// Enters on one edge, exits roughly opposite — a straight arc across the
 		// whole arena rather than a clip through one corner.
-		bool horizontal = GD.Randf() < 0.5f;
+		bool horizontal = RunState.Rng.Randf() < 0.5f;
 		Vector2 start, end;
 
 		if (horizontal)
 		{
-			float y = (float)GD.RandRange(bounds.Y * 0.15, bounds.Y * 0.85);
-			bool leftToRight = GD.Randf() < 0.5f;
+			float y = RunState.Rng.RandfRange(bounds.Y * 0.15f, bounds.Y * 0.85f);
+			bool leftToRight = RunState.Rng.Randf() < 0.5f;
 			start = new Vector2(leftToRight ? -margin : bounds.X + margin, y);
 			end = new Vector2(leftToRight ? bounds.X + margin : -margin,
-				(float)GD.RandRange(bounds.Y * 0.15, bounds.Y * 0.85));
+				RunState.Rng.RandfRange(bounds.Y * 0.15f, bounds.Y * 0.85f));
 		}
 		else
 		{
-			float x = (float)GD.RandRange(bounds.X * 0.15, bounds.X * 0.85);
-			bool topToBottom = GD.Randf() < 0.5f;
+			float x = RunState.Rng.RandfRange(bounds.X * 0.15f, bounds.X * 0.85f);
+			bool topToBottom = RunState.Rng.Randf() < 0.5f;
 			start = new Vector2(x, topToBottom ? -margin : bounds.Y + margin);
-			end = new Vector2((float)GD.RandRange(bounds.X * 0.15, bounds.X * 0.85),
+			end = new Vector2(RunState.Rng.RandfRange(bounds.X * 0.15f, bounds.X * 0.85f),
 				topToBottom ? bounds.Y + margin : -margin);
 		}
 

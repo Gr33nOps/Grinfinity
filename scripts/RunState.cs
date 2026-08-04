@@ -21,6 +21,19 @@ public partial class RunState : Node
 	/// <summary>Streak lengths worth shouting about, ascending.</summary>
 	public static readonly int[] StreakMilestones = { 5, 10, 25, 50, 100 };
 
+	/// <summary>
+	/// The RNG driving this orbit. Every gameplay roll should draw from this
+	/// instead of <c>GD.Rand*</c>, or Daily Alignment's fixed seed would not
+	/// actually fix the orbit. Static so static roll tables (<see cref="Relics"/>,
+	/// <see cref="ArenaEvent"/>, <see cref="PowerUpKind"/>) and classes with no
+	/// <see cref="RunState"/> reference can reach it without one threaded through
+	/// every call site — the same shortcut <see cref="BodySpawner.CurrentSpeed"/>
+	/// already takes for "the current orbit's" ramped speed. <see cref="Modes"/>
+	/// reseeds it in <see cref="GameManager"/>._EnterTree, before this instance
+	/// (or anything that rolls against it) exists.
+	/// </summary>
+	public static RandomNumberGenerator Rng { get; } = new RandomNumberGenerator();
+
 	[ExportGroup("Mass")]
 	// Sized so a full dial is roughly 100 absorbed motes — about a hundred
 	// bodies. Reaching maximum should be an achievement of the back half of an
@@ -90,7 +103,7 @@ public partial class RunState : Node
 		EventTimeLeft = duration;
 
 		if (id == ArenaEventId.SolarWind)
-			WindDirection = Vector2.FromAngle(GD.Randf() * Mathf.Tau);
+			WindDirection = Vector2.FromAngle(Rng.Randf() * Mathf.Tau);
 
 		EmitSignal(SignalName.EffectsChanged);
 	}

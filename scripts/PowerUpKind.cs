@@ -74,5 +74,5 @@ public static class PowerUps
 	public static Profile Get(PowerUpKind kind) => All[(int)kind];
 
 	/// <summary>Uniform for now; weighting is a tuning job for after a playtest.</summary>
-	public static PowerUpKind Roll() => (PowerUpKind)GD.RandRange(0, All.Length - 1);
+	public static PowerUpKind Roll() => (PowerUpKind)RunState.Rng.RandiRange(0, All.Length - 1);
 }

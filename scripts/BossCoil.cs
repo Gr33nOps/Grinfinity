@@ -35,7 +35,7 @@ public partial class BossCoil : Boss
 	{
 		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
 		ringTimer = 1.4f;
-		gapAngle = GD.Randf() * Mathf.Tau;
+		gapAngle = RunState.Rng.Randf() * Mathf.Tau;
 		PickDriftTarget();
 	}
 
@@ -65,8 +65,8 @@ public partial class BossCoil : Boss
 	{
 		Vector2 bounds = GetViewportRect().Size;
 		driftTarget = new Vector2(
-			(float)GD.RandRange(bounds.X * 0.25, bounds.X * 0.75),
-			(float)GD.RandRange(bounds.Y * 0.25, bounds.Y * 0.75));
+			RunState.Rng.RandfRange(bounds.X * 0.25f, bounds.X * 0.75f),
+			RunState.Rng.RandfRange(bounds.Y * 0.25f, bounds.Y * 0.75f));
 	}
 
 	private void FireRing()

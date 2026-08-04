@@ -30,9 +30,11 @@ public partial class GameSettings : Node
 	private const string MasterBus = "Master";
 	private const float MinAudibleLinear = 0.001f;
 
-	// v2 moved rapid fire off Q. Bumping the version lets LoadSettings drop the
-	// stale bind instead of restoring the key the migration exists to escape.
-	private const int SaveVersion = 2;
+	// v2 moved rapid fire off Q. v3 adds mode and difficulty. Bumping the
+	// version lets LoadSettings drop the stale bind instead of restoring the
+	// key the migration exists to escape; a v2 file simply has no mode or
+	// difficulty on record and falls back to their defaults.
+	private const int SaveVersion = 3;
 
 	public float MasterVolume { get; private set; } = 1.0f;
 	public float MusicVolume { get; private set; } = 0.8f;
@@ -47,6 +49,12 @@ public partial class GameSettings : Node
 
 	/// <summary>Last world (skin) taken into an orbit.</summary>
 	public int World { get; private set; } = 1;
+
+	/// <summary>Last mode taken into an orbit.</summary>
+	public GameMode Mode { get; private set; } = GameMode.EndlessOrbit;
+
+	/// <summary>Last difficulty taken into an orbit.</summary>
+	public Difficulty Difficulty { get; private set; } = Difficulty.Normal;
 
 	private readonly System.Collections.Generic.Dictionary<string, Key> defaultKeys = new();
 
@@ -187,6 +195,22 @@ public partial class GameSettings : Node
 		SaveSettings();
 	}
 
+	/// <summary>Remembers the chosen mode the same way <see cref="SetWeapon"/> remembers the weapon.</summary>
+	public void SetMode(GameMode mode)
+	{
+		Mode = mode;
+		Loadout.RestoreMode(mode);
+		SaveSettings();
+	}
+
+	/// <summary>Remembers the chosen difficulty the same way <see cref="SetWeapon"/> remembers the weapon.</summary>
+	public void SetDifficulty(Difficulty difficulty)
+	{
+		Difficulty = difficulty;
+		Loadout.RestoreDifficulty(difficulty);
+		SaveSettings();
+	}
+
 	private void ApplyAllVolumes()
 	{
 		ApplyBusVolume(MasterBus, MasterVolume);
@@ -225,6 +249,8 @@ public partial class GameSettings : Node
 		config.SetValue(Section, "shake_intensity", ShakeIntensity);
 		config.SetValue(Section, "weapon", (int)Weapon);
 		config.SetValue(Section, "world", World);
+		config.SetValue(Section, "mode", (int)Mode);
+		config.SetValue(Section, "difficulty", (int)Difficulty);
 
 		foreach (var (action, _) in RebindableActions)
 			config.SetValue(InputSection, action, (int)GetActionKey(action));
@@ -258,6 +284,20 @@ public partial class GameSettings : Node
 		{
 			World = storedWorld;
 			Loadout.RestoreWorld(World);
+		}
+
+		int storedMode = config.GetValue(Section, "mode", (int)GameMode.EndlessOrbit).AsInt32();
+		if (System.Enum.IsDefined(typeof(GameMode), storedMode))
+		{
+			Mode = (GameMode)storedMode;
+			Loadout.RestoreMode(Mode);
+		}
+
+		int storedDifficulty = config.GetValue(Section, "difficulty", (int)Difficulty.Normal).AsInt32();
+		if (System.Enum.IsDefined(typeof(Difficulty), storedDifficulty))
+		{
+			Difficulty = (Difficulty)storedDifficulty;
+			Loadout.RestoreDifficulty(Difficulty);
 		}
 
 		int version = config.GetValue(Section, "version", 1).AsInt32();

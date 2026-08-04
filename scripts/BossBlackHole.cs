@@ -88,8 +88,8 @@ public partial class BossBlackHole : Boss
 		// Stays in the upper-middle of the arena rather than the whole viewport —
 		// this is the anchor the fight orbits, not something that chases into a corner.
 		driftTarget = new Vector2(
-			(float)GD.RandRange(bounds.X * 0.3, bounds.X * 0.7),
-			(float)GD.RandRange(bounds.Y * 0.25, bounds.Y * 0.6));
+			RunState.Rng.RandfRange(bounds.X * 0.3f, bounds.X * 0.7f),
+			RunState.Rng.RandfRange(bounds.Y * 0.25f, bounds.Y * 0.6f));
 	}
 
 	private float PullAt(float distance, float strength) => strength * (PullRadius * 0.35f) / (distance + PullRadius * 0.35f);
@@ -180,7 +180,7 @@ public partial class BossBlackHole : Boss
 			return;
 
 		var shot = BulletScene.Instantiate<Bullet>();
-		shot.GlobalPosition = GlobalPosition + Vector2.FromAngle(GD.Randf() * Mathf.Tau) * 90f;
+		shot.GlobalPosition = GlobalPosition + Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * 90f;
 		shot.Direction = (world.GlobalPosition - shot.GlobalPosition).Normalized();
 		shot.Speed = FlingSpeed;
 		shot.Range = 5.0f;

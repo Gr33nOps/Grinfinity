@@ -165,7 +165,7 @@ public partial class Body : CharacterBody2D, IShootable
 
 		ApplyFace();
 
-		OrbitDirection = GD.Randf() < 0.5f ? -1.0f : 1.0f;
+		OrbitDirection = RunState.Rng.Randf() < 0.5f ? -1.0f : 1.0f;
 
 		// Heavy Weather applies at birth, not continuously, so the bodies it
 		// produced stay giant for their whole life and the change is legible.
@@ -195,7 +195,7 @@ public partial class Body : CharacterBody2D, IShootable
 
 		int index = TextureIndex >= 0
 			? Mathf.Min(TextureIndex, faceTextures.Length - 1)
-			: GD.RandRange(0, Mathf.Min(2, faceTextures.Length - 1));
+			: RunState.Rng.RandiRange(0, Mathf.Min(2, faceTextures.Length - 1));
 		sprite.Texture = faceTextures[index];
 
 		// Bodies spawned past the bottom-right edge get flipped, purely for
@@ -222,7 +222,7 @@ public partial class Body : CharacterBody2D, IShootable
 			return;
 
 		Vector2 tangent = toWorld.Normalized().Orthogonal() * OrbitDirection;
-		Drift = tangent * BodySpawner.CurrentSpeed * SpeedMultiplier * (float)GD.RandRange(0.35, 0.95);
+		Drift = tangent * BodySpawner.CurrentSpeed * SpeedMultiplier * RunState.Rng.RandfRange(0.35f, 0.95f);
 	}
 
 	/// <summary>Applies the stats and look for a kind. Call before adding to the tree.</summary>
