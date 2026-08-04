@@ -5,8 +5,11 @@ records what the code actually looks like underneath those decisions, measured
 rather than estimated, so the cuts can be sequenced without building on top of
 something about to be torn out.
 
-Nothing here has been built. Every count below came from reading the current
-tree.
+Every count below came from reading the tree before any of it was built.
+
+**Status: steps 1–4 are done.** What is left is step 5 — the leaderboard name
+prompt and the Stats screen — plus the tuning that only a human at the
+keyboard can do. See §9 for what is still open.
 
 ---
 
@@ -185,14 +188,37 @@ These need hands on the game, not a decision here. Listed so they don't get
 lost:
 
 1. **Random offers vs. full menu** at wave breaks (§2's own open question).
-2. **Nuke and Freeze** (§10) — full clear, or scaled to heavy damage / hard
-   slow? Resolve *before* step 4, or the curve gets tuned around a release
-   valve that then disappears.
+   Built as random-offer, with two fairness rules bolted on (a mass option
+   always present, at least one offer always affordable). Whether that is
+   enough structure is a playtest question.
+2. ~~**Nuke and Freeze**~~ — **decided: they stay as they are.** Power-ups
+   were explicitly kept. If the curve later proves they defuse it, that is a
+   tuning problem to solve then, with the curve in front of you.
 3. **When is the player's name asked?** First launch, or first time they place
    on the board? The latter is less friction but means the prompt interrupts a
-   recap screen.
+   recap screen. Still open — the name currently defaults to PLAYER and is
+   already persisted, so only the prompt is missing.
 4. **Arena events during bosses** (§10) — bosses recur far more often now; the
    stand-down rule may starve events of airtime.
+5. **Stardust outpaces spending on a long run.** One purchase per break is the
+   design, but by the fifth or sixth break every option is affordable and the
+   choice stops being about cost. Whether that matters depends on whether the
+   time pressure alone carries the decision — which only playing will say.
+
+---
+
+## 9. What is still to do
+
+**Step 5 — the leaderboard name prompt and the Stats screen.** The name is
+persisted and every board entry already carries one; there is simply no UI to
+set it, so everything reads PLAYER. Stats is pure display and depends on
+nothing else.
+
+**The tuning pass.** Wave sizes, the 7-second break, cost curves and the
+escalation shape are all first-pass numbers chosen to be reasonable, not
+right. §3 of the design doc is explicit that this is where most of the real
+playtesting time goes, and none of it has happened yet — a bot can confirm
+the systems run, not whether the rhythm is any good.
 
 ---
 
