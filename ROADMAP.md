@@ -424,22 +424,73 @@ placeholder audio throughout, per M1.
 
 ### M7 — Ship it
 
-- [ ] **Options** — resolution, vsync, FPS cap, shake intensity, UI scale,
-	  damage numbers toggle, gamepad aim assist
-- [ ] **Accessibility** — colourblind-safe body palette, high-contrast outlines,
-	  hold-vs-toggle rapid fire, assist mode (slower bodies), shake off
-- [ ] **Localisation-ready** — all UI strings through a translation table
-- [ ] ~~**Object pooling** for bullets, bodies and debris if frame time suffers~~
-	  — measured in M3 and it does not. See "Known debt" above; re-measure
-	  rather than assuming.
-- [ ] **Steamworks** — overlay, achievements, cloud saves
-- [ ] **Store assets** — trailer, 6–8 screenshots, capsules, description
-- [ ] **QA matrix** — 1080p / 1440p / ultrawide, gamepad-only, keyboard-only,
-	  fresh install with no save
-- [ ] **itch.io soft launch** before Steam
+- [x] **Options** — resolution (windowed-mode size; "not fullscreen" now means
+	  windowed at a chosen size rather than always maximized), VSync, FPS cap,
+	  shake intensity (already had its slider since M1), a UI Scale slider that
+	  scales the in-game HUD's CanvasLayer specifically, a damage-numbers
+	  toggle (the feature itself is new — `DamageNumber.cs`, built and wired
+	  into both of `Bullet.cs`'s damage-dealing paths), and gamepad aim assist.
+- [x] **Accessibility** — a colourblind-safe alternate tint/burst palette per
+	  `BodyKind`, high-contrast sprite outlines (`outline.gdshader`, a standard
+	  8-direction alpha-edge trace), hold-vs-toggle rapid fire, Assist Mode (an
+	  extra 0.8x body-speed cut stacked on top of Difficulty), and shake off —
+	  already covered by M1's Screen Shake slider (0 = off), referenced on the
+	  new screen rather than duplicated.
+- [x] **Localisation-ready** — `translations/strings.csv` registered with
+	  Godot's `TranslationServer`; every data-table Name/Flavour/Effect/
+	  Description (~100 keys across Weapons, PowerUps, Achievements, Arena
+	  Events, Relics, Worlds, Modes, Difficulties, boss arrival lines) and
+	  every dynamically-built UI string (the recap, the stardust line, the
+	  menu's best-score label, stats row labels) routes through a translation
+	  key. Static per-scene button/label text is deliberately left as literal
+	  English — Godot auto-translates any Control using the string itself as
+	  the key, so a translator adding a row to the CSV is the entire remaining
+	  cost, no code or scene changes. See M7 status note for a headless-import
+	  gotcha this surfaced.
+- [x] ~~**Object pooling** for bullets, bodies and debris if frame time
+	  suffers~~ — measured in M3 and it does not. See "Known debt" above;
+	  re-measure rather than assuming.
+- [ ] **Steamworks** — overlay, achievements, cloud saves. **Not attempted**:
+	  needs a real Steamworks account, an App ID, and the Steam SDK/GodotSteam
+	  integration — none of which a solo coding pass can supply.
+- [~] **Store assets** — 6 screenshots (menu, mode select, mid-orbit combat, a
+	  boss fight, the leaderboard, Convergence) and a draft description with
+	  feature bullets were generated and delivered. **Not done**: a trailer
+	  (needs video capture and editing) and capsule/header art (needs actual
+	  design work) — both explicitly out of what this pass could produce, and
+	  the screenshots themselves are still placeholder art per `ASSETS.md`.
+- [~] **QA matrix** — a genuine fresh install (entire save directory removed)
+	  was run end to end: menu, mode select, weapon select, upgrades, stats,
+	  leaderboard, settings, accessibility, a live orbit, and a mortal death
+	  all confirmed clean with zero script errors, and the resulting
+	  `highscore.cfg`/`leaderboard.cfg` were inspected to confirm the v4/v2
+	  per-mode schema writes correctly from nothing. Resolution options were
+	  exercised via the Settings screen. **Not done**: an actual gamepad-only
+	  or keyboard-only playthrough, and 1440p/ultrawide on real hardware —
+	  both need human hands and physical displays, not a headless capture tool.
+- [ ] **itch.io soft launch** — **not attempted**. Uploading a build to a
+	  public storefront is a publishing action; it needs the project owner's
+	  own itch.io account and their explicit go-ahead, not something to do
+	  autonomously even if the credentials existed.
 
 **Done when:** someone who has never seen the game can install, play and quit
 without confusion.
+
+**Status:** Everything code-shaped is done and verified — Options,
+Accessibility, and Localisation-ready are complete milestone items, not
+partial ones. What's left is entirely non-code: a trailer, capsule art, a
+Steamworks account and integration, hands-on hardware QA, and the actual
+decision to publish anywhere. That is the honest line between "a solo coding
+pass can finish this" and "this needs a person, an account, or a camera."
+
+A headless-import note worth keeping: `project.godot`'s
+`locale/translations` has to point at the CSV importer's *compiled* output
+(`translations/strings.en.translation`), not the source `.csv` — referencing
+the source hits `Failed loading resource` in `godot --headless --import` on
+a fresh checkout, before an editor has ever opened the project once. Both the
+compiled `.translation` and its `.import` sidecar are committed for exactly
+this reason. Confirmed by deliberately reproducing the failure (a simulated
+fresh clone with only the `.csv` present) before confirming the fix.
 
 ---
 
@@ -487,13 +538,17 @@ Firm. Revisit only if a shipped game earns the right.
    the art, so they are now cropped and the key is drawn live from the input map
    — which also fixes rebinding silently lying about itself.
 3. ~~**M1**: tune the existing numbers → hitstop → screen shake → parallax space.~~
-   Done — and **M2 through M6 with it**. Every milestone through "modes" is
-   built: five distinct ways to play, a seeded RNG every gameplay roll draws
-   from, per-mode records, and a difficulty select that never touches player
-   damage. Next is **M7: ship it** — options, accessibility, localisation-
-   ready strings, Steamworks, store assets, the QA matrix and an itch.io soft
-   launch. Nothing left on the design side; everything left is production and
-   a playtest.
+   Done — and **M2 through M7 with it**, as far as code can carry it. Every
+   milestone through "ship it" that a solo coding pass can actually finish is
+   built and verified: five modes, a seeded RNG, per-mode records, a
+   difficulty select that never touches player damage, a full options and
+   accessibility pass, and localisation-ready strings. What's left is not a
+   milestone so much as a checklist of things that need a person rather than
+   code: the placeholder audio noted since M1, the placeholder art in
+   `ASSETS.md`, a real playtest, a trailer, capsule art, a Steamworks account
+   and its integration, hands-on QA on real hardware, and the actual decision
+   to publish anywhere. See M7's status note for the exact line between what
+   got finished and what genuinely can't be.
 
 ### The two things code cannot finish
 

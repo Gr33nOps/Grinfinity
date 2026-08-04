@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://c1grinaccess01"]
+[gd_scene load_steps=3 format=3 uid="uid://boymhwaatxsto"]
 
 [ext_resource type="Script" path="res://scripts/AccessibilityMenu.cs" id="1_accsc"]
 [ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_font"]

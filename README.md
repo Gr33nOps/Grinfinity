@@ -78,7 +78,14 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 - Music that swells with how dangerous the run has become
 - Pause menu and game over flow
 - Settings: master / music / SFX volume, screen shake intensity (0 = off),
-  fullscreen, and key rebinding
+  fullscreen or windowed at a chosen resolution, VSync, an FPS cap, UI scale,
+  and key rebinding
+- Accessibility: a colourblind-safe body palette, high-contrast sprite
+  outlines, hold-or-toggle rapid fire, an Assist Mode that gently slows
+  bodies, a damage-numbers toggle, and gamepad aim assist
+- Localisation-ready: every dynamic string and data-table description routes
+  through a translation table (`translations/strings.csv`) — adding a
+  language is a data change, not a code change
 - Gamepad support
 - Background music and SFX on separate audio buses
 
