@@ -16,6 +16,7 @@ public partial class Menu : Node
 		var quitButton = GetNode<TextureButton>("UI/Buttons/QuitButton");
 		var upgradesButton = GetNode<Button>("UI/SideMenu/UpgradesButton");
 		var leaderboardButton = GetNode<Button>("UI/SideMenu/LeaderboardButton");
+		var statsButton = GetNode<Button>("UI/SideMenu/StatsButton");
 		var settingsButton = GetNode<Button>("UI/SideMenu/SettingsButton");
 		var creditsButton = GetNode<Button>("UI/SideMenu/CreditsButton");
 
@@ -23,12 +24,13 @@ public partial class Menu : Node
 		playButton.Pressed += () => GoTo("res://scenes/weapon_select.tscn");
 		upgradesButton.Pressed += () => GoTo("res://scenes/upgrades.tscn");
 		leaderboardButton.Pressed += () => GoTo("res://scenes/leaderboard.tscn");
+		statsButton.Pressed += () => GoTo("res://scenes/stats.tscn");
 		settingsButton.Pressed += () => GoTo("res://scenes/settings.tscn");
 		creditsButton.Pressed += () => GoTo("res://scenes/credits.tscn");
 		quitButton.Pressed += OnQuitButtonPressed;
 
 		foreach (var button in new BaseButton[]
-			{ playButton, upgradesButton, leaderboardButton, settingsButton, creditsButton, quitButton })
+			{ playButton, upgradesButton, leaderboardButton, statsButton, settingsButton, creditsButton, quitButton })
 		{
 			button.MouseEntered += PlayHoverSound;
 		}

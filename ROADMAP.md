@@ -350,10 +350,19 @@ first beating the ones before it. Still on placeholder audio throughout — see 
       screen off the main menu; a placing orbit's rank also shows on the recap.
       Per-mode is moot until M6 adds a second mode — Endless Orbit is the only
       one that exists.
-- [ ] **Lifetime stats** — orbits, kills, favourite weapon, time played,
-	  heaviest mass reached
+- [x] **Lifetime stats** — orbits, kills, time played, heaviest mass reached,
+      favourite weapon, plus worlds and achievements as fractions. Purely a
+      display screen — every number already lived on `PlayerProfile` from the
+      stardust work; this is just the first place a player can actually see it.
 
 **Done when:** there is a visible reason to start orbit #20.
+
+**Status:** M5 is done. Every item above is built, verified against real saved
+state (not just fresh defaults), and live on `main`. What's missing is
+content, not systems: the placeholder audio noted throughout M1–M4 remains
+placeholder, and the ~40 icons `ASSETS.md` lists for this milestone (world
+card frames, achievement icons, a stats-screen icon set) are still text-only.
+Nothing here is blocked on them.
 
 ---
 
@@ -442,9 +451,10 @@ Firm. Revisit only if a shipped game earns the right.
    the art, so they are now cropped and the key is drawn live from the input map
    — which also fixes rebinding silently lying about itself.
 3. ~~**M1**: tune the existing numbers → hitstop → screen shake → parallax space.~~
-   Done — and **M2, M3 and M4 with it**. Every milestone through "orbits that
-   feel unique" is built. Next is **M5: meta and retention** — stardust, named
-   worlds, soft-capped upgrades, achievements, a local leaderboard.
+   Done — and **M2 through M5 with it**. Every milestone through "meta and
+   retention" is built. Next is **M6: modes** — mode select, Flyby, Daily
+   Alignment (needs seeded RNG), Convergence, Glass Planet, and a difficulty
+   select that never touches player damage.
 
 ### The two things code cannot finish
 

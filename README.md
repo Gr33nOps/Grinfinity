@@ -40,6 +40,7 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 - Three soft-capped permanent upgrades bought with stardust: Thrust, Coolant, Ballast
 - Nine achievements, tracked live and persisted
 - A local top-10 leaderboard: score, time, kills, weapon, world and date
+- A lifetime stats screen: orbits, kills, time played, heaviest mass, favourite weapon
 - Death recap: score, time, kills, best streak, mass at death and moons held
 - Bodies unlock as an orbit goes on:
   - **Drifter** — the baseline, falls straight in
