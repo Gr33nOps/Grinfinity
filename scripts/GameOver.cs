@@ -21,8 +21,8 @@ public partial class GameOver : Control
 	/// <summary>What ended the orbit — a body kind, a boss, a hazard. Empty for a clean, non-death ending (Flyby's clock, giving up).</summary>
 	public static string DeathCause = "";
 
-	private Button restartButton;
-	private Button menuButton;
+	private TextureButton restartButton;
+	private TextureButton menuButton;
 	private Label scoreLabel;
 	private Label scoreCaption;
 	private Label statsLabel;
@@ -45,8 +45,8 @@ public partial class GameOver : Control
 		worldUnlockLabel = GetNodeOrNull<Label>("Layout/Recap/WorldUnlockLabel");
 		leaderboardLabel = GetNodeOrNull<Label>("Layout/Recap/LeaderboardLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Layout/Recap/HighScoreLabel");
-		restartButton = GetNode<Button>("Layout/ButtonRow/RestartButton");
-		menuButton = GetNode<Button>("Layout/ButtonRow/MenuButton");
+		restartButton = GetNode<TextureButton>("Layout/Buttons/RestartButton");
+		menuButton = GetNode<TextureButton>("Layout/Buttons/MenuButton");
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNodeOrNull<AudioStreamPlayer>("HoverSound");
 		gameOverSound = GetNodeOrNull<AudioStreamPlayer>("GameOverSound");
