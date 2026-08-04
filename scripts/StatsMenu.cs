@@ -7,8 +7,12 @@ using Godot;
 /// </summary>
 public partial class StatsMenu : Control
 {
+	private LineEdit nameField;
+
 	public override void _Ready()
 	{
+		BuildNameField();
+
 		SetRow("Orbits", $"{PlayerProfile.TotalOrbits:N0}");
 		SetRow("Kills", $"{PlayerProfile.TotalKills:N0}");
 		SetRow("Time played", FormatDuration(PlayerProfile.TotalTimePlayed));
@@ -24,8 +28,38 @@ public partial class StatsMenu : Control
 		backButton.GrabFocus();
 	}
 
+	/// <summary>
+	/// The one line on this screen the player writes rather than earns. Saved on
+	/// every edit rather than behind a confirm button — there is nothing to
+	/// cancel, and a name that silently failed to save because someone hit Back
+	/// would be a small, baffling betrayal.
+	/// </summary>
+	private void BuildNameField()
+	{
+		nameField = GetNodeOrNull<LineEdit>("Layout/Rows/NameRow/Field");
+		if (nameField == null)
+			return;
+
+		var label = GetNodeOrNull<Label>("Layout/Rows/NameRow/Label");
+		if (label != null)
+			label.Text = TranslationServer.Translate("STATS_NAME");
+
+		nameField.Text = PlayerProfile.PlayerName;
+		nameField.TextChanged += OnNameChanged;
+	}
+
+	private void OnNameChanged(string text)
+	{
+		PlayerProfile.SetPlayerName(text);
+	}
+
 	public override void _UnhandledInput(InputEvent inputEvent)
 	{
+		// Escape while typing should leave the field, not the screen — otherwise
+		// there is no way to stop editing without also backing out.
+		if (nameField != null && nameField.HasFocus())
+			return;
+
 		if (inputEvent.IsActionPressed("pause"))
 		{
 			OnBackPressed();

@@ -51,6 +51,27 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_constants/separation = 14
 
+[node name="NameRow" type="HBoxContainer" parent="Layout/Rows"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Layout/Rows/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 38
+text = "NAME"
+
+[node name="Field" type="LineEdit" parent="Layout/Rows/NameRow"]
+custom_minimum_size = Vector2(340, 56)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+alignment = 2
+max_length = 12
+text = "PLAYER"
+
 [node name="Orbits" type="HBoxContainer" parent="Layout/Rows"]
 layout_mode = 2
 
@@ -184,18 +205,18 @@ theme_override_font_sizes/font_size = 38
 text = "0 / 9"
 horizontal_alignment = 2
 
-[node name="Stardustbanked" type="HBoxContainer" parent="Layout/Rows"]
+[node name="Stardustearned" type="HBoxContainer" parent="Layout/Rows"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Layout/Rows/Stardustbanked"]
+[node name="Label" type="Label" parent="Layout/Rows/Stardustearned"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 38
-text = "STARDUST BANKED"
+text = "STARDUST EARNED"
 
-[node name="Value" type="Label" parent="Layout/Rows/Stardustbanked"]
+[node name="Value" type="Label" parent="Layout/Rows/Stardustearned"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
 theme_override_fonts/font = ExtResource("2_font")

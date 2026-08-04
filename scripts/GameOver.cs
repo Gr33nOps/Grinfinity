@@ -31,6 +31,8 @@ public partial class GameOver : Control
 	private Label worldUnlockLabel;
 	private Label leaderboardLabel;
 	private Label highScoreLabel;
+	private HBoxContainer nameRow;
+	private LineEdit nameField;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
 	private AudioStreamPlayer gameOverSound;
@@ -45,6 +47,8 @@ public partial class GameOver : Control
 		worldUnlockLabel = GetNodeOrNull<Label>("Recap/WorldUnlockLabel");
 		leaderboardLabel = GetNodeOrNull<Label>("Recap/LeaderboardLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
+		nameRow = GetNodeOrNull<HBoxContainer>("Recap/NameRow");
+		nameField = GetNodeOrNull<LineEdit>("Recap/NameRow/Field");
 		restartButton = GetNode<TextureButton>("Buttons/RestartButton");
 		menuButton = GetNode<TextureButton>("Buttons/MenuButton");
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
@@ -122,6 +126,8 @@ public partial class GameOver : Control
 				leaderboardLabel.Text = string.Format(TranslationServer.Translate("UI_LEADERBOARD_RANK"), LeaderboardRank);
 		}
 
+		ShowNamePrompt();
+
 		if (highScoreLabel == null)
 			return;
 
@@ -139,6 +145,41 @@ public partial class GameOver : Control
 		{
 			highScoreLabel.Text = string.Format(TranslationServer.Translate("UI_BEST_SCORE_LABEL"), ScoreManager.BestScore);
 		}
+	}
+
+	/// <summary>
+	/// Asks who was playing, but only at the one moment it is worth interrupting
+	/// for: a run that actually placed, by someone who has not already said. A
+	/// first run is never gated behind a text field, and a named player is never
+	/// asked twice.
+	/// </summary>
+	private void ShowNamePrompt()
+	{
+		if (nameRow == null || nameField == null)
+			return;
+
+		bool unnamed = PlayerProfile.PlayerName == "PLAYER";
+		nameRow.Visible = LeaderboardRank > 0 && unnamed;
+		if (!nameRow.Visible)
+			return;
+
+		var prompt = nameRow.GetNodeOrNull<Label>("Prompt");
+		if (prompt != null)
+			prompt.Text = TranslationServer.Translate("UI_NAME_PROMPT");
+
+		nameField.Text = "";
+		nameField.TextChanged += OnNameTyped;
+	}
+
+	private void OnNameTyped(string text)
+	{
+		if (string.IsNullOrWhiteSpace(text))
+			return;
+
+		PlayerProfile.SetPlayerName(text);
+		// The run was recorded before it could be asked who played it, so the
+		// row already on the board gets the answer retro-fitted.
+		Leaderboard.RenameAt(LeaderboardRank, text);
 	}
 
 	private void OnRestartButtonPressed()

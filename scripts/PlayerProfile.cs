@@ -31,20 +31,59 @@ public static class PlayerProfile
 	/// the run's own, starting from zero each time. This is here to be looked
 	/// at on the Stats screen and nothing else.
 	/// </summary>
-	public static int StardustEarned { get; private set; }
+	// Every one of these loads on access. They used to be plain auto-properties,
+	// which meant reading one before anything else had touched the profile
+	// returned a zero — the Stats screen only ever looked right because the
+	// weapon and world rows happened to be read first and pulled the file in as
+	// a side effect. Reordering that screen was enough to blank four of them.
+	private static int stardustEarned;
+	private static int totalOrbits;
+	private static int totalKills;
+	private static float totalTimePlayed;
+	private static float heaviestMassEver;
+	private static string playerName = "PLAYER";
 
-	public static int TotalOrbits { get; private set; }
-	public static int TotalKills { get; private set; }
-	public static float TotalTimePlayed { get; private set; }
+	public static int StardustEarned
+	{
+		get { EnsureLoaded(); return stardustEarned; }
+		private set => stardustEarned = value;
+	}
+
+	public static int TotalOrbits
+	{
+		get { EnsureLoaded(); return totalOrbits; }
+		private set => totalOrbits = value;
+	}
+
+	public static int TotalKills
+	{
+		get { EnsureLoaded(); return totalKills; }
+		private set => totalKills = value;
+	}
+
+	public static float TotalTimePlayed
+	{
+		get { EnsureLoaded(); return totalTimePlayed; }
+		private set => totalTimePlayed = value;
+	}
+
 	/// <summary>Highest normalised mass (0..1) ever carried, across every orbit.</summary>
-	public static float HeaviestMassEver { get; private set; }
+	public static float HeaviestMassEver
+	{
+		get { EnsureLoaded(); return heaviestMassEver; }
+		private set => heaviestMassEver = value;
+	}
 
 	/// <summary>
 	/// The name that goes on the board. Defaulted rather than demanded: a first
 	/// run should never be gated behind a text field, so an unnamed player still
 	/// places and can put a name to it afterwards.
 	/// </summary>
-	public static string PlayerName { get; private set; } = "PLAYER";
+	public static string PlayerName
+	{
+		get { EnsureLoaded(); return playerName; }
+		private set => playerName = value;
+	}
 
 	public static void SetPlayerName(string name)
 	{

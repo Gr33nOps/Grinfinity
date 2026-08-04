@@ -85,6 +85,24 @@ public static class Leaderboard
 	}
 
 	/// <summary>
+	/// Renames an entry already on the board, by the 1-based rank
+	/// <see cref="Submit"/> returned. The recap asks who was playing *after* the
+	/// run has been recorded, so the row exists before the answer does.
+	/// </summary>
+	public static void RenameAt(int rank, string name)
+	{
+		EnsureLoaded();
+
+		int index = rank - 1;
+		if (index < 0 || index >= entries.Count)
+			return;
+
+		Entry old = entries[index];
+		entries[index] = new Entry(Sanitise(name), old.Score, old.SurvivalTime, old.Kills);
+		SaveToFile();
+	}
+
+	/// <summary>
 	/// Keeps a name to one short, printable line. A leaderboard row has a fixed
 	/// column and no say in what gets typed into it.
 	/// </summary>
