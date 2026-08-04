@@ -58,9 +58,12 @@ public partial class UIManager : Node
 		if (bestLabel != null)
 			bestLabel.Text = ScoreManager.GetFormattedHighScore();
 
-		// Scale tweens have to grow from the middle of the banner, not its corner.
+		// The banner is left-aligned in the HUD's left column, so it has to grow
+		// rightward from its own left edge. Scaling from the box centre would
+		// swing the text sideways, because the glyphs start at the left edge
+		// while the box runs the full width of the column.
 		if (streakLabel != null)
-			streakLabel.PivotOffset = streakLabel.Size * 0.5f;
+			streakLabel.PivotOffset = new Vector2(0f, streakLabel.Size.Y * 0.5f);
 
 		if (run != null)
 		{
