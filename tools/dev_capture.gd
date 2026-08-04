@@ -35,6 +35,12 @@ func _report_load() -> void:
 # Temporary dev tool: runs a scene unattended and writes a screenshot so visual
 # work can be verified without a human at the keyboard. Delete when done.
 #
+# Do NOT pass --headless: it picks the dummy renderer, which can never produce
+# an image and hangs the run (see _release_all). Park the window offscreen
+# instead, which captures fine and stays out of the way:
+#
+#   godot --path . --audio-driver Dummy --position 4000,4000 tools/dev_capture.tscn
+#
 #   GRIN_SCENE  scene to load        (default res://scenes/game.tscn)
 #   GRIN_SHOT   png path to write    (default user://capture.png)
 #   GRIN_RUN    seconds to run for   (default 6)
@@ -244,6 +250,18 @@ func _aim_at_nearest() -> void:
 func _release_all() -> void:
 	for action in ["shoot", "left", "right", "up", "down"]:
 		Input.action_release(action)
+
+	# --headless selects the dummy rendering driver, which never emits
+	# frame_post_draw. Awaiting it there blocks forever: no screenshot, no
+	# report, no exit, and nothing in the log after the version banner. Bail
+	# out loudly instead of hanging, and say what to run instead.
+	if DisplayServer.get_name() == "headless":
+		printerr("dev_capture: --headless cannot render, so no screenshot is possible.")
+		printerr("             Run without --headless and park the window offscreen:")
+		printerr("             godot --path . --audio-driver Dummy --position 4000,4000 tools/dev_capture.tscn")
+		_report_load()
+		get_tree().quit(1)
+		return
 
 	await RenderingServer.frame_post_draw
 	var image: Image = get_viewport().get_texture().get_image()
