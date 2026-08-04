@@ -18,11 +18,6 @@ config/icon="uid://cgq7b3o6g7yae"
 [autoload]
 
 GameSettings="*res://scripts/GameSettings.cs"
-
-[gui]
-
-theme/custom="res://theme/ui_theme.tres"
-
 Background="*res://scenes/background.tscn"
 MusicManager="*res://scenes/music_manager.tscn"
 SceneTransition="*res://scenes/scene_transition.tscn"
@@ -39,14 +34,14 @@ window/stretch/aspect="expand"
 
 project/assembly_name="Grinfinity"
 
-[internationalization]
-
-locale/translations=PackedStringArray("res://translations/strings.en.translation")
-
 [global_group]
 
 bodies=""
 game_manager=""
+
+[gui]
+
+theme/custom="res://theme/ui_theme.tres"
 
 [input]
 
@@ -130,6 +125,10 @@ fullscreen_toggle={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194342,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://translations/strings.en.translation")
 
 [layer_names]
 
