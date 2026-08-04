@@ -7,9 +7,8 @@ something about to be torn out.
 
 Every count below came from reading the tree before any of it was built.
 
-**Status: steps 1–4 are done.** What is left is step 5 — the leaderboard name
-prompt and the Stats screen — plus the tuning that only a human at the
-keyboard can do. See §9 for what is still open.
+**Status: every step is built.** What is left is the tuning that only a human
+at the keyboard can do. See §9.
 
 ---
 
@@ -194,10 +193,10 @@ lost:
 2. ~~**Nuke and Freeze**~~ — **decided: they stay as they are.** Power-ups
    were explicitly kept. If the curve later proves they defuse it, that is a
    tuning problem to solve then, with the curve in front of you.
-3. **When is the player's name asked?** First launch, or first time they place
-   on the board? The latter is less friction but means the prompt interrupts a
-   recap screen. Still open — the name currently defaults to PLAYER and is
-   already persisted, so only the prompt is missing.
+3. ~~**When is the player's name asked?**~~ **Decided: on the recap, and only
+   when a run placed while the player is still unnamed.** A first run is never
+   gated behind a text field, a named player is never asked twice, and the
+   Stats screen can change it at any time.
 4. **Arena events during bosses** (§10) — bosses recur far more often now; the
    stand-down rule may starve events of airtime.
 5. **Stardust outpaces spending on a long run.** One purchase per break is the
@@ -209,12 +208,7 @@ lost:
 
 ## 9. What is still to do
 
-**Step 5 — the leaderboard name prompt and the Stats screen.** The name is
-persisted and every board entry already carries one; there is simply no UI to
-set it, so everything reads PLAYER. Stats is pure display and depends on
-nothing else.
-
-**The tuning pass.** Wave sizes, the 7-second break, cost curves and the
+**The tuning pass — all that is left.** Wave sizes, the 7-second break, cost curves and the
 escalation shape are all first-pass numbers chosen to be reasonable, not
 right. §3 of the design doc is explicit that this is where most of the real
 playtesting time goes, and none of it has happened yet — a bot can confirm
