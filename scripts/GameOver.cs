@@ -24,7 +24,6 @@ public partial class GameOver : Control
 	private TextureButton restartButton;
 	private TextureButton menuButton;
 	private Label scoreLabel;
-	private Label scoreCaption;
 	private Label statsLabel;
 	private Label deathCauseLabel;
 	private Label stardustLabel;
@@ -40,7 +39,6 @@ public partial class GameOver : Control
 	public override void _Ready()
 	{
 		scoreLabel = GetNode<Label>("Recap/ScoreLabel");
-		scoreCaption = GetNodeOrNull<Label>("Recap/ScoreCaption");
 		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
 		deathCauseLabel = GetNodeOrNull<Label>("Recap/DeathCauseLabel");
 		stardustLabel = GetNodeOrNull<Label>("Recap/StardustLabel");
@@ -70,11 +68,6 @@ public partial class GameOver : Control
 	private void ShowRecap()
 	{
 		scoreLabel.Text = $"{ScoreToShow:N0}";
-
-		// The weapon it was scored with. One mode means there is nothing else
-		// left to disambiguate a score against.
-		if (scoreCaption != null)
-			scoreCaption.Text = Loadout.Profile.Name;
 
 		if (statsLabel != null)
 		{

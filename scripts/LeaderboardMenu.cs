@@ -45,7 +45,10 @@ public partial class LeaderboardMenu : Control
 		for (int i = 0; i < entries.Count; i++)
 		{
 			Leaderboard.Entry entry = entries[i];
-			var row = new HBoxContainer();
+			// Rows are fixed-width cells inside a full-width VBox, so without
+			// this they pack against the left edge and the whole table sits off
+			// centre under a centred title.
+			var row = new HBoxContainer { SizeFlagsHorizontal = SizeFlags.ShrinkCenter };
 			row.AddThemeConstantOverride("separation", 28);
 
 			// Top three read warmer than the rest — the same accent colour the

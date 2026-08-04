@@ -13,14 +13,20 @@ public partial class Debris : Node2D
 	[Export] public float MassValue { get; set; } = 2.0f;
 
 	[ExportGroup("Motion")]
-	[Export] public float LaunchSpeedMin { get; set; } = 210.0f;
-	[Export] public float LaunchSpeedMax { get; set; } = 420.0f;
+	[Export] public float LaunchSpeedMin { get; set; } = 140.0f;
+	[Export] public float LaunchSpeedMax { get; set; } = 260.0f;
 	/// <summary>Pull toward the world at birth.</summary>
 	[Export] public float BaseAcceleration { get; set; } = 900.0f;
-	/// <summary>Pull is multiplied up to this over <see cref="GrabTime"/>, so nothing lingers.</summary>
-	[Export] public float FinalAccelerationFactor { get; set; } = 4.5f;
-	[Export] public float GrabTime { get; set; } = 1.1f;
-	[Export] public float Drag { get; set; } = 1.5f;
+	/// <summary>
+	/// Pull is multiplied up to this over <see cref="GrabTime"/>, so nothing
+	/// lingers. Tuned hard: motes used to keep a slow orbit around a moving
+	/// world for over a second, which read as junk circling the player rather
+	/// than mass being collected. A short scatter and a firm pull says the same
+	/// thing without the clutter.
+	/// </summary>
+	[Export] public float FinalAccelerationFactor { get; set; } = 6.5f;
+	[Export] public float GrabTime { get; set; } = 0.45f;
+	[Export] public float Drag { get; set; } = 3.4f;
 	[Export] public float AbsorbRadius { get; set; } = 46.0f;
 	/// <summary>How much harder the Magnet pickup pulls.</summary>
 	[Export] public float MagnetFactor { get; set; } = 5.0f;

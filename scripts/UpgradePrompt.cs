@@ -16,15 +16,18 @@ public partial class UpgradePrompt : Control
 	private static readonly Color Affordable = new Color(1f, 0.85f, 0.4f);
 	private static readonly Color TooDear = new Color(0.55f, 0.55f, 0.62f);
 
+	private const float CardWidth = 280f;
+	private const float CardHeight = 150f;
+
 	private RunState run;
-	private VBoxContainer cards;
+	private HBoxContainer cards;
 	private Label heading;
 	private readonly List<RunUpgradeId> offer = new();
 	private readonly List<Button> buttons = new();
 
 	public override void _Ready()
 	{
-		cards = GetNodeOrNull<VBoxContainer>("Cards");
+		cards = GetNodeOrNull<HBoxContainer>("Cards");
 		heading = GetNodeOrNull<Label>("Heading");
 		Visible = false;
 	}
@@ -152,6 +155,12 @@ public partial class UpgradePrompt : Control
 		return id;
 	}
 
+	/// <summary>
+	/// One box per offer, side by side. A row of full-width lines read as a
+	/// wall of text over the arena; a card is a thing you point at, and three
+	/// of them side by side can be compared at a glance — which is the whole
+	/// job, given how little time the window gives you.
+	/// </summary>
 	private void BuildCards()
 	{
 		if (cards == null)
@@ -164,34 +173,95 @@ public partial class UpgradePrompt : Control
 		if (heading != null)
 			heading.Text = string.Format(TranslationServer.Translate("UI_UPGRADE_HEADING"), run.Stardust);
 
+		Font font = heading?.GetThemeFont("font");
+
 		for (int i = 0; i < offer.Count; i++)
 		{
 			RunUpgrades.Profile profile = RunUpgrades.Get(offer[i]);
 			int cost = profile.CostAt(run.LevelOf(profile.Id));
 			bool canAfford = cost <= run.Stardust;
+			Color tint = canAfford ? Affordable : TooDear;
 
-			var button = new Button
+			var card = new Button
 			{
-				Text = $"{i + 1}   {profile.Name}   ·   {profile.Effect}   ·   {cost}",
-				Flat = true,
+				Flat = false,
 				Disabled = !canAfford,
-				CustomMinimumSize = new Vector2(0, 56)
+				CustomMinimumSize = new Vector2(CardWidth, CardHeight),
+				// The label stack below draws the text; the button itself is the
+				// box and the hit target.
+				Text = string.Empty
 			};
 
-			button.AddThemeColorOverride("font_color", canAfford ? Affordable : TooDear);
-			button.AddThemeColorOverride("font_disabled_color", TooDear);
-			button.AddThemeColorOverride("font_hover_color", Colors.White);
-			button.AddThemeColorOverride("font_focus_color", Colors.White);
-			button.AddThemeColorOverride("font_outline_color", new Color(0, 0, 0, 0.85f));
-			button.AddThemeConstantOverride("outline_size", 8);
-			button.AddThemeFontSizeOverride("font_size", 32);
+			card.AddThemeStyleboxOverride("normal", CardStyle(new Color(0.09f, 0.07f, 0.13f, 0.88f), tint));
+			card.AddThemeStyleboxOverride("hover", CardStyle(new Color(0.16f, 0.13f, 0.22f, 0.94f), Colors.White));
+			card.AddThemeStyleboxOverride("pressed", CardStyle(new Color(0.2f, 0.16f, 0.26f, 0.96f), Colors.White));
+			card.AddThemeStyleboxOverride("focus", CardStyle(new Color(0.16f, 0.13f, 0.22f, 0.94f), Colors.White));
+			card.AddThemeStyleboxOverride("disabled", CardStyle(new Color(0.07f, 0.06f, 0.1f, 0.8f), TooDear));
+
+			var stack = new VBoxContainer
+			{
+				MouseFilter = MouseFilterEnum.Ignore,
+				AnchorRight = 1f,
+				AnchorBottom = 1f,
+				OffsetLeft = 12f,
+				OffsetRight = -12f,
+				OffsetTop = 10f,
+				OffsetBottom = -10f
+			};
+			stack.AddThemeConstantOverride("separation", 2);
+
+			stack.AddChild(CardLabel($"{i + 1}", font, 26, new Color(0.6f, 0.6f, 0.7f), HorizontalAlignment.Center));
+			stack.AddChild(CardLabel(profile.Name, font, 30, tint, HorizontalAlignment.Center));
+
+			Label effect = CardLabel(profile.Effect, font, 21, new Color(0.8f, 0.8f, 0.88f), HorizontalAlignment.Center);
+			effect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+			effect.SizeFlagsVertical = SizeFlags.ExpandFill;
+			stack.AddChild(effect);
+
+			stack.AddChild(CardLabel($"{cost}", font, 28, tint, HorizontalAlignment.Center));
+
+			card.AddChild(stack);
 
 			int index = i;
-			button.Pressed += () => Buy(index);
+			card.Pressed += () => Buy(index);
 
-			cards.AddChild(button);
-			buttons.Add(button);
+			cards.AddChild(card);
+			buttons.Add(card);
 		}
+	}
+
+	private static StyleBoxFlat CardStyle(Color background, Color border)
+	{
+		return new StyleBoxFlat
+		{
+			BgColor = background,
+			BorderColor = new Color(border, 0.55f),
+			BorderWidthTop = 2,
+			BorderWidthBottom = 2,
+			BorderWidthLeft = 2,
+			BorderWidthRight = 2,
+			CornerRadiusTopLeft = 10,
+			CornerRadiusTopRight = 10,
+			CornerRadiusBottomLeft = 10,
+			CornerRadiusBottomRight = 10
+		};
+	}
+
+	private static Label CardLabel(string text, Font font, int size, Color colour, HorizontalAlignment align)
+	{
+		var label = new Label
+		{
+			Text = text,
+			HorizontalAlignment = align,
+			MouseFilter = Control.MouseFilterEnum.Ignore
+		};
+
+		if (font != null)
+			label.AddThemeFontOverride("font", font);
+
+		label.AddThemeFontSizeOverride("font_size", size);
+		label.AddThemeColorOverride("font_color", colour);
+		return label;
 	}
 
 	/// <summary>

@@ -54,15 +54,15 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -280.0
-offset_top = 165.0
-offset_right = 280.0
-offset_bottom = 697.0
+offset_left = -250.0
+offset_top = 150.0
+offset_right = 250.0
+offset_bottom = 625.0
 grow_horizontal = 2
 theme_override_constants/separation = 0
 
 [node name="RestartButton" type="TextureButton" parent="Buttons"]
-custom_minimum_size = Vector2(560, 267)
+custom_minimum_size = Vector2(500, 239)
 layout_mode = 2
 texture_normal = ExtResource("12_play_n")
 texture_pressed = ExtResource("13_play_p")
@@ -71,7 +71,7 @@ ignore_texture_size = true
 stretch_mode = 5
 
 [node name="MenuButton" type="TextureButton" parent="Buttons"]
-custom_minimum_size = Vector2(560, 265)
+custom_minimum_size = Vector2(500, 237)
 layout_mode = 2
 texture_normal = ExtResource("15_menu_n")
 texture_pressed = ExtResource("16_menu_p")
@@ -85,19 +85,11 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -480.0
-offset_top = 715.0
+offset_top = 648.0
 offset_right = 480.0
-offset_bottom = 1075.0
+offset_bottom = 1040.0
 grow_horizontal = 2
 theme_override_constants/separation = 4
-
-[node name="ScoreCaption" type="Label" parent="Recap"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.78, 1)
-theme_override_fonts/font = ExtResource("1_ewvvw")
-theme_override_font_sizes/font_size = 30
-text = "ORBIT SCORE"
-horizontal_alignment = 1
 
 [node name="ScoreLabel" type="Label" parent="Recap"]
 layout_mode = 2

@@ -256,8 +256,6 @@ public partial class GameManager : Node2D
 
 		if (bossNameLabel != null)
 			bossNameLabel.Text = encounterName;
-		if (bossBar != null)
-			bossBar.Visible = true;
 		if (bossHealth != null)
 		{
 			// A fresh stylebox per encounter, so each boss reads in its own
@@ -276,6 +274,22 @@ public partial class GameManager : Node2D
 		Announce(encounterName, boss.ArrivalLine, boss.BossColor);
 		Shake(0.5f);
 		PlayStreakSting(0.6f);
+		RevealBossBarAfterAnnouncement();
+	}
+
+	/// <summary>
+	/// The bar waits for the announcement to finish. Both live at the bottom of
+	/// the screen and both name the same boss, so showing them together was one
+	/// idea said twice, competing for the same strip.
+	/// </summary>
+	private async void RevealBossBarAfterAnnouncement()
+	{
+		float wait = announcer != null ? announcer.HoldTime + announcer.FadeTime : 0f;
+		await ToSignal(GetTree().CreateTimer(wait, processAlways: true), SceneTreeTimer.SignalName.Timeout);
+
+		// The boss can be dead, or the orbit over, before the banner clears.
+		if (IsInstanceValid(this) && !isGameOver && BossActive && bossBar != null)
+			bossBar.Visible = true;
 	}
 
 	private void OnBossHealthChanged(float fraction)

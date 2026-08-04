@@ -136,13 +136,44 @@ public partial class SettingsMenu : Control
 	/// Greys the whole resolution row together. Disabling only the dropdown
 	/// left its label at full brightness, which reads as an active row whose
 	/// control just happens to be unreadable, rather than an inactive one.
+	///
+	/// Fullscreen also makes the row tell the truth. The game renders at the
+	/// monitor's native size in fullscreen — the stretch mode scales the canvas
+	/// rather than the render target — but the dropdown went on showing whatever
+	/// windowed size was last picked, so a 1440p screen looked like it was
+	/// locked to 1080p when it never was.
 	/// </summary>
 	private void SetResolutionEnabled(bool enabled)
 	{
 		resolutionOption.Disabled = !enabled;
+
 		var label = GetNodeOrNull<Label>("Layout/ResolutionRow/Label");
 		label?.AddThemeColorOverride("font_color",
 			enabled ? new Color(1f, 1f, 1f) : new Color(0.45f, 0.45f, 0.5f));
+
+		if (enabled)
+		{
+			// Back to the stored choice, which is what windowed mode will use.
+			resolutionOption.Selected = GameSettings.Instance?.ResolutionIndex ?? 0;
+			return;
+		}
+
+		Vector2I screen = DisplayServer.ScreenGetSize(DisplayServer.WindowGetCurrentScreen());
+		string native = $"{screen.X} x {screen.Y}";
+
+		// Reuse a matching entry if the list already has one, so the dropdown
+		// does not grow a duplicate every time fullscreen is toggled.
+		for (int i = 0; i < resolutionOption.ItemCount; i++)
+		{
+			if (resolutionOption.GetItemText(i) != native)
+				continue;
+
+			resolutionOption.Selected = i;
+			return;
+		}
+
+		resolutionOption.AddItem(native);
+		resolutionOption.Selected = resolutionOption.ItemCount - 1;
 	}
 
 	private void OnVSyncToggled(bool pressed)
