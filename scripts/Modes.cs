@@ -94,20 +94,22 @@ public static class Modes
 	public static void SeedRun(GameMode mode)
 	{
 		if (mode == GameMode.DailyAlignment)
-			RunState.Rng.Seed = DailySeedValue();
+			RunState.Rng.Seed = (ulong)TodayKey();
 		else
 			RunState.Rng.Randomize();
 	}
 
 	/// <summary>
-	/// Today's UTC date as a stable integer seed. Deliberately not
+	/// Today's UTC date as a stable integer, e.g. 20260804. Deliberately not
 	/// <c>string.GetHashCode()</c> — .NET randomises that per process, which
 	/// would make "the same orbit for everyone today" false the moment two
-	/// players ran different processes.
+	/// players ran different processes. Doubles as the RNG seed and as the key
+	/// <see cref="PlayerProfile"/> checks to gate Daily Alignment to one
+	/// attempt: both need "today", identically, on every machine.
 	/// </summary>
-	public static ulong DailySeedValue()
+	public static int TodayKey()
 	{
 		var today = System.DateTime.UtcNow;
-		return (ulong)(today.Year * 10000 + today.Month * 100 + today.Day);
+		return today.Year * 10000 + today.Month * 100 + today.Day;
 	}
 }

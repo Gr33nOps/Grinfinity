@@ -28,6 +28,26 @@ public static class PlayerProfile
 	/// <summary>Highest normalised mass (0..1) ever carried, across every orbit.</summary>
 	public static float HeaviestMassEver { get; private set; }
 
+	/// <summary><see cref="Modes.TodayKey"/> on the last day Daily Alignment was played, or 0 if never.</summary>
+	public static int LastDailyAlignmentDay { get; private set; }
+	/// <summary>The score that attempt earned, for the mode-select card to show while today's is locked.</summary>
+	public static int LastDailyAlignmentScore { get; private set; }
+
+	/// <summary>True once today's one Daily Alignment attempt has already been spent.</summary>
+	public static bool PlayedDailyAlignmentToday
+	{
+		get { EnsureLoaded(); return LastDailyAlignmentDay == Modes.TodayKey(); }
+	}
+
+	/// <summary>Spends today's Daily Alignment attempt. Called once, from GameManager.TriggerGameOver.</summary>
+	public static void RecordDailyAlignment(int score)
+	{
+		EnsureLoaded();
+		LastDailyAlignmentDay = Modes.TodayKey();
+		LastDailyAlignmentScore = Mathf.Max(score, 0);
+		SaveToFile();
+	}
+
 	private static readonly Dictionary<WeaponId, int> weaponTally = new();
 
 	/// <summary>The weapon most orbits have been launched with, or Comet if none yet.</summary>
@@ -147,6 +167,8 @@ public static class PlayerProfile
 		TotalKills = Mathf.Max(config.GetValue(Section, "total_kills", 0).AsInt32(), 0);
 		TotalTimePlayed = Mathf.Max(config.GetValue(Section, "total_time", 0.0f).AsSingle(), 0f);
 		HeaviestMassEver = Mathf.Clamp(config.GetValue(Section, "heaviest_mass", 0.0f).AsSingle(), 0f, 1f);
+		LastDailyAlignmentDay = config.GetValue(Section, "daily_day", 0).AsInt32();
+		LastDailyAlignmentScore = Mathf.Max(config.GetValue(Section, "daily_score", 0).AsInt32(), 0);
 
 		foreach (int worldId in config.GetValue(WorldSection, "unlocked", new int[] { 1 }).AsInt32Array())
 			unlockedWorlds.Add(worldId);
@@ -173,6 +195,8 @@ public static class PlayerProfile
 		config.SetValue(Section, "total_kills", TotalKills);
 		config.SetValue(Section, "total_time", TotalTimePlayed);
 		config.SetValue(Section, "heaviest_mass", HeaviestMassEver);
+		config.SetValue(Section, "daily_day", LastDailyAlignmentDay);
+		config.SetValue(Section, "daily_score", LastDailyAlignmentScore);
 
 		var worlds = new int[unlockedWorlds.Count];
 		unlockedWorlds.CopyTo(worlds);

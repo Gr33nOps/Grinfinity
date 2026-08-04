@@ -5,14 +5,19 @@ using Godot;
 /// The local top-10, per the roadmap: score, weapon, world and date for each
 /// entry. Separate from <see cref="ScoreManager"/>'s single best, because a
 /// leaderboard needs to keep the ninth-best run even after a tenth arrives to
-/// bump someone off it — one scalar can't do that.
+/// bump someone off it — one scalar can't do that. Kept per <see cref="GameMode"/>
+/// since M6 — a Flyby's 60-second sprint and an Endless Orbit survival run are
+/// not the same currency, so they get their own top-10 each.
 /// </summary>
 public static class Leaderboard
 {
 	public const int Capacity = 10;
 	private const string SavePath = "user://leaderboard.cfg";
-	private const string Section = "leaderboard";
-	private const int SaveVersion = 1;
+	private const string LegacySection = "leaderboard";
+	// v2 splits the single table into one per GameMode. A v1 file's entries
+	// were all played before modes existed, so they migrate straight into
+	// Endless Orbit's bucket rather than being lost.
+	private const int SaveVersion = 2;
 
 	public readonly struct Entry
 	{
@@ -35,39 +40,41 @@ public static class Leaderboard
 		public string Date { get; }
 	}
 
-	private static readonly List<Entry> entries = new();
+	private static readonly Dictionary<GameMode, List<Entry>> entriesByMode = new();
 	private static bool isLoaded;
 
-	public static IReadOnlyList<Entry> Entries
+	/// <summary>This mode's top entries, best first. Empty if none have been played yet.</summary>
+	public static IReadOnlyList<Entry> EntriesFor(GameMode mode)
 	{
-		get
-		{
-			EnsureLoaded();
-			return entries;
-		}
+		EnsureLoaded();
+		return entriesByMode.TryGetValue(mode, out List<Entry> list) ? list : System.Array.Empty<Entry>();
 	}
 
 	/// <summary>
-	/// Records a finished orbit. Returns the 1-based rank it landed at, or -1 if
-	/// it did not place in the top <see cref="Capacity"/>.
+	/// Records a finished orbit against its own mode's table. Returns the
+	/// 1-based rank it landed at within that mode, or -1 if it did not place
+	/// in the top <see cref="Capacity"/>.
 	/// </summary>
-	public static int Submit(int score, float survivalTime, int kills, WeaponId weapon, int world)
+	public static int Submit(GameMode mode, int score, float survivalTime, int kills, WeaponId weapon, int world)
 	{
 		EnsureLoaded();
 
+		if (!entriesByMode.TryGetValue(mode, out List<Entry> list))
+			entriesByMode[mode] = list = new List<Entry>();
+
 		var entry = new Entry(score, survivalTime, kills, weapon, world, Time.GetDateStringFromSystem());
 
-		int insertAt = entries.FindIndex(e => score > e.Score);
+		int insertAt = list.FindIndex(e => score > e.Score);
 		if (insertAt < 0)
 		{
-			if (entries.Count >= Capacity)
+			if (list.Count >= Capacity)
 				return -1;
-			insertAt = entries.Count;
+			insertAt = list.Count;
 		}
 
-		entries.Insert(insertAt, entry);
-		if (entries.Count > Capacity)
-			entries.RemoveRange(Capacity, entries.Count - Capacity);
+		list.Insert(insertAt, entry);
+		if (list.Count > Capacity)
+			list.RemoveRange(Capacity, list.Count - Capacity);
 
 		SaveToFile();
 		return insertAt + 1;
@@ -84,36 +91,61 @@ public static class Leaderboard
 		if (config.Load(SavePath) != Error.Ok)
 			return;
 
-		int count = Mathf.Clamp(config.GetValue(Section, "count", 0).AsInt32(), 0, Capacity);
+		int version = config.GetValue(LegacySection, "version", 1).AsInt32();
+
+		if (version < 2)
+		{
+			LoadSection(LegacySection, GameMode.EndlessOrbit, config);
+			return;
+		}
+
+		foreach (GameMode mode in System.Enum.GetValues<GameMode>())
+			LoadSection($"{LegacySection}_{mode}", mode, config);
+	}
+
+	private static void LoadSection(string section, GameMode mode, ConfigFile config)
+	{
+		int count = Mathf.Clamp(config.GetValue(section, "count", 0).AsInt32(), 0, Capacity);
+		if (count <= 0)
+			return;
+
+		var list = new List<Entry>(count);
 		for (int i = 0; i < count; i++)
 		{
-			int score = config.GetValue(Section, $"score_{i}", 0).AsInt32();
-			float time = config.GetValue(Section, $"time_{i}", 0.0f).AsSingle();
-			int kills = config.GetValue(Section, $"kills_{i}", 0).AsInt32();
-			int weaponRaw = config.GetValue(Section, $"weapon_{i}", 0).AsInt32();
-			int world = Mathf.Clamp(config.GetValue(Section, $"world_{i}", 1).AsInt32(), 1, 12);
-			string date = config.GetValue(Section, $"date_{i}", "").AsString();
+			int score = config.GetValue(section, $"score_{i}", 0).AsInt32();
+			float time = config.GetValue(section, $"time_{i}", 0.0f).AsSingle();
+			int kills = config.GetValue(section, $"kills_{i}", 0).AsInt32();
+			int weaponRaw = config.GetValue(section, $"weapon_{i}", 0).AsInt32();
+			int world = Mathf.Clamp(config.GetValue(section, $"world_{i}", 1).AsInt32(), 1, 12);
+			string date = config.GetValue(section, $"date_{i}", "").AsString();
 
 			WeaponId weapon = System.Enum.IsDefined(typeof(WeaponId), weaponRaw) ? (WeaponId)weaponRaw : WeaponId.Comet;
-			entries.Add(new Entry(score, time, kills, weapon, world, date));
+			list.Add(new Entry(score, time, kills, weapon, world, date));
 		}
+
+		entriesByMode[mode] = list;
 	}
 
 	private static void SaveToFile()
 	{
 		var config = new ConfigFile();
-		config.SetValue(Section, "version", SaveVersion);
-		config.SetValue(Section, "count", entries.Count);
+		config.SetValue(LegacySection, "version", SaveVersion);
 
-		for (int i = 0; i < entries.Count; i++)
+		foreach ((GameMode mode, List<Entry> list) in entriesByMode)
 		{
-			Entry entry = entries[i];
-			config.SetValue(Section, $"score_{i}", entry.Score);
-			config.SetValue(Section, $"time_{i}", entry.SurvivalTime);
-			config.SetValue(Section, $"kills_{i}", entry.Kills);
-			config.SetValue(Section, $"weapon_{i}", (int)entry.Weapon);
-			config.SetValue(Section, $"world_{i}", entry.World);
-			config.SetValue(Section, $"date_{i}", entry.Date);
+			string section = $"{LegacySection}_{mode}";
+			config.SetValue(section, "count", list.Count);
+
+			for (int i = 0; i < list.Count; i++)
+			{
+				Entry entry = list[i];
+				config.SetValue(section, $"score_{i}", entry.Score);
+				config.SetValue(section, $"time_{i}", entry.SurvivalTime);
+				config.SetValue(section, $"kills_{i}", entry.Kills);
+				config.SetValue(section, $"weapon_{i}", (int)entry.Weapon);
+				config.SetValue(section, $"world_{i}", entry.World);
+				config.SetValue(section, $"date_{i}", entry.Date);
+			}
 		}
 
 		Error error = config.Save(SavePath);

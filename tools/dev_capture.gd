@@ -53,6 +53,20 @@ func _ready() -> void:
 		if settings:
 			settings.call("SetWeapon", int(weapon))
 
+	# GRIN_MODE picks the mode by index (0 Endless, 1 Flyby, 2 Daily Alignment,
+	# 3 Convergence, 4 Glass Planet). GRIN_DIFFICULTY picks Easy/Normal/Hard
+	# the same way (0/1/2).
+	var mode := OS.get_environment("GRIN_MODE")
+	if mode != "":
+		var settings := get_node_or_null("/root/GameSettings")
+		if settings:
+			settings.call("SetMode", int(mode))
+	var difficulty := OS.get_environment("GRIN_DIFFICULTY")
+	if difficulty != "":
+		var settings := get_node_or_null("/root/GameSettings")
+		if settings:
+			settings.call("SetDifficulty", int(difficulty))
+
 	# GameManager's death path calls change_scene_to_file(), which frees
 	# whatever current_scene points to. Since this wrapper IS current_scene (it
 	# is the CLI-launched main scene), a mortal run that reaches death loses the

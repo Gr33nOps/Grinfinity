@@ -29,17 +29,27 @@ Every keyboard binding above can be changed in **Settings → Controls**.
 
 ## Features
 
+- Five modes, chosen before an orbit: **Endless Orbit** (survive as long as
+  you can), **Flyby** (60 seconds, maximum score), **Daily Alignment** (a
+  fixed seed shared by everyone that day, one attempt), **Convergence**
+  (three bosses back to back, no trash to hide behind) and **Glass Planet**
+  (one hit kills you, your own shots hit five times as hard)
+- Easy / Normal / Hard difficulty, scaling spawn rate, body speed and contact
+  radius — never player damage
+- A seeded RNG every gameplay roll draws from, so Daily Alignment reproduces
+  the same orbit on every machine
 - Gravity, not pathfinding: bodies orbit, overshoot, clump and slingshot
 - Three weapons, chosen at orbit start: Comet, Debris Cannon, Ion Lance
 - Seven body kinds that each teach something — splitting, armoured, orbiting,
   detonating — plus **The Coil**, a boss of spinning rings with one safe gap
 - Mass as a single risk-and-reward dial — rings, moons, venting and a live
   score multiplier all read from it
-- Score, survival timer, kill count and streak counter, saved as personal bests
+- Score, survival timer, kill count and streak counter, saved as personal
+  bests — per mode, alongside one "best of any mode" figure the menu shows
 - Stardust, earned from time, kills and streaks, carried across every orbit
 - Three soft-capped permanent upgrades bought with stardust: Thrust, Coolant, Ballast
 - Nine achievements, tracked live and persisted
-- A local top-10 leaderboard: score, time, kills, weapon, world and date
+- A local top-10 leaderboard per mode: score, time, kills, weapon, world and date
 - A lifetime stats screen: orbits, kills, time played, heaviest mass, favourite weapon
 - Death recap: score, time, kills, best streak, mass at death and moons held
 - Bodies unlock as an orbit goes on:
@@ -126,6 +136,8 @@ GRIN_SCENE=res://scenes/game.tscn GRIN_RUN=60 GRIN_SHOT=/tmp/shot.png godot --pa
 | `GRIN_SHOT` | Where to write the PNG |
 | `GRIN_RUN` | Seconds to play for |
 | `GRIN_WEAPON` | Loadout index: 0 Comet, 1 Debris Cannon, 2 Ion Lance |
+| `GRIN_MODE` | Mode index: 0 Endless Orbit, 1 Flyby, 2 Daily Alignment, 3 Convergence, 4 Glass Planet |
+| `GRIN_DIFFICULTY` | Difficulty index: 0 Easy, 1 Normal, 2 Hard |
 | `GRIN_BOSS` | Seconds before The Coil arrives |
 | `GRIN_MORTAL` | Leave contact damage on, to exercise death and the recap |
 | `GRIN_PACIFIST` | Hold fire, so bodies pile to the spawn cap |
@@ -143,8 +155,13 @@ Edit the masters, re-crop, and drop the result into `sprites/`.
 
 Stored under Godot's user data directory (`%APPDATA%\Godot\app_userdata\Grinfinity` on Windows):
 
-- `highscore.cfg` — best survival time, best kill count, best streak
-- `settings.cfg` — volume, fullscreen and key binding preferences
+- `highscore.cfg` — best survival time, kills, streak and score, per mode and
+  overall
+- `leaderboard.cfg` — the local top-10, per mode
+- `profile.cfg` — stardust, lifetime stats, unlocked worlds and achievements,
+  upgrade levels, and the day Daily Alignment was last played
+- `settings.cfg` — volume, fullscreen, key bindings, and the last weapon,
+  world, mode and difficulty picked
 
 ## License
 

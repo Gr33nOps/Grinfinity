@@ -371,18 +371,54 @@ Nothing here is blocked on them.
 | Mode | Shape | Why |
 |---|---|---|
 | **Endless Orbit** ✅ | Endless survival | The default |
-| **Flyby** | 60 seconds, max score | Perfect for "one more" |
-| **Daily Alignment** | Fixed seed, one attempt | Reason to return daily |
-| **Convergence** | Three bosses, no trash | Showcases M3/M4 work |
-| **Glass Planet** | One-hit death, huge damage | Ranked, for the skilled |
+| **Flyby** ✅ | 60 seconds, max score | Perfect for "one more" |
+| **Daily Alignment** ✅ | Fixed seed, one attempt | Reason to return daily |
+| **Convergence** ✅ | Three bosses, no trash | Showcases M3/M4 work |
+| **Glass Planet** ✅ | One-hit death, huge damage | Ranked, for the skilled |
 
-- [ ] Mode select on the main menu
-- [ ] **Seeded RNG** — `RandomNumberGenerator` with an explicit seed, not `GD.Rand*`
-- [ ] Per-mode high scores in the save
-- [ ] **Difficulty select** — Easy / Normal / Hard, affecting spawn rate, body
-	  speed and contact radius. Never player damage.
+- [x] **Mode select on the main menu** — a new screen between the menu and the
+      weapon pick, `ModeSelect.cs`, same pick-then-pick-again pattern
+      `WeaponSelect` already uses. A Daily Alignment already played today shows
+      locked, with that attempt's score on the card, instead of being pickable.
+- [x] **Seeded RNG** — `RunState.Rng`, a static `RandomNumberGenerator` every
+      gameplay roll now draws from instead of `GD.Rand*`: spawns, relics, arena
+      events, hazards, boss internals, bullet jitter, pickups. `GameManager`
+      reseeds it in `_EnterTree`, before `RunState` exists — Daily Alignment
+      gets a seed derived from today's UTC date (a plain integer, not
+      `string.GetHashCode()`, which .NET randomises per process), every other
+      mode gets fresh entropy via `Randomize()`. `GameCamera`'s shake-noise
+      seed deliberately stayed on `GD.Randi()` — it colours a texture, never
+      an orbit.
+- [x] **Per-mode high scores in the save** — `ScoreManager` keeps a record per
+      `GameMode` (`highscore.cfg` v4) alongside the existing global "best of
+      any mode" the main menu shows; a Flyby run no longer has to out-score an
+      Endless Orbit marathon to earn "NEW BEST!". `Leaderboard`'s top-10
+      became per-mode too (v2), with a mode browser on the leaderboard screen —
+      the M5 status note called this "moot until M6 adds a second mode".
+- [x] **Difficulty select** — Easy / Normal / Hard, on the same screen as the
+      mode. Scales `BodySpawner`'s spawn interval and speed ramp, and each
+      `Body`'s collision shape (not its sprite, so a Hard Drifter looks
+      identical but is less forgiving to graze). Never player damage — that
+      axis belongs to Glass Planet's mode-level multiplier instead, applied in
+      `Bullet.ApplyProfile`.
 
 **Done when:** Daily Alignment produces identical orbits across two machines.
+**Verified**: two independent process launches on the same day produced the
+same seed, the same relic, and byte-identical RNG draws
+(`0.643708, 0.275573, 0.081102`, in order). Frame-timing (when a spawn Timer's
+tick lands) is the one thing a non-lockstep engine cannot pin bit-for-bit
+across machines with different frame rates — the roll *stream* is proven
+identical, which is what actually decides everything that happens.
+
+**Status:** M6 is done. Convergence was verified live: The Coil's health bar
+is already up at 0:12 with zero trash bodies on screen, against a default
+~3:00 arrival and constant spawning in every other mode. Difficulty was
+verified with a pacifist A/B — Easy and Hard held at the spawn cap for 15
+seconds landed at 9 and 15 live bodies respectively, in line with the tuned
+1.3x / 0.78x interval multipliers. Flyby and Glass Planet were run and capped
+without errors; Glass Planet's population stayed small across an 8-second
+capture, consistent with a 5x damage multiplier clearing kills fast. Still on
+placeholder audio throughout, per M1.
 
 ---
 
@@ -451,10 +487,13 @@ Firm. Revisit only if a shipped game earns the right.
    the art, so they are now cropped and the key is drawn live from the input map
    — which also fixes rebinding silently lying about itself.
 3. ~~**M1**: tune the existing numbers → hitstop → screen shake → parallax space.~~
-   Done — and **M2 through M5 with it**. Every milestone through "meta and
-   retention" is built. Next is **M6: modes** — mode select, Flyby, Daily
-   Alignment (needs seeded RNG), Convergence, Glass Planet, and a difficulty
-   select that never touches player damage.
+   Done — and **M2 through M6 with it**. Every milestone through "modes" is
+   built: five distinct ways to play, a seeded RNG every gameplay roll draws
+   from, per-mode records, and a difficulty select that never touches player
+   damage. Next is **M7: ship it** — options, accessibility, localisation-
+   ready strings, Steamworks, store assets, the QA matrix and an itch.io soft
+   launch. Nothing left on the design side; everything left is production and
+   a playtest.
 
 ### The two things code cannot finish
 

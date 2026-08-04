@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
@@ -11,21 +12,42 @@ public static class ScoreManager
 	private const string Section = "score";
 
 	// v3 adds best_score, which arrived with the mass-weighted scoring in M2.
-	// v2 saves load unchanged and simply start with no score on record.
-	private const int SaveVersion = 3;
+	// v4 adds a per-mode table alongside the existing global fields — a v3
+	// save's numbers become the global figures unchanged, and every mode
+	// simply starts with nothing on record until it is actually played.
+	private const int SaveVersion = 4;
 	private const float MaxPlausibleTime = 36000.0f;
+
+	private readonly struct ModeRecord
+	{
+		public ModeRecord(float time, int kills, int streak, int score)
+		{
+			Time = time;
+			Kills = kills;
+			Streak = streak;
+			Score = score;
+		}
+
+		public float Time { get; }
+		public int Kills { get; }
+		public int Streak { get; }
+		public int Score { get; }
+	}
 
 	private static float bestTime;
 	private static int bestKills;
 	private static int bestStreak;
 	private static int bestScore;
+	private static readonly Dictionary<GameMode, ModeRecord> modeRecords = new();
 	private static bool isLoaded;
 
+	/// <summary>Best of any mode — what the main menu shows. One number to beat, regardless of what was last played.</summary>
 	public static float BestTime
 	{
 		get { EnsureLoaded(); return bestTime; }
 	}
 
+	/// <summary>Best of any mode. See <see cref="BestTime"/>.</summary>
 	public static int BestScore
 	{
 		get { EnsureLoaded(); return bestScore; }
@@ -44,6 +66,20 @@ public static class ScoreManager
 		return $"BEST: {bestScore}";
 	}
 
+	/// <summary>This mode's own best score, or 0 if it has never been played.</summary>
+	public static int BestScoreFor(GameMode mode)
+	{
+		EnsureLoaded();
+		return modeRecords.TryGetValue(mode, out ModeRecord record) ? record.Score : 0;
+	}
+
+	/// <summary>This mode's own best survival time, or 0 if it has never been played.</summary>
+	public static float BestTimeFor(GameMode mode)
+	{
+		EnsureLoaded();
+		return modeRecords.TryGetValue(mode, out ModeRecord record) ? record.Time : 0f;
+	}
+
 	/// <summary>What a finished orbit beat, so the recap can celebrate the right thing.</summary>
 	public readonly struct Result
 	{
@@ -57,23 +93,30 @@ public static class ScoreManager
 		public bool NewBestTime { get; }
 	}
 
-	/// <summary>Records a finished orbit and reports which records it broke.</summary>
-	public static Result SaveRun(float time, int kills, int streak, int score)
+	/// <summary>
+	/// Records a finished orbit and reports which records it broke — against its
+	/// own mode's table, not the global one. A 60-second Flyby should not have
+	/// to out-score a ten-minute Endless Orbit run to earn a "NEW BEST!".
+	/// </summary>
+	public static Result SaveRun(GameMode mode, float time, int kills, int streak, int score)
 	{
 		EnsureLoaded();
 
-		bool newBestTime = time > bestTime;
-		bool newBestScore = score > bestScore;
-		bool improved = newBestTime || newBestScore || kills > bestKills || streak > bestStreak;
+		if (time > bestTime) bestTime = time;
+		if (score > bestScore) bestScore = score;
+		if (kills > bestKills) bestKills = kills;
+		if (streak > bestStreak) bestStreak = streak;
 
-		if (newBestTime)
-			bestTime = time;
-		if (newBestScore)
-			bestScore = score;
-		if (kills > bestKills)
-			bestKills = kills;
-		if (streak > bestStreak)
-			bestStreak = streak;
+		ModeRecord previous = modeRecords.GetValueOrDefault(mode, default);
+		bool newBestTime = time > previous.Time;
+		bool newBestScore = score > previous.Score;
+		bool improved = newBestTime || newBestScore || kills > previous.Kills || streak > previous.Streak;
+
+		modeRecords[mode] = new ModeRecord(
+			Mathf.Max(time, previous.Time),
+			Mathf.Max(kills, previous.Kills),
+			Mathf.Max(streak, previous.Streak),
+			Mathf.Max(score, previous.Score));
 
 		if (improved)
 			SaveToFile();
@@ -95,6 +138,24 @@ public static class ScoreManager
 			bestKills = config.GetValue(Section, "best_kills", 0).AsInt32();
 			bestStreak = config.GetValue(Section, "best_combo", 0).AsInt32();
 			bestScore = config.GetValue(Section, "best_score", 0).AsInt32();
+
+			foreach (GameMode mode in System.Enum.GetValues<GameMode>())
+			{
+				string prefix = $"mode_{mode}_";
+				float time = config.GetValue(Section, prefix + "time", 0.0f).AsSingle();
+				int kills = config.GetValue(Section, prefix + "kills", 0).AsInt32();
+				int streak = config.GetValue(Section, prefix + "streak", 0).AsInt32();
+				int score = config.GetValue(Section, prefix + "score", 0).AsInt32();
+
+				if (time > 0f || kills > 0 || streak > 0 || score > 0)
+					modeRecords[mode] = new ModeRecord(time, kills, streak, score);
+			}
+
+			// A pre-M6 save has a global best but no mode table yet. That best
+			// was always Endless Orbit — it was the only mode that existed —
+			// so it seeds that mode's record instead of starting it at zero.
+			if (!modeRecords.ContainsKey(GameMode.EndlessOrbit) && (bestScore > 0 || bestTime > 0f))
+				modeRecords[GameMode.EndlessOrbit] = new ModeRecord(bestTime, bestKills, bestStreak, bestScore);
 		}
 		else if (FileAccess.FileExists(LegacySavePath))
 		{
@@ -131,6 +192,15 @@ public static class ScoreManager
 		// "streak" in the fiction, not in the file format.
 		config.SetValue(Section, "best_combo", bestStreak);
 		config.SetValue(Section, "best_score", bestScore);
+
+		foreach ((GameMode mode, ModeRecord record) in modeRecords)
+		{
+			string prefix = $"mode_{mode}_";
+			config.SetValue(Section, prefix + "time", record.Time);
+			config.SetValue(Section, prefix + "kills", record.Kills);
+			config.SetValue(Section, prefix + "streak", record.Streak);
+			config.SetValue(Section, prefix + "score", record.Score);
+		}
 
 		Error error = config.Save(SavePath);
 		if (error != Error.Ok)

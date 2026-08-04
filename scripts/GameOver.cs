@@ -63,10 +63,10 @@ public partial class GameOver : Control
 	{
 		scoreLabel.Text = $"{ScoreToShow:N0}";
 
-		// Which weapon it was scored with, because comparing two orbits without
-		// that is comparing nothing.
+		// Which mode and weapon it was scored with, because comparing two
+		// orbits without that is comparing nothing.
 		if (scoreCaption != null)
-			scoreCaption.Text = $"ORBIT SCORE  ·  {Loadout.Profile.Name}";
+			scoreCaption.Text = $"{Loadout.ModeProfile.Name}  ·  {Loadout.Profile.Name}";
 
 		if (statsLabel != null)
 		{
@@ -123,14 +123,19 @@ public partial class GameOver : Control
 		}
 		else
 		{
-			highScoreLabel.Text = ScoreManager.GetFormattedHighScore();
+			highScoreLabel.Text = $"BEST: {ScoreManager.BestScoreFor(Loadout.Mode)}";
 		}
 	}
 
 	private void OnRestartButtonPressed()
 	{
 		buttonSound?.Play();
-		SceneTransition.Instance.ChangeScene("res://scenes/game.tscn");
+
+		// Daily Alignment has no restart — today's one attempt is already
+		// spent. Mode select is the honest next stop, not straight back in.
+		SceneTransition.Instance.ChangeScene(Loadout.Mode == GameMode.DailyAlignment
+			? "res://scenes/mode_select.tscn"
+			: "res://scenes/game.tscn");
 	}
 
 	private void OnMenuButtonPressed()

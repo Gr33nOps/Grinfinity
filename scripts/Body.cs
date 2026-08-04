@@ -163,6 +163,13 @@ public partial class Body : CharacterBody2D, IShootable
 		if (sprite != null)
 			spriteBaseScale = sprite.Scale;
 
+		// Difficulty's contact radius scales the hitbox alone — the collision
+		// shape's own local scale, not the body's — so a Hard-mode Drifter looks
+		// exactly like a Normal one but is less forgiving to graze.
+		var collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
+		if (collisionShape != null)
+			collisionShape.Scale *= Loadout.DifficultyProfile.ContactRadiusMultiplier;
+
 		ApplyFace();
 
 		OrbitDirection = RunState.Rng.Randf() < 0.5f ? -1.0f : 1.0f;

@@ -126,7 +126,7 @@ public partial class WeaponSelect : Control
 
 	private void OnBackPressed()
 	{
-		SceneTransition.Instance.ChangeScene("res://scenes/menu.tscn");
+		SceneTransition.Instance.ChangeScene("res://scenes/mode_select.tscn");
 	}
 
 	private void BuildWorldPicker()

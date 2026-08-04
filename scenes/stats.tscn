@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://c1grinstats001"]
+[gd_scene load_steps=3 format=3 uid="uid://boymigq8ax0to"]
 
 [ext_resource type="Script" path="res://scripts/StatsMenu.cs" id="1_stats"]
 [ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_font"]

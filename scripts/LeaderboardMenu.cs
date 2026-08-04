@@ -6,20 +6,49 @@ public partial class LeaderboardMenu : Control
 	private VBoxContainer rows;
 	private Label emptyLabel;
 	private Button backButton;
+	private Label modeLabel;
+	private Button modePrevButton;
+	private Button modeNextButton;
 	private Font font;
+	private GameMode browsedMode;
 
 	public override void _Ready()
 	{
 		rows = GetNode<VBoxContainer>("Layout/Rows");
 		emptyLabel = GetNode<Label>("Layout/EmptyLabel");
 		backButton = GetNode<Button>("Layout/BackButton");
+		modeLabel = GetNode<Label>("Layout/ModeRow/ModeLabel");
+		modePrevButton = GetNode<Button>("Layout/ModeRow/Prev");
+		modeNextButton = GetNode<Button>("Layout/ModeRow/Next");
 		font = GetNode<Label>("Layout/Title").GetThemeFont("font");
 
-		BuildRows();
+		modeLabel.AddThemeFontOverride("font", font);
+		modePrevButton.Pressed += () => BrowseMode(-1);
+		modeNextButton.Pressed += () => BrowseMode(1);
+
+		// Opens on whatever mode was last played — the board someone just
+		// finished a run in is the one they came here wanting to see.
+		browsedMode = Loadout.Mode;
+		RefreshMode();
+
 		backButton.Pressed += OnBackPressed;
 
 		Input.MouseMode = Input.MouseModeEnum.Visible;
 		backButton.GrabFocus();
+	}
+
+	private void BrowseMode(int direction)
+	{
+		int count = Modes.All.Length;
+		int index = ((int)browsedMode + direction + count) % count;
+		browsedMode = (GameMode)index;
+		RefreshMode();
+	}
+
+	private void RefreshMode()
+	{
+		modeLabel.Text = Modes.Get(browsedMode).Name;
+		BuildRows();
 	}
 
 	public override void _UnhandledInput(InputEvent inputEvent)
@@ -33,7 +62,10 @@ public partial class LeaderboardMenu : Control
 
 	private void BuildRows()
 	{
-		var entries = Leaderboard.Entries;
+		foreach (Node child in rows.GetChildren())
+			child.QueueFree();
+
+		var entries = Leaderboard.EntriesFor(browsedMode);
 		emptyLabel.Visible = entries.Count == 0;
 
 		for (int i = 0; i < entries.Count; i++)
