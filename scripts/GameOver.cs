@@ -37,16 +37,16 @@ public partial class GameOver : Control
 
 	public override void _Ready()
 	{
-		scoreLabel = GetNode<Label>("Layout/Recap/ScoreLabel");
-		scoreCaption = GetNodeOrNull<Label>("Layout/Recap/ScoreCaption");
-		statsLabel = GetNodeOrNull<Label>("Layout/Recap/StatsLabel");
-		deathCauseLabel = GetNodeOrNull<Label>("Layout/Recap/DeathCauseLabel");
-		stardustLabel = GetNodeOrNull<Label>("Layout/Recap/StardustLabel");
-		worldUnlockLabel = GetNodeOrNull<Label>("Layout/Recap/WorldUnlockLabel");
-		leaderboardLabel = GetNodeOrNull<Label>("Layout/Recap/LeaderboardLabel");
-		highScoreLabel = GetNodeOrNull<Label>("Layout/Recap/HighScoreLabel");
-		restartButton = GetNode<TextureButton>("Layout/Buttons/RestartButton");
-		menuButton = GetNode<TextureButton>("Layout/Buttons/MenuButton");
+		scoreLabel = GetNode<Label>("Recap/ScoreLabel");
+		scoreCaption = GetNodeOrNull<Label>("Recap/ScoreCaption");
+		statsLabel = GetNodeOrNull<Label>("Recap/StatsLabel");
+		deathCauseLabel = GetNodeOrNull<Label>("Recap/DeathCauseLabel");
+		stardustLabel = GetNodeOrNull<Label>("Recap/StardustLabel");
+		worldUnlockLabel = GetNodeOrNull<Label>("Recap/WorldUnlockLabel");
+		leaderboardLabel = GetNodeOrNull<Label>("Recap/LeaderboardLabel");
+		highScoreLabel = GetNodeOrNull<Label>("Recap/HighScoreLabel");
+		restartButton = GetNode<TextureButton>("Buttons/RestartButton");
+		menuButton = GetNode<TextureButton>("Buttons/MenuButton");
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNodeOrNull<AudioStreamPlayer>("HoverSound");
 		gameOverSound = GetNodeOrNull<AudioStreamPlayer>("GameOverSound");
