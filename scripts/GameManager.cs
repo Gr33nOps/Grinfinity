@@ -233,10 +233,14 @@ public partial class GameManager : Node2D
 		if (!isPaused && !isGameOver)
 		{
 			// Flyby ends cleanly the instant the clock runs out — not a death,
-			// just the orbit being over, so there is no hitstop or shake first.
+			// just the orbit being over, so there is no hitstop or shake first,
+			// and no death cause left over from a previous orbit either.
 			float timeLimit = Loadout.ModeProfile.TimeLimit;
 			if (timeLimit > 0f && RunTime >= timeLimit)
+			{
+				GameOver.DeathCause = "";
 				TriggerGameOver();
+			}
 
 			// Convergence chains its own bosses (see OnBossDefeated) and only
 			// needs this to fire the very first one; the other two modes gate
@@ -484,12 +488,13 @@ public partial class GameManager : Node2D
 	/// Death juice. Freezes and shakes first, then hands over to the recap, so the
 	/// hit registers before the screen starts fading.
 	/// </summary>
-	public async void OnPlayerKilled()
+	public async void OnPlayerKilled(string cause)
 	{
 		if (isDying || isGameOver)
 			return;
 
 		isDying = true;
+		GameOver.DeathCause = cause;
 		Shake(DeathTrauma);
 		Hitstop(DeathHitstop);
 
@@ -670,6 +675,8 @@ public partial class GameManager : Node2D
 
 	private void OnGiveUpGame()
 	{
+		// Not a death — no cause left over from a previous orbit should show.
+		GameOver.DeathCause = "";
 		TriggerGameOver();
 	}
 

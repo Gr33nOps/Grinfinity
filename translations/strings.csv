@@ -107,6 +107,11 @@ DIFFICULTY_Hard_FLAVOUR,"Enemies are faster and appear more often."
 BOSS_Coil_ARRIVAL,Read the gap. Dash through it.
 BOSS_Brood_ARRIVAL,It will not stop spawning. Neither can you.
 BOSS_BlackHole_ARRIVAL,It is heavier than you. Do not let it prove it.
+UI_DEATH_CAUSE,"Killed by {0}."
+DEATH_CAUSE_GravityWell,a gravity well
+DEATH_CAUSE_Comet,a comet
+DEATH_CAUSE_FlareBlast,a Flare explosion
+DEATH_CAUSE_EnemyShot,an enemy shot
 UI_BEST_SCORE,BEST {0}
 UI_BEST_TIME,LONGEST {0}
 UI_RECAP_STATS,"{0}     KILLS: {1}     STREAK: x{2}     MASS: {3}%     MOONS: {4}"

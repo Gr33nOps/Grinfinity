@@ -119,7 +119,7 @@ public partial class Bullet : Area2D
 
 			hasHit = true;
 			SetDeferred(Area2D.PropertyName.Monitoring, false);
-			world.KillByBlast();
+			world.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_EnemyShot"));
 			SpawnBurst(20, 0.6f, HostileTint, 0.6f);
 			QueueFree();
 			return;

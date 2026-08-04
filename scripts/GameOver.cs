@@ -18,12 +18,15 @@ public partial class GameOver : Control
 	public static int LeaderboardRank = -1;
 	public static bool IsNewBestTime = false;
 	public static bool IsNewBestScore = false;
+	/// <summary>What ended the orbit — a body kind, a boss, a hazard. Empty for a clean, non-death ending (Flyby's clock, giving up).</summary>
+	public static string DeathCause = "";
 
 	private Button restartButton;
 	private Button menuButton;
 	private Label scoreLabel;
 	private Label scoreCaption;
 	private Label statsLabel;
+	private Label deathCauseLabel;
 	private Label stardustLabel;
 	private Label worldUnlockLabel;
 	private Label leaderboardLabel;
@@ -37,6 +40,7 @@ public partial class GameOver : Control
 		scoreLabel = GetNode<Label>("Layout/Recap/ScoreLabel");
 		scoreCaption = GetNodeOrNull<Label>("Layout/Recap/ScoreCaption");
 		statsLabel = GetNodeOrNull<Label>("Layout/Recap/StatsLabel");
+		deathCauseLabel = GetNodeOrNull<Label>("Layout/Recap/DeathCauseLabel");
 		stardustLabel = GetNodeOrNull<Label>("Layout/Recap/StardustLabel");
 		worldUnlockLabel = GetNodeOrNull<Label>("Layout/Recap/WorldUnlockLabel");
 		leaderboardLabel = GetNodeOrNull<Label>("Layout/Recap/LeaderboardLabel");
@@ -75,6 +79,15 @@ public partial class GameOver : Control
 			statsLabel.Text = string.Format(TranslationServer.Translate("UI_RECAP_STATS"),
 				ScoreManager.FormatTime(SurvivalTimeToShow), KillsToShow, BestComboToShow,
 				Mathf.RoundToInt(MassAtDeath * 100), MoonsAtDeath);
+		}
+
+		// A one-line "what actually got you" — a number alone is a tally, this
+		// is what turns it into something you remember and try to avoid next time.
+		if (deathCauseLabel != null)
+		{
+			deathCauseLabel.Visible = !string.IsNullOrEmpty(DeathCause);
+			if (deathCauseLabel.Visible)
+				deathCauseLabel.Text = string.Format(TranslationServer.Translate("UI_DEATH_CAUSE"), DeathCause);
 		}
 
 		// The running total, not just what was earned this orbit — "one more

@@ -2,8 +2,8 @@ using Godot;
 
 public partial class BodySpawner : Node
 {
-	// Tuned for a 2-6 minute orbit: the ramp tops out around 2:00, which is when
-	// the spawn interval is also at its floor, so the back half is flat-out.
+	// Tuned for a 2-6 minute orbit: the primary ramp tops out around 2:00. See
+	// "Late-game escalation" below for what happens to an orbit that outlasts it.
 	[Export] public float StartSpeed { get; set; } = 110.0f;
 	[Export] public float MaxSpeed { get; set; } = 215.0f;
 	[Export] public float SpeedIncreasePerSecond { get; set; } = 0.9f;
@@ -12,6 +12,21 @@ public partial class BodySpawner : Node
 	[Export] public int MaxBodyCount { get; set; } = 90;
 	[Export] public float SpawnMargin { get; set; } = 100.0f;
 	[Export] public PackedScene BodyScene { get; set; }
+
+	[ExportGroup("Late-game escalation")]
+	// The primary ramp above used to just stop at 2:00 and hold dead flat for
+	// however much longer the player survived — a bot playtest sat through
+	// minutes of literally nothing changing. This second, much slower ramp
+	// picks up exactly where the first one caps, so a long Endless Orbit keeps
+	// quietly tightening instead of going static. It has its own ceiling too —
+	// unbounded escalation would just be a different way of going nowhere,
+	// this time by becoming unwinnable instead of boring.
+	/// <summary>Final speed ceiling as a multiplier on MaxSpeed, reached slowly after the primary ramp caps.</summary>
+	[Export] public float LateGameSpeedMultiplier { get; set; } = 1.35f;
+	/// <summary>Final spawn-interval floor as a multiplier on MinSpawnInterval. Under 1 spawns faster.</summary>
+	[Export] public float LateGameSpawnMultiplier { get; set; } = 0.7f;
+	/// <summary>Seconds after the primary ramp caps before the late-game ceiling is fully reached.</summary>
+	[Export] public float LateGameRampDuration { get; set; } = 240.0f;
 
 	[ExportGroup("Bestiary")]
 	// One new kind roughly every 20 seconds. Each arrival is meant to be
@@ -38,6 +53,9 @@ public partial class BodySpawner : Node
 	private RunState run;
 	private float enemySpeed;
 	private float elapsed;
+	private float lateGameMaxSpeed;
+	private float lateGameMinSpawnInterval;
+	private float lateGameSpeedIncreasePerSecond;
 
 	public override void _Ready()
 	{
@@ -59,6 +77,10 @@ public partial class BodySpawner : Node
 			MaxSpeed *= 0.8f;
 		}
 
+		lateGameMaxSpeed = MaxSpeed * LateGameSpeedMultiplier;
+		lateGameMinSpawnInterval = MinSpawnInterval * LateGameSpawnMultiplier;
+		lateGameSpeedIncreasePerSecond = Mathf.Max(lateGameMaxSpeed - MaxSpeed, 0f) / Mathf.Max(LateGameRampDuration, 1f);
+
 		enemySpeed = StartSpeed;
 		CurrentSpeed = StartSpeed;
 		SpeedScale = 1.0f;
@@ -71,17 +93,30 @@ public partial class BodySpawner : Node
 	public override void _Process(double delta)
 	{
 		elapsed += (float)delta;
-		enemySpeed = Mathf.Min(enemySpeed + SpeedIncreasePerSecond * (float)delta, MaxSpeed);
+
+		// The primary ramp reaches MaxSpeed around 2:00, tuned to feel like a
+		// deliberate escalation. Once there, the far slower late-game ramp
+		// takes over and keeps pushing toward its own, higher ceiling — an
+		// orbit that outlasts the primary ramp keeps getting harder instead of
+		// holding flat for however much longer it lasts.
+		bool primaryRampDone = enemySpeed >= MaxSpeed;
+		float target = primaryRampDone ? lateGameMaxSpeed : MaxSpeed;
+		float rate = primaryRampDone ? lateGameSpeedIncreasePerSecond : SpeedIncreasePerSecond;
+		enemySpeed = Mathf.Min(enemySpeed + rate * (float)delta, target);
 		CurrentSpeed = enemySpeed;
 		SpeedScale = enemySpeed / Mathf.Max(StartSpeed, 1f);
 
-		float speedRange = Mathf.Max(MaxSpeed - StartSpeed, 0.001f);
-		float progress = (enemySpeed - StartSpeed) / speedRange;
+		// Spawn interval rides the same overall progress, from StartSpeed all
+		// the way to the late-game ceiling, so it keeps tightening in lockstep
+		// with speed across both ramps rather than flooring out on its own at 2:00.
+		float overallRange = Mathf.Max(lateGameMaxSpeed - StartSpeed, 0.001f);
+		float overallProgress = (enemySpeed - StartSpeed) / overallRange;
+		float targetInterval = Mathf.Lerp(StartSpawnInterval, lateGameMinSpawnInterval, overallProgress);
 
 		// A heavy world pulls harder, so it also draws more attention: mass
 		// tightens the spawn interval on top of the time ramp.
 		float massRate = Mathf.Lerp(1.0f, HeavySpawnRate, run?.MassNormalised ?? 0f);
-		spawnTimer.WaitTime = Mathf.Lerp(StartSpawnInterval, MinSpawnInterval, progress) * massRate;
+		spawnTimer.WaitTime = targetInterval * massRate;
 	}
 
 	private void SetupSpawnTimer()

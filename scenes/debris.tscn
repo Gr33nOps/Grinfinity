@@ -3,11 +3,11 @@
 [ext_resource type="Script" path="res://scripts/Debris.cs" id="1_debris"]
 
 [node name="Debris" type="Node2D"]
-scale = Vector2(1.6, 1.6)
+scale = Vector2(1.3, 1.3)
 script = ExtResource("1_debris")
 
 [node name="Chunk" type="Polygon2D" parent="."]
-color = Color(1, 1, 1, 1)
+color = Color(1, 1, 1, 0.8)
 polygon = PackedVector2Array(-8, -4, -3, -9, 5, -8, 9, -1, 6, 7, -2, 9, -8, 4)
 
 [node name="Glint" type="Polygon2D" parent="."]

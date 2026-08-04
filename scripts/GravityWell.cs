@@ -131,7 +131,7 @@ public partial class GravityWell : Node2D
 
 		if (distance <= CoreRadius)
 		{
-			world.KillByBlast();
+			world.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_GravityWell"));
 			return;
 		}
 

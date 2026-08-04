@@ -14,6 +14,7 @@ public partial class Menu : Node
 
 		var playButton = GetNode<TextureButton>("UI/Buttons/PlayButton");
 		var quitButton = GetNode<TextureButton>("UI/Buttons/QuitButton");
+		var modesButton = GetNode<Button>("UI/SideMenu/ModesButton");
 		var upgradesButton = GetNode<Button>("UI/SideMenu/UpgradesButton");
 		var leaderboardButton = GetNode<Button>("UI/SideMenu/LeaderboardButton");
 		// Optional: the side menu does not currently carry a stats entry, but
@@ -22,8 +23,13 @@ public partial class Menu : Node
 		var settingsButton = GetNode<Button>("UI/SideMenu/SettingsButton");
 		var creditsButton = GetNode<Button>("UI/SideMenu/CreditsButton");
 
-		// Play goes through the mode and weapon choice; only a restart skips them.
-		playButton.Pressed += () => GoTo("res://scenes/mode_select.tscn");
+		// Play jumps straight to the weapon pick with whatever mode and
+		// difficulty are already on record (Endless Orbit / Normal on a fresh
+		// install) — a first-time player was otherwise asked to clear three
+		// decision screens before ever taking a shot. Modes gets its own entry
+		// here for anyone who wants to choose deliberately.
+		playButton.Pressed += () => GoTo("res://scenes/weapon_select.tscn");
+		modesButton.Pressed += () => GoTo("res://scenes/mode_select.tscn");
 		upgradesButton.Pressed += () => GoTo("res://scenes/upgrades.tscn");
 		leaderboardButton.Pressed += () => GoTo("res://scenes/leaderboard.tscn");
 		if (statsButton != null)
@@ -33,7 +39,7 @@ public partial class Menu : Node
 		quitButton.Pressed += OnQuitButtonPressed;
 
 		var hoverButtons = new System.Collections.Generic.List<BaseButton>
-			{ playButton, upgradesButton, leaderboardButton, settingsButton, creditsButton, quitButton };
+			{ playButton, modesButton, upgradesButton, leaderboardButton, settingsButton, creditsButton, quitButton };
 		if (statsButton != null)
 			hoverButtons.Add(statsButton);
 

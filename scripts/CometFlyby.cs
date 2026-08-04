@@ -63,7 +63,7 @@ public partial class CometFlyby : Node2D
 	{
 		if (world != null && IsInstanceValid(world) && GlobalPosition.DistanceTo(world.GlobalPosition) <= HitRadius)
 		{
-			world.KillByBlast();
+			world.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_Comet"));
 			return;
 		}
 

@@ -332,18 +332,22 @@ public partial class Player : CharacterBody2D
 	private void OnHitBoxBodyEntered(Node2D hit)
 	{
 		// "hazards" covers things that are lethal on contact but are not bodies —
-		// bosses, and whatever M4's arena hazards turn out to be.
-		if (hit.IsInGroup("bodies") || hit.IsInGroup("hazards"))
-			Die();
+		// bosses, and gravity wells.
+		if (hit is Body body)
+			Die(body.Kind.ToString());
+		else if (hit is Boss boss)
+			Die(boss.BossName);
+		else if (hit.IsInGroup("hazards"))
+			Die(TranslationServer.Translate("DEATH_CAUSE_GravityWell"));
 	}
 
-	/// <summary>Killed by something other than contact — a Flare blast or a hostile shot.</summary>
-	public void KillByBlast()
+	/// <summary>Killed by something other than contact — a Flare blast, a comet, or a hostile shot.</summary>
+	public void KillByBlast(string cause)
 	{
-		Die();
+		Die(cause);
 	}
 
-	private void Die()
+	private void Die(string cause = "")
 	{
 		if (isDead || Invulnerable)
 			return;
@@ -368,7 +372,7 @@ public partial class Player : CharacterBody2D
 		Velocity = Vector2.Zero;
 		SpawnDeathEffect();
 
-		GameManager.Of(this)?.OnPlayerKilled();
+		GameManager.Of(this)?.OnPlayerKilled(cause);
 	}
 
 	private void SpawnDeathEffect()

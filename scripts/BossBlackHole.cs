@@ -166,7 +166,7 @@ public partial class BossBlackHole : Boss
 
 		if (distance <= CoreRadius)
 		{
-			world.KillByBlast();
+			world.KillByBlast(BossName);
 			return;
 		}
 
