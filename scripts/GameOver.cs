@@ -26,7 +26,6 @@ public partial class GameOver : Control
 	private Label scoreLabel;
 	private Label statsLabel;
 	private Label deathCauseLabel;
-	private Label stardustLabel;
 	private Label worldUnlockLabel;
 	private Label leaderboardLabel;
 	private Label highScoreLabel;
@@ -41,7 +40,6 @@ public partial class GameOver : Control
 		scoreLabel = GetNode<Label>("Layout/Recap/ScoreLabel");
 		statsLabel = GetNodeOrNull<Label>("Layout/Recap/StatsLabel");
 		deathCauseLabel = GetNodeOrNull<Label>("Layout/Recap/DeathCauseLabel");
-		stardustLabel = GetNodeOrNull<Label>("Layout/Recap/StardustLabel");
 		worldUnlockLabel = GetNodeOrNull<Label>("Layout/Recap/WorldUnlockLabel");
 		leaderboardLabel = GetNodeOrNull<Label>("Layout/Recap/LeaderboardLabel");
 		highScoreLabel = GetNodeOrNull<Label>("Layout/Recap/HighScoreLabel");
@@ -86,12 +84,6 @@ public partial class GameOver : Control
 			if (deathCauseLabel.Visible)
 				deathCauseLabel.Text = string.Format(TranslationServer.Translate("UI_DEATH_CAUSE"), DeathCause);
 		}
-
-		// The running total, not just what was earned this orbit — "one more
-		// orbit" needs the balance to visibly grow, not just flash and vanish.
-		if (stardustLabel != null)
-			stardustLabel.Text = string.Format(TranslationServer.Translate("UI_STARDUST_LINE"),
-				StardustEarned.ToString("N0"), PlayerProfile.StardustEarned.ToString("N0"));
 
 		if (worldUnlockLabel != null)
 		{

@@ -23,7 +23,6 @@ public partial class UIManager : Node
 	private Label bestLabel;
 	private Label killsLabel;
 	private Label streakLabel;
-	private Label scoreLabel;
 	private Label effectsLabel;
 	private Player player;
 	private RunState run;
@@ -59,7 +58,6 @@ public partial class UIManager : Node
 		bestLabel = gameRoot?.GetNodeOrNull<Label>("UI/HighScoreLabel");
 		killsLabel = gameRoot?.GetNodeOrNull<Label>("UI/KillsLabel");
 		streakLabel = gameRoot?.GetNodeOrNull<Label>("UI/ComboLabel");
-		scoreLabel = gameRoot?.GetNodeOrNull<Label>("UI/RunScoreLabel");
 		effectsLabel = gameRoot?.GetNodeOrNull<Label>("UI/EffectsLabel");
 		player = gameRoot?.GetNodeOrNull<Player>("player");
 		run = GameManager.Of(this)?.Run;
@@ -96,13 +94,13 @@ public partial class UIManager : Node
 
 	private void BuildClusters()
 	{
-		foreach (CanvasItem item in new CanvasItem[] { dashIcon, rapidFireIcon, dashKeyLabel, rapidFireKeyLabel, killsLabel, streakLabel })
+		foreach (CanvasItem item in new CanvasItem[] { dashIcon, rapidFireIcon, dashKeyLabel, rapidFireKeyLabel, streakLabel })
 		{
 			if (item != null)
 				leftCluster.Add(item);
 		}
 
-		foreach (CanvasItem item in new CanvasItem[] { timeLabel, scoreLabel, bestLabel })
+		foreach (CanvasItem item in new CanvasItem[] { timeLabel, killsLabel, bestLabel })
 		{
 			if (item != null)
 				rightCluster.Add(item);
@@ -194,11 +192,6 @@ public partial class UIManager : Node
 
 		if (timeLabel != null)
 			timeLabel.Text = ScoreManager.FormatTime(run.SurvivalTime);
-
-		// The live multiplier sits next to the score, because it is the only
-		// place the player can see what carrying mass is actually buying them.
-		if (scoreLabel != null)
-			scoreLabel.Text = $"{run.Score:N0}   x{run.ScoreMultiplier:0.0}";
 
 		RefreshEffects();
 	}
