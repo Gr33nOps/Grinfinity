@@ -45,7 +45,7 @@ public partial class ReleaseQa : Node
             var active = GetTree().CurrentScene as GameManager;
             Check(active != null, $"journey {attempt}: enters arena");
             if (active == null) return;
-            Check(active.Run.TotalLevels == 0 && !active.Run.HasShield && active.Run.Weapon == WeaponId.Comet && !active.Run.HasDash, "retry resets upgrades, shield, abilities and weapon");
+            Check(active.Run.TotalLevels == 0 && !active.Run.HasShield && active.Run.Weapon == WeaponId.Comet, "retry resets upgrades, shield and weapon");
             var player = active.GetNode<Player>("player"); player.Invulnerable = true;
             Invoke(active, "TogglePause");
             float time = active.RunTime;
@@ -114,16 +114,15 @@ public partial class ReleaseQa : Node
     {
         var state = FreshRun(this);
         Check(!state.HasShield, "a run starts without a shield");
-        Check(!state.HasDash && !state.HasOverdrive && !state.HasNova, "a run starts with no abilities");
-        state._Process(Balance.DashUnlockAt - 1f);
-        Check(!state.HasDash, "dash stays locked before its time");
-        state._Process(2f);
-        Check(state.HasDash && !state.HasOverdrive && !state.HasNova, "dash unlocks first, on time");
-        state._Process(Balance.OverdriveUnlockAt - state.SurvivalTime + 0.1f);
-        Check(state.HasOverdrive && !state.HasNova, "overdrive unlocks second");
-        state._Process(Balance.NovaUnlockAt - state.SurvivalTime + 0.1f);
-        Check(state.HasNova, "nova unlocks third");
-        Check(Balance.DashUnlockAt < Balance.OverdriveUnlockAt && Balance.OverdriveUnlockAt < Balance.NovaUnlockAt, "unlock order is Dash, Overdrive, Nova");
+        state._Process(0.01f);
+        if (Balance.NovaUnlockAt <= 0f)
+            Check(state.HasDash && state.HasOverdrive && state.HasNova, "all three abilities are ready from the first frame");
+        else
+        {
+            state._Process(Balance.NovaUnlockAt);
+            Check(state.HasDash && state.HasOverdrive && state.HasNova, "abilities unlock by time");
+        }
+        Check(Balance.DashUnlockAt <= Balance.OverdriveUnlockAt && Balance.OverdriveUnlockAt <= Balance.NovaUnlockAt, "unlock order is Dash, Overdrive, Nova");
         Check(Balance.DashCooldown < Balance.OverdriveCooldown && Balance.OverdriveCooldown < Balance.NovaCooldown, "cooldowns rise with ability strength");
         state.Free();
 

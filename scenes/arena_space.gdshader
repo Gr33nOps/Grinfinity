@@ -90,7 +90,7 @@ void fragment() {
 	float cloud = smoothstep(0.45, 0.85, n1 * 0.7 + n2 * 0.45);
 	vec3 nebula = mix(nebula_indigo.rgb, nebula_plum.rgb, smoothstep(0.35, 0.7, n2));
 	nebula = mix(nebula, nebula_berry.rgb, smoothstep(0.62, 0.8, n1) * 0.6);
-	col = mix(col, nebula, cloud * 0.26);
+	col = mix(col, nebula, cloud * 0.15);
 
 	// Ribbons, a little nearer. Repeat down the arena so every view has one.
 	vec2 mid = screen + camera * 0.18;
@@ -102,11 +102,11 @@ void fragment() {
 		float y = (r + 0.5) * spacing;
 		bands += ribbon(mid, y, 90.0 + 40.0 * hash21(vec2(r, 1.0)), 120.0, r * 2.3);
 	}
-	col = mix(col, ribbon_color.rgb, clamp(bands, 0.0, 1.0) * 0.035);
+	col = mix(col, ribbon_color.rgb, clamp(bands, 0.0, 1.0) * 0.02);
 
 	// Two star layers at different depths.
-	float s = stars(screen + camera * 0.22, 54.0, 1.2, 0.4, t) * 0.22
-		+ stars(screen + camera * 0.45, 118.0, 1.9, 0.45, t) * 0.38;
+	float s = stars(screen + camera * 0.22, 54.0, 1.1, 0.35, t) * 0.14
+		+ stars(screen + camera * 0.45, 118.0, 1.7, 0.4, t) * 0.24;
 	col += star_tint.rgb * s;
 
 	// A soft vignette keeps the eye on the middle, where the planet is.

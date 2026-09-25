@@ -208,6 +208,7 @@ public partial class RunState : Node
 
 	private float fighting;
 	private float nextDropAt;
+	private bool rolledFirstDrop;
 
 	/// <summary>Seconds of survival when a shield last dropped, so shields cannot chain.</summary>
 	public float LastShieldDropAt { get; set; } = -999f;
@@ -230,6 +231,13 @@ public partial class RunState : Node
 
 	private void RollDropGap()
 	{
+		if (!rolledFirstDrop)
+		{
+			rolledFirstDrop = true;
+			nextDropAt = SurvivalTime + Rng.RandfRange(Balance.FirstDropGapMin, Balance.FirstDropGapMax);
+			return;
+		}
+
 		float growth = Mathf.Min(1f + Balance.DropGapGrowthPerMinute * SurvivalTime / 60f, Balance.DropGapGrowthCap);
 		nextDropAt = SurvivalTime + Rng.RandfRange(Balance.DropGapMin, Balance.DropGapMax) * growth;
 	}

@@ -220,8 +220,8 @@ public sealed class FlareBehaviour : BodyBehaviour
 }
 
 /// <summary>
-/// Plated across the face it is travelling with. Shots into the front arc bounce
-/// off, so it has to be flanked — or dashed past and shot in the back.
+/// Plated across the face it is travelling with. Most shots into the front arc
+/// bounce off, so it is best flanked — or dashed through, which ignores armour.
 /// </summary>
 public sealed class BulwarkBehaviour : BodyBehaviour
 {
@@ -240,6 +240,9 @@ public sealed class BulwarkBehaviour : BodyBehaviour
 		body.SetBurst(90, 1.6f, new Color(0.8f, 0.84f, 0.9f));
 	}
 
+	/// <summary>Every this-many shots into the armour, one gets through.</summary>
+	private const int HitsToChip = 5;
+
 	public override bool Deflects(Body body, Vector2 impactDirection)
 	{
 		if (impactDirection == Vector2.Zero)
@@ -247,6 +250,17 @@ public sealed class BulwarkBehaviour : BodyBehaviour
 
 		// A shot travelling into the face is head-on to the way the body is
 		// going, so the dot product against its heading is strongly negative.
-		return impactDirection.Normalized().Dot(body.Forward) < ArmourCosine;
+		if (impactDirection.Normalized().Dot(body.Forward) >= ArmourCosine)
+			return false;
+
+		// Shooting the plate is slow, not useless: every fifth shot chips
+		// through. Flanking is still far quicker, but a player who has not
+		// worked that out yet is not left helpless while it walks into them.
+		body.BehaviourTimer += 1f;
+		if (body.BehaviourTimer < HitsToChip)
+			return true;
+
+		body.BehaviourTimer = 0f;
+		return false;
 	}
 }

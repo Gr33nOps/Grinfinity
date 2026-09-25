@@ -44,45 +44,46 @@ public static class Balance
 	/// <summary>Seconds between spawns.</summary>
 	public static readonly Vector2[] SpawnInterval =
 	{
-		new(0f, 0.95f), new(45f, 0.8f), new(120f, 0.66f), new(240f, 0.54f), new(420f, 0.44f),
-		new(660f, 0.36f), new(900f, 0.29f), new(1500f, 0.2f), new(2400f, 0.13f)
+		new(0f, 0.78f), new(40f, 0.66f), new(100f, 0.56f), new(200f, 0.5f), new(330f, 0.43f),
+		new(520f, 0.35f), new(760f, 0.28f), new(1200f, 0.19f), new(2000f, 0.13f)
 	};
 
 	/// <summary>Most enemies alive at once.</summary>
 	public static readonly Vector2[] MaxAlive =
 	{
-		new(0f, 10f), new(60f, 15f), new(180f, 22f), new(360f, 30f),
-		new(600f, 38f), new(900f, 46f), new(1500f, 58f), new(2400f, 70f)
+		new(0f, 13f), new(45f, 18f), new(140f, 23f), new(280f, 28f),
+		new(470f, 35f), new(720f, 44f), new(1200f, 58f), new(2000f, 72f)
 	};
 
 	/// <summary>Base enemy speed. Keeps creeping after the last key, up to <see cref="EnemySpeedCeiling"/>.</summary>
 	public static readonly Vector2[] EnemySpeed =
 	{
-		new(0f, 92f), new(120f, 110f), new(360f, 140f), new(600f, 165f),
-		new(900f, 190f), new(1500f, 220f)
+		new(0f, 100f), new(100f, 118f), new(280f, 138f), new(470f, 160f),
+		new(720f, 195f), new(1200f, 225f)
 	};
 	public const float EnemySpeedCreepPerMinute = 3f;
 	public const float EnemySpeedCeiling = 285f;
 
 	// When each kind first joins the mix. The first of a kind arrives on its own
 	// so it can be noticed.
-	public const float ShardAt = 30f;
-	public const float PlanetoidAt = 75f;
-	public const float FractureAt = 120f;
-	public const float SatelliteAt = 225f;
-	public const float BulwarkAt = 300f;
-	public const float FlareAt = 420f;
+	public const float ShardAt = 15f;
+	public const float PlanetoidAt = 45f;
+	public const float FractureAt = 80f;
+	public const float SatelliteAt = 150f;
+	public const float BulwarkAt = 240f;
+	public const float FlareAt = 330f;
 	/// <summary>By this time the mix has shifted as far toward the dangerous kinds as it goes.</summary>
-	public const float CompositionPeakAt = 1080f;
+	public const float CompositionPeakAt = 780f;
 
 	// --- Abilities --------------------------------------------------------------
-	// Each boss is met with the newest ability in hand: Dash for learning the
-	// arena, Overdrive for the Coil, Nova for the Brood.
-	public const float DashUnlockAt = 40f;
-	public const float OverdriveUnlockAt = 140f;
-	public const float NovaUnlockAt = 310f;
+	// All three are ready from the first second. Unlocking them over five minutes
+	// made the opening a long stretch of plain shooting; the growth now comes
+	// from upgrades instead. Set these above zero to stagger them again.
+	public const float DashUnlockAt = 0f;
+	public const float OverdriveUnlockAt = 0f;
+	public const float NovaUnlockAt = 0f;
 
-	public const float DashCooldown = 2.2f;
+	public const float DashCooldown = 2.0f;
 	/// <summary>Distance covered by one dash, before upgrades.</summary>
 	public const float DashDistance = 340f;
 	public const float DashDuration = 0.15f;
@@ -95,7 +96,7 @@ public static class Balance
 	/// <summary>Share of a boss's full health one dash takes. Counted once per dash.</summary>
 	public const float DashBossDamage = 0.035f;
 
-	public const float OverdriveCooldown = 30f;
+	public const float OverdriveCooldown = 26f;
 	public const float OverdriveDuration = 6f;
 	/// <summary>Fire interval multiplier while Overdrive is up. Lower is faster.</summary>
 	public const float OverdriveFireScale = 0.4f;
@@ -104,7 +105,7 @@ public static class Balance
 	public const int OverdriveDamageMultiplier = 2;
 	public const int OverdriveExtraPierce = 1;
 
-	public const float NovaCooldown = 45f;
+	public const float NovaCooldown = 40f;
 	public const float NovaRadius = 720f;
 	public const float NovaRadiusPerLevel = 0.18f;
 	/// <summary>How long the blast takes to reach its full radius. Enemies pop as it passes.</summary>
@@ -124,11 +125,14 @@ public static class Balance
 	// density that the whole build was maxed by six minutes.
 
 	/// <summary>Seconds between enemy drops, rolled between these each time.</summary>
-	public const float DropGapMin = 38f;
-	public const float DropGapMax = 58f;
+	public const float DropGapMin = 28f;
+	public const float DropGapMax = 42f;
+	/// <summary>The first drop comes sooner, so the gun changes within the first half minute.</summary>
+	public const float FirstDropGapMin = 16f;
+	public const float FirstDropGapMax = 24f;
 	/// <summary>The gap grows by this share per minute survived.</summary>
-	public const float DropGapGrowthPerMinute = 0.1f;
-	public const float DropGapGrowthCap = 2.4f;
+	public const float DropGapGrowthPerMinute = 0.14f;
+	public const float DropGapGrowthCap = 2.2f;
 	/// <summary>Kill value needed since the last drop (a Drifter is 1).</summary>
 	public const float DropMinFighting = 10f;
 	/// <summary>Seconds an enemy drop stays on the field. It blinks for the last quarter.</summary>
@@ -139,28 +143,28 @@ public static class Balance
 	public const float PickupMagnetRadius = 320f;
 	public const int BossRewardCount = 3;
 	/// <summary>Weapon swaps cannot drop before this.</summary>
-	public const float WeaponSwapAt = 150f;
+	public const float WeaponSwapAt = 90f;
 	/// <summary>
 	/// Seconds after one shield drops before an enemy can drop another. Without
 	/// it, a finished build turns every drop into a spare life.
 	/// </summary>
-	public const float ShieldDropCooldown = 75f;
+	public const float ShieldDropCooldown = 60f;
 
 	// --- Bosses -------------------------------------------------------------
 	/// <summary>When the first boss arrives.</summary>
-	public const float FirstBossAt = 170f;
+	public const float FirstBossAt = 125f;
 	/// <summary>Scheduled gap between boss arrivals in the first cycle.</summary>
-	public const float BossGapFirstCycle = 180f;
+	public const float BossGapFirstCycle = 140f;
 	/// <summary>Scheduled gap once the bosses start coming round again.</summary>
-	public const float BossGapLaterCycles = 150f;
+	public const float BossGapLaterCycles = 130f;
 	/// <summary>Never less than this between one boss dying and the next arriving.</summary>
-	public const float BossBreather = 60f;
+	public const float BossBreather = 45f;
 	/// <summary>Warning shown before a boss arrives.</summary>
 	public const float BossWarning = 3.2f;
 	/// <summary>Bosses arrive this far from the planet.</summary>
 	public const float BossArrivalDistance = 720f;
 	/// <summary>Boss health grows by this share with each full cycle.</summary>
-	public const float BossHealthPerCycle = 0.3f;
+	public const float BossHealthPerCycle = 0.7f;
 	/// <summary>
 	/// Share of the normal spawn rate that keeps running during a boss fight,
 	/// per cycle. The first time round a boss is fought alone.
@@ -170,15 +174,15 @@ public static class Balance
 	public const int BossScoreBonus = 5000;
 
 	// --- Hazards and events -----------------------------------------------------
-	public const float FirstCometAt = 250f;
+	public const float FirstCometAt = 170f;
 	public const float CometGapMin = 16f;
 	public const float CometGapMax = 28f;
 	/// <summary>Seconds a comet's path is shown before it flies.</summary>
 	public const float CometWarning = 1.35f;
-	public const float FirstWellAt = 470f;
+	public const float FirstWellAt = 330f;
 	public const float WellGapMin = 45f;
 	public const float WellGapMax = 75f;
-	public const float FirstEventAt = 520f;
+	public const float FirstEventAt = 380f;
 
 	// --- Score ----------------------------------------------------------------
 	public const float PointsPerSecond = 10f;

@@ -2,7 +2,7 @@
 
 A tiny smiling planet with a big gun, surviving endless space. How long can you last?
 
-Move, aim and shoot in an arena about three screens across. Enemies never stop coming and the run gets harder the longer you survive. Dash, Overdrive and Nova come online as you go, some kills drop upgrades you grab on the move, and bosses turn up on a clock and keep coming round. One hit ends the run unless you are carrying a shield. Retry straight from the results screen.
+Move, aim and shoot in an arena about three screens across. Enemies never stop coming and the run gets harder the longer you survive. Dash, Overdrive and Nova are ready from the start, some kills drop upgrades you grab on the move, and bosses turn up on a clock and keep coming round. One hit ends the run unless you are carrying a shield. Retry straight from the results screen.
 
 ## Play the Windows build
 
@@ -13,9 +13,9 @@ Extract `builds/Grinfinity-1.0.0-rc4-windows-x64.zip` into a folder and launch `
 | Move | WASD | Left stick |
 | Aim | Mouse | Right stick |
 | Shoot | Left mouse | Right trigger |
-| Dash (from 0:40) | Shift | B |
-| Overdrive (from 2:20) | E | X |
-| Nova (from 5:10) | R | Y |
+| Dash | Shift | B |
+| Overdrive | E | X |
+| Nova | R | Y |
 | Pause | Escape | Start |
 
 Keys can be rebound. Settings include audio, fullscreen, resolution, VSync, frame cap, HUD text scale, reduced shake, colourblind palette, high-contrast outlines, aim assist and assist speed. Cosmetic planet choices and your leaderboard name live in Stats. Cosmetics have no power advantage.
@@ -23,8 +23,8 @@ Keys can be rebound. Settings include audio, fullscreen, resolution, VSync, fram
 ## What is in this version
 
 - One endless survival run in a bounded arena with a following camera. No waves, no pauses, no upgrade menu.
-- Seven enemy kinds (plus the Fracture's Splinters) that join the mix over time, telegraphed comets, gravity wells and brief arena events.
-- Three abilities on their own cooldowns, unlocked by time in a fixed order: Dash, Overdrive, Nova.
+- Seven enemy kinds (plus the Fracture's Splinters) that join the mix over time, rushes in five formations, telegraphed comets, gravity wells and brief arena events.
+- Three abilities on their own cooldowns, all ready from the first second: Dash, Overdrive, Nova.
 - Upgrade and shield pickups that drop from kills and apply instantly. Eight upgrades, including two weapon swaps.
 - The Coil, The Brood and The Black Hole, cycling forever with more enemies joining each round.
 - Local top ten ranked by survival time, personal bests, lifetime stats, cosmetic planets and achievements. Fully offline.

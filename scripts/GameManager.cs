@@ -547,6 +547,15 @@ public partial class GameManager : Node2D
 	private void OnAbilityUnlocked(int which)
 	{
 		var ability = (Ability)which;
+
+		// Everything unlocked at the very start: the slots already show their
+		// keys, so a pulse is enough. Three banners at once would just stack.
+		if (run.SurvivalTime < 1f)
+		{
+			uiManager?.PulseAbility(ability);
+			return;
+		}
+
 		Announce($"{RunUpgrades.AbilityName(ability)} ONLINE", $"Press {UIManager.ControlHint(ability)} to {RunUpgrades.AbilityVerb(ability)}", ArcadeSkin.Orange);
 		PlayCue("unlock");
 		Shake(0.25f);

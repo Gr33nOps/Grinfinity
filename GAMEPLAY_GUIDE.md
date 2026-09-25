@@ -18,21 +18,21 @@ A **shield** blocks exactly one hit. You never start with one; it drops like an 
 
 ## Abilities
 
-Each unlocks automatically at the same time in every run and has its own cooldown. There is no energy meter.
+All three are ready from the first second, each on its own cooldown. There is no energy meter. (Setting the unlock times in `Balance.cs` above zero staggers them again.)
 
-| Ability | Unlocks | Cooldown | Keys | What it does |
-|---|---|---|---|---|
-| Dash | 0:40 | 2.2 s | Shift / B | Zooms 340 units in your move direction (or aim direction when standing still). While moving you cannot be hurt, and every normal enemy the path crosses is destroyed. Then the planet blinks for 0.4 s: still safe, but no longer destroying anything. Get clear before the blink ends. A boss takes 3.5% of its health, once per dash. |
-| Overdrive | 2:20 | 30 s | E / X | 6 seconds of your current gun going wild: 2.5× fire rate, double damage, +1 pierce, bigger and faster shots. It keeps your spread, pierce and weapon. |
-| Nova | 5:10 | 45 s | R / Y | A shockwave out to 720 units. Normal enemies it reaches are destroyed, enemy shots in it are wiped, and a boss takes 10% of its health. |
+| Ability | Cooldown | Keys | What it does |
+|---|---|---|---|
+| Dash | 2.0 s | Shift / B | Zooms 340 units in your move direction (or aim direction when standing still). While moving you cannot be hurt, and every normal enemy the path crosses is destroyed. Then the planet blinks for 0.4 s: still safe, but no longer destroying anything. Get clear before the blink ends. A boss takes 3.5% of its health, once per dash. |
+| Overdrive | 26 s | E / X | 6 seconds of your current gun going wild: 2.5× fire rate, double damage, +1 pierce, bigger and faster shots. It keeps your spread, pierce and weapon. |
+| Nova | 40 s | R / Y | A shockwave out to 720 units. Normal enemies it reaches are destroyed, enemy shots in it are wiped, and a boss takes 10% of its health. |
 
 The Accessibility menu can switch Overdrive to hold-to-use.
 
 ## Upgrades and drops
 
-There is no upgrade menu. Some kills drop a glowing pickup; touch it and it applies at once. A drop comes due every 38–58 seconds at the start (the gap grows by 10% per minute survived) and falls from your next kill, but only if you have also been fighting since the last one. Pickups last 16 seconds and slide to you when you are close.
+There is no upgrade menu. Some kills drop a glowing pickup; touch it and it applies at once. The first drop comes 16–24 seconds in, then one every 28–42 seconds (the gap grows by 14% per minute survived) and falls from your next kill, but only if you have also been fighting since the last one. Pickups last 16 seconds and slide to you when you are close.
 
-A drop is only ever something that would help right now: nothing already maxed, nothing for an ability you have not unlocked, no second weapon, no second shield. A shield cannot drop more than once every 75 seconds.
+A drop is only ever something that would help right now: nothing already maxed, no second weapon, no second shield. A shield cannot drop more than once every 60 seconds.
 
 | Pickup | Levels | Effect |
 |---|---|---|
@@ -42,8 +42,8 @@ A drop is only ever something that would help right now: nothing already maxed, 
 | Longer Dash | 3 | +14% dash distance and +0.08 s blink per level |
 | Overdrive Boost | 3 | +1.5 s Overdrive and 15% faster Overdrive fire per level |
 | Bigger Nova | 3 | +18% Nova radius per level |
-| Debris Cannon | 1 | Replaces the Comet: six short-range pellets. Not before 2:30 |
-| Ion Lance | 1 | Replaces the Comet: slow, heavy shots that pierce eight enemies. Not before 2:30 |
+| Debris Cannon | 1 | Replaces the Comet: six short-range pellets. Not before 1:30 |
+| Ion Lance | 1 | Replaces the Comet: slow, heavy shots that pierce eight enemies. Not before 1:30 |
 | Shield | 1 held | Blocks one hit |
 
 The two weapon swaps rule each other out. Rings appear around the planet at 4, 9 and 15 upgrade levels.
@@ -52,17 +52,25 @@ The two weapon swaps rule each other out. Rings appear around the planet at 4, 9
 
 | Enemy | Joins | HP | Behaviour |
 |---|---|---|---|
-| Drifter | 0:00 | 1 | Falls toward the planet. Arrives in twos from 0:20, threes from 1:00. |
-| Shard | 0:30 | 1 | Fast, in packs. |
-| Planetoid | 1:15 | 4 | Big and slow. |
-| Fracture | 2:00 | 2 | Splits into three Splinters when destroyed. |
-| Satellite | 3:45 | 2 | Circles at range and shoots at you. |
-| Bulwark | 5:00 | 3 | Armoured front; shots from the front bounce off. Dash and Nova go through the armour. |
-| Flare | 7:00 | 2 | Explodes when destroyed. The dashed ring around it shows the blast. |
+| Drifter | 0:00 | 1 | Falls toward the planet. Arrives in twos from 0:08, threes from 0:40. |
+| Shard | 0:15 | 1 | Fast, in packs. |
+| Planetoid | 0:45 | 4 | Big and slow. |
+| Fracture | 1:20 | 2 | Splits into three Splinters when destroyed. |
+| Satellite | 2:30 | 2 | Circles at range and shoots at you. |
+| Bulwark | 4:00 | 3 | Armoured front: most shots from the front bounce off, though every fifth chips through. Hit it from the side or back, or Dash or Nova through the armour. |
+| Flare | 5:30 | 2 | Explodes when destroyed. The dashed ring around it shows the blast. |
 
-Spawn rate, the number alive at once and enemy speed all ramp with time (see the tables in `Balance.cs`). Speed keeps creeping up after 25 minutes. From 1:50, tight packs rush in from one direction about every 26 seconds. By 18 minutes the mix is mostly the dangerous kinds.
+Spawn rate, the number alive at once and enemy speed all ramp with time (see the tables in `Balance.cs`). Speed keeps creeping up after 20 minutes. By 13 minutes the mix is mostly the dangerous kinds.
 
-Comets (from 4:10) cross the screen along a dashed red line that shows for 1.35 s first. Gravity wells (from 7:50) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 8:40. None of these run during a boss.
+From 0:45, about every 20 seconds, a **rush** arrives in one of five shapes, never the same one twice running, and a little bigger as the run goes on:
+
+- **Pack:** a tight group from one direction.
+- **Pincer** (from 1:00): two groups from opposite sides at once.
+- **Ring** (from 1:30): enemies all the way round you, just off screen, closing in. From 1:20 some of them are Fractures.
+- **Wall:** a line of Shards sweeping in across one side.
+- **Escort** (from 1:30): a Planetoid (later sometimes a Bulwark) with a guard of Shards.
+
+Comets (from 2:50) cross the screen along a dashed red line that shows for 1.35 s first. Gravity wells (from 5:30) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 6:20. None of these run during a boss.
 
 ## Bosses
 
@@ -70,11 +78,11 @@ Bosses arrive on a clock, with a warning banner and a marker where they will lan
 
 | Round 1 | Arrives | HP | Fight |
 |---|---|---|---|
-| The Coil | 2:50 | 360 | Rings of shots with a gap. Slip through the gap or dash. |
-| The Brood | 5:50 | 500 | Keeps spawning Shards. Keep shooting the big one. |
-| The Black Hole | 8:50 | 1000 | Pulls you, enemies and your shots toward its core, and throws shots back. |
+| The Coil | 2:05 | 400 | Rings of shots with a gap. Slip through the gap or dash. |
+| The Brood | 4:25 | 660 | Keeps spawning Shards. Keep shooting the big one. |
+| The Black Hole | 6:45 | 1100 | Pulls you, enemies and your shots toward its core, and throws shots back. |
 
-After the Black Hole the run carries on, and the bosses come round again every 2.5 minutes: The Coil at 11:20, The Brood at 13:50, The Black Hole at 16:20, and so on forever. Each round the bosses get 30% more health and attack a little faster. More of the difficulty comes from company, though: the first time round each boss fights alone, and from round two ordinary enemies keep arriving during the fight (35% of the normal rate in round 2, 55% in round 3, up to 95%). There is always at least 60 seconds between one boss dying and the next arriving.
+After the Black Hole the run carries on, and the bosses come round again every 2 minutes 10 seconds: The Coil at 8:55, The Brood at 11:05, The Black Hole at 13:15, and so on forever. Each round the bosses get 70% more health (so a full late-game build still has a fight on its hands) and attack a little faster. More of the difficulty comes from company, though: the first time round each boss fights alone, and from round two ordinary enemies keep arriving during the fight (35% of the normal rate in round 2, 55% in round 3, up to 95%). There is always at least 45 seconds between one boss dying and the next arriving.
 
 ## Score
 

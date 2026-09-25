@@ -7,8 +7,9 @@ using Godot;
 /// tables in <see cref="Balance"/> — how often something arrives, how many can
 /// be alive at once, how fast they fall, and which kinds are in the mix.
 ///
-/// Every so often a rush arrives: a tight pack from one direction, so the arena
-/// has peaks and lulls rather than one flat drizzle.
+/// Every twenty seconds or so a rush arrives in one of five shapes (pack,
+/// pincer, ring, wall, escort), so the arena has peaks and lulls and the
+/// same situation rarely repeats.
 /// </summary>
 public partial class BodySpawner : Node
 {
@@ -16,8 +17,8 @@ public partial class BodySpawner : Node
 	[Export] public int ShardPackSize { get; set; } = 3;
 
 	[ExportGroup("Rushes")]
-	[Export] public float FirstRushAt { get; set; } = 110.0f;
-	[Export] public float RushGap { get; set; } = 26.0f;
+	[Export] public float FirstRushAt { get; set; } = 45.0f;
+	[Export] public float RushGap { get; set; } = 20.0f;
 
 	/// <summary>Current ramped base speed, read by living bodies each frame.</summary>
 	public static float CurrentSpeed { get; private set; } = 100.0f;
@@ -105,8 +106,8 @@ public partial class BodySpawner : Node
 		// fills sooner without anything new to learn.
 		int group = kind switch
 		{
-			BodyKind.Shard => time < 120f ? 2 : ShardPackSize,
-			BodyKind.Drifter => time < 20f ? 1 : time < 60f ? 2 : 3,
+			BodyKind.Shard => time < 90f ? 2 : ShardPackSize,
+			BodyKind.Drifter => time < 8f ? 1 : time < 40f ? 2 : 3,
 			_ => 1
 		};
 		int count = Mathf.Min(group, capacity - alive);
@@ -114,17 +115,130 @@ public partial class BodySpawner : Node
 			SpawnOne(kind, origin.Value + Jitter(90));
 	}
 
-	/// <summary>A pack from one direction. It may briefly overfill the cap; that is the point.</summary>
+	/// <summary>The shapes a rush can take. Rotated so the same one never comes twice running.</summary>
+	private enum Formation { Pack, Pincer, Ring, Wall, Escort }
+
+	private Formation lastFormation = Formation.Escort;
+
+	/// <summary>
+	/// A burst of enemies in a recognisable shape. It may briefly overfill the
+	/// cap; that is the point. The shapes ask different things of the player:
+	/// a pack is shot down, a pincer has to be split, a ring has to be broken
+	/// out of, a wall has to be dodged or dashed through, and an escort has a
+	/// tough one in the middle that the small ones protect.
+	/// </summary>
 	private void SpawnRush(float time, int room)
 	{
-		int size = Mathf.Min(Mathf.RoundToInt(Mathf.Lerp(4f, 10f, Mathf.Clamp((time - FirstRushAt) / 900f, 0f, 1f))), room);
-		Vector2? origin = FindOrigin();
-		if (size <= 0 || origin == null)
+		int size = Mathf.Min(Mathf.RoundToInt(Mathf.Lerp(5f, 12f, Mathf.Clamp((time - FirstRushAt) / 840f, 0f, 1f))), room);
+		var player = GameManager.Of(this)?.GetNodeOrNull<Node2D>("player");
+		if (size <= 0 || player == null)
 			return;
 
-		bool swarm = RunState.Rng.Randf() < 0.5f;
-		for (int i = 0; i < size; i++)
-			SpawnOne(swarm ? BodyKind.Shard : BodyKind.Drifter, origin.Value + Jitter(150));
+		Formation formation = PickFormation(time);
+		lastFormation = formation;
+		Vector2 here = player.GlobalPosition;
+
+		switch (formation)
+		{
+			case Formation.Pack:
+			{
+				if (FindOrigin() is not Vector2 origin)
+					return;
+				BodyKind kind = RunState.Rng.Randf() < 0.5f ? BodyKind.Shard : BodyKind.Drifter;
+				for (int i = 0; i < size; i++)
+					SpawnOne(kind, origin + Jitter(150));
+				break;
+			}
+
+			case Formation.Pincer:
+			{
+				// Two halves from opposite sides of the screen, arriving together.
+				Vector2 axis = RunState.Rng.Randf() < 0.6f ? Vector2.Right : Vector2.Down;
+				float reach = (axis == Vector2.Right ? Arena.View.Size.X : Arena.View.Size.Y) * 0.5f + Balance.SpawnBeyondView + 120f;
+				foreach (float side in new[] { -1f, 1f })
+				{
+					Vector2 at = here + axis * side * reach;
+					if (!Arena.Playable.Grow(-40f).HasPoint(at))
+						continue;
+					for (int i = 0; i < size / 2 + 1; i++)
+						SpawnOne(i % 3 == 0 ? BodyKind.Shard : BodyKind.Drifter, at + Jitter(120));
+				}
+				break;
+			}
+
+			case Formation.Ring:
+			{
+				// All the way round, just off screen, closing in together.
+				float radius = Arena.View.Size.Length() * 0.5f + 160f;
+				int count = size + 3;
+				float turn = RunState.Rng.Randf() * Mathf.Tau;
+				for (int i = 0; i < count; i++)
+				{
+					Vector2 at = here + Vector2.FromAngle(turn + Mathf.Tau * i / count) * radius;
+					if (!Arena.Playable.Grow(-40f).HasPoint(at))
+						continue;
+					bool tough = time >= Balance.FractureAt && i % 4 == 0;
+					SpawnOne(tough ? BodyKind.Fracture : BodyKind.Drifter, at);
+				}
+				break;
+			}
+
+			case Formation.Wall:
+			{
+				// A line of Shards across one side of the screen, sweeping in.
+				Rect2 edge = Arena.View.Grow(Balance.SpawnBeyondView + 100f);
+				int count = size + 2;
+				for (int attempt = 0; attempt < 4; attempt++)
+				{
+					int sideIndex = RunState.Rng.RandiRange(0, 3);
+					bool horizontal = sideIndex < 2;
+					Vector2 start = sideIndex switch
+					{
+						0 => edge.Position,
+						1 => new Vector2(edge.Position.X, edge.End.Y),
+						2 => edge.Position,
+						_ => new Vector2(edge.End.X, edge.Position.Y)
+					};
+					Vector2 step = horizontal ? new Vector2(edge.Size.X / (count - 1), 0f) : new Vector2(0f, edge.Size.Y / (count - 1));
+					Vector2 middle = start + step * (count - 1) * 0.5f;
+					if (!Arena.Playable.Grow(-40f).HasPoint(middle))
+						continue;
+					for (int i = 0; i < count; i++)
+					{
+						Vector2 at = start + step * i;
+						if (Arena.Playable.Grow(-40f).HasPoint(at))
+							SpawnOne(BodyKind.Shard, at);
+					}
+					break;
+				}
+				break;
+			}
+
+			case Formation.Escort:
+			{
+				// One tough enemy with a guard of Shards around it.
+				if (FindOrigin() is not Vector2 origin)
+					return;
+				BodyKind heavy = time >= Balance.BulwarkAt && RunState.Rng.Randf() < 0.5f ? BodyKind.Bulwark : BodyKind.Planetoid;
+				SpawnOne(heavy, origin);
+				for (int i = 0; i < size - 1; i++)
+					SpawnOne(BodyKind.Shard, origin + Vector2.FromAngle(Mathf.Tau * i / (size - 1)) * 130f);
+				break;
+			}
+		}
+	}
+
+	/// <summary>A random shape that is unlocked by now and was not the last one.</summary>
+	private Formation PickFormation(float time)
+	{
+		var options = new List<Formation> { Formation.Pack };
+		if (time >= 60f) options.Add(Formation.Pincer);
+		if (time >= 90f) options.Add(Formation.Ring);
+		if (time >= Balance.ShardAt) options.Add(Formation.Wall);
+		if (time >= Balance.PlanetoidAt + 45f) options.Add(Formation.Escort);
+		if (options.Count > 1)
+			options.Remove(lastFormation);
+		return options[RunState.Rng.RandiRange(0, options.Count - 1)];
 	}
 
 	private Vector2? FindOrigin()

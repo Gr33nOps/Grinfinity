@@ -105,6 +105,9 @@ public partial class ArenaBackdrop : Node2D
 
 	private readonly System.Collections.Generic.List<(Node2D node, Vector2 at, float extent)> scenery = new();
 
+	/// <summary>Scenery never gets more opaque than this. It is set dressing, not a landmark to stare at.</summary>
+	private const float SceneryStrength = 0.45f;
+
 	/// <summary>
 	/// Placed in the far layer's own space, on a loose three-by-three grid. The
 	/// camera's centre ranges over the arena minus half a screen, and at a third
@@ -153,13 +156,13 @@ public partial class ArenaBackdrop : Node2D
 		{
 			Vector2 seen = far.Position + at;
 			float room = Mathf.Min(Mathf.Min(seen.X - lit.Position.X, lit.End.X - seen.X), Mathf.Min(seen.Y - lit.Position.Y, lit.End.Y - seen.Y)) - extent;
-			node.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp(room / 320f, 0f, 1f));
+			node.Modulate = new Color(1f, 1f, 1f, SceneryStrength * Mathf.Clamp(room / 320f, 0f, 1f));
 		}
 	}
 
 	// Each piece is flat, dusky and drawn in the menu's shapes. All of them are
 	// blended well back into the sky, so none competes with the fight.
-	private static Color Dim(string hex) => new Color(hex).Lerp(Sky, 0.5f);
+	private static Color Dim(string hex) => new Color(hex).Lerp(Sky, 0.72f);
 
 	private static void DrawScenery(CanvasItem item, Scenery kind, Vector2 at, ulong seed)
 	{
@@ -280,7 +283,7 @@ public partial class ArenaBackdrop : Node2D
 	private static void DrawNearStars(CanvasItem item, Rect2 area, ulong seed)
 	{
 		var rng = new RandomNumberGenerator { Seed = seed };
-		int count = Mathf.RoundToInt(area.Size.X * area.Size.Y / 60000f);
+		int count = Mathf.RoundToInt(area.Size.X * area.Size.Y / 90000f);
 		for (int i = 0; i < count; i++)
 		{
 			var at = new Vector2(rng.RandfRange(area.Position.X, area.End.X), rng.RandfRange(area.Position.Y, area.End.Y));
@@ -289,7 +292,7 @@ public partial class ArenaBackdrop : Node2D
 			{
 				// The menu's four-point sparkle.
 				float size = rng.RandfRange(5f, 8f);
-				var colour = new Color(Cream, 0.3f);
+				var colour = new Color(Cream, 0.18f);
 				item.DrawColoredPolygon(new[]
 				{
 					at + new Vector2(0, -size), at + new Vector2(size * 0.22f, -size * 0.22f), at + new Vector2(size, 0),
@@ -299,7 +302,7 @@ public partial class ArenaBackdrop : Node2D
 			}
 			else
 			{
-				item.DrawCircle(at, rng.RandfRange(1.1f, 2.2f), new Color(Cream, rng.RandfRange(0.14f, 0.32f)));
+				item.DrawCircle(at, rng.RandfRange(1.1f, 2.2f), new Color(Cream, rng.RandfRange(0.08f, 0.2f)));
 			}
 		}
 	}

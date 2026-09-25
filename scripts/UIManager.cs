@@ -98,10 +98,13 @@ public partial class UIManager : Node
 		toast.Modulate = new Color(1, 1, 1, 0);
 		hud.AddChild(toast);
 
-		hint = ArcadeSkin.Label("WASD / left stick to move     •     Mouse / right stick to aim     •     Click / RT to shoot", Size(23), ArcadeSkin.Muted);
+		// Two lines: the basics, then the three ability buttons, which are all
+		// live from the first second.
+		hint = ArcadeSkin.Label("WASD / left stick to move     •     Mouse / right stick to aim     •     Click / RT to shoot\n"
+			+ $"{ControlHint(Ability.Dash)} to dash     •     {ControlHint(Ability.Overdrive)} for overdrive     •     {ControlHint(Ability.Nova)} for nova", Size(23), ArcadeSkin.Muted);
 		hint.Name = "HowTo";
 		hint.AnchorLeft = .5f; hint.AnchorRight = .5f; hint.AnchorTop = .5f; hint.AnchorBottom = .5f;
-		hint.OffsetLeft = -650; hint.OffsetRight = 650; hint.OffsetTop = 150; hint.OffsetBottom = 190;
+		hint.OffsetLeft = -650; hint.OffsetRight = 650; hint.OffsetTop = 140; hint.OffsetBottom = 220;
 		hud.AddChild(hint);
 
 		var bossBar = root.GetNode<Control>("UI/BossBar");
@@ -146,7 +149,7 @@ public partial class UIManager : Node
 		score.Text = $"SCORE  {run.Score:N0}";
 		streak.Text = run.Streak >= 2 ? $"{run.Streak} COMBO" : "";
 		best.Text = ScoreManager.BestTime > 0f ? $"BEST  {ScoreManager.FormatTime(ScoreManager.BestTime)}" : "";
-		hint.Visible = run.SurvivalTime < 8f;
+		hint.Visible = run.SurvivalTime < 10f;
 		shieldChip.Visible = run.HasShield;
 	}
 

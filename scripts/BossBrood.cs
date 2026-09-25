@@ -16,7 +16,7 @@ public partial class BossBrood : Boss
 		BossName = "THE BROOD";
 		ArrivalLine = TranslationServer.Translate("BOSS_Brood_ARRIVAL");
 		BossColor = new Color(0.58f, 0.82f, 0.4f);
-		MaxHealth = 500;
+		MaxHealth = 660;
 	}
 
 	[Export] public float ChaseSpeed { get; set; } = 62.0f;
