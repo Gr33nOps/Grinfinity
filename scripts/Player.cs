@@ -360,7 +360,7 @@ public partial class Player : CharacterBody2D
 	}
 
 	/// <summary>The weapon this run is carrying.</summary>
-	public WeaponProfile Weapon => WeaponProfile.Get(run?.Weapon ?? WeaponId.Comet);
+	public WeaponProfile Weapon => WeaponProfile.Comet;
 
 	/// <summary>Seconds until the weapon can fire again.</summary>
 	public float FireInterval(bool overdriven)

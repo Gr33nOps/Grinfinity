@@ -6,8 +6,6 @@ public enum RunUpgradeId
 	FireRate,
 	SpreadShot,
 	Piercing,
-	DebrisCannon,
-	IonLance,
 	DashReach,
 	DashBlink,
 	OverdrivePower,
@@ -47,8 +45,6 @@ public static class RunUpgrades
 		/// <summary>Rim colour on a pickup and the tree, so upgrades sharing an icon still differ.</summary>
 		public required Color Colour { get; init; }
 		public int MaxLevel { get; init; } = 1;
-		/// <summary>Replaces the starting Comet. Only one swap per run.</summary>
-		public WeaponId? Equips { get; init; }
 		/// <summary>Relative chance in a boss reward. Zero keeps it out of boss rewards.</summary>
 		public float BossWeight { get; init; } = 1f;
 		/// <summary>The node below this one in the tree. Needs one rank before this opens.</summary>
@@ -76,20 +72,6 @@ public static class RunUpgrades
 	{
 		Id = RunUpgradeId.Piercing, Branch = Branch.Gun, Name = TranslationServer.Translate("UPG_Piercing_NAME"),
 		Short = "Shots go through foes", Icon = "pierce", Colour = Gun, MaxLevel = 2, BossWeight = 1.1f, Requires = RunUpgradeId.SpreadShot
-	};
-
-	// The two weapons are a choice, not a pair: taking one closes the other, and
-	// a boss never picks one for you.
-	public static readonly Profile DebrisCannon = new()
-	{
-		Id = RunUpgradeId.DebrisCannon, Branch = Branch.Gun, Name = "DEBRIS CANNON",
-		Short = "Six pellets, close range", Icon = "cannon", Colour = new Color("c9a0ff"), Equips = WeaponId.DebrisCannon, BossWeight = 0f, Requires = RunUpgradeId.Piercing
-	};
-
-	public static readonly Profile IonLance = new()
-	{
-		Id = RunUpgradeId.IonLance, Branch = Branch.Gun, Name = "ION LANCE",
-		Short = "Slow, heavy, pierces lines", Icon = "lance", Colour = new Color("8ce6ff"), Equips = WeaponId.IonLance, BossWeight = 0f, Requires = RunUpgradeId.Piercing
 	};
 
 	public static readonly Profile DashReach = new()
@@ -131,21 +113,18 @@ public static class RunUpgrades
 	// Declared last: static field initialisers run in source order.
 	public static readonly Profile[] All =
 	{
-		FireRate, SpreadShot, Piercing, DebrisCannon, IonLance,
+		FireRate, SpreadShot, Piercing,
 		DashReach, DashBlink, OverdrivePower, OverdriveDuration, BiggerNova, NovaPower
 	};
 
-	/// <summary>Every rank the tree holds. A weapon counts once — only one can be taken.</summary>
+	/// <summary>Every rank the tree holds.</summary>
 	public static readonly int MaxTotalLevels = CountMaxLevels();
 
 	private static int CountMaxLevels()
 	{
-		int total = 1;
+		int total = 0;
 		foreach (Profile profile in All)
-		{
-			if (profile.Equips == null)
-				total += profile.MaxLevel;
-		}
+			total += profile.MaxLevel;
 		return total;
 	}
 

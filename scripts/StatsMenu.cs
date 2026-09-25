@@ -21,7 +21,6 @@ public partial class StatsMenu : Control
 		SetRow("Kills", $"{PlayerProfile.TotalKills:N0}");
 		SetRow("Time played", FormatDuration(PlayerProfile.TotalTimePlayed));
 		SetRow("Heaviest mass", $"{Mathf.RoundToInt(PlayerProfile.HeaviestMassEver * 100)}%");
-		SetRow("Favourite weapon", WeaponProfile.Get(PlayerProfile.FavouriteWeapon).Name);
 		SetRow("Worlds unlocked", $"{CountUnlockedWorlds()} / {Worlds.All.Length}");
 		SetRow("Achievements", $"{CountUnlockedAchievements()} / {Achievements.All.Length}");
 

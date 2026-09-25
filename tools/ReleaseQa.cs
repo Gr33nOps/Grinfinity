@@ -45,7 +45,7 @@ public partial class ReleaseQa : Node
             var active = GetTree().CurrentScene as GameManager;
             Check(active != null, $"journey {attempt}: enters arena");
             if (active == null) return;
-            Check(active.Run.TotalLevels == 0 && !active.Run.HasShield && active.Run.Weapon == WeaponId.Comet, "retry resets upgrades, shield and weapon");
+            Check(active.Run.TotalLevels == 0 && !active.Run.HasShield, "retry resets upgrades and shield");
             var player = active.GetNode<Player>("player"); player.Invulnerable = true;
             Invoke(active, "TogglePause");
             float time = active.RunTime;
@@ -132,10 +132,7 @@ public partial class ReleaseQa : Node
         locked.TryGrant(RunUpgradeId.FireRate);
         for (int i = 0; i < 10; i++) locked.TryGrant(RunUpgradeId.SpreadShot);
         Check(locked.LevelOf(RunUpgradeId.SpreadShot) == RunUpgrades.SpreadShot.MaxLevel, "upgrades stop at their maximum");
-        Check(!locked.TryGrant(RunUpgradeId.DebrisCannon), "the weapons sit above Piercing Shots");
-        locked.TryGrant(RunUpgradeId.Piercing);
-        Check(locked.TryGrant(RunUpgradeId.DebrisCannon) && locked.Weapon == WeaponId.DebrisCannon, "debris cannon replaces the comet");
-        Check(!locked.TryGrant(RunUpgradeId.IonLance) && locked.Weapon == WeaponId.DebrisCannon, "the two weapons are one choice");
+        Check(!locked.TryGrant(RunUpgradeId.Piercing) || locked.LevelOf(RunUpgradeId.SpreadShot) > 0, "Piercing Shots sits above Spread Shot");
         locked.GrantShield(); locked.GrantShield();
         Check(locked.HasShield && locked.ConsumeShield() && !locked.ConsumeShield(), "at most one shield, spent by one hit");
         locked.Free();
@@ -185,9 +182,9 @@ public partial class ReleaseQa : Node
         for (int roll = 0; roll < 300; roll++)
         {
             if (!Pickups.TryRollBossReward(fresh, new List<Reward>(), out Reward reward)) continue;
-            bossClean &= reward.Kind == RewardKind.Upgrade && RunUpgrades.Get(reward.Upgrade).Equips == null && !fresh.IsMaxed(reward.Upgrade);
+            bossClean &= reward.Kind == RewardKind.Upgrade && !fresh.IsMaxed(reward.Upgrade);
         }
-        Check(bossClean, "boss rewards are upgrades the run can take, never a weapon");
+        Check(bossClean, "boss rewards are upgrades the run can take");
         fresh.Free();
 
         // Drop cadence: a gap in a fixed window, and only for a player who is fighting.

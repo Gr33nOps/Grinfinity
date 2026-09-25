@@ -132,7 +132,7 @@ func _watch(t: float) -> void:
 	var now_levels: int = run_state.get("TotalLevels")
 	if now_levels != levels:
 		levels = now_levels
-		_log("UPGRADE -> %d levels (weapon %d)" % [levels, run_state.get("Weapon")])
+		_log("UPGRADE -> %d levels" % levels)
 	var now_shield: bool = run_state.get("HasShield")
 	if now_shield != shield:
 		shield = now_shield
@@ -284,9 +284,9 @@ func _save(label: String) -> void:
 
 # Buys an upgrade the moment the CORE bar is full, the way a player who taps
 # the upgrade key straight away would. Order: gun first, then the abilities.
-# Ids follow RunUpgradeId: 0 FireRate, 1 Spread, 2 Piercing, 3 Cannon, 4 Lance,
-# 5 DashReach, 6 DashBlink, 7 OverdrivePower, 8 OverdriveTime, 9 BiggerNova, 10 NovaPower.
-const BUY_ORDER := [0, 1, 0, 2, 7, 9, 0, 4, 1, 5, 7, 10, 2, 9, 8, 5, 6, 7, 9, 10, 8, 6, 5]
+# Ids follow RunUpgradeId: 0 FireRate, 1 Spread, 2 Piercing, 3 DashReach,
+# 4 DashBlink, 5 OverdrivePower, 6 OverdriveTime, 7 BiggerNova, 8 NovaPower.
+const BUY_ORDER := [0, 1, 0, 2, 5, 7, 0, 1, 3, 5, 8, 2, 7, 6, 3, 4, 5, 7, 8, 6, 4, 3]
 
 func _spend_core() -> void:
 	if not run_state.get("CoreReady"):

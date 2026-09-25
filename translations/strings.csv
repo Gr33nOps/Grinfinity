@@ -2,12 +2,6 @@ keys,en
 WEAPON_Comet_NAME,COMET
 WEAPON_Comet_FANTASY,"Quick, steady shots. The gun every planet starts with."
 WEAPON_Comet_TRADEOFF,No big weakness.
-WEAPON_DebrisCannon_NAME,DEBRIS CANNON
-WEAPON_DebrisCannon_FANTASY,Six chunks of rock at once.
-WEAPON_DebrisCannon_TRADEOFF,Only reaches enemies up close.
-WEAPON_IonLance_NAME,ION LANCE
-WEAPON_IonLance_FANTASY,Heavy beams that punch through a whole line of enemies.
-WEAPON_IonLance_TRADEOFF,Slow to fire. Line up your shots.
 ACHIEVEMENT_SurviveFiveMinutes_NAME,LONG ORBIT
 ACHIEVEMENT_SurviveFiveMinutes_DESC,Survive for 5 minutes.
 ACHIEVEMENT_HundredKills_NAME,CENTURY
@@ -87,7 +81,6 @@ STATS_ORBITS,RUNS PLAYED
 STATS_KILLS,ENEMIES POPPED
 STATS_TIMEPLAYED,TIME PLAYED
 STATS_HEAVIESTMASS,FULLEST BUILD
-STATS_FAVOURITEWEAPON,FAVOURITE WEAPON
 STATS_WORLDSUNLOCKED,PLANETS UNLOCKED
 STATS_ACHIEVEMENTS,ACHIEVEMENTS
 UI_MINUTES_SHORT,min

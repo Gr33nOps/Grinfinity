@@ -63,8 +63,8 @@ public partial class Bullet : Area2D
 		var lifetime = GetNodeOrNull<Timer>("Timer");
 		if (lifetime != null)
 		{
-			// Lifetime is how a weapon's range is expressed: the Debris Cannon's
-			// spread is not slow, it simply stops existing before it gets far.
+			// Lifetime is how a weapon's range is expressed: a shot is not slowed
+			// down at the end of its range, it simply stops existing.
 			if (Range > 0f)
 				lifetime.WaitTime = Range;
 			lifetime.Timeout += QueueFree;
@@ -181,7 +181,7 @@ public partial class Bullet : Area2D
 		SpawnDamageNumber(GlobalPosition);
 
 		// A piercing shot carries on through the clump. Area2D only reports each
-		// body once per entry, so nothing can be hit twice by the same lance.
+		// body once per entry, so nothing can be hit twice by the same shot.
 		if (Pierce > 0)
 		{
 			Pierce--;

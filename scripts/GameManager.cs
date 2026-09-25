@@ -346,7 +346,7 @@ public partial class GameManager : Node2D
 		boughtThisVisit = true;
 		RunUpgrades.Profile profile = RunUpgrades.Get(id);
 		int level = run.LevelOf(id);
-		string rank = profile.Equips != null ? "EQUIPPED" : level >= profile.MaxLevel ? "MAX" : $"RANK {level}";
+		string rank = level >= profile.MaxLevel ? "MAX" : $"RANK {level}";
 		Toast($"{profile.Name}  •  {rank}", profile.Colour);
 		PlayCue("upgrade_chirp");
 		player.GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
@@ -802,7 +802,7 @@ public partial class GameManager : Node2D
 		GameOver.IsNewBestScore = records.NewBestScore;
 		GameOver.IsNewBestTime = records.NewBestTime;
 
-		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakBuildFraction, run.Weapon);
+		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakBuildFraction);
 
 		GameOver.LeaderboardRank = Leaderboard.Submit(
 			PlayerProfile.PlayerName, run.Score, run.SurvivalTime, run.Kills);
@@ -985,7 +985,7 @@ public partial class GameManager : Node2D
 		{
 			RunUpgrades.Profile profile = RunUpgrades.Get(reward.Upgrade);
 			int level = run.LevelOf(profile.Id);
-			string rank = profile.Equips != null ? "EQUIPPED" : level >= profile.MaxLevel ? "MAX" : $"LV {level}";
+			string rank = level >= profile.MaxLevel ? "MAX" : $"LV {level}";
 			Toast($"{profile.Name}  •  {rank}", profile.Colour);
 			PlayCue("upgrade_chirp");
 		}

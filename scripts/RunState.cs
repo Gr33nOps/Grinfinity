@@ -7,7 +7,7 @@ using Godot;
 /// <see cref="UIManager"/> decides how to draw them.
 ///
 /// Everything here is run-only. A new run is a new RunState, so dying resets the
-/// abilities, the upgrades, the shield and the weapon in one go.
+/// abilities, the upgrades, and the shield in one go.
 /// </summary>
 public partial class RunState : Node
 {
@@ -55,7 +55,6 @@ public partial class RunState : Node
 	[Export] public int StardustPerStreakBest { get; set; } = 3;
 
 	public float SurvivalTime { get; private set; }
-	public WeaponId Weapon { get; private set; } = WeaponId.Comet;
 	public int Kills { get; private set; }
 	public int Streak { get; private set; }
 	public int BestStreak { get; private set; }
@@ -121,7 +120,7 @@ public partial class RunState : Node
 	public bool IsMaxed(RunUpgradeId id) => RunUpgrades.Get(id) is not { } profile || LevelOf(id) >= profile.MaxLevel;
 
 	/// <summary>Adds one level if the run can take it.</summary>
-	/// <returns>False if it was maxed, locked, or a second weapon swap.</returns>
+	/// <returns>False if it was maxed or locked.</returns>
 	public bool TryGrant(RunUpgradeId id)
 	{
 		RunUpgrades.Profile profile = RunUpgrades.Get(id);
@@ -131,12 +130,8 @@ public partial class RunState : Node
 			return false;
 		if (profile.Requires is RunUpgradeId below && LevelOf(below) == 0)
 			return false;
-		if (profile.Equips != null && Weapon != WeaponId.Comet)
-			return false;
 
 		upgradeLevels[id] = LevelOf(id) + 1;
-		if (profile.Equips is WeaponId weapon)
-			Weapon = weapon;
 
 		PeakBuildFraction = Mathf.Max(PeakBuildFraction, BuildFraction);
 		RefreshRings();
@@ -267,7 +262,7 @@ public partial class RunState : Node
 			return false;
 		if (profile.Requires is RunUpgradeId below && LevelOf(below) == 0)
 			return false;
-		return profile.Equips == null || Weapon == WeaponId.Comet;
+		return true;
 	}
 
 	// --- Pickup timing ----------------------------------------------------------

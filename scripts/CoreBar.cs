@@ -1,8 +1,9 @@
 using Godot;
 
 /// <summary>
-/// The CORE bar on the HUD. Fills with every kill; when it is full it turns
-/// orange and breathes, and the upgrade prompt appears above it. It ticks
+/// The CORE bar on the HUD: a tall bar beside the ability column that fills
+/// from the bottom with every kill. When it is full it turns orange and
+/// breathes, and the upgrade prompt appears under the column. It ticks
 /// brighter for a moment each time CORE comes in, so even a single kill shows.
 /// </summary>
 public partial class CoreBar : Control
@@ -12,7 +13,7 @@ public partial class CoreBar : Control
 	private static readonly Color Filling = new("c66e80");
 	private static readonly Color Full = new("f5a451");
 
-	/// <summary>Size of the word written inside the bar.</summary>
+	/// <summary>Size of the word written up the bar.</summary>
 	public int TextSize { get; init; } = 16;
 
 	private float shown;
@@ -49,38 +50,41 @@ public partial class CoreBar : Control
 	public override void _Draw()
 	{
 		var area = new Rect2(Vector2.Zero, Size);
-		float radius = Size.Y * 0.5f;
+		float radius = Size.X * 0.5f;
 		DrawStyleBox(Box(Track, Rim, radius, 2), area);
 
 		if (complete)
 		{
-			Caption("ALL UPGRADES", ArcadeSkin.Muted);
+			Caption("MAXED", ArcadeSkin.Muted);
 			return;
 		}
 
-		float width = Mathf.Max((Size.X - 6f) * shown, 0f);
-		if (width > 1f)
+		float height = Mathf.Max((Size.Y - 6f) * shown, 0f);
+		if (height > 1f)
 		{
 			Color fill = ready ? Full.Lerp(new Color("ffd66b"), 0.5f + 0.5f * Mathf.Sin(time * 6f)) : Filling.Lerp(Full, shown * 0.6f);
 			fill = fill.Lightened(tick * 0.35f);
-			DrawStyleBox(Box(fill, fill, Mathf.Min(radius - 3f, width * 0.5f), 0), new Rect2(3f, 3f, width, Size.Y - 6f));
+			DrawStyleBox(Box(fill, fill, Mathf.Min(radius - 3f, height * 0.5f), 0), new Rect2(3f, Size.Y - 3f - height, Size.X - 6f, height));
 		}
 
 		if (ready)
 			DrawStyleBox(Box(new Color(0, 0, 0, 0), new Color(Full, 0.5f + 0.4f * Mathf.Sin(time * 6f)), radius + 4f, 3), area.Grow(4f));
 
-		Caption(ready ? "CORE FULL" : "CORE", ready ? ArcadeSkin.Ink : ArcadeSkin.Cream);
+		Caption("CORE", ready ? ArcadeSkin.Ink : ArcadeSkin.Cream);
 	}
 
-	/// <summary>The bar's name, centred in it, outlined so it reads over any fill.</summary>
+	/// <summary>The bar's name, reading bottom to top from its foot, outlined so it reads over any fill.</summary>
 	private void Caption(string text, Color colour)
 	{
 		Font font = ArcadeSkin.Font;
-		Vector2 size = font.GetStringSize(text, HorizontalAlignment.Left, -1, TextSize);
-		var at = new Vector2((Size.X - size.X) * 0.5f, (Size.Y + font.GetAscent(TextSize) - font.GetDescent(TextSize)) * 0.5f);
+		// Turned a quarter anticlockwise, the glyphs' height runs across the
+		// bar; this offset centres them on it.
+		float across = (font.GetAscent(TextSize) - font.GetDescent(TextSize)) * 0.5f;
+		DrawSetTransform(new Vector2(Size.X * 0.5f + across, Size.Y - 12f), -Mathf.Pi * 0.5f, Vector2.One);
 		if (colour != ArcadeSkin.Ink)
-			DrawStringOutline(font, at, text, HorizontalAlignment.Left, -1, TextSize, 5, new Color(0.1f, 0.05f, 0.12f));
-		DrawString(font, at, text, HorizontalAlignment.Left, -1, TextSize, colour);
+			DrawStringOutline(font, Vector2.Zero, text, HorizontalAlignment.Left, -1, TextSize, 5, new Color(0.1f, 0.05f, 0.12f));
+		DrawString(font, Vector2.Zero, text, HorizontalAlignment.Left, -1, TextSize, colour);
+		DrawSetTransform(Vector2.Zero, 0f, Vector2.One);
 	}
 
 	private static StyleBoxFlat Box(Color fill, Color border, float radius, int line)

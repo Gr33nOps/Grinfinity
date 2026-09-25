@@ -13,7 +13,6 @@ public static class PlayerProfile
 	private const string Section = "profile";
 	private const string WorldSection = "worlds";
 	private const string AchievementSection = "achievements";
-	private const string WeaponTallySection = "weapon_tally";
 	/// <summary>
 	/// v2 dropped the permanent upgrade shop and turned stardust from a balance
 	/// into a lifetime tally. Old files keep their "upgrades" section on disk —
@@ -95,29 +94,6 @@ public static class PlayerProfile
 		SaveToFile();
 	}
 
-	private static readonly Dictionary<WeaponId, int> weaponTally = new();
-
-	/// <summary>The weapon most orbits have been launched with, or Comet if none yet.</summary>
-	public static WeaponId FavouriteWeapon
-	{
-		get
-		{
-			EnsureLoaded();
-			WeaponId best = WeaponId.Comet;
-			int bestCount = -1;
-			foreach (WeaponProfile weapon in WeaponProfile.All)
-			{
-				int count = weaponTally.GetValueOrDefault(weapon.Id, 0);
-				if (count > bestCount)
-				{
-					bestCount = count;
-					best = weapon.Id;
-				}
-			}
-			return best;
-		}
-	}
-
 	// --- Unlocks ------------------------------------------------------------
 	private static readonly HashSet<int> unlockedWorlds = new() { 1 };
 	private static readonly HashSet<AchievementId> unlockedAchievements = new();
@@ -158,10 +134,10 @@ public static class PlayerProfile
 
 	/// <summary>
 	/// Folds one finished orbit into the profile: stardust earned, lifetime
-	/// totals, and which weapon it was played with. Called once, from
+	/// totals. Called once, from
 	/// GameManager.TriggerGameOver.
 	/// </summary>
-	public static void RecordOrbit(int stardustEarned, int kills, float survivalTime, float buildFraction, WeaponId weapon)
+	public static void RecordOrbit(int stardustEarned, int kills, float survivalTime, float buildFraction)
 	{
 		EnsureLoaded();
 
@@ -170,7 +146,6 @@ public static class PlayerProfile
 		TotalKills += Mathf.Max(kills, 0);
 		TotalTimePlayed += Mathf.Max(survivalTime, 0f);
 		HeaviestMassEver = Mathf.Max(HeaviestMassEver, buildFraction);
-		weaponTally[weapon] = weaponTally.GetValueOrDefault(weapon, 0) + 1;
 
 		SaveToFile();
 	}
@@ -206,8 +181,6 @@ public static class PlayerProfile
 				unlockedAchievements.Add(id);
 		}
 
-		foreach (WeaponId id in System.Enum.GetValues<WeaponId>())
-			weaponTally[id] = Mathf.Max(SaveStore.Value(config, WeaponTallySection, id.ToString(), 0).AsInt32(), 0);
 	}
 
 	private static void SaveToFile()
@@ -231,8 +204,6 @@ public static class PlayerProfile
 			achievements[ai++] = id.ToString();
 		config.SetValue(AchievementSection, "unlocked", achievements);
 
-		foreach ((WeaponId id, int count) in weaponTally)
-			config.SetValue(WeaponTallySection, id.ToString(), count);
 
 		Error error = SaveStore.Save(config, SavePath);
 		if (error != Error.Ok)

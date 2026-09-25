@@ -1,11 +1,9 @@
 using Godot;
 
-/// <summary>Which weapon the world is carrying. Chosen once, at orbit start.</summary>
+/// <summary>Which weapon the world is carrying. There is one: the Comet.</summary>
 public enum WeaponId
 {
-	Comet,
-	DebrisCannon,
-	IonLance
+	Comet
 }
 
 /// <summary>
@@ -44,12 +42,7 @@ public sealed class WeaponProfile
 	/// <summary>Rapid fire multiplies the interval by this, whatever the weapon.</summary>
 	public float RapidFireScale { get; init; } = 0.32f;
 
-	public static WeaponProfile Get(WeaponId id) => id switch
-	{
-		WeaponId.DebrisCannon => DebrisCannon,
-		WeaponId.IonLance => IonLance,
-		_ => Comet
-	};
+	public static WeaponProfile Get(WeaponId id) => Comet;
 
 	public static readonly WeaponProfile Comet = new()
 	{
@@ -63,43 +56,6 @@ public sealed class WeaponProfile
 		Tint = new Color(0.95f, 0.62f, 0.35f)
 	};
 
-	public static readonly WeaponProfile DebrisCannon = new()
-	{
-		Id = WeaponId.DebrisCannon,
-		Name = TranslationServer.Translate("WEAPON_DebrisCannon_NAME"),
-		Fantasy = TranslationServer.Translate("WEAPON_DebrisCannon_FANTASY"),
-		Tradeoff = TranslationServer.Translate("WEAPON_DebrisCannon_TRADEOFF"),
-		FireInterval = 0.52f,
-		Pellets = 6,
-		Spread = Mathf.DegToRad(30f),
-		Speed = 820f,
-		SpeedJitter = 0.22f,
-		// Short life, not slow shots: the spread stays fast and simply stops
-		// existing before it reaches anything far away.
-		Range = 0.42f,
-		ShotScale = 0.8f,
-		Tint = new Color(0.88f, 0.72f, 0.5f)
-	};
-
-	public static readonly WeaponProfile IonLance = new()
-	{
-		Id = WeaponId.IonLance,
-		Name = TranslationServer.Translate("WEAPON_IonLance_NAME"),
-		Fantasy = TranslationServer.Translate("WEAPON_IonLance_FANTASY"),
-		Tradeoff = TranslationServer.Translate("WEAPON_IonLance_TRADEOFF"),
-		FireInterval = 0.78f,
-		Speed = 1650f,
-		Damage = 2,
-		Pierce = 8,
-		Range = 1.6f,
-		ShotScale = 1.35f,
-		Tint = new Color(0.55f, 0.9f, 1.0f)
-	};
-
-	/// <summary>
-	/// Every weapon, in the order the select screen lists them. Declared last on
-	/// purpose: static field initialisers run in source order, so an array up at
-	/// the top of the class would capture three nulls.
-	/// </summary>
-	public static readonly WeaponProfile[] All = { Comet, DebrisCannon, IonLance };
+	/// <summary>Every weapon. Declared last: static field initialisers run in source order.</summary>
+	public static readonly WeaponProfile[] All = { Comet };
 }

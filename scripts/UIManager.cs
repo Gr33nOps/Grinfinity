@@ -4,10 +4,11 @@ using Godot;
 /// <summary>
 /// The gameplay HUD, fixed to the screen while the world moves under it.
 ///
-/// Time comes first because time is the record. Score sits under it. The three
-/// abilities live bottom centre, a shield chip bottom left, and pickups announce
-/// themselves in a short line just above the abilities — the banner at the top
-/// is kept for bigger moments. Nothing else.
+/// Top right holds the run's numbers: time first because time is the record,
+/// then score and best. Top left holds the kit: the three abilities in a column
+/// with the CORE bar standing beside them. A shield chip sits bottom left, and
+/// pickups announce themselves in a short line at the bottom centre; the banner
+/// at the top is kept for bigger moments. Nothing else.
 /// </summary>
 public partial class UIManager : Node
 {
@@ -55,57 +56,52 @@ public partial class UIManager : Node
 		layer.AddChild(hud);
 		ArcadeSkin.Fill(hud);
 
-		var clock = new VBoxContainer { Position = new Vector2(34, 20), MouseFilter = Control.MouseFilterEnum.Ignore };
-		clock.AddThemeConstantOverride("separation", -4);
-		hud.AddChild(clock);
+		// Top right: the run's numbers. Time first and biggest, because time is
+		// the record; score and best under it; the combo last, so it can come
+		// and go without shifting anything.
+		var numbers = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+		numbers.AnchorLeft = 1; numbers.AnchorRight = 1; numbers.OffsetLeft = -Size(420); numbers.OffsetRight = -34; numbers.OffsetTop = 20;
+		numbers.AddThemeConstantOverride("separation", -4);
+		hud.AddChild(numbers);
 		var caption = ArcadeSkin.Label("SURVIVED", Size(18), ArcadeSkin.Muted);
-		caption.HorizontalAlignment = HorizontalAlignment.Left;
-		clock.AddChild(caption);
 		time = ArcadeSkin.Label("00:00", Size(64));
 		time.Name = "RunInfo";
-		time.HorizontalAlignment = HorizontalAlignment.Left;
-		clock.AddChild(time);
 		score = ArcadeSkin.Label("0", Size(26));
 		score.Name = "LiveScore";
-		score.HorizontalAlignment = HorizontalAlignment.Left;
-		clock.AddChild(score);
-		streak = ArcadeSkin.Label("", Size(22), ArcadeSkin.Orange);
-		streak.HorizontalAlignment = HorizontalAlignment.Left;
-		clock.AddChild(streak);
-
 		best = ArcadeSkin.Label("", Size(22), ArcadeSkin.Muted);
-		best.HorizontalAlignment = HorizontalAlignment.Right;
-		best.AnchorLeft = 1; best.AnchorRight = 1; best.OffsetLeft = -360; best.OffsetRight = -34; best.OffsetTop = 30; best.OffsetBottom = 60;
-		hud.AddChild(best);
+		streak = ArcadeSkin.Label("", Size(22), ArcadeSkin.Orange);
+		foreach (Label label in new[] { caption, time, score, best, streak })
+		{
+			label.HorizontalAlignment = HorizontalAlignment.Right;
+			numbers.AddChild(label);
+		}
 
-		var row = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center, MouseFilter = Control.MouseFilterEnum.Ignore };
-		row.AnchorLeft = .5f; row.AnchorRight = .5f; row.AnchorTop = 1; row.AnchorBottom = 1;
-		row.OffsetLeft = -300; row.OffsetRight = 300; row.OffsetTop = -Size(150); row.OffsetBottom = -14;
-		row.AddThemeConstantOverride("separation", Size(14));
-		hud.AddChild(row);
+		// Top left: what the player has to use. The CORE bar stands beside the
+		// three abilities, as tall as the column of rings, and the upgrade prompt
+		// appears under them when the bar is full.
+		int diameter = Size(76), gap = Size(4), barWidth = Size(26);
+		float slotHeight = diameter + 34f;
+		var column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Position = new Vector2(34 + barWidth + 14 - 20, 24) };
+		column.AddThemeConstantOverride("separation", gap);
+		hud.AddChild(column);
 		foreach (Ability ability in System.Enum.GetValues<Ability>())
 		{
-			var slot = new AbilitySlot { Ability = ability, Diameter = Size(84), Name = RunUpgrades.AbilityName(ability) };
-			row.AddChild(slot);
+			var slot = new AbilitySlot { Ability = ability, Diameter = diameter, Name = RunUpgrades.AbilityName(ability) };
+			column.AddChild(slot);
 			slots[ability] = slot;
 		}
 
-		// CORE: a bar exactly as wide as the three ability rings, sitting on
-		// them, with its name inside it rather than hanging off one end. The
-		// upgrade prompt sits on top of it when a bar is full.
-		float ringSpan = (3 * (Size(84) + 40f) + 2 * Size(14)) * 0.5f - 20f;
 		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(16) };
-		coreBar.AnchorLeft = .5f; coreBar.AnchorRight = .5f; coreBar.AnchorTop = 1; coreBar.AnchorBottom = 1;
-		coreBar.OffsetLeft = -ringSpan; coreBar.OffsetRight = ringSpan; coreBar.OffsetTop = -Size(150) - Size(34); coreBar.OffsetBottom = -Size(150) - 10;
+		coreBar.Position = new Vector2(34, 24);
+		coreBar.Size = new Vector2(barWidth, 2 * (slotHeight + gap) + diameter);
 		hud.AddChild(coreBar);
 
 		upgradePrompt = ArcadeSkin.Button("", () => GameManager.Of(this)?.OpenUpgradeTree(), true);
 		upgradePrompt.Name = "UpgradePrompt";
 		upgradePrompt.FocusMode = Control.FocusModeEnum.None;
-		upgradePrompt.AddThemeFontSizeOverride("font_size", Size(22));
-		upgradePrompt.CustomMinimumSize = new Vector2(0, Size(42));
-		upgradePrompt.AnchorLeft = .5f; upgradePrompt.AnchorRight = .5f; upgradePrompt.AnchorTop = 1; upgradePrompt.AnchorBottom = 1;
-		upgradePrompt.OffsetLeft = -ringSpan; upgradePrompt.OffsetRight = ringSpan; upgradePrompt.OffsetTop = -Size(150) - Size(34) - 12 - Size(42); upgradePrompt.OffsetBottom = -Size(150) - Size(34) - 12;
+		upgradePrompt.AddThemeFontSizeOverride("font_size", Size(20));
+		upgradePrompt.Position = new Vector2(30, 24 + 3 * slotHeight + 2 * gap + 10);
+		upgradePrompt.CustomMinimumSize = new Vector2(Size(210), Size(64));
 		upgradePrompt.Visible = false;
 		hud.AddChild(upgradePrompt);
 
@@ -120,7 +116,7 @@ public partial class UIManager : Node
 		toast.AddThemeColorOverride("font_outline_color", new Color(0.12f, 0.06f, 0.15f));
 		toast.AddThemeConstantOverride("outline_size", 10);
 		toast.AnchorLeft = .5f; toast.AnchorRight = .5f; toast.AnchorTop = 1; toast.AnchorBottom = 1;
-		toast.OffsetLeft = -500; toast.OffsetRight = 500; toast.OffsetTop = -Size(150) - 140; toast.OffsetBottom = -Size(150) - 96;
+		toast.OffsetLeft = -500; toast.OffsetRight = 500; toast.OffsetTop = -Size(140); toast.OffsetBottom = -Size(90);
 		toast.Modulate = new Color(1, 1, 1, 0);
 		hud.AddChild(toast);
 
@@ -157,7 +153,7 @@ public partial class UIManager : Node
 		bool ready = run.CoreReady;
 		if (ready && !upgradePrompt.Visible)
 		{
-			upgradePrompt.Text = $"UPGRADE READY  •  {UpgradeHint()}";
+			upgradePrompt.Text = $"UPGRADE READY\n{UpgradeHint()}";
 			upgradePrompt.PivotOffset = upgradePrompt.Size * 0.5f;
 			upgradePrompt.Scale = Vector2.One * 1.2f;
 			upgradePrompt.CreateTween().TweenProperty(upgradePrompt, "scale", Vector2.One, 0.25f)
@@ -194,7 +190,7 @@ public partial class UIManager : Node
 		shieldChip.Visible = run.HasShield;
 	}
 
-	/// <summary>A short line above the abilities. A new one replaces the old at once.</summary>
+	/// <summary>A short line at the bottom centre. A new one replaces the old at once.</summary>
 	public void Toast(string text, Color colour)
 	{
 		toastTween?.Kill();

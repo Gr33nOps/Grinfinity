@@ -5,8 +5,7 @@ using Godot;
 /// <summary>
 /// The skill tree. The CORE sits at the root; four branches grow up out of it,
 /// one for the gun and one for each ability. Each node needs one rank in the
-/// node below it, and the gun's branch ends in a fork: Debris Cannon or Ion
-/// Lance, never both.
+/// node below it.
 ///
 /// Opened whenever the player likes; buying needs a full CORE bar and takes one
 /// rank. The whole game is paused behind it (see
@@ -16,15 +15,15 @@ using Godot;
 /// </summary>
 public partial class UpgradeTree : Control
 {
-	private static readonly Vector2 CanvasSize = new(1480, 700);
-	private static readonly Vector2 RootAt = new(740, 640);
-	private static readonly float[] Tiers = { 500, 360, 220, 80 };
+	private static readonly Vector2 CanvasSize = new(1480, 560);
+	private static readonly Vector2 RootAt = new(740, 500);
+	private static readonly float[] Tiers = { 360, 220, 80 };
 
 	private static float ColumnOf(Branch branch) => branch switch
 	{
-		Branch.Gun => 300,
-		Branch.Dash => 660,
-		Branch.Overdrive => 950,
+		Branch.Gun => 240,
+		Branch.Dash => 620,
+		Branch.Overdrive => 930,
 		_ => 1240
 	};
 
@@ -78,20 +77,13 @@ public partial class UpgradeTree : Control
 			int tier = 0;
 			foreach (RunUpgrades.Profile profile in RunUpgrades.All)
 			{
-				if (profile.Branch != branch || profile.Equips != null)
+				if (profile.Branch != branch)
 					continue;
 				SkillNode node = Place(profile, new Vector2(ColumnOf(branch), Tiers[tier++]), false);
 				canvas.Link(below, node);
 				below = node;
 			}
 
-			// The gun's fork: the two weapons sit either side above Piercing.
-			if (branch == Branch.Gun)
-			{
-				float x = ColumnOf(branch);
-				canvas.Link(below, Place(RunUpgrades.DebrisCannon, new Vector2(x - 90, Tiers[tier]), true));
-				canvas.Link(below, Place(RunUpgrades.IonLance, new Vector2(x + 90, Tiers[tier]), false));
-			}
 		}
 
 		BuildReadout();
@@ -123,7 +115,7 @@ public partial class UpgradeTree : Control
 	/// <summary>Top right, over the short branches: what the pointed-at node does.</summary>
 	private void BuildReadout()
 	{
-		var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(720, 24), Size = new Vector2(740, 200) };
+		var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(620, 6), Size = new Vector2(740, 200) };
 		readout.AddThemeConstantOverride("separation", 20);
 		canvas.AddChild(readout);
 
@@ -182,15 +174,14 @@ public partial class UpgradeTree : Control
 		infoIcon.Texture = GD.Load<Texture2D>($"res://art/cosmic/icon_{profile.Icon}.svg");
 		infoName.Text = profile.Name;
 		infoName.AddThemeColorOverride("font_color", profile.Colour);
-		infoLine.Text = profile.Equips != null ? $"{profile.Short}. Replaces your gun." : profile.Short;
+		infoLine.Text = profile.Short;
 
-		string rankOnly = profile.MaxLevel > 1 ? $"Rank {node.Level} of {profile.MaxLevel}" : "Pick one of the two weapons";
-		string rank = profile.MaxLevel > 1 ? $"{rankOnly}  •  " : "";
+		string rankOnly = $"Rank {node.Level} of {profile.MaxLevel}";
+		string rank = $"{rankOnly}  •  ";
 		(string words, Color colour) = node.Current switch
 		{
 			SkillNode.State.Locked => ($"Unlocks at {ScoreManager.FormatTime(RunState.UnlockTime(RunUpgrades.AbilityFor(profile.Branch).Value))}", ArcadeSkin.Muted),
-			SkillNode.State.Maxed => (profile.Equips != null ? "Equipped" : $"{rank}Maxed", profile.Colour),
-			SkillNode.State.Closed when profile.Equips != null && run.Weapon != WeaponId.Comet => ("You picked the other weapon", ArcadeSkin.Muted),
+			SkillNode.State.Maxed => ($"{rank}Maxed", profile.Colour),
 			SkillNode.State.Closed => ($"Needs {Title(RunUpgrades.Get(profile.Requires.Value).Name)} first", ArcadeSkin.Muted),
 			SkillNode.State.Buyable => ($"{rank}Press to buy", ArcadeSkin.Orange),
 			_ => (rankOnly, ArcadeSkin.Muted)

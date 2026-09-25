@@ -23,14 +23,14 @@ All three are unlocked from the first second but start the run charging, so the 
 | Ability | Cooldown | Keys | What it does |
 |---|---|---|---|
 | Dash | 2.0 s | Shift / B | Zooms 340 units in your move direction (or aim direction when standing still). While moving you cannot be hurt, and every normal enemy the path crosses is destroyed. Then the planet blinks for 0.4 s: still safe, but no longer destroying anything. Get clear before the blink ends. A boss takes 3.5% of its health, once per dash. |
-| Overdrive | 26 s | E / X | 6 seconds of your current gun going wild: 2.5× fire rate, double damage, +1 pierce, bigger and faster shots. It keeps your spread, pierce and weapon. |
+| Overdrive | 26 s | E / X | 6 seconds of your current gun going wild: 2.5× fire rate, double damage, +1 pierce, bigger and faster shots. It keeps your spread and pierce. |
 | Nova | 40 s | R / Y | A shockwave out to 720 units. Normal enemies it reaches are destroyed, enemy shots in it are wiped, and a boss takes 10% of its health. |
 
 The Accessibility menu can switch Overdrive to hold-to-use.
 
 ## CORE and upgrades
 
-Every kill fills the **CORE** bar at the bottom of the screen, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, **UPGRADE READY** appears. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the prompt, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it.
+Every kill fills the **CORE** bar, the tall bar in the top-left corner beside your three abilities, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, **UPGRADE READY** appears under the abilities. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the prompt, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it.
 
 The first bar needs 35 CORE and each one after needs 32% more, so upgrades come quickly early and slow down as the build gets strong.
 
@@ -41,7 +41,6 @@ The whole game is paused while the upgrade screen is open: enemies, shots, coold
 | Gun | Faster Shots | 3 | 16% less time between shots per rank |
 | Gun | Spread Shot | 2 | One extra angled shot (alternating sides), then two |
 | Gun | Piercing Shots | 2 | Shots pass through 1, then 3 extra enemies |
-| Gun | Debris Cannon **or** Ion Lance | 1 | Replace the Comet with six close-range pellets, or slow heavy shots that pierce eight. Pick one; it closes the other. |
 | Dash | Dash Reach | 3 | +14% dash distance per rank |
 | Dash | Dash Blink | 2 | +0.12 s safe blink after a dash per rank |
 | Overdrive | Overdrive Power | 3 | Overdrive fires 12% faster per rank |
@@ -49,7 +48,7 @@ The whole game is paused while the upgrade screen is open: enemies, shots, coold
 | Nova | Bigger Nova | 3 | +15% Nova radius per rank |
 | Nova | Nova Power | 2 | +3% boss damage and 15% shorter cooldown per rank |
 
-The upgrade screen is drawn as a tree growing out of the CORE: each branch runs bottom to top in the order above, and every node needs one rank in the node below it before it opens. The gun branch ends in a fork: Debris Cannon or Ion Lance, reached after one rank of Piercing Shots. The Dash, Overdrive and Nova branches stay locked until their ability is online. Rings appear around the planet at 5, 11 and 17 ranks, out of 23.
+The upgrade screen is drawn as a tree growing out of the CORE: each branch runs bottom to top in the order above, and every node needs one rank in the node below it before it opens. The Dash, Overdrive and Nova branches stay locked until their ability is online. Rings appear around the planet at 5, 11 and 17 ranks, out of 22.
 
 ## Pickups
 
@@ -63,7 +62,7 @@ Enemies drop only three things, and only when they would help:
 
 The first pickup comes 18–26 seconds in, then one every 24–36 seconds (a little slower as the run goes on). It falls from your next kill, but only if you have been fighting since the last one. A kill off screen drops its pickup a short way from you instead. Pickups last 22 seconds and slide to you from about half a screen away.
 
-Bosses still drop three upgrade ranks each, on top of what CORE buys, but never a weapon. That choice stays yours.
+Bosses still drop three upgrade ranks each, on top of what CORE buys. They only give ranks the tree could sell you right now.
 
 ## Enemies
 
