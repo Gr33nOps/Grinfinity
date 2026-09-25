@@ -1,10 +1,14 @@
 using Godot;
 
 /// <summary>
-/// The planet's look: smiling face, blaster, shield shell, and the states the
+/// The planet's look: smiling face, blaster, its moons, and the states the
 /// abilities put it in. Pure presentation — nothing here changes the hitbox.
 ///
-/// Blinking means "safe for now": after a dash and after a shield breaks. The
+/// Each moon in orbit is one shield. They circle on a tilted path, passing
+/// behind the planet on the far side, so the count can be read at a glance
+/// without looking away from the fight.
+///
+/// Blinking means "safe for now": after a dash and after a moon is lost. The
 /// flicker is the only warning the player gets that it is about to end, so it
 /// speeds up over the last stretch.
 /// </summary>
@@ -14,7 +18,17 @@ public partial class PlanetVisual : Node2D
 	private static readonly Color DashGhost = new(1f, 0.93f, 0.8f, 0.38f);
 
 	private Player player;
-	private Sprite2D body, face, gun, shield;
+	private Sprite2D body, face, gun;
+	/// <summary>Carries the moons, turned against the aim so their orbit stays level.</summary>
+	private Node2D orbit;
+	private readonly Sprite2D[] moons = new Sprite2D[Balance.MaxMoons];
+	/// <summary>Each moon's place round the orbit, easing toward even spacing when the count changes.</summary>
+	private readonly float[] moonOffset = new float[Balance.MaxMoons];
+	/// <summary>Counts up from 0 as a new moon swells into place.</summary>
+	private readonly float[] moonGrow = new float[Balance.MaxMoons];
+	private int shownMoons;
+
+	private const float OrbitWide = 64f, OrbitTall = 24f, OrbitTilt = -0.24f, OrbitSpeed = 1.15f, MoonScale = 0.115f;
 	private Painted aura;
 	private Node2D muzzle;
 	private float time, recoil, celebration, hurt, ghostTimer;
@@ -33,7 +47,13 @@ public partial class PlanetVisual : Node2D
 		gun = new Sprite2D { Texture = GD.Load<Texture2D>("res://art/cosmic/blaster.svg"), Position = new Vector2(49, 12), Scale = Vector2.One * .27f, ZIndex = 3 }; AddChild(gun);
 		muzzle = player.GetNode<Node2D>("shootyPart");
 		muzzle.Position = new Vector2(75, 12);
-		shield = new Sprite2D { Texture = GD.Load<Texture2D>("res://art/cosmic/shield_shell.svg"), Scale = Vector2.One * .39f, ZIndex = 4 }; AddChild(shield);
+		orbit = new Node2D { Name = "Moons" }; AddChild(orbit);
+		Texture2D moonArt = GD.Load<Texture2D>("res://art/cosmic/moon.svg");
+		for (int i = 0; i < moons.Length; i++)
+		{
+			moons[i] = new Sprite2D { Texture = moonArt, Visible = false };
+			orbit.AddChild(moons[i]);
+		}
 
 		// Overdrive's glow sits behind the planet, so the face stays readable.
 		aura = new Painted(new Rect2(-90, -90, 180, 180), item =>
@@ -75,8 +95,7 @@ public partial class PlanetVisual : Node2D
 		gun.FlipV = aimDir.X < 0f;
 		muzzle.Position = new Vector2(75, 0f);
 		gun.Visible = body.Visible;
-		shield.Visible = body.Visible && player.Run?.HasShield == true;
-		shield.Scale = Vector2.One * (.39f + .003f * Mathf.Sin(time * 2));
+		UpdateMoons(step);
 
 		bool overdriven = player.IsOverdriven;
 		aura.Visible = overdriven && body.Visible;
@@ -109,6 +128,41 @@ public partial class PlanetVisual : Node2D
 				ghostTimer = .04f;
 				LeaveGhost();
 			}
+		}
+	}
+
+	private void UpdateMoons(float step)
+	{
+		orbit.Rotation = -player.Rotation;
+		int count = Mathf.Clamp(player.Run?.Moons ?? 0, 0, moons.Length);
+
+		// A moon lost to a hit bursts where it was; a new one swells in.
+		for (int i = count; i < shownMoons; i++)
+			PopEffect.Spawn(this, moons[i].GlobalPosition, 26f, Pickups.ShieldColour, 6, 0.35f);
+		for (int i = shownMoons; i < count; i++)
+			moonGrow[i] = 0f;
+		shownMoons = count;
+
+		for (int i = 0; i < moons.Length; i++)
+		{
+			Sprite2D moon = moons[i];
+			moon.Visible = i < count && body.Visible;
+			if (i >= count)
+				continue;
+
+			moonOffset[i] = Mathf.LerpAngle(moonOffset[i], Mathf.Tau * i / count, 1f - Mathf.Exp(-6f * step));
+			moonGrow[i] = Mathf.Min(1f, moonGrow[i] + step * 4f);
+
+			float angle = time * OrbitSpeed + moonOffset[i];
+			var flat = new Vector2(Mathf.Cos(angle) * OrbitWide, Mathf.Sin(angle) * OrbitTall);
+			moon.Position = flat.Rotated(OrbitTilt);
+
+			// The far side of the orbit passes behind the planet, a touch smaller and dimmer.
+			float depth = Mathf.Sin(angle);
+			moon.ZIndex = depth < 0f ? -1 : 5;
+			float swell = moonGrow[i] < 1f ? Mathf.Sin(moonGrow[i] * Mathf.Pi * 0.5f) * (1f + 0.25f * Mathf.Sin(moonGrow[i] * Mathf.Pi)) : 1f;
+			moon.Scale = Vector2.One * MoonScale * (1f + 0.1f * depth) * swell;
+			moon.SelfModulate = depth < 0f ? new Color(0.78f, 0.74f, 0.86f) : Colors.White;
 		}
 	}
 

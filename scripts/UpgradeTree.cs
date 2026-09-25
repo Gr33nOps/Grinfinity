@@ -140,6 +140,7 @@ public partial class UpgradeTree : Control
 
 		canvas.Fraction = run.CoreFraction;
 		canvas.IsFull = run.CoreReady;
+		canvas.Banked = run.Banked;
 		canvas.Complete = run.BuildComplete;
 		canvas.QueueRedraw();
 	}
@@ -172,10 +173,17 @@ public partial class UpgradeTree : Control
 		if (closing || manager == null || node.Current != SkillNode.State.Buyable || !manager.BuyUpgrade(node.Profile.Id))
 			return;
 
-		// Let the branch light up and the node swell, then straight back to the fight.
-		closing = true;
+		// Let the branch light up and the node swell. With more bars saved, stay
+		// for the next pick; with none left, straight back to the fight.
 		Refresh(manager.Run);
 		node.Pop();
+		if (manager.Run.CoreReady)
+		{
+			if (node.Current != SkillNode.State.Buyable)
+				FocusFirst();
+			return;
+		}
+		closing = true;
 		ReturnSoon();
 	}
 

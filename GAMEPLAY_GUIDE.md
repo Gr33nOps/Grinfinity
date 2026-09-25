@@ -1,6 +1,6 @@
 # Gameplay guide
 
-One endless run. Enemies keep coming, the arena gets harder the longer you last, and the run ends the first time something touches the planet without a shield. Your survival time is the only result. There is no score.
+One endless run. Enemies keep coming, the arena gets harder the longer you last, and the run ends the first time something touches the planet with no moon left to save it. Your survival time is the only result. There is no score.
 
 Every tuning number mentioned here lives in `scripts/Balance.cs`.
 
@@ -10,11 +10,11 @@ The playable area is 5220 × 3220, about three screens each way, surrounded by a
 
 Enemies enter just outside the screen and never closer than 760 units to the planet. If you are backed into a corner, they come in from the visible edge of the arena instead, so corners are not safe spots. An enemy left more than 2500 units behind is brought back in near the screen.
 
-## Life and the shield
+## Life and moons
 
-There is no health bar. One hit ends the run.
+There is no health bar. One hit ends the run, unless a moon takes it.
 
-A **shield** blocks exactly one hit. You never start with one; it drops as a pickup. You can hold one at a time. An enemy that runs into it is destroyed along with the shield, and counts as a kill (bosses are too big to pop). When it breaks, the planet blinks for 1 second and cannot be hit.
+**Moons** are your shields. Each one orbits the planet, and each one blocks exactly one hit. You never start with one; they drop as pickups, and you can have up to **three** in orbit at once. When a hit lands, one moon bursts instead of you, the planet blinks for 1 second and cannot be hit, and an enemy that caused it is destroyed too and counts as a kill (bosses are too big to pop). You can see how many are left just by looking at your planet.
 
 ## Abilities
 
@@ -30,7 +30,7 @@ The Accessibility menu can switch Overdrive to hold-to-use.
 
 ## CORE and upgrades
 
-Every kill fills the **CORE** bar along the bottom of the screen, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, it turns orange and reads **UPGRADE READY** with the button to press, right inside the bar. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the bar, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it. Once every upgrade is bought, the bar turns purple and becomes **OVERCHARGE**: kills keep filling it, and each full bar recharges all three abilities at once.
+Every kill fills the **CORE** bar along the bottom of the screen, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, it turns orange and reads **UPGRADE READY** with the button to press, right inside the bar. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the bar, and spend a full bar on one rank. Full bars are **saved**, up to three: the three pips at the right end of the bar count them, and the bar says "2 UPGRADES READY" and so on. So you can keep fighting and spend them later, and three saved bars buy three upgrades in one visit (the screen stays open until you have spent them all). Only with three saved does the bar wait at full. Once every upgrade is bought, the bar turns purple and becomes **OVERCHARGE**: kills keep filling it, and each full bar recharges all three abilities at once.
 
 The first bar needs 35 CORE and each one after needs 32% more, so upgrades come quickly early and slow down as the build gets strong.
 
@@ -48,7 +48,7 @@ The whole game is paused while the upgrade screen is open: enemies, shots, coold
 | Nova | Bigger Nova | 3 | +15% Nova radius per rank |
 | Nova | Nova Power | 2 | +3% boss damage and 15% shorter cooldown per rank |
 
-The upgrade screen is drawn as a tree growing out of the CORE: each branch runs bottom to top in the order above, and every node needs one rank in the node below it before it opens. The Dash, Overdrive and Nova branches stay locked until their ability is online. A yellow ring appears around the planet at 5 ranks, out of 22, and grows a little at 11 and 17. It is only a badge for how built-up you are; it does nothing in play.
+The upgrade screen is drawn as a tree growing out of the CORE: each branch runs bottom to top in the order above, and every node needs one rank in the node below it before it opens. The Dash, Overdrive and Nova branches stay locked until their ability is online. The yellow ring around the planet is a badge, not an upgrade: your planet wears it, on the menu and in game, once you have a run on the leaderboard. It does nothing in play.
 
 ## Pickups
 
@@ -56,7 +56,7 @@ Enemies drop only three things, and only when they would help:
 
 | Pickup | Does | Never drops when |
 |---|---|---|
-| Shield | Blocks one lethal hit. You can hold one. | You already have one, or one dropped in the last 60 s |
+| Moon | One more moon in orbit; each blocks one lethal hit. Up to three. | Three already in orbit, one is already lying in the arena, or one dropped in the last 75 s |
 | CORE Burst | Fills the CORE bar at once | The bar is already full |
 | Power Cell | Every unlocked ability ready again | Every ability is already ready |
 

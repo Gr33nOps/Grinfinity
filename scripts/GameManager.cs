@@ -7,7 +7,7 @@ public enum KillSource
 	Shot,
 	Dash,
 	Nova,
-	/// <summary>Ran into the planet's shield and broke it, and itself with it.</summary>
+	/// <summary>Ran into one of the planet's moons and broke it, and itself with it.</summary>
 	Shield
 }
 
@@ -377,13 +377,14 @@ public partial class GameManager : Node2D
 
 	private void OnCoreChanged(float fraction, bool ready)
 	{
-		// The bar itself turns orange and says so; this is just the sound.
-		if (ready && !coreWasReady)
+		// The bar itself turns orange and counts them; this is just the sound,
+		// once for every bar saved.
+		if (run.Banked > banked)
 			PlayCue("unlock");
-		coreWasReady = ready;
+		banked = run.Banked;
 	}
 
-	private bool coreWasReady;
+	private int banked;
 
 	/// <summary>Every ability ready at once — a Power Cell, or a full Overcharge bar.</summary>
 	private void RechargeAbilities(string message)
@@ -1017,7 +1018,7 @@ public partial class GameManager : Node2D
 		if (reward.Kind == RewardKind.Shield)
 		{
 			run.GrantShield();
-			Toast("SHIELD  •  BLOCKS ONE HIT", Pickups.ShieldColour);
+			Toast($"MOON  •  {run.Moons} OF {Balance.MaxMoons} IN ORBIT", Pickups.ShieldColour);
 			PlayCue("shield_get");
 		}
 		else if (reward.Kind == RewardKind.CoreBurst)

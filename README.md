@@ -26,7 +26,7 @@ Keys can be rebound. Settings include audio, fullscreen, resolution, VSync, fram
 - One endless survival run in a bounded arena with a following camera. No waves, no pauses, no upgrade menu.
 - Seven enemy kinds (plus the Fracture's Splinters) that join the mix over time, rushes in five formations, telegraphed comets, gravity wells and brief arena events.
 - Three abilities on their own cooldowns, all charging from the first second: Dash, Overdrive, Nova.
-- A CORE bar filled by every kill, spent on a small four-branch skill tree (Gun, Dash, Overdrive, Nova) while the game waits. Shield, CORE Burst and Power Cell pickups drop along the way.
+- A CORE bar filled by every kill, spent on a small four-branch skill tree (Gun, Dash, Overdrive, Nova) while the game waits. Moon, CORE Burst and Power Cell pickups drop along the way; up to three moons orbit the planet, each blocking one hit.
 - The Coil, The Brood and The Black Hole, cycling forever with more enemies joining each round.
 - Local top ten ranked by survival time, personal bests, lifetime stats, cosmetic planets and achievements. Fully offline.
 

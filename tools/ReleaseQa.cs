@@ -133,17 +133,23 @@ public partial class ReleaseQa : Node
         for (int i = 0; i < 10; i++) locked.TryGrant(RunUpgradeId.SpreadShot);
         Check(locked.LevelOf(RunUpgradeId.SpreadShot) == RunUpgrades.SpreadShot.MaxLevel, "upgrades stop at their maximum");
         Check(!locked.TryGrant(RunUpgradeId.Piercing) || locked.LevelOf(RunUpgradeId.SpreadShot) > 0, "Piercing Shots sits above Spread Shot");
-        locked.GrantShield(); locked.GrantShield();
-        Check(locked.HasShield && locked.ConsumeShield() && !locked.ConsumeShield(), "at most one shield, spent by one hit");
+        for (int i = 0; i < Balance.MaxMoons + 2; i++) locked.GrantShield();
+        Check(locked.Moons == Balance.MaxMoons, "at most three moons in orbit");
+        bool eachBlocks = true;
+        for (int i = 0; i < Balance.MaxMoons; i++) eachBlocks &= locked.ConsumeShield();
+        Check(eachBlocks && !locked.ConsumeShield() && !locked.HasShield, "each moon blocks one hit, then it is gone");
         locked.Free();
 
-        // CORE: every kill fills the bar, a full bar buys exactly one rank, and each bar is longer.
+        // CORE: every kill fills the bar, full bars are saved (up to three), each buys one rank, and each bar is longer.
         var core = FreshRun(this);
         Check(!core.CoreReady && !core.BuyWithCore(RunUpgradeId.FireRate), "no upgrade without a full CORE bar");
         float firstBar = core.CoreNeeded;
-        core.AddCore(firstBar * 3f);
-        Check(core.CoreReady && Mathf.IsEqualApprox(core.Core, firstBar), "the bar stops at full rather than banking extra");
-        Check(core.BuyWithCore(RunUpgradeId.FireRate) && core.LevelOf(RunUpgradeId.FireRate) == 1 && !core.CoreReady, "a full bar buys one rank and empties");
+        core.AddCore(firstBar);
+        Check(core.CoreReady && core.Banked == 1 && core.CoreNeeded > firstBar, "a full bar is saved, and the next bar is longer");
+        core.AddCore(10000f);
+        Check(core.Banked == Balance.MaxBankedUpgrades && Mathf.IsEqualApprox(core.CoreFraction, 1f), "no more than three bars are saved");
+        Check(core.BuyWithCore(RunUpgradeId.FireRate) && core.LevelOf(RunUpgradeId.FireRate) == 1 && core.Banked == 2, "a saved bar buys one rank");
+        Check(core.BuyWithCore(RunUpgradeId.FireRate) && core.BuyWithCore(RunUpgradeId.SpreadShot) && !core.CoreReady, "three saved bars buy three upgrades");
         Check(core.CoreNeeded > firstBar, "each bar needs more CORE than the last");
         Check(Pickups.CoreFor(BodyKind.Planetoid) > Pickups.CoreFor(BodyKind.Drifter) && Pickups.CoreFor(BodyKind.Drifter) > 0f, "every kill gives CORE, tougher ones more");
         core.FillCore();
@@ -176,13 +182,13 @@ public partial class ReleaseQa : Node
                 bool charging = roll % 2 == 0;
                 if (!Pickups.TryRollEnemyDrop(drops, new List<Reward>(), charging, out Reward reward)) continue;
                 onlyThree &= reward.Kind != RewardKind.Upgrade;
-                if (reward.Kind == RewardKind.Shield) useful &= !drops.HasShield;
-                if (reward.Kind == RewardKind.CoreBurst) useful &= !drops.CoreReady;
+                if (reward.Kind == RewardKind.Shield) useful &= drops.Moons < Balance.MaxMoons;
+                if (reward.Kind == RewardKind.CoreBurst) useful &= drops.Banked < Balance.MaxBankedUpgrades;
                 if (reward.Kind == RewardKind.PowerCell) useful &= charging;
             }
         }
         Check(onlyThree, "enemies drop only Shield, CORE Burst and Power Cell");
-        Check(useful, "no shield on a shield, no burst into a full bar, no Power Cell when all is ready");
+        Check(useful, "no moon into a full orbit, no burst into full savings, no Power Cell when all is ready");
         var pendingShield = new List<Reward> { Reward.Shield };
         bool noDouble = true;
         var fresh = FreshRun(this);

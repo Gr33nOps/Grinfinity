@@ -5,10 +5,11 @@ using Godot;
 /// kill and ticks brighter for a moment each time CORE comes in, so even a
 /// single kill shows.
 ///
-/// When it is full it turns orange and says so itself — "UPGRADE READY" and
-/// the button to press, written inside the bar — so the notice is exactly
-/// where the player has been watching it fill. It can be clicked, too. Once
-/// every upgrade is bought it becomes the purple Overcharge bar.
+/// Full bars are saved, up to three: the pips at the right end count them, and
+/// the bar turns orange and says how many are ready and which button spends
+/// them — written inside the bar, exactly where the player has been watching
+/// it fill. It keeps filling toward the next one meanwhile. It can be clicked,
+/// too. Once every upgrade is bought it becomes the purple Overcharge bar.
 /// </summary>
 public partial class CoreBar : Control
 {
@@ -20,8 +21,8 @@ public partial class CoreBar : Control
 
 	/// <summary>Size of the words written inside the bar.</summary>
 	public int TextSize { get; init; } = 17;
-	/// <summary>Shown inside the bar while an upgrade is ready, e.g. "UPGRADE READY • PRESS TAB".</summary>
-	public string ReadyText { get; set; } = "UPGRADE READY";
+	/// <summary>The button that spends a saved bar, e.g. "PRESS TAB".</summary>
+	public string PressText { get; set; } = "PRESS TAB";
 	/// <summary>Called when the full bar is clicked.</summary>
 	public System.Action Pressed { get; set; }
 
@@ -29,6 +30,7 @@ public partial class CoreBar : Control
 	private float target;
 	private bool ready;
 	private bool complete;
+	private int banked;
 	private float tick;
 	private float pop;
 	private float time;
@@ -38,12 +40,14 @@ public partial class CoreBar : Control
 		MouseFilter = MouseFilterEnum.Ignore;
 	}
 
-	public void Refresh(float fraction, bool isReady, bool isComplete)
+	public void Refresh(float fraction, bool isReady, bool isComplete, int bankedNow)
 	{
 		if (fraction > target + 0.0001f)
 			tick = 1f;
-		if (isReady && !ready)
+		// A swell for every bar saved, not just the first.
+		if (bankedNow > banked)
 			pop = 1f;
+		banked = bankedNow;
 		target = fraction;
 		ready = isReady;
 		complete = isComplete;
@@ -67,7 +71,7 @@ public partial class CoreBar : Control
 		time += step;
 		tick = Mathf.Max(0f, tick - step * 5f);
 		pop = Mathf.Max(0f, pop - step * 3f);
-		// Eases up to the real value, but snaps down when a bar is spent.
+		// Eases up to the real value, but snaps down when a bar rolls over.
 		shown = target < shown ? target : Mathf.Lerp(shown, target, 1f - Mathf.Exp(-14f * step));
 		QueueRedraw();
 	}
@@ -79,20 +83,41 @@ public partial class CoreBar : Control
 		Vector2 grow = Size * (swell - 1f) * 0.5f;
 		var area = new Rect2(-grow, Size * swell);
 		float radius = area.Size.Y * 0.5f;
-		DrawStyleBox(Box(Track, ready && !complete ? Full : Rim, radius, 2), area);
+		// With upgrades saved the whole bar is orange; the lighter band is progress to the next.
+		DrawStyleBox(Box(ready && !complete ? Full : Track, ready && !complete ? new Color("ffcd85") : Rim, radius, 2), area);
 
 		float width = Mathf.Max((area.Size.X - 6f) * shown, 0f);
 		if (width > 1f)
 		{
 			Color fill = complete ? Overcharge
-				: ready ? Full.Lerp(new Color("ffd66b"), 0.5f + 0.5f * Mathf.Sin(time * 5f))
+				: ready ? new Color("ffe08a").Lerp(new Color("fff0ce"), 0.3f + 0.3f * Mathf.Sin(time * 5f))
 				: Filling.Lerp(Full, shown * 0.6f);
 			fill = fill.Lightened(tick * 0.35f);
 			DrawStyleBox(Box(fill, fill, Mathf.Min(radius - 3f, width * 0.5f), 0), new Rect2(area.Position + new Vector2(3f, 3f), new Vector2(width, area.Size.Y - 6f)));
 		}
 
-		string words = complete ? "OVERCHARGE" : ready ? ReadyText : "CORE";
+		string words = complete ? "OVERCHARGE"
+			: !ready ? "CORE"
+			: banked > 1 ? $"{banked} UPGRADES READY  •  {PressText}"
+			: $"UPGRADE READY  •  {PressText}";
 		Caption(words, area, ready ? ArcadeSkin.Ink : ArcadeSkin.Cream);
+
+		if (!complete)
+			Pips(area);
+	}
+
+	/// <summary>One pip per bar that can be saved, filled for each one that is.</summary>
+	private void Pips(Rect2 area)
+	{
+		float r = area.Size.Y * 0.2f;
+		float gap = r * 2.8f;
+		for (int i = 0; i < Balance.MaxBankedUpgrades; i++)
+		{
+			var at = new Vector2(area.End.X - area.Size.Y * 0.5f - (Balance.MaxBankedUpgrades - 1 - i) * gap, area.GetCenter().Y);
+			bool saved = i < banked;
+			DrawCircle(at, r, saved ? ArcadeSkin.Cream : new Color(Track, 0.85f));
+			DrawArc(at, r, 0f, Mathf.Tau, 20, saved ? ArcadeSkin.Ink : new Color(ArcadeSkin.Cream, 0.6f), 2f, true);
+		}
 	}
 
 	/// <summary>Centred in the bar, outlined when light so it reads over any fill.</summary>

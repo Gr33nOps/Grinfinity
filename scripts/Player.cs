@@ -1,8 +1,8 @@
 using Godot;
 
 /// <summary>
-/// The planet. It moves, aims, shoots and dies in one hit — unless a shield takes
-/// it, or it is dashing, or it is still blinking after a dash or a broken shield.
+/// The planet. It moves, aims, shoots and dies in one hit — unless a moon takes
+/// it, or it is dashing, or it is still blinking after a dash or a lost moon.
 /// </summary>
 public partial class Player : CharacterBody2D
 {
@@ -295,8 +295,8 @@ public partial class Player : CharacterBody2D
 
 		if (hit is Body body)
 		{
-			// A shield that takes the hit takes the enemy with it: it pops like a
-			// dash kill and pays its CORE. A boss is too big to pop; it just breaks the shield.
+			// A moon that takes the hit takes the enemy with it: it pops like a
+			// dash kill and pays its CORE. A boss is too big to pop; it just costs the moon.
 			if (Die($"a {body.Kind}") && IsInstanceValid(body) && !body.IsDestroyed)
 			{
 				Body.Remains remains = body.GetRemains();
@@ -334,7 +334,7 @@ public partial class Player : CharacterBody2D
 			manager?.Hitstop(0.09f);
 			manager?.SpawnBlast(GlobalPosition, 240f, Pickups.ShieldColour);
 			manager?.Flash(Pickups.ShieldColour, 0.18f, 0.25f);
-			manager?.Toast("SHIELD BROKEN", Pickups.ShieldColour);
+			manager?.Toast(run.Moons > 0 ? $"MOON LOST  •  {run.Moons} LEFT" : "LAST MOON LOST", Pickups.ShieldColour);
 			return true;
 		}
 

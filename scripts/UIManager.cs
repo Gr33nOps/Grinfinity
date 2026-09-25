@@ -7,7 +7,7 @@ using Godot;
 /// Top right holds the run's numbers: time first because time is the only
 /// result, then the best time. Top left holds the three abilities in a column.
 /// The CORE bar runs along the bottom centre and says "UPGRADE READY" inside
-/// itself when it is full. A shield chip sits bottom left, and pickups announce
+/// itself when it is full. Moons orbit the planet itself, and pickups announce
 /// themselves in a short line just above the bar; the banner at the top is
 /// kept for bigger moments. Nothing else.
 /// </summary>
@@ -16,7 +16,6 @@ public partial class UIManager : Node
 	private Control hud;
 	private Label time, streak, best, toast;
 	private ControlsCard hint;
-	private TextureRect shieldChip;
 	private CoreBar coreBar;
 	private Player player;
 	private RunState run;
@@ -93,17 +92,12 @@ public partial class UIManager : Node
 
 		// Bottom centre: the CORE bar. When it is full, the notice to go and
 		// upgrade is written inside it, and it can be clicked.
-		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(17), ReadyText = ReadyText(), Pressed = () => GameManager.Of(this)?.OpenUpgradeTree() };
+		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(17), PressText = PressText(), Pressed = () => GameManager.Of(this)?.OpenUpgradeTree() };
 		coreBar.AnchorLeft = .5f; coreBar.AnchorRight = .5f; coreBar.AnchorTop = 1; coreBar.AnchorBottom = 1;
 		coreBar.OffsetLeft = -Size(290); coreBar.OffsetRight = Size(290);
 		coreBar.OffsetTop = -34 - Size(32); coreBar.OffsetBottom = -34;
 		hud.AddChild(coreBar);
 
-		shieldChip = ArcadeSkin.Icon("shield", Size(64));
-		shieldChip.AnchorTop = 1; shieldChip.AnchorBottom = 1;
-		shieldChip.OffsetLeft = 34; shieldChip.OffsetTop = -Size(64) - 34; shieldChip.OffsetBottom = -34; shieldChip.OffsetRight = 34 + Size(64);
-		shieldChip.TooltipText = "SHIELD";
-		hud.AddChild(shieldChip);
 
 		toast = ArcadeSkin.Label("", Size(30));
 		toast.Name = "Toast";
@@ -142,12 +136,12 @@ public partial class UIManager : Node
 			crosshair.GlobalPosition = GetViewport().CanvasTransform * player.AimPosition;
 
 		// Abilities every frame, so the cooldown sweep is smooth; text less often.
-		coreBar.Refresh(run.CoreFraction, run.CoreReady, run.BuildComplete);
+		coreBar.Refresh(run.CoreFraction, run.CoreReady, run.BuildComplete, run.Banked);
 		if (padHints != InputDevice.Pad)
 		{
 			padHints = InputDevice.Pad;
 			hint.Build();
-			coreBar.ReadyText = ReadyText();
+			coreBar.PressText = PressText();
 		}
 
 		// The how-to lines are for the first few seconds only, then fade away.
@@ -170,14 +164,13 @@ public partial class UIManager : Node
 		}
 	}
 
-	private static string ReadyText() => $"UPGRADE READY  •  PRESS {UpgradeHint()}";
+	private static string PressText() => $"PRESS {UpgradeHint()}";
 
 	private void UpdateLabels()
 	{
 		time.Text = ScoreManager.FormatTime(run.SurvivalTime);
 		streak.Text = run.Streak >= 2 ? $"{run.Streak} COMBO" : "";
 		best.Text = ScoreManager.BestTime > 0f ? $"BEST  {ScoreManager.FormatTime(ScoreManager.BestTime)}" : "";
-		shieldChip.Visible = run.HasShield;
 	}
 
 	/// <summary>A short line just above the CORE bar. A new one replaces the old at once.</summary>

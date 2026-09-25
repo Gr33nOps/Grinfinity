@@ -27,7 +27,7 @@ var boss_since := 0.0
 var boss_seen := {}
 var most_bosses := 0
 var levels := 0
-var shield := false
+var moon_count := 0
 var drops_seen := 0
 var known_pickups := {}
 var press_toggle := false
@@ -61,7 +61,7 @@ func _start_run() -> void:
 	boss_seen.clear()
 	most_bosses = 0
 	levels = 0
-	shield = false
+	moon_count = 0
 	drops_seen = 0
 	known_pickups.clear()
 	game = load("res://scenes/game.tscn").instantiate()
@@ -143,14 +143,14 @@ func _watch(t: float) -> void:
 	if now_levels != levels:
 		levels = now_levels
 		_log("UPGRADE -> %d levels" % levels)
-	var now_shield: bool = run_state.get("HasShield")
-	if now_shield != shield:
-		shield = now_shield
-		_log("SHIELD %s" % ("gained" if shield else "broke"))
+	var moons: int = run_state.get("Moons")
+	if moons != moon_count:
+		moon_count = moons
+		_log("MOONS now %d" % moons)
 
 	if t >= next_log:
 		next_log += 30.0
-		_log("alive=%d kills=%d pickups=%d levels=%d bought=%d core=%d%% shield=%s" % [get_tree().get_nodes_in_group("bodies").size(), run_state.get("Kills"), drops_seen, levels, run_state.get("UpgradesBought"), int(run_state.get("CoreFraction") * 100), shield])
+		_log("alive=%d kills=%d pickups=%d levels=%d bought=%d core=%d%% banked=%d moons=%d" % [get_tree().get_nodes_in_group("bodies").size(), run_state.get("Kills"), drops_seen, levels, run_state.get("UpgradesBought"), int(run_state.get("CoreFraction") * 100), run_state.get("Banked"), moon_count])
 
 func _set_axis(negative: String, positive: String, value: float) -> void:
 	Input.action_release(negative)

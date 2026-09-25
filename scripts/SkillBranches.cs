@@ -21,6 +21,8 @@ public partial class SkillBranches : Control
 	public Vector2 Root { get; set; }
 	public float Fraction { get; set; }
 	public bool IsFull { get; set; }
+	/// <summary>Full bars saved and waiting to be spent.</summary>
+	public int Banked { get; set; }
 	public bool Complete { get; set; }
 
 	private Texture2D core;
@@ -74,7 +76,7 @@ public partial class SkillBranches : Control
 		DrawTextureRect(core, new Rect2(Root - Vector2.One * side * 0.5f, Vector2.One * side), false);
 
 		Font font = ArcadeSkin.Font;
-		string reading = Complete ? "ALL DONE" : IsFull ? "FULL" : $"{Mathf.FloorToInt(Fraction * 100f)}%";
+		string reading = Complete ? "ALL DONE" : IsFull ? $"{Banked} READY" : $"{Mathf.FloorToInt(Fraction * 100f)}%";
 		var at = new Vector2(Root.X + RootRadius + 16f, Root.Y - 2f);
 		DrawString(font, at, "CORE", HorizontalAlignment.Left, -1, 18, ArcadeSkin.Muted);
 		DrawString(font, at + new Vector2(0f, 26f), reading, HorizontalAlignment.Left, -1, 26, IsFull ? ArcadeSkin.Orange : ArcadeSkin.Cream);

@@ -30,7 +30,7 @@ public readonly struct Reward
 
 	public string Name => Kind switch
 	{
-		RewardKind.Shield => "SHIELD",
+		RewardKind.Shield => "MOON",
 		RewardKind.CoreBurst => "CORE BURST",
 		RewardKind.PowerCell => "POWER CELL",
 		_ => RunUpgrades.Get(Upgrade).Name
@@ -38,7 +38,7 @@ public readonly struct Reward
 
 	public string Icon => Kind switch
 	{
-		RewardKind.Shield => "shield",
+		RewardKind.Shield => "moon",
 		RewardKind.CoreBurst => "core",
 		RewardKind.PowerCell => "powercell",
 		_ => RunUpgrades.Get(Upgrade).Icon
@@ -55,7 +55,7 @@ public readonly struct Reward
 
 /// <summary>
 /// Decides what drops. Enemies drop only three things, and only ones that would
-/// do something right now: no shield on top of a shield, no CORE Burst into a
+/// do something right now: no moon when the orbit is full, no CORE Burst into a
 /// full bar, no Power Cell when every ability is already ready. Bosses drop
 /// strong upgrades instead, chosen from what the run can still take. Pickups
 /// already lying on the field count as taken, so two of the same thing never
@@ -63,7 +63,8 @@ public readonly struct Reward
 /// </summary>
 public static class Pickups
 {
-	public static readonly Color ShieldColour = new(0.55f, 0.85f, 1.0f);
+	/// <summary>The moons' pale lilac, used wherever a moon shield shows or breaks.</summary>
+	public static readonly Color ShieldColour = new(0.9f, 0.86f, 0.97f);
 	public static readonly Color CoreColour = new("f5a451");
 	public static readonly Color PowerCellColour = new("b58cff");
 
@@ -87,7 +88,7 @@ public static class Pickups
 		var options = new List<Reward>();
 		if (ShieldEligible(run, pending))
 			options.Add(Reward.Shield);
-		if (!run.CoreReady && !run.BuildComplete && !pending.Exists(r => r.Kind == RewardKind.CoreBurst))
+		if (run.Banked < Balance.MaxBankedUpgrades && !run.BuildComplete && !pending.Exists(r => r.Kind == RewardKind.CoreBurst))
 			options.Add(Reward.CoreBurst);
 		if (abilitiesCharging && !pending.Exists(r => r.Kind == RewardKind.PowerCell))
 			options.Add(Reward.PowerCell);
@@ -138,9 +139,10 @@ public static class Pickups
 		return true;
 	}
 
+	/// <summary>A moon can drop while there is room in orbit and none is already lying in the arena.</summary>
 	public static bool ShieldEligible(RunState run, List<Reward> pending)
 	{
-		if (run.HasShield || pending.Exists(r => r.IsShield))
+		if (run.Moons >= Balance.MaxMoons || pending.Exists(r => r.IsShield))
 			return false;
 
 		return run.SurvivalTime - run.LastShieldDropAt >= Balance.ShieldDropCooldown;

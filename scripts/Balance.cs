@@ -44,8 +44,8 @@ public static class Balance
 	/// <summary>Seconds between spawns.</summary>
 	public static readonly Vector2[] SpawnInterval =
 	{
-		new(0f, 0.78f), new(40f, 0.66f), new(100f, 0.56f), new(200f, 0.5f), new(330f, 0.43f),
-		new(520f, 0.35f), new(760f, 0.28f), new(1200f, 0.19f), new(2000f, 0.13f)
+		new(0f, 0.82f), new(40f, 0.69f), new(100f, 0.59f), new(200f, 0.53f), new(330f, 0.45f),
+		new(520f, 0.37f), new(760f, 0.29f), new(1200f, 0.2f), new(2000f, 0.14f)
 	};
 
 	/// <summary>Most enemies alive at once.</summary>
@@ -58,8 +58,8 @@ public static class Balance
 	/// <summary>Base enemy speed. Keeps creeping after the last key, up to <see cref="EnemySpeedCeiling"/>.</summary>
 	public static readonly Vector2[] EnemySpeed =
 	{
-		new(0f, 100f), new(100f, 118f), new(280f, 138f), new(470f, 160f),
-		new(720f, 195f), new(1200f, 225f)
+		new(0f, 96f), new(100f, 113f), new(280f, 132f), new(470f, 154f),
+		new(720f, 187f), new(1200f, 216f)
 	};
 	public const float EnemySpeedCreepPerMinute = 3f;
 	public const float EnemySpeedCeiling = 285f;
@@ -117,7 +117,11 @@ public static class Balance
 	/// <summary>Nova Power multiplies the cooldown by this per level.</summary>
 	public const float NovaCooldownPerLevel = 0.85f;
 
-	/// <summary>Invulnerable blinking after a Shield breaks.</summary>
+	/// <summary>The most moons the planet can have in orbit. Each one blocks one hit.</summary>
+	public const int MaxMoons = 3;
+	/// <summary>Full CORE bars that can be saved up and spent together.</summary>
+	public const int MaxBankedUpgrades = 3;
+	/// <summary>Invulnerable blinking after a moon breaks.</summary>
 	public const float ShieldBreakGrace = 1.0f;
 
 	// --- CORE and the skill tree ------------------------------------------------
@@ -165,10 +169,10 @@ public static class Balance
 	public const float PickupMagnetRadius = 440f;
 	public const int BossRewardCount = 3;
 	/// <summary>
-	/// Seconds after one shield drops before an enemy can drop another. Without
-	/// it, a finished build turns every drop into a spare life.
+	/// Seconds after one moon drops before an enemy can drop another. Without
+	/// it, three spare lives would come far too easily.
 	/// </summary>
-	public const float ShieldDropCooldown = 60f;
+	public const float ShieldDropCooldown = 75f;
 
 	// --- Bosses -------------------------------------------------------------
 	/// <summary>When the first boss arrives.</summary>

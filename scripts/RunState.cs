@@ -3,28 +3,23 @@ using Godot;
 
 /// <summary>
 /// The single owner of one run: time, kills, streak, the build and the
-/// shield. Nothing in this class touches the UI; it raises signals and
+/// moons. Nothing in this class touches the UI; it raises signals and
 /// <see cref="UIManager"/> decides how to draw them.
 ///
 /// Everything here is run-only. A new run is a new RunState, so dying resets the
-/// abilities, the upgrades, and the shield in one go.
+/// abilities, the upgrades, and the moons in one go.
 /// </summary>
 public partial class RunState : Node
 {
 	[Signal] public delegate void KillsChangedEventHandler(int kills);
 	[Signal] public delegate void StreakChangedEventHandler(int streak, bool milestone);
-	/// <summary>Rings around the planet, one per stage of build strength.</summary>
-	[Signal] public delegate void RingTierChangedEventHandler(int tier);
-	/// <summary>Raised when the shield, the build or an arena event changes.</summary>
+	/// <summary>Raised when the moons, the build or an arena event changes.</summary>
 	[Signal] public delegate void EffectsChangedEventHandler();
 	/// <summary>Raised once per ability, the moment survival time reaches it.</summary>
 	[Signal] public delegate void AbilityUnlockedEventHandler(int ability);
 
 	/// <summary>Streak lengths worth shouting about, ascending.</summary>
 	public static readonly int[] StreakMilestones = { 5, 10, 25, 50, 100 };
-
-	/// <summary>Total upgrade levels at which each ring appears.</summary>
-	private static readonly int[] RingThresholds = { 5, 11, 17 };
 
 	/// <summary>
 	/// The RNG driving this run. Every gameplay roll should draw from this instead
@@ -50,10 +45,13 @@ public partial class RunState : Node
 	public int Kills { get; private set; }
 	public int Streak { get; private set; }
 	public int BestStreak { get; private set; }
-	public int RingTier { get; private set; }
 
-	/// <summary>A shield blocks exactly one lethal hit. Runs start without one.</summary>
-	public bool HasShield { get; private set; }
+	/// <summary>
+	/// Moons in orbit, up to <see cref="Balance.MaxMoons"/>. Each one is a
+	/// shield: it blocks one lethal hit and is gone. Runs start with none.
+	/// </summary>
+	public int Moons { get; private set; }
+	public bool HasShield => Moons > 0;
 
 	/// <summary>How much of the full build this run holds, 0..1. Recorded as the run's high-water mark.</summary>
 	public float BuildFraction => Mathf.Clamp(TotalLevels / (float)RunUpgrades.MaxTotalLevels, 0f, 1f);
@@ -120,47 +118,32 @@ public partial class RunState : Node
 		upgradeLevels[id] = LevelOf(id) + 1;
 
 		PeakBuildFraction = Mathf.Max(PeakBuildFraction, BuildFraction);
-		RefreshRings();
+		// A boss's gift can use up ranks a saved bar was waiting for.
+		Banked = Mathf.Min(Banked, RanksLeft);
 		EmitSignal(SignalName.EffectsChanged);
 		return true;
 	}
 
+	/// <summary>Puts one more moon in orbit, if there is room.</summary>
 	public void GrantShield()
 	{
-		if (HasShield)
+		if (Moons >= Balance.MaxMoons)
 			return;
 
-		HasShield = true;
+		Moons++;
 		EmitSignal(SignalName.EffectsChanged);
 	}
 
-	/// <summary>Spends the shield, if there is one.</summary>
+	/// <summary>Spends one moon, if there is one.</summary>
 	/// <returns>True if a hit was absorbed and the planet survives.</returns>
 	public bool ConsumeShield()
 	{
-		if (!HasShield)
+		if (Moons <= 0)
 			return false;
 
-		HasShield = false;
+		Moons--;
 		EmitSignal(SignalName.EffectsChanged);
 		return true;
-	}
-
-	private void RefreshRings()
-	{
-		int tier = 0;
-		int total = TotalLevels;
-		foreach (int threshold in RingThresholds)
-		{
-			if (total >= threshold)
-				tier++;
-		}
-
-		if (tier == RingTier)
-			return;
-
-		RingTier = tier;
-		EmitSignal(SignalName.RingTierChanged, tier);
 	}
 
 	// --- Derived numbers --------------------------------------------------------
@@ -191,21 +174,32 @@ public partial class RunState : Node
 	public float NovaCooldown => Balance.NovaCooldown * Mathf.Pow(Balance.NovaCooldownPerLevel, LevelOf(RunUpgradeId.NovaPower));
 
 	// --- CORE ---------------------------------------------------------------------
-	// Every kill fills the bar; a full bar buys one upgrade from the tree. The bar
-	// stops at full rather than banking a second one, so an upgrade waiting to
-	// be spent is always obvious.
+	// Every kill fills the bar; a full bar buys one upgrade from the tree. Full
+	// bars are saved, up to three, so nothing is wasted by fighting on instead
+	// of stopping to spend — and three saved bars buy three upgrades in one go.
 
 	[Signal] public delegate void CoreChangedEventHandler(float fraction, bool ready);
 	/// <summary>The build is finished and a full bar of CORE has come in: every ability recharges.</summary>
 	[Signal] public delegate void OverchargedEventHandler();
 
+	/// <summary>CORE toward the bar being filled now.</summary>
 	public float Core { get; private set; }
 	/// <summary>Upgrades bought with CORE so far. Each makes the next bar a little longer.</summary>
 	public int UpgradesBought { get; private set; }
-	public float CoreNeeded => Balance.CoreFirstBar * Mathf.Pow(Balance.CoreBarGrowth, UpgradesBought);
-	public bool CoreReady => Core >= CoreNeeded && !BuildComplete;
-	/// <summary>How full the bar on the HUD is: CORE toward the next upgrade, or Overcharge once there are none left.</summary>
-	public float CoreFraction => BuildComplete ? Mathf.Clamp(Overcharge / Balance.OverchargeBar, 0f, 1f) : Mathf.Clamp(Core / CoreNeeded, 0f, 1f);
+	/// <summary>Full bars saved and not yet spent, up to <see cref="Balance.MaxBankedUpgrades"/>.</summary>
+	public int Banked { get; private set; }
+	/// <summary>The size of the bar being filled now: every bar bought or saved makes the next one longer.</summary>
+	public float CoreNeeded => Balance.CoreFirstBar * Mathf.Pow(Balance.CoreBarGrowth, UpgradesBought + Banked);
+	public bool CoreReady => Banked > 0 && !BuildComplete;
+	/// <summary>Ranks still in the tree. No point saving more bars than this.</summary>
+	private int RanksLeft => Mathf.Max(RunUpgrades.MaxTotalLevels - TotalLevels, 0);
+	private int BankCap => Mathf.Min(Balance.MaxBankedUpgrades, RanksLeft);
+	/// <summary>
+	/// How full the bar on the HUD is: toward the next saved upgrade (full while
+	/// the savings are at their cap), or Overcharge once there is nothing left.
+	/// </summary>
+	public float CoreFraction => BuildComplete ? Mathf.Clamp(Overcharge / Balance.OverchargeBar, 0f, 1f)
+		: Banked >= BankCap ? 1f : Mathf.Clamp(Core / CoreNeeded, 0f, 1f);
 	/// <summary>CORE gathered after the build is complete, toward the next ability recharge.</summary>
 	public float Overcharge { get; private set; }
 
@@ -230,10 +224,18 @@ public partial class RunState : Node
 			return;
 		}
 
-		bool wasReady = CoreReady;
-		Core = Mathf.Min(Core + amount, CoreNeeded);
-		if (Core > 0f || wasReady != CoreReady)
-			EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
+		if (Banked >= BankCap)
+			return;
+
+		Core += amount;
+		while (Banked < BankCap && Core >= CoreNeeded)
+		{
+			Core -= CoreNeeded;
+			Banked++;
+		}
+		if (Banked >= BankCap)
+			Core = 0f;
+		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
 	}
 
 	/// <summary>A CORE Burst: the bar is full at once.</summary>
@@ -244,19 +246,20 @@ public partial class RunState : Node
 			AddCore(Balance.OverchargeBar);
 			return;
 		}
-		Core = CoreNeeded;
-		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
+		AddCore(Mathf.Max(CoreNeeded - Core, 0.01f));
 	}
 
-	/// <summary>Spends a full bar on one rank of an upgrade.</summary>
-	/// <returns>False if the bar is not full or the upgrade cannot be taken.</returns>
+	/// <summary>Spends one saved bar on one rank of an upgrade.</summary>
+	/// <returns>False if no bar is saved or the upgrade cannot be taken.</returns>
 	public bool BuyWithCore(RunUpgradeId id)
 	{
-		if (!CoreReady || !TryGrant(id))
+		if (!CoreReady || !CanTake(id))
 			return false;
 
-		Core = 0f;
+		// Moved from saved to bought first: the bar being filled keeps its size.
+		Banked--;
 		UpgradesBought++;
+		TryGrant(id);
 		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
 		return true;
 	}
@@ -283,7 +286,7 @@ public partial class RunState : Node
 	private float nextDropAt;
 	private bool rolledFirstDrop;
 
-	/// <summary>Seconds of survival when a shield last dropped, so shields cannot chain.</summary>
+	/// <summary>Seconds of survival when a moon last dropped, so moons cannot chain.</summary>
 	public float LastShieldDropAt { get; set; } = -999f;
 
 	public bool DropDue => SurvivalTime >= nextDropAt && fighting >= Balance.DropMinFighting;

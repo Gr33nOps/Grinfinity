@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cug5aqw5572op"
-path="res://.godot/imported/icon_shield.svg-6521468b2f4a8e3c885678da6897c673.ctex"
+uid="uid://cy4ulavrvpbjw"
+path="res://.godot/imported/icon_moon.svg-5e511b6c1f29eece001b8b776c6f389f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/cosmic/icon_shield.svg"
-dest_files=["res://.godot/imported/icon_shield.svg-6521468b2f4a8e3c885678da6897c673.ctex"]
+source_file="res://art/cosmic/icon_moon.svg"
+dest_files=["res://.godot/imported/icon_moon.svg-5e511b6c1f29eece001b8b776c6f389f.ctex"]
 
 [params]
 

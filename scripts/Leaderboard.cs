@@ -44,6 +44,14 @@ public static class Leaderboard
 		get { EnsureLoaded(); return entries; }
 	}
 
+	/// <summary>Whether anyone by this name has a run on the board.</summary>
+	public static bool Includes(string name)
+	{
+		EnsureLoaded();
+		string clean = Sanitise(name);
+		return entries.Exists(e => e.Name == clean);
+	}
+
 	/// <summary>
 	/// Would a run this long place?
 	/// </summary>

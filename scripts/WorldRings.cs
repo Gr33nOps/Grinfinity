@@ -1,31 +1,38 @@
 using Godot;
 
-// Two illustrated halves let the near band pass in front of the planet.
-// The ring is a badge for how built-up the planet is: it appears at 5 upgrade
-// ranks and grows a little at 11 and 17. It is the same yellow band the menu
-// planet wears, so the planet looks like itself in both places.
+/// <summary>
+/// The ring badge. It is worn by a planet whose player has a run on the
+/// leaderboard — a mark of having made the board, shown here in the game and
+/// on the menu planet alike. It does nothing in play.
+///
+/// Two illustrated halves let the near band pass in front of the planet; one
+/// of these nodes draws each half.
+/// </summary>
 public partial class WorldRings : Node2D
 {
-    [Export] public bool NearHalf {get;set;}
-    private RunState run;
-    private Node2D world;
-    private Sprite2D band;
-    private int shownTier=-1;
-    private float presence;
-    public override void _Ready()
-    {
-        run=GameManager.Of(this)?.Run;world=GetParent<Node2D>();TopLevel=true;
-        band=new Sprite2D();AddChild(band);
-    }
-    public override void _Process(double delta)
-    {
-        if(run==null)return;
-        GlobalPosition=world.GlobalPosition;Scale=world.Scale;
-        int tier=run.RingTier;
-        if(tier>0&&tier!=shownTier)
-        {shownTier=tier;band.Texture=GD.Load<Texture2D>($"res://art/cosmic/ring_2_{(NearHalf?"front":"back")}.svg");}
-        presence=Mathf.MoveToward(presence,tier>0?1:0,(float)delta*3);
-        band.Visible=presence>.01f;band.Modulate=new Color(1,1,1,presence);
-        band.Scale=Vector2.One*.25f*(1+.08f*Mathf.Max(tier-1,0))*Mathf.Lerp(.85f,1,presence);
-    }
+	[Export] public bool NearHalf { get; set; }
+
+	private Node2D world;
+
+	/// <summary>Whether the player's name is on the leaderboard, and so wears the ring.</summary>
+	public static bool Earned => Leaderboard.Includes(PlayerProfile.PlayerName);
+
+	public override void _Ready()
+	{
+		world = GetParent<Node2D>();
+		TopLevel = true;
+		AddChild(new Sprite2D
+		{
+			Texture = GD.Load<Texture2D>($"res://art/cosmic/ring_2_{(NearHalf ? "front" : "back")}.svg"),
+			Scale = Vector2.One * 0.25f
+		});
+		// Decided once per run: a run that makes the board shows it from the next one.
+		Visible = Earned;
+	}
+
+	public override void _Process(double delta)
+	{
+		GlobalPosition = world.GlobalPosition;
+		Scale = world.Scale;
+	}
 }

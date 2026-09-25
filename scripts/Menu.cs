@@ -31,10 +31,12 @@ public partial class Menu : Node
         Place(best,layer,.56f,.77f,.9f,.83f);
         best.Visible=ScoreManager.BestTime>0f;
         hero=new Node2D();AddChild(hero);
-        hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_back.svg"),Scale=Vector2.One*.78f});
+        // The ring is a badge: worn once the player has a run on the leaderboard.
+        bool ringed=WorldRings.Earned;
+        if(ringed)hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_back.svg"),Scale=Vector2.One*.78f});
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>($"res://art/cosmic/planet_{GameSettings.Instance.World}.svg")});
         expression=new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/face.svg")};hero.AddChild(expression);
-        hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_front.svg"),Scale=Vector2.One*.78f});
+        if(ringed)hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_front.svg"),Scale=Vector2.One*.78f});
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/blaster.svg"),Position=new Vector2(153,52),Scale=Vector2.One*.65f,Rotation=.12f});
         hero.Scale=Vector2.One*2;
         Input.MouseMode=Input.MouseModeEnum.Visible;play.GrabFocus();
