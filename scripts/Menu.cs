@@ -15,15 +15,15 @@ public partial class Menu : Node
         var title=ArcadeSkin.Label("GRINFINITY",112);title.HorizontalAlignment=HorizontalAlignment.Left;Place(title,layer,.1f,.14f,.69f,.28f);
         var buttons=new VBoxContainer {Name="Buttons"};buttons.AddThemeConstantOverride("separation",15);Place(buttons,layer,.105f,.40f,.425f,.84f);
         var play=AddButton(buttons,"PlayButton","PLAY",()=>GoTo("game"),true);
-        AddButton(buttons,"LeaderboardButton","HIGH SCORES",()=>GoTo("leaderboard"));
+        AddButton(buttons,"LeaderboardButton","LEADERBOARD",()=>GoTo("leaderboard"));
         AddButton(buttons,"SettingsButton","SETTINGS",()=>GoTo("settings"));
         AddButton(buttons,"StatsButton","MY PLANET",()=>GoTo("stats"));
         var footer=new HBoxContainer();footer.AddThemeConstantOverride("separation",16);buttons.AddChild(footer);
         AddButton(footer,"CreditsButton","CREDITS",()=>GoTo("credits"));
         AddButton(footer,"QuitButton","QUIT",()=>GameSettings.Instance.QuitGame());
-        var best=ArcadeSkin.Label(ScoreManager.BestScore>0?$"YOUR BEST   {ScoreManager.BestScore:N0}":"YOUR BEST   0",26,ArcadeSkin.Muted);
+        var best=ArcadeSkin.Label($"BEST TIME   {ScoreManager.FormatTime(ScoreManager.BestTime)}",26,ArcadeSkin.Muted);
         Place(best,layer,.56f,.80f,.94f,.88f);
-        var note=ArcadeSkin.Label("Move • Aim • Shoot • Grow",24,ArcadeSkin.Muted);Place(note,layer,.105f,.92f,.425f,.98f);
+        var note=ArcadeSkin.Label("Move • Aim • Shoot • Survive",24,ArcadeSkin.Muted);Place(note,layer,.105f,.92f,.425f,.98f);
         hero=new Node2D();AddChild(hero);
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_back.svg"),Scale=Vector2.One*.78f});
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>($"res://art/cosmic/planet_{GameSettings.Instance.World}.svg")});

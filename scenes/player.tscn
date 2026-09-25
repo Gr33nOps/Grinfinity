@@ -1,14 +1,11 @@
-[gd_scene load_steps=11 format=3 uid="uid://bcmipct1fe830"]
+[gd_scene load_steps=8 format=3 uid="uid://bcmipct1fe830"]
 
 [ext_resource type="Script" uid="uid://bj2ub38457ksw" path="res://scripts/Player.cs" id="1_3vyb7"]
 [ext_resource type="Texture2D" path="res://art/cosmic/planet_1.svg" id="2_dqkch"]
 [ext_resource type="Texture2D" path="res://art/cosmic/muzzle.svg" id="10_muzzle"]
 [ext_resource type="AudioStream" path="res://sounds/pew.wav" id="4_dqkch"]
 [ext_resource type="PackedScene" uid="uid://bw0u5kimoedt1" path="res://scenes/bullet.tscn" id="5_bullet"]
-[ext_resource type="PackedScene" uid="uid://bqbrm25rh4kjc" path="res://scenes/explosion.tscn" id="6_expl"]
 [ext_resource type="Script" path="res://scripts/WorldRings.cs" id="7_rings"]
-[ext_resource type="Script" path="res://scripts/MoonRing.cs" id="8_moons"]
-[ext_resource type="PackedScene" uid="uid://c1grinmoon0001" path="res://scenes/moon.tscn" id="9_moon"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_player"]
 radius = 25.0
@@ -19,7 +16,6 @@ collision_mask = 0
 scale = Vector2(2, 2)
 script = ExtResource("1_3vyb7")
 BulletScene = ExtResource("5_bullet")
-DeathEffectScene = ExtResource("6_expl")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_player")
@@ -44,10 +40,6 @@ texture = ExtResource("2_dqkch")
 z_index = 1
 script = ExtResource("7_rings")
 NearHalf = true
-
-[node name="MoonRing" type="Node2D" parent="."]
-script = ExtResource("8_moons")
-MoonScene = ExtResource("9_moon")
 
 [node name="shootyPart" type="Node2D" parent="."]
 position = Vector2(75, 12)

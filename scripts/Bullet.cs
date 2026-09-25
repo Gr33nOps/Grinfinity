@@ -6,15 +6,18 @@ public partial class Bullet : Area2D
 	[Export] public int Damage { get; set; } = 1;
 	/// <summary>Extra bodies this shot survives after the first. 0 stops on contact.</summary>
 	[Export] public int Pierce { get; set; } = 0;
-	[Export] public PackedScene ExplosionScene { get; set; }
 
 	/// <summary>Points kept in the motion trail. More is longer and softer.</summary>
 	[Export] public int TrailLength { get; set; } = 9;
 
 	public Vector2 Direction { get; set; }
 
+	/// <summary>Fired under Overdrive. Only changes the look; the numbers are set by the shooter.</summary>
+	public bool Overdriven { get; set; }
+
 	/// <summary>Danger telegraph from the style guide — reserved for "about to hurt you".</summary>
 	private static readonly Color HostileTint = new Color(1.0f, 0.30f, 0.30f);
+	private static readonly Color ChipTint = new Color(1.0f, 0.95f, 0.8f);
 
 	private Line2D trail;
     private Sprite2D art;
@@ -38,19 +41,24 @@ public partial class Bullet : Area2D
         foreach(Node child in GetChildren()) if(child is Polygon2D polygon)polygon.Hide();
         art=new Sprite2D {Texture=GD.Load<Texture2D>(hostile?"res://art/cosmic/hostile.svg":"res://art/cosmic/shot.svg"),Scale=Vector2.One*(hostile?.065f:.29f)};AddChild(art);
         Modulate=Colors.White;
-        ExplosionScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 		BodyEntered += OnBodyEntered;
 
 		// Not just the player's own gun: moon shots count too, since both are
 		// "your side". A gravity well bending only the Comet and ignoring a moon
 		// would be an arbitrary distinction nobody could learn.
-		if (!hostile)
-			AddToGroup("player_bullets");
+		// Hostile shots are grouped too, so a Nova can sweep them out of the air.
+		AddToGroup(hostile ? "hostile_bullets" : "player_bullets");
 
 		trail = GetNodeOrNull<Line2D>("Trail");
 		trail?.ClearPoints();
         if(trail!=null){trail.Width=hostile?5:6;trail.DefaultColor=hostile?new Color(1,.4f,.4f,.5f):new Color(1,.75f,.4f,.5f);}
         TrailLength=3;
+        if(Overdriven)
+        {
+            art.Modulate=new Color(1.5f,.85f,1.1f);
+            TrailLength=5;
+            if(trail!=null){trail.Width=10;trail.Gradient=null;trail.DefaultColor=new Color(PlanetVisual.OverdriveColour,.6f);}
+        }
 
 		var lifetime = GetNodeOrNull<Timer>("Timer");
 		if (lifetime != null)
@@ -81,6 +89,11 @@ public partial class Bullet : Area2D
 	{
 		art.Rotation=Direction.Angle();
 		GlobalPosition += Direction * Speed * (float)delta;
+		if (!Arena.World.HasPoint(GlobalPosition))
+		{
+			QueueFree();
+			return;
+		}
 		UpdateTrail();
 	}
 
@@ -125,7 +138,7 @@ public partial class Bullet : Area2D
 			hasHit = true;
 			SetDeferred(Area2D.PropertyName.Monitoring, false);
 			world.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_EnemyShot"));
-			SpawnBurst(20, 0.6f, HostileTint, 0.6f);
+			PopEffect.Spawn(this, GlobalPosition, 30f, HostileTint, 3, 0.3f);
 			QueueFree();
 			return;
 		}
@@ -137,7 +150,7 @@ public partial class Bullet : Area2D
 			if (hit is IShootable target)
 			{
 				target.TakeDamage(Damage, Direction);
-				SpawnBurst(10, 0.4f, new Color(1.0f, 0.95f, 0.8f), 0.5f);
+				PopEffect.Spawn(this, GlobalPosition, 16f, ChipTint, 0, 0.2f);
 				SpawnDamageNumber(GlobalPosition);
 
 				if (Pierce > 0)
@@ -158,16 +171,13 @@ public partial class Bullet : Area2D
 		Body.Remains remains = body.GetRemains();
 
 		// Armoured bodies survive several hits, so the kill only scores when it lands.
+		// The kill's pop is GameManager's, centred on the body; a hit that only
+		// chips gets a small pale tick where the shot landed.
+		Vector2 bodyAt = body.GlobalPosition;
 		if (body.TakeDamage(Damage, Direction))
-		{
-			GameManager.Of(this)?.RegisterKill(remains, GlobalPosition);
-			SpawnBurst(remains.BurstAmount, remains.BurstScale, remains.BurstColor, 1.0f);
-		}
+			GameManager.Of(this)?.RegisterKill(remains, bodyAt, KillSource.Shot);
 		else
-		{
-			// A chip hit gets a small pale spark instead of a full death burst.
-			SpawnBurst(14, 0.45f, new Color(1.0f, 0.95f, 0.8f), 0.55f);
-		}
+			PopEffect.Spawn(this, GlobalPosition, 18f, ChipTint, 0, 0.2f);
 		SpawnDamageNumber(GlobalPosition);
 
 		// A piercing shot carries on through the clump. Area2D only reports each
@@ -192,24 +202,5 @@ public partial class Bullet : Area2D
 		var number = new DamageNumber { Amount = Damage };
 		number.GlobalPosition = at + new Vector2(RunState.Rng.RandfRange(-10f, 10f), -10f);
 		GameManager.Spawn(this, number);
-	}
-
-	private void SpawnBurst(int amount, float scale, Color color, float lifetimeScale)
-	{
-		if (ExplosionScene == null)
-			return;
-
-		var burst = ExplosionScene.Instantiate<CpuParticles2D>();
-		burst.GlobalPosition = GlobalPosition;
-		burst.Amount = Mathf.Max(amount, 1);
-		// Node scale carries the particle velocities with it, so one burst scene
-		// covers a swarmer pop and a tank detonation.
-		burst.Scale = new Vector2(scale, scale);
-		burst.Color = color;
-		burst.Lifetime = RunState.Rng.RandfRange(0.5f, 0.7f) * lifetimeScale;
-		burst.Emitting = true;
-		// explosion.tscn is one_shot, so Finished fires once the burst is done.
-		burst.Finished += burst.QueueFree;
-		GameManager.Spawn(this, burst);
 	}
 }

@@ -10,28 +10,22 @@ using Godot;
 /// </summary>
 public partial class Body : CharacterBody2D, IShootable
 {
-	// How far outside the viewport a body may drift before it is culled.
-	private const float CullMargin = 700.0f;
-
 	/// <summary>Speed a knockback impulse bleeds off at, in units per second.</summary>
 	private const float KnockbackDecay = 1400.0f;
+
+	/// <summary>No matter what spawns children, the arena never holds more than this.</summary>
+	public const int HardCap = 90;
 
 	[ExportGroup("Gravity")]
 	[Export] public float BaseAcceleration { get; set; } = 640.0f;
 	/// <summary>Distance at which pull is half its close-range strength.</summary>
 	[Export] public float FalloffDistance { get; set; } = 430.0f;
-	/// <summary>Pull multiplier at full world mass. 1.0 at zero mass.</summary>
-	[Export] public float HeavyPullMultiplier { get; set; } = 2.5f;
 	/// <summary>Velocity bled off per second. Without it, orbits never decay inward.</summary>
 	[Export] public float Drag { get; set; } = 0.55f;
 	/// <summary>Beyond this range a body is forced to keep closing, so nothing strands.</summary>
 	[Export] public float StrandingDistance { get; set; } = 700.0f;
 	/// <summary>Ceiling on drift speed, as a multiple of the ramped base speed.</summary>
 	[Export] public float MaxSpeedFactor { get; set; } = 2.3f;
-
-	[ExportGroup("Relics")]
-	[Export] public float SlowAuraRadius { get; set; } = 340.0f;
-	[Export] public float SlowAuraStrength { get; set; } = 3.2f;
 
 	[ExportGroup("Arena events")]
 	/// <summary>Push per second during Solar Wind.</summary>
@@ -148,6 +142,9 @@ public partial class Body : CharacterBody2D, IShootable
 
 	public Remains GetRemains() => new Remains(Kind, DebrisCount, BurstAmount, BurstScale, BurstColor);
 
+	/// <summary>True from the killing blow on, even before the node is freed.</summary>
+	public bool IsDestroyed => destroyed;
+
 	public void SetHealth(int value)
 	{
 		health = Mathf.Max(value, 1);
@@ -214,10 +211,9 @@ public partial class Body : CharacterBody2D, IShootable
 		EnsureFacesLoaded();
 		sprite.Texture = faceTextures[Kind];
 
-		// Bodies spawned past the bottom-right edge get flipped, purely for
-		// variety — otherwise every off-screen arrival on that side looks identical.
-		Vector2 viewportSize = GetViewportRect().Size;
-		if (GlobalPosition.X > viewportSize.X || GlobalPosition.Y > viewportSize.Y)
+		// Bodies arriving from the right are mirrored, purely for variety —
+		// otherwise every arrival looks identical.
+		if (HasWorld && GlobalPosition.X > world.GlobalPosition.X)
 		{
 			sprite.FlipV = false;
 			sprite.FlipH = true;
@@ -276,41 +272,37 @@ public partial class Body : CharacterBody2D, IShootable
 
 		float step = (float)delta;
 
-		// Freeze stops the steering, not the node: knockback still resolves, so
-		// a frozen body being shot still visibly takes the hit.
-		if (run == null || !run.Frozen)
-			behaviour.Steer(this, step);
-		else
-			Drift = Drift.MoveToward(Vector2.Zero, 900f * step);
-
-		ApplySlowAura(step);
+		behaviour.Steer(this, step);
 
 		Velocity = Drift + knockback;
 		FaceTravel();
 		MoveAndSlide();
+		StayInArena();
 
 		knockback = knockback.MoveToward(Vector2.Zero, KnockbackDecay * step);
 
-		CullIfLost();
+		Leash();
 	}
 
 	/// <summary>
-	/// Deep Well relic: bodies bog down as they close. It makes the last stretch
-	/// before contact readable, which is exactly where the game is hardest.
+	/// Enemies may cross the perimeter belt on the way in, but never leave the
+	/// world. Once inside the playable area they stay in it.
 	/// </summary>
-	private void ApplySlowAura(float delta)
+	private void StayInArena()
 	{
-		if (run == null || !run.Has(RelicId.SlowAura))
+		Rect2 playable = Arena.Playable;
+		if (playable.HasPoint(GlobalPosition))
+		{
+			insideArena = true;
 			return;
+		}
 
-		float distance = WorldOffset.Length();
-		if (distance > SlowAuraRadius)
-			return;
-
-		// Strongest at the centre, nothing at the rim, so there is no edge to it.
-		float bite = 1f - distance / SlowAuraRadius;
-		Drift *= Mathf.Max(1f - SlowAuraStrength * bite * delta, 0f);
+		GlobalPosition = insideArena
+			? Arena.ClampToPlayable(GlobalPosition)
+			: GlobalPosition.Clamp(Arena.World.Position, Arena.World.End);
 	}
+
+	private bool insideArena;
 
 	/// <summary>The default motion: accelerate toward the world under its gravity.</summary>
 	public void FallTowardWorld(float delta)
@@ -322,9 +314,7 @@ public partial class Body : CharacterBody2D, IShootable
 		// Softened inverse falloff: real inverse-square explodes on contact and
 		// leaves distant bodies barely moving. This keeps both ends playable.
 		float falloff = FalloffDistance / (distance + FalloffDistance);
-		float massPull = Mathf.Lerp(1.0f, HeavyPullMultiplier, run?.MassNormalised ?? 0f);
-		float acceleration = BaseAcceleration * AccelMultiplier * massPull * falloff
-			* BodySpawner.SpeedScale;
+		float acceleration = BaseAcceleration * AccelMultiplier * falloff * BodySpawner.SpeedScale;
 
 		// Inversion flips the sign of the one force the whole game is built on.
 		bool inverted = run != null && run.During(ArenaEventId.InvertedGravity);
@@ -373,7 +363,7 @@ public partial class Body : CharacterBody2D, IShootable
 		// while the server is flushing queries is an error. The add waits for idle.
 		Callable.From(() =>
 		{
-			if (IsInstanceValid(manager) && IsInstanceValid(child) && GetTree().GetNodeCountInGroup("bodies") < 24)
+			if (IsInstanceValid(manager) && IsInstanceValid(child) && GetTree().GetNodeCountInGroup("bodies") < HardCap)
 				manager.AddEntity(child);
 			else
 				child.QueueFree();
@@ -424,13 +414,16 @@ public partial class Body : CharacterBody2D, IShootable
 	}
 
 	/// <param name="impactDirection">Travel direction of whatever hit it, for knockback.</param>
+	/// <param name="ignoreArmour">A dash or a Nova goes through plating. Only shots can be deflected.</param>
 	/// <returns>True if this hit destroyed the body.</returns>
-	public bool TakeDamage(int amount, Vector2 impactDirection = default)
+	public bool TakeDamage(int amount, Vector2 impactDirection = default) => TakeDamage(amount, impactDirection, false);
+
+	public bool TakeDamage(int amount, Vector2 impactDirection, bool ignoreArmour)
 	{
 		if (destroyed)
 			return false;
 
-		if (behaviour.Deflects(this, impactDirection))
+		if (!ignoreArmour && behaviour.Deflects(this, impactDirection))
 		{
 			FlashDeflect();
 			return false;
@@ -487,14 +480,23 @@ public partial class Body : CharacterBody2D, IShootable
 		}
 	}
 
-	/// <summary>Safety net so a body that somehow drifts away cannot leak forever.</summary>
-	private void CullIfLost()
+	/// <summary>
+	/// A body left far behind is brought back in just outside the screen, rather
+	/// than piling up somewhere the player never goes. Running away does not
+	/// thin the field; it only reshuffles where the pressure comes from.
+	/// </summary>
+	private void Leash()
 	{
-		var bounds = GetViewportRect().Size;
-		if (GlobalPosition.X < -CullMargin || GlobalPosition.X > bounds.X + CullMargin ||
-			GlobalPosition.Y < -CullMargin || GlobalPosition.Y > bounds.Y + CullMargin)
-		{
-			QueueFree();
-		}
+		if (!HasWorld || GlobalPosition.DistanceSquaredTo(world.GlobalPosition) < Balance.LeashDistance * Balance.LeashDistance)
+			return;
+
+		if (!Arena.TryFindSpawnPoint(world.GlobalPosition, out Vector2 point))
+			return;
+
+		GlobalPosition = point;
+		insideArena = Arena.Playable.HasPoint(point);
+		Drift = Vector2.Zero;
+		knockback = Vector2.Zero;
+		LaunchIntoOrbit();
 	}
 }

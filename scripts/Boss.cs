@@ -1,14 +1,13 @@
 using Godot;
 
 /// <summary>
-/// Shared spine for every boss: health, damage, the hit flash and the two
-/// signals <see cref="GameManager"/> listens for. What makes each boss distinct
-/// — movement, attacks, what it spawns — belongs entirely to the subclass.
+/// Shared spine for every boss: health, damage, the hit flash, the arrival and
+/// the two signals <see cref="GameManager"/> listens for. What makes each boss
+/// distinct — movement, attacks, what it spawns — belongs to the subclass.
 ///
-/// A boss is deliberately not a body: none inherit from <see cref="Body"/>, none
-/// join the "bodies" group, so none count toward the spawn cap, are absorbed by
-/// a nova, or are targeted by moons. Beating one has to be worth something a
-/// mass-menu total cannot buy.
+/// A boss is deliberately not a body: it never joins the "bodies" group, so it
+/// never counts toward the spawn cap and is never simply deleted by a Dash or a
+/// Nova. Those land a fixed share of its health instead, once each.
 /// </summary>
 public abstract partial class Boss : CharacterBody2D, IShootable
 {
@@ -22,25 +21,44 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	/// <summary>One line shown under the name when it arrives — what to expect.</summary>
 	[Export] public string ArrivalLine { get; set; } = "";
 
+	/// <summary>
+	/// Which time round the bosses this is, from 1. Set before the boss enters the
+	/// tree. Later cycles are a little tougher and attack a little faster; most of
+	/// their difficulty comes from the enemies fighting alongside them.
+	/// </summary>
+	public int Cycle { get; set; } = 1;
+
 	protected int health;
 	protected bool defeated;
 	private Tween hitFlash;
-    protected Sprite2D Art;
-    private float visualTime;
-    protected float Windup;
+	protected Sprite2D Art;
+	private float visualTime;
+	protected float Windup;
+	protected Player World;
 
-	public float HealthFraction => MaxHealth <= 0 ? 0f : (float)health / MaxHealth;
+	public int ScaledMaxHealth => Mathf.Max(1, Mathf.RoundToInt(MaxHealth * (1f + Balance.BossHealthPerCycle * (Cycle - 1))));
+	public float HealthFraction => (float)health / ScaledMaxHealth;
+
+	/// <summary>Attack gaps shrink a little each cycle, never below three quarters.</summary>
+	protected float CycleTempo => Mathf.Max(1f - 0.08f * (Cycle - 1), 0.75f);
 
 	public sealed override void _Ready()
 	{
-        health = MaxHealth;
+		health = ScaledMaxHealth;
 		AddToGroup("hazards");
 		AddToGroup("bosses");
-        foreach(Node child in GetChildren())if(child is Polygon2D polygon)polygon.Hide();
-        string asset=this is BossCoil?"coil":this is BossBrood?"brood":"black_hole";
-        Art=new Sprite2D {Texture=GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"),Scale=Vector2.One*.88f};AddChild(Art);
-        Modulate=Colors.White;
-        OnBossReady();
+		foreach (Node child in GetChildren()) if (child is Polygon2D polygon) polygon.Hide();
+		string asset = this is BossCoil ? "coil" : this is BossBrood ? "brood" : "black_hole";
+		Art = new Sprite2D { Texture = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"), Scale = Vector2.One * .88f }; AddChild(Art);
+		Modulate = Colors.White;
+		World = GameManager.Of(this)?.GetNodeOrNull<Player>("player");
+
+		// Arrives with a pop rather than simply appearing.
+		Scale = Vector2.One * 0.2f;
+		CreateTween().TweenProperty(this, "scale", Vector2.One, 0.5f)
+			.SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+
+		OnBossReady();
 	}
 
 	/// <summary>Subclass setup — scenes to preload, initial state. Health and groups are already set.</summary>
@@ -52,7 +70,7 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 			return false;
 
 		health -= amount;
-		EmitSignal(SignalName.HealthChanged, HealthFraction);
+		EmitSignal(SignalName.HealthChanged, Mathf.Max(HealthFraction, 0f));
 
 		if (health > 0)
 		{
@@ -68,24 +86,49 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 		return true;
 	}
 
+	/// <summary>
+	/// Takes a share of full health — how a Dash and a Nova hurt a boss. A share
+	/// rather than a number, so the ability is worth the same against every boss
+	/// and every cycle, and never ends a fight on its own.
+	/// </summary>
+	public bool TakeShareOfHealth(float share, Vector2 impactDirection = default)
+	{
+		return TakeDamage(Mathf.Max(1, Mathf.CeilToInt(ScaledMaxHealth * share)), impactDirection);
+	}
+
 	/// <summary>Called on every hit that does not finish the boss off.</summary>
 	protected virtual void OnDamaged() { }
 
 	/// <summary>Called once, on the killing blow, before the node is freed.</summary>
 	protected virtual void OnBossDefeated() { }
 
-    public override void _Process(double delta)
-    {
-        visualTime+=(float)delta;
-        float pulse=1+.035f*Mathf.Sin(visualTime*3)+Windup*.1f;
-        Art.Scale=new Vector2(.88f/pulse,.88f*pulse);
-        Art.Rotation=-Rotation+Mathf.Sin(visualTime*1.5f)*.08f;
-        Art.SelfModulate=Colors.White.Lerp(new Color("ffc47c"),Windup);
-    }
-    private void FlashHit()
+	/// <summary>
+	/// Somewhere to drift to, near the planet but not on it, and inside the
+	/// arena. Bosses keep the fight where the player is rather than wandering off.
+	/// </summary>
+	protected Vector2 PointNearPlayer(float minDistance, float maxDistance)
+	{
+		Vector2 around = World != null && IsInstanceValid(World) ? World.GlobalPosition : GlobalPosition;
+		Vector2 offset = Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * RunState.Rng.RandfRange(minDistance, maxDistance);
+		// Squashed vertically: the screen is wider than tall, and a boss above
+		// the top edge is a boss the player cannot read.
+		offset.Y *= 0.6f;
+		return Arena.ClampToPlayable(around + offset, 160f);
+	}
+
+	public override void _Process(double delta)
+	{
+		visualTime += (float)delta;
+		float pulse = 1 + .035f * Mathf.Sin(visualTime * 3) + Windup * .1f;
+		Art.Scale = new Vector2(.88f / pulse, .88f * pulse);
+		Art.Rotation = -Rotation + Mathf.Sin(visualTime * 1.5f) * .08f;
+		Art.SelfModulate = Colors.White.Lerp(new Color("ffc47c"), Windup);
+	}
+
+	private void FlashHit()
 	{
 		hitFlash?.Kill();
-		Modulate = new Color(1.6f,1.5f,1.3f);
+		Modulate = new Color(1.6f, 1.5f, 1.3f);
 		hitFlash = CreateTween();
 		hitFlash.TweenProperty(this, "modulate", Colors.White, 0.12f);
 	}

@@ -79,7 +79,7 @@ public partial class GravityWell : Node2D
 
 			if (distance <= CoreRadius)
 			{
-				body.TakeDamage(9999, -toCore.Normalized());
+				body.TakeDamage(9999, -toCore.Normalized(), ignoreArmour: true);
 				continue;
 			}
 

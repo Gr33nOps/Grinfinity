@@ -13,17 +13,22 @@ public partial class BossCoil : Boss
 	public BossCoil()
 	{
 		BossName = "THE COIL";
-		MaxHealth = 140;
+		MaxHealth = 360;
 		ArrivalLine = TranslationServer.Translate("BOSS_Coil_ARRIVAL");
 	}
 
 	[Export] public float SpinSpeed { get; set; } = 1.1f;
-	/// <summary>Seconds between rings. Falls toward the floor as health drops.</summary>
-	[Export] public float RingInterval { get; set; } = 2.4f;
-	[Export] public float MinRingInterval { get; set; } = 1.1f;
+	/// <summary>
+	/// Seconds between rings. Falls toward the floor as health drops, and each
+	/// later cycle shortens both. The first Coil is a lesson, so its floor is
+	/// generous: tighter than this and the rings stacked up faster than a first
+	/// boss should ask anyone to read.
+	/// </summary>
+	[Export] public float RingInterval { get; set; } = 2.6f;
+	[Export] public float MinRingInterval { get; set; } = 1.5f;
 	[Export] public int ShotsPerRing { get; set; } = 26;
 	/// <summary>Consecutive shots omitted, making the gap the player dashes through.</summary>
-	[Export] public int GapWidth { get; set; } = 4;
+	[Export] public int GapWidth { get; set; } = 5;
 	[Export] public float ShotSpeed { get; set; } = 250.0f;
 	[Export] public float DriftSpeed { get; set; } = 46.0f;
 	[Export] public PackedScene BulletScene { get; set; }
@@ -58,17 +63,14 @@ public partial class BossCoil : Boss
 		if (ringTimer <= 0f)
 		{
 			// Wounded means faster, not merely closer to dead.
-			ringTimer = Mathf.Lerp(MinRingInterval, RingInterval, HealthFraction);
+			ringTimer = Mathf.Lerp(MinRingInterval, RingInterval, HealthFraction) * CycleTempo;
 			FireRing();
 		}
 	}
 
 	private void PickDriftTarget()
 	{
-		Vector2 bounds = GetViewportRect().Size;
-		driftTarget = new Vector2(
-			RunState.Rng.RandfRange(bounds.X * 0.25f, bounds.X * 0.75f),
-			RunState.Rng.RandfRange(bounds.Y * 0.25f, bounds.Y * 0.75f));
+		driftTarget = PointNearPlayer(380f, 650f);
 	}
 
 	private void FireRing()
@@ -91,7 +93,7 @@ public partial class BossCoil : Boss
 			shot.GlobalPosition = GlobalPosition + Vector2.FromAngle(angle) * 70f;
 			shot.Direction = Vector2.FromAngle(angle);
 			shot.Speed = ShotSpeed;
-			shot.Range = 6.0f;
+			shot.Range = 4.5f;
 			shot.MakeHostile();
 			GameManager.Spawn(this, shot);
 		}

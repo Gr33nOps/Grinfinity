@@ -165,13 +165,14 @@ public partial class StatsMenu : Control
 		return count;
 	}
 
-	private void SetRow(string label, string value)
+	/// <param name="caption">Overrides the translated row caption, for rows whose meaning moved on.</param>
+	private void SetRow(string label, string value, string caption = null)
 	{
 		string nodeName = label.Replace(" ", "");
 		var labelNode = GetNodeOrNull<Label>($"Layout/Rows/{nodeName}/Label");
 		var valueNode = GetNodeOrNull<Label>($"Layout/Rows/{nodeName}/Value");
 		if (labelNode != null)
-			labelNode.Text = TranslationServer.Translate($"STATS_{nodeName.ToUpperInvariant()}");
+			labelNode.Text = caption ?? TranslationServer.Translate($"STATS_{nodeName.ToUpperInvariant()}");
 		if (valueNode != null)
 			valueNode.Text = value;
 	}

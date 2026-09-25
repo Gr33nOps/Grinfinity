@@ -6,10 +6,7 @@ public partial class GameOver : Control
 	public static int KillsToShow = 0;
 	public static int BestComboToShow = 0;
 	public static int ScoreToShow = 0;
-	/// <summary>Mass at death, 0..1. Tells the player whether the risk dial got used.</summary>
-	public static float MassAtDeath = 0f;
-	/// <summary>Moons still held when the orbit ended — whether going heavy paid.</summary>
-	public static int MoonsAtDeath = 0;
+	public static int BossesBeaten = 0;
 	public static int StardustEarned = 0;
 	public static System.Collections.Generic.List<Worlds.Profile> NewlyUnlockedWorlds = new();
 	/// <summary>The one achievement that can only be known at the exact moment an orbit ends.</summary>
@@ -38,9 +35,9 @@ public partial class GameOver : Control
 	public override void _Ready()
 	{
         var rows=ArcadeSkin.Modal(this,"GAME OVER",850);
-        rows.AddChild(ArcadeSkin.Label("RUN COMPLETE",22,ArcadeSkin.Orange));
-        scoreLabel=ArcadeSkin.Label("0",92);scoreLabel.Name="FinalScore";rows.AddChild(scoreLabel);
-        statsLabel=ArcadeSkin.Label("",25);rows.AddChild(statsLabel);
+        rows.AddChild(ArcadeSkin.Label("YOU SURVIVED",22,ArcadeSkin.Orange));
+        scoreLabel=ArcadeSkin.Label("00:00",104);scoreLabel.Name="FinalTime";rows.AddChild(scoreLabel);
+        statsLabel=ArcadeSkin.Label("",25);statsLabel.Name="FinalScore";rows.AddChild(statsLabel);
         deathCauseLabel=ArcadeSkin.Label("",22,ArcadeSkin.Muted);rows.AddChild(deathCauseLabel);
         highScoreLabel=ArcadeSkin.Label("",30,ArcadeSkin.Orange);rows.AddChild(highScoreLabel);
         leaderboardLabel=ArcadeSkin.Label("",24);rows.AddChild(leaderboardLabel);
@@ -70,13 +67,13 @@ public partial class GameOver : Control
 
 	private void ShowRecap()
 	{
-		scoreLabel.Text = $"{ScoreToShow:N0}";
+		// Time is the record; everything else supports it.
+		scoreLabel.Text = ScoreManager.FormatTime(SurvivalTimeToShow);
 
 		if (statsLabel != null)
 		{
-			// Mass at death is on the recap deliberately: it is the one number
-			// that says whether the risk dial was used at all.
-			statsLabel.Text = $"{ScoreManager.FormatTime(SurvivalTimeToShow)} SURVIVED  •  {KillsToShow} POPPED  •  BEST STREAK x{BestComboToShow}";
+			string bosses = BossesBeaten > 0 ? $"  •  {BossesBeaten} BOSS{(BossesBeaten == 1 ? "" : "ES")}" : "";
+			statsLabel.Text = $"SCORE {ScoreToShow:N0}  •  {KillsToShow} POPPED{bosses}";
 		}
 
 		// A one-line "what actually got you" — a number alone is a tally, this
@@ -85,7 +82,7 @@ public partial class GameOver : Control
 		{
 			deathCauseLabel.Visible = !string.IsNullOrEmpty(DeathCause);
 			if (deathCauseLabel.Visible)
-				deathCauseLabel.Text = $"CAUGHT BY {DeathCause.ToUpperInvariant()}. GO AGAIN!";
+				deathCauseLabel.Text = $"BONKED BY {DeathCause.ToUpperInvariant()}!";
 		}
 
 		if (worldUnlockLabel != null)
@@ -119,19 +116,19 @@ public partial class GameOver : Control
 		if (highScoreLabel == null)
 			return;
 
-		if (IsNewBestScore)
-		{
-			highScoreLabel.Text = TranslationServer.Translate("UI_NEW_BEST");
-			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
-		}
-		else if (IsNewBestTime)
+		if (IsNewBestTime)
 		{
 			highScoreLabel.Text = TranslationServer.Translate("UI_LONGEST_YET");
 			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
 		}
+		else if (IsNewBestScore)
+		{
+			highScoreLabel.Text = TranslationServer.Translate("UI_NEW_BEST");
+			highScoreLabel.AddThemeColorOverride("font_color", new Color(1f, 0.72f, 0.32f));
+		}
 		else
 		{
-			highScoreLabel.Text = string.Format(TranslationServer.Translate("UI_BEST_SCORE_LABEL"), ScoreManager.BestScore);
+			highScoreLabel.Text = $"BEST TIME  {ScoreManager.FormatTime(ScoreManager.BestTime)}";
 		}
 	}
 

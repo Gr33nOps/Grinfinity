@@ -17,7 +17,7 @@ public partial class GameSettings : Node
 		("right", "Move Right"),
 		("shoot", "Shoot"),
 		("dash", "Dash"),
-		("rapid_fire", "Rapid Fire"),
+		("rapid_fire", "Overdrive"),
 		("nova", "Nova"),
 		("pause", "Pause")
 	};

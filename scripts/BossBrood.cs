@@ -16,7 +16,7 @@ public partial class BossBrood : Boss
 		BossName = "THE BROOD";
 		ArrivalLine = TranslationServer.Translate("BOSS_Brood_ARRIVAL");
 		BossColor = new Color(0.58f, 0.82f, 0.4f);
-		MaxHealth = 220;
+		MaxHealth = 500;
 	}
 
 	[Export] public float ChaseSpeed { get; set; } = 62.0f;
@@ -35,7 +35,7 @@ public partial class BossBrood : Boss
 	protected override void OnBossReady()
 	{
 		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
-		world = GameManager.Of(this)?.GetNodeOrNull<Player>("player");
+		world = World;
 		spawnTimer = 1.0f;
 	}
 
@@ -61,7 +61,7 @@ public partial class BossBrood : Boss
         Windup=Mathf.Clamp(1-spawnTimer/.45f,0,1);
 		if (spawnTimer <= 0f)
 		{
-			spawnTimer = Mathf.Lerp(MinSpawnInterval, SpawnInterval, HealthFraction);
+			spawnTimer = Mathf.Lerp(MinSpawnInterval, SpawnInterval, HealthFraction) * CycleTempo;
 			SpawnBroodling();
 		}
 	}
@@ -71,9 +71,8 @@ public partial class BossBrood : Boss
 		if (BodyScene == null || liveBroodlings >= MaxBroodlings)
 			return;
 
-		// The arena's own cap still applies — a boss fight flooding past it would
-		// undo the measurement in ROADMAP.md that said pooling wasn't needed yet.
-		if (GetTree().GetNodeCountInGroup("bodies") >= 12)
+		// The arena's own ceiling still applies on top of the Brood's.
+		if (GetTree().GetNodeCountInGroup("bodies") >= Body.HardCap)
 			return;
 
 		if (BodyScene.Instantiate() is not Body shard)

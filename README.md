@@ -1,8 +1,8 @@
 # GRINFINITY
 
-An arcade space shooter: clear waves, defeat bosses, and chase a high score.
+A tiny smiling planet with a big gun, surviving endless space. How long can you last?
 
-Move, aim and shoot. Clear a wave, choose one free boost while the action pauses, then dive back in. Collect debris to grow rings, orbiting moons and your score multiplier. You begin with one shield; after it breaks, the next unprotected hit ends the orbit. Retry straight from the results screen.
+Move, aim and shoot in an arena about three screens across. Enemies never stop coming and the run gets harder the longer you survive. Dash, Overdrive and Nova come online as you go, some kills drop upgrades you grab on the move, and bosses turn up on a clock and keep coming round. One hit ends the run unless you are carrying a shield. Retry straight from the results screen.
 
 ## Play the Windows build
 
@@ -13,26 +13,23 @@ Extract `builds/Grinfinity-1.0.0-rc4-windows-x64.zip` into a folder and launch `
 | Move | WASD | Left stick |
 | Aim | Mouse | Right stick |
 | Shoot | Left mouse | Right trigger |
-| Dash, once unlocked | Shift | B |
-| Rapid fire, once unlocked | E | X |
-| Nova, once unlocked and charged | R | Y |
-| Choose a boost | 1 / 2 / 3 or click | D-pad, then A |
+| Dash (from 0:40) | Shift | B |
+| Overdrive (from 2:20) | E | X |
+| Nova (from 5:10) | R | Y |
 | Pause | Escape | Start |
 
 Keys can be rebound. Settings include audio, fullscreen, resolution, VSync, frame cap, HUD text scale, reduced shake, colourblind palette, high-contrast outlines, aim assist and assist speed. Cosmetic planet choices and your leaderboard name live in Stats. Cosmetics have no power advantage.
 
 ## What is in this version
 
-The main menu now shares the illustrated gameplay theme. Gameplay now uses an original illustrated asset set: expressive planets, a separate recoiling blaster, distinct enemies and bosses, warm star effects, illustrated pickups and a layered space background. Compact HUD, untimed boost choices, exclusive pause screens and score-first results replace the overlapping interface.
+- One endless survival run in a bounded arena with a following camera. No waves, no pauses, no upgrade menu.
+- Seven enemy kinds (plus the Fracture's Splinters) that join the mix over time, telegraphed comets, gravity wells and brief arena events.
+- Three abilities on their own cooldowns, unlocked by time in a fixed order: Dash, Overdrive, Nova.
+- Upgrade and shield pickups that drop from kills and apply instantly. Eight upgrades, including two weapon swaps.
+- The Coil, The Brood and The Black Hole, cycling forever with more enemies joining each round.
+- Local top ten ranked by survival time, personal bests, lifetime stats, cosmetic planets and achievements. Fully offline.
 
-- One endless survival mode, with short waves and a gradually changing enemy mix.
-- Distinct chasing, swarming, armoured, splitting, orbiting/shooting and exploding threats.
-- Three boss encounters within a continuing endless run, plus telegraphed comets, gravity wells and brief arena events.
-- Dash unlocks after wave 1, rapid fire after wave 3, and nova after wave 5. Free between-wave boosts improve shooting, piercing, spread and abilities, with optional weapon choices. Spread Shot adds one angled bullet per level, first available after waves 5 and 10. The starting gun fires every 0.18 seconds. Nothing to buy or grind outside a run.
-- Three pickup types (shield, overcharge and nova burst), growing rings and helper moons, impact effects, and original synthesized music and sound effects.
-- Local score-ranked top ten, personal bests, lifetime records and cosmetic achievements. Fully offline; no account or network required.
-
-Survival earns points; kills and quick streaks earn more. Absorbing debris raises the visible multiplier from x1 to x3. Bosses add a flat bonus. Upgrade timing, enemy behaviours and boss attacks are listed in [GAMEPLAY_GUIDE.md](GAMEPLAY_GUIDE.md). Release verification is in [RELEASE.md](RELEASE.md).
+Every timing, cooldown and drop rule is in [GAMEPLAY_GUIDE.md](GAMEPLAY_GUIDE.md), and every tuning number in `scripts/Balance.cs`. Release verification is in [RELEASE.md](RELEASE.md).
 
 ## Develop
 
@@ -52,17 +49,17 @@ Set `$Godot` to the .NET engine console executable. For the isolated integration
 
 It copies the project to a builds/qa/isolated-project directory and uses a separate `Grinfinity-QA` save folder. Success requires `QA RESULT: 0 failure(s)`. The runner builds first and aborts on compilation failure before copying the fresh assembly. `tools/ReleaseQa.cs` is compiled only in Debug and `tools/` is excluded from exports.
 
-### Rendered playtests
+### Bot playtests
 
 ```powershell
-$env:GRIN_RUN = '90'
-$env:GRIN_AUTO_BUY = '1'
-$env:GRIN_SIZE = '1280x720'
-$env:GRIN_SHOT = 'C:/Temp/grinfinity.png'
-& $Godot --path "builds/qa/isolated-project" res://tools/playtest.tscn
+& tools/run-bot.ps1 -Godot $Godot -Runs 5              # mortal runs, printed timeline and summary
+& tools/run-bot.ps1 -Godot $Godot -Immortal -MaxSeconds 1800
+& tools/run-bot.ps1 -Godot $Godot -Immortal -Windowed -Shots "60,180,300" -ShotDir C:/Temp
 ```
 
-The capture harness moves, aims and fires through actual gameplay. By default it is invulnerable so longer runs can be inspected. `GRIN_MORTAL=1` enables real deaths; `GRIN_PACIFIST=1` stops shooting. `GRIN_CAPTURE_BREAK=1` captures the first choice, `GRIN_VIEW=options` captures pause settings, `GRIN_BOSS_INDEX=0/1/2` accelerates a boss, and `GRIN_UNCAPPED=1` measures uncapped rendering. `GRIN_SCENE` can select a menu scene. Clear environment overrides between tests. Automated play does not establish subjective fun or physical controller compatibility.
+`tools/survival_bot.gd` plays whole runs (kiting, aiming with the stick, collecting pickups, using all three abilities) in an isolated copy of the project, so it never touches real saves. It logs unlocks, drops, boss arrivals and fight lengths, and why each run ended. It aims perfectly but dodges worse than a good player, so treat its survival times as a floor.
+
+`tools/playtest.tscn` captures a single screen (`GRIN_SCENE`, `GRIN_VIEW=pause`, `GRIN_SHOT`), and `tools/gallery.tscn` lays out every enemy, pickup and boss for an art review. Automated play does not establish subjective fun or physical controller compatibility.
 
 Godot MCP is supported by `tools/godot-mcp-smoke.mjs`; pass the installed MCP server entry point, the .NET executable, and project path. This avoids accidentally launching the standard non-C# engine.
 

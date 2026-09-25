@@ -67,7 +67,10 @@ public static class PlayerProfile
 		private set => totalTimePlayed = value;
 	}
 
-	/// <summary>Highest normalised mass (0..1) ever carried, across every orbit.</summary>
+	/// <summary>
+	/// Fullest build ever held, 0..1, across every run. Kept under its old name
+	/// and save key: it used to be peak mass, and a world still unlocks at 100%.
+	/// </summary>
 	public static float HeaviestMassEver
 	{
 		get { EnsureLoaded(); return heaviestMassEver; }
@@ -158,7 +161,7 @@ public static class PlayerProfile
 	/// totals, and which weapon it was played with. Called once, from
 	/// GameManager.TriggerGameOver.
 	/// </summary>
-	public static void RecordOrbit(int stardustEarned, int kills, float survivalTime, float massNormalised, WeaponId weapon)
+	public static void RecordOrbit(int stardustEarned, int kills, float survivalTime, float buildFraction, WeaponId weapon)
 	{
 		EnsureLoaded();
 
@@ -166,7 +169,7 @@ public static class PlayerProfile
 		TotalOrbits++;
 		TotalKills += Mathf.Max(kills, 0);
 		TotalTimePlayed += Mathf.Max(survivalTime, 0f);
-		HeaviestMassEver = Mathf.Max(HeaviestMassEver, massNormalised);
+		HeaviestMassEver = Mathf.Max(HeaviestMassEver, buildFraction);
 		weaponTally[weapon] = weaponTally.GetValueOrDefault(weapon, 0) + 1;
 
 		SaveToFile();

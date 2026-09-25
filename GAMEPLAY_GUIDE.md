@@ -1,68 +1,83 @@
-# Grinfinity gameplay reference — rc4
+# Gameplay guide
 
-There are **7 selectable upgrade types**, **3 automatic ability unlocks**, **3 pickup types**, **8 enemy types** (including the splitter child), and **3 bosses**. No upgrade costs currency. Everything affecting combat resets on a new run; unlocked planet colours are cosmetic.
+One endless run. Enemies keep coming, the arena gets harder the longer you last, and the run ends the first time something touches the planet without a shield. Your survival time is the record; score is kept alongside it.
 
-## How upgrade offers work
+Every tuning number mentioned here lives in `scripts/Balance.cs`.
 
-Clear every enemy in a wave. The game pauses and presents up to three distinct eligible upgrades. Pick one, or choose **KEEP CURRENT BUILD** to skip. There is no timer. Automatically earned abilities do not consume your choice.
+## The arena
 
-The table lists the earliest **completed** wave for each level. You must own the preceding level; maxed upgrades and upgrades for locked abilities are excluded. An available standard stat/ability upgrade always gets a slot. At most one weapon replacement appears in an offer. New spread ranks are shown on their milestone wave if the previous rank is owned; a skipped rank stays eligible later. Newly introduced weapons also get an introduction slot. Remaining slots are random among eligible choices.
+The playable area is 5220 × 3220, about three screens each way, surrounded by a band of plain dark space the camera can see into but nothing can enter. The camera follows the planet with a small dead zone, leans a little toward where you aim, and stops at the edge of the world. During a boss fight it also leans a little toward the boss. The lit arena fades into the dark at its edge; that fade is where the planet stops.
 
-Cannon and Ion Lance are alternative replacements for the starter gun: choosing either removes further weapon replacements for that run. Existing firing-speed, piercing and spread upgrades continue working on the chosen weapon. You can skip every weapon offer and keep the starter.
+Enemies enter just outside the screen and never closer than 760 units to the planet. If you are backed into a corner, they come in from the visible edge of the arena instead, so corners are not safe spots. An enemy left more than 2500 units behind is brought back in near the screen.
 
-| Selectable upgrade | Earliest wave cleared by level | Levels | Effect |
-|---|---|---|---|
-| Faster Shots | 1 / 4 / 7 | 3 | Each level multiplies firing delay by 0.82: 18% less delay. |
-| Piercing Shots | 1 | 1 | Bullets penetrate two additional ordinary enemies; front armour still deflects head-on hits. |
-| Quicker Dash | 1 / 4 / 7 | 3 | Each level multiplies dash cooldown by 0.87: 13% less cooldown. Requires dash. |
-| Debris Cannon | 4 | 1 | Replace the gun with six short-range pellets, firing every 0.52 seconds before upgrades. |
-| Spread Shot | 5 / 10 | 2 | One additional side bullet per level: starter gun fires 2, then 3. Its centre shot stays aimed; the first side bullet alternates left/right. |
-| Ion Lance | 6 | 1 | Replace the gun with slower, fast-travelling shots dealing 2 damage and penetrating 8 additional ordinary enemies. Base interval 0.78 seconds. |
-| Bigger Nova | 6 / 9 / 12 | 3 | Add 22% of base nova radius per level. Requires nova. |
+## Life and the shield
 
-The starter Comet fires every **0.18 seconds**, up from 0.22 seconds in rc3, without needing an upgrade. Spread no longer grants an immediate three-bullet opening volley or reaches five bullets with the starter.
+There is no health bar. One hit ends the run.
 
-## Automatically earned abilities
+A **shield** blocks exactly one hit. You never start with one; it drops like an upgrade. You can hold one at a time. When it breaks, the planet blinks for 1 second and cannot be hit.
 
-| Ability | Earned after clearing | Function |
+## Abilities
+
+Each unlocks automatically at the same time in every run and has its own cooldown. There is no energy meter.
+
+| Ability | Unlocks | Cooldown | Keys | What it does |
+|---|---|---|---|---|
+| Dash | 0:40 | 2.2 s | Shift / B | Zooms 340 units in your move direction (or aim direction when standing still). While moving you cannot be hurt, and every normal enemy the path crosses is destroyed. Then the planet blinks for 0.4 s: still safe, but no longer destroying anything. Get clear before the blink ends. A boss takes 3.5% of its health, once per dash. |
+| Overdrive | 2:20 | 30 s | E / X | 6 seconds of your current gun going wild: 2.5× fire rate, double damage, +1 pierce, bigger and faster shots. It keeps your spread, pierce and weapon. |
+| Nova | 5:10 | 45 s | R / Y | A shockwave out to 720 units. Normal enemies it reaches are destroyed, enemy shots in it are wiped, and a boss takes 10% of its health. |
+
+The Accessibility menu can switch Overdrive to hold-to-use.
+
+## Upgrades and drops
+
+There is no upgrade menu. Some kills drop a glowing pickup; touch it and it applies at once. A drop comes due every 38–58 seconds at the start (the gap grows by 10% per minute survived) and falls from your next kill, but only if you have also been fighting since the last one. Pickups last 16 seconds and slide to you when you are close.
+
+A drop is only ever something that would help right now: nothing already maxed, nothing for an ability you have not unlocked, no second weapon, no second shield. A shield cannot drop more than once every 75 seconds.
+
+| Pickup | Levels | Effect |
 |---|---|---|
-| Dash | Wave 1 | Brief protected burst in movement direction, or aim direction when stationary. Shift / B. Spends 4 mass when available; insufficient mass does not prevent dashing. |
-| Rapid Fire | Wave 3 | Fire much faster for 3.5 seconds, followed by a 7-second cooldown. E / X. |
-| Nova | Wave 5 | Spend 35 mass to destroy ordinary enemies in a radius. R / Y. It does not damage bosses or refund debris. |
+| Faster Shots | 4 | 14% less time between shots per level |
+| Piercing Shots | 3 | Shots pass through one more enemy per level |
+| Spread Shot | 2 | One extra angled shot (alternating sides), then two |
+| Longer Dash | 3 | +14% dash distance and +0.08 s blink per level |
+| Overdrive Boost | 3 | +1.5 s Overdrive and 15% faster Overdrive fire per level |
+| Bigger Nova | 3 | +18% Nova radius per level |
+| Debris Cannon | 1 | Replaces the Comet: six short-range pellets. Not before 2:30 |
+| Ion Lance | 1 | Replaces the Comet: slow, heavy shots that pierce eight enemies. Not before 2:30 |
+| Shield | 1 held | Blocks one hit |
 
-## Pickups
-
-- **Shield:** circular bubble blocking the next hit, followed by a short recovery window. Each run starts with one. Duplicate shields become overcharge drops while protected.
-- **Overcharge:** +1 bullet damage for 8 seconds; another pickup refreshes its duration.
-- **Nuke:** instantly destroys ordinary enemies in a large radius, not bosses. Available from wave 5; earlier rolls become overcharge.
-
-At most two pickups remain on screen. A normal kill has a 5% base drop chance; Planetoid, Bulwark and Flare kills add 14 percentage points. Before ownership/wave substitutions, type weights are shield 50%, overcharge 35%, nuke 15%. Magnet and Freeze remain removed from live drops.
+The two weapon swaps rule each other out. Rings appear around the planet at 4, 9 and 15 upgrade levels.
 
 ## Enemies
 
-HP below means ordinary one-damage hits, before overcharge, weapon damage or armour.
-
-| Enemy | First wave | HP | Behaviour |
+| Enemy | Joins | HP | Behaviour |
 |---|---|---|---|
-| Drifter | 1 | 1 | Basic enemy pulled toward the player. |
-| Shard | 3 | 1 | Fast swarmer arriving in small groups. |
-| Planetoid | 4 | 4 | Large, slow, heavy enemy; resists knockback. |
-| Fracture | 6 | 2 | Splits into three smaller enemies when destroyed. |
-| Splinter | From Fracture, wave 6 onward | 1 | Small, fast child launched outward before pursuing. |
-| Satellite | 8 | 2 | Circles at range and fires at you roughly every 2.1 seconds. |
-| Bulwark | 10 | 3 | Front armour rejects head-on shots; attack its sides/rear. |
-| Flare | 12 | 2 | Explodes when destroyed; the blast can hit the player and nearby enemies. Keep distance. |
+| Drifter | 0:00 | 1 | Falls toward the planet. Arrives in twos from 0:20, threes from 1:00. |
+| Shard | 0:30 | 1 | Fast, in packs. |
+| Planetoid | 1:15 | 4 | Big and slow. |
+| Fracture | 2:00 | 2 | Splits into three Splinters when destroyed. |
+| Satellite | 3:45 | 2 | Circles at range and shoots at you. |
+| Bulwark | 5:00 | 3 | Armoured front; shots from the front bounce off. Dash and Nova go through the armour. |
+| Flare | 7:00 | 2 | Explodes when destroyed. The dashed ring around it shows the blast. |
 
-Regular spawns cap at 18 live enemies; split children have an overall 24-body ceiling. Waves grow from 6 enemies to a budget cap of 28. Speed and spawn pressure advance with wave progress, never with time spent struggling in the same wave.
+Spawn rate, the number alive at once and enemy speed all ramp with time (see the tables in `Balance.cs`). Speed keeps creeping up after 25 minutes. From 1:50, tight packs rush in from one direction about every 26 seconds. By 18 minutes the mix is mostly the dangerous kinds.
+
+Comets (from 4:10) cross the screen along a dashed red line that shows for 1.35 s first. Gravity wells (from 7:50) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 8:40. None of these run during a boss.
 
 ## Bosses
 
-Bosses arrive after the stated wave is cleared and the choice/break ends. Regular wave spawning stops during the fight. Later waves resume after victory.
+Bosses arrive on a clock, with a warning banner and a marker where they will land. When one dies its shots vanish, and three strong upgrades fly out of the wreck.
 
-| Boss | After clearing | HP | Attacks and response |
+| Round 1 | Arrives | HP | Fight |
 |---|---|---|---|
-| The Coil | Wave 6 | 140 | Drifts and fires circular bullet patterns with a rotating safe gap. Move toward the gap; dash through danger. Ring attacks accelerate as its health falls. |
-| The Brood | Wave 12 | 220 | Slowly follows the player and spawns fast Shards, capped at 12 live ordinary enemies. Spawns accelerate as health falls. Manage the swarm while focusing the boss. |
-| The Black Hole | Wave 18 | 300 | Pulls the player, debris and friendly shots toward its core, and fires back at the player. Pull strength and attack frequency increase as it loses health. Keep away from the core and use dash to escape. |
+| The Coil | 2:50 | 360 | Rings of shots with a gap. Slip through the gap or dash. |
+| The Brood | 5:50 | 500 | Keeps spawning Shards. Keep shooting the big one. |
+| The Black Hole | 8:50 | 1000 | Pulls you, enemies and your shots toward its core, and throws shots back. |
 
-All three are existing distinct encounters; this pass rebalances upgrades rather than adding extra bosses. Endless waves continue after the third boss. Comets, gravity wells and temporary arena events are separate hazards, not additional enemy or boss types.
+After the Black Hole the run carries on, and the bosses come round again every 2.5 minutes: The Coil at 11:20, The Brood at 13:50, The Black Hole at 16:20, and so on forever. Each round the bosses get 30% more health and attack a little faster. More of the difficulty comes from company, though: the first time round each boss fights alone, and from round two ordinary enemies keep arriving during the fight (35% of the normal rate in round 2, 55% in round 3, up to 95%). There is always at least 60 seconds between one boss dying and the next arriving.
+
+## Score
+
+10 points per second survived, 25 per kill plus 3 for each link in your current combo (up to 25 links). A combo breaks after 2.5 seconds without a kill. Beating a boss is worth 5,000 × its round.
+
+The leaderboard ranks runs by survival time, with score breaking ties.

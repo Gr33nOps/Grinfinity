@@ -68,5 +68,12 @@ public static class ArenaEvents
 
 	public static Profile Get(ArenaEventId id) => All[(int)id - 1];
 
-	public static ArenaEventId Roll() => (ArenaEventId)(RunState.Rng.RandiRange(0, All.Length - 1) + 1);
+	/// <summary>
+	/// The events that can actually come up. Thrusters Out and Inversion stay
+	/// defined but out of the roll: with one-hit deaths, taking the dash away is
+	/// just unfair, and pushing every enemy away rewards hiding.
+	/// </summary>
+	private static readonly ArenaEventId[] Rollable = { ArenaEventId.SolarWind, ArenaEventId.GiantSlugs };
+
+	public static ArenaEventId Roll() => Rollable[RunState.Rng.RandiRange(0, Rollable.Length - 1)];
 }

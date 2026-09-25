@@ -1,37 +1,24 @@
 using Godot;
 
-/// <summary>Everything a run can buy at a wave break.</summary>
+/// <summary>Everything a run can pick up. Each is permanent until the run ends.</summary>
 public enum RunUpgradeId
 {
-	// Abilities you do not start with. An orbit opens with move and shoot and
-	// nothing else; everything past that is earned at a wave break.
-	UnlockDash,
-	UnlockRapidFire,
-	UnlockNova,
-	// Weapon
 	FireRate,
 	Piercing,
-	// Ability
-	QuickerDash,
+	SpreadShot,
+	DashBoost,
 	BiggerNova,
-	HungryDash,
-	// Mass economy
-	WiderPull,
-	RichDebris,
-	SlowField,
+	OverdriveBoost,
 	DebrisCannon,
-	IonLance,
-	FanShot
+	IonLance
 }
 
-/// <summary>
-/// The gameplay system improved by a boost.
-/// </summary>
-public enum UpgradeFamily
+/// <summary>The three abilities. They unlock by survival time, always in this order.</summary>
+public enum Ability
 {
-	Weapon,
-	Ability,
-	Mass
+	Dash,
+	Overdrive,
+	Nova
 }
 
 public static class RunUpgrades
@@ -39,129 +26,85 @@ public static class RunUpgrades
 	public sealed class Profile
 	{
 		public required RunUpgradeId Id { get; init; }
-		public required UpgradeFamily Family { get; init; }
 		public required string Name { get; init; }
-		/// <summary>One line, plainly. What it does, not what it is called.</summary>
-		public required string Effect { get; init; }
-		/// <summary>How many times it can be taken. One-offs are switches, not dials.</summary>
-		public int MaxLevel { get; init; } = 5;
-		/// <summary>A passive this unlocks, if any. <see cref="RelicId.None"/> for the numeric ones.</summary>
-		public RelicId Grants { get; init; } = RelicId.None;
-		/// <summary>
-		/// An ability granted automatically at its wave milestone.
-		/// </summary>
-		public bool IsUnlock { get; init; }
-		/// <summary>
-		/// An ability this improves, which the run has to own first. Offering
-		/// "dash again sooner" to someone with no dash is a card that cannot
-		/// mean anything to them yet.
-		/// </summary>
-		public RunUpgradeId? Requires { get; init; }
+		/// <summary>Icon under art/cosmic/icon_*.svg.</summary>
+		public required string Icon { get; init; }
+		/// <summary>Disc colour behind the icon, so pickups sharing an icon still differ.</summary>
+		public required Color Colour { get; init; }
+		public int MaxLevel { get; init; } = 1;
+		/// <summary>An ability the run must have unlocked before this can mean anything.</summary>
+		public Ability? Requires { get; init; }
+		/// <summary>Replaces the starting Comet. Only one swap per run.</summary>
 		public WeaponId? Equips { get; init; }
-        public int MinWave { get; init; } = 1;
-        public int WaveStep { get; init; } = 0;
-        public int RequiredWave(int currentLevel) => MinWave + WaveStep * currentLevel;
-
+		/// <summary>Relative chance among eligible drops from ordinary enemies.</summary>
+		public float Weight { get; init; } = 1f;
+		/// <summary>Relative chance in a boss reward.</summary>
+		public float BossWeight { get; init; } = 1f;
 	}
 
-	public static readonly Profile UnlockDash = new()
-	{
-		Id = RunUpgradeId.UnlockDash,
-		Family = UpgradeFamily.Ability,
-		Name = TranslationServer.Translate("UPG_UnlockDash_NAME"),
-		Effect = TranslationServer.Translate("UPG_UnlockDash_EFFECT"),
-		MaxLevel = 1,
-		IsUnlock = true
-	};
-
-	public static readonly Profile UnlockRapidFire = new()
-	{
-		Id = RunUpgradeId.UnlockRapidFire,
-		Family = UpgradeFamily.Ability,
-		Name = TranslationServer.Translate("UPG_UnlockRapidFire_NAME"),
-		Effect = TranslationServer.Translate("UPG_UnlockRapidFire_EFFECT"),
-		MaxLevel = 1,
-		IsUnlock = true
-	};
-
-	public static readonly Profile UnlockNova = new()
-	{
-		Id = RunUpgradeId.UnlockNova,
-		Family = UpgradeFamily.Ability,
-		Name = TranslationServer.Translate("UPG_UnlockNova_NAME"),
-		Effect = TranslationServer.Translate("UPG_UnlockNova_EFFECT"),
-		MaxLevel = 1,
-		IsUnlock = true
-	};
+	private static readonly Color Gun = new("f5a451");
+	private static readonly Color Move = new("7fd6c2");
+	private static readonly Color Power = new("ff7b8e");
+	private static readonly Color Blast = new("ffd66b");
 
 	public static readonly Profile FireRate = new()
 	{
-		Id = RunUpgradeId.FireRate,
-		Family = UpgradeFamily.Weapon,
-		Name = TranslationServer.Translate("UPG_FireRate_NAME"),
-		Effect = "18% less time between shots per level.", MaxLevel = 3, WaveStep = 3,
+		Id = RunUpgradeId.FireRate, Name = TranslationServer.Translate("UPG_FireRate_NAME"),
+		Icon = "firerate", Colour = Gun, MaxLevel = 4, Weight = 1.1f, BossWeight = 1.2f
 	};
 
 	public static readonly Profile Piercing = new()
 	{
-		Id = RunUpgradeId.Piercing,
-		Family = UpgradeFamily.Weapon,
-		Name = TranslationServer.Translate("UPG_Piercing_NAME"),
-		Effect = TranslationServer.Translate("UPG_Piercing_EFFECT"),
-		MaxLevel = 1,
-		Grants = RelicId.Piercing
+		Id = RunUpgradeId.Piercing, Name = TranslationServer.Translate("UPG_Piercing_NAME"),
+		Icon = "pierce", Colour = Gun, MaxLevel = 3, Weight = 0.9f, BossWeight = 1.1f
 	};
 
-	public static readonly Profile QuickerDash = new()
+	public static readonly Profile SpreadShot = new()
 	{
-		Id = RunUpgradeId.QuickerDash,
-		Family = UpgradeFamily.Ability,
-		Name = TranslationServer.Translate("UPG_QuickerDash_NAME"),
-		Effect = TranslationServer.Translate("UPG_QuickerDash_EFFECT"),
-		MinWave = 1, WaveStep = 3, MaxLevel = 3, Requires = RunUpgradeId.UnlockDash
+		Id = RunUpgradeId.SpreadShot, Name = "SPREAD SHOT",
+		Icon = "spread", Colour = Gun, MaxLevel = 2, Weight = 0.9f, BossWeight = 1.3f
+	};
+
+	public static readonly Profile DashBoost = new()
+	{
+		Id = RunUpgradeId.DashBoost, Name = "LONGER DASH",
+		Icon = "dash", Colour = Move, MaxLevel = 3, Requires = Ability.Dash, Weight = 0.8f
 	};
 
 	public static readonly Profile BiggerNova = new()
 	{
-		Id = RunUpgradeId.BiggerNova,
-		Family = UpgradeFamily.Ability,
-		Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
-		Effect = TranslationServer.Translate("UPG_BiggerNova_EFFECT"),
-		MaxLevel = 3,
-		MinWave = 6, WaveStep = 3, Requires = RunUpgradeId.UnlockNova
+		Id = RunUpgradeId.BiggerNova, Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
+		Icon = "nova", Colour = Blast, MaxLevel = 3, Requires = Ability.Nova, Weight = 0.7f, BossWeight = 1.1f
 	};
 
-
-
-
+	public static readonly Profile OverdriveBoost = new()
+	{
+		Id = RunUpgradeId.OverdriveBoost, Name = "OVERDRIVE BOOST",
+		Icon = "rapid", Colour = Power, MaxLevel = 3, Requires = Ability.Overdrive, Weight = 0.8f, BossWeight = 1.2f
+	};
 
 	public static readonly Profile DebrisCannon = new()
 	{
-		Id = RunUpgradeId.DebrisCannon, Family = UpgradeFamily.Weapon,
-		Name = "DEBRIS CANNON", Effect = "This run: six close-range pellets. Slower, wide spread.",
-		MaxLevel = 1, MinWave = 4, Equips = WeaponId.DebrisCannon
-	};
-	public static readonly Profile IonLance = new()
-	{
-		Id = RunUpgradeId.IonLance, Family = UpgradeFamily.Weapon,
-		Name = "ION LANCE", Effect = "This run: powerful piercing shots. Aim carefully.",
-		MaxLevel = 1, MinWave = 6, Equips = WeaponId.IonLance
+		Id = RunUpgradeId.DebrisCannon, Name = "DEBRIS CANNON",
+		Icon = "cannon", Colour = new Color("c9a0ff"), Equips = WeaponId.DebrisCannon, Weight = 0.3f, BossWeight = 0.6f
 	};
 
-	public static readonly Profile FanShot = new()
+	public static readonly Profile IonLance = new()
 	{
-		Id = RunUpgradeId.FanShot, Family = UpgradeFamily.Weapon,
-		Name = "SPREAD SHOT", Effect = "Add one angled bullet per volley per level. Your aimed shot stays straight.",
-		MaxLevel = 2, MinWave = 5, WaveStep = 5
+		Id = RunUpgradeId.IonLance, Name = "ION LANCE",
+		Icon = "lance", Colour = new Color("8ce6ff"), Equips = WeaponId.IonLance, Weight = 0.3f, BossWeight = 0.6f
 	};
 
 	// Declared last: static field initialisers run in source order.
 	public static readonly Profile[] All =
 	{
-		UnlockDash, UnlockRapidFire, UnlockNova,
-		FireRate, Piercing, QuickerDash, BiggerNova,
-		DebrisCannon, IonLance, FanShot
+		FireRate, Piercing, SpreadShot, DashBoost, BiggerNova, OverdriveBoost, DebrisCannon, IonLance
 	};
+
+	/// <summary>Every level a single run can hold. A weapon swap counts once — only one can be taken.</summary>
+	public static readonly int MaxTotalLevels =
+		FireRate.MaxLevel + Piercing.MaxLevel + SpreadShot.MaxLevel + DashBoost.MaxLevel
+		+ BiggerNova.MaxLevel + OverdriveBoost.MaxLevel + 1;
 
 	public static Profile Get(RunUpgradeId id)
 	{
@@ -173,4 +116,34 @@ public static class RunUpgrades
 
 		return null;
 	}
+
+	public static string AbilityName(Ability ability) => ability switch
+	{
+		Ability.Dash => "DASH",
+		Ability.Overdrive => "OVERDRIVE",
+		_ => "NOVA"
+	};
+
+	/// <summary>What the ability does, finishing "Press SHIFT / B to ...". Shown once, when it comes online.</summary>
+	public static string AbilityVerb(Ability ability) => ability switch
+	{
+		Ability.Dash => "zoom through enemies and pop them",
+		Ability.Overdrive => "make your gun go wild",
+		_ => "blast everything around you"
+	};
+
+	/// <summary>The input action each ability listens on. Overdrive keeps the old rapid-fire binding.</summary>
+	public static string ActionFor(Ability ability) => ability switch
+	{
+		Ability.Dash => "dash",
+		Ability.Overdrive => "rapid_fire",
+		_ => "nova"
+	};
+
+	public static string IconFor(Ability ability) => ability switch
+	{
+		Ability.Dash => "dash",
+		Ability.Overdrive => "rapid",
+		_ => "nova"
+	};
 }

@@ -1,5 +1,6 @@
 #if DEBUG
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Godot;
@@ -10,8 +11,28 @@ public partial class ReleaseQa : Node
     private void Check(bool ok, string name) { GD.Print($"{(ok ? "PASS" : "FAIL")}: {name}"); if (!ok) failures++; }
     private static object Invoke(object obj, string name, params object[] args) => obj.GetType().GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(obj, args);
     private async Task Frames(int count = 2) { for (int i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame); }
+    private async Task PhysicsFrames(int count = 2) { for (int i = 0; i < count; i++) await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame); }
     private async Task Wait(double seconds) => await ToSignal(GetTree().CreateTimer(seconds, processAlways: true, ignoreTimeScale: true), SceneTreeTimer.SignalName.Timeout);
-    private static int UpgradeCount(RunState run) { int count = 0; foreach (var upgrade in RunUpgrades.All) count += run.LevelOf(upgrade.Id); return count; }
+    private static bool IsDead(Player player) => (bool)typeof(Player).GetField("isDead", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(player)!;
+
+    private static RunState FreshRun(Node parent)
+    {
+        var state = new RunState();
+        parent.AddChild(state);
+        state.SetProcess(false);
+        return state;
+    }
+
+    private Body Drifter(GameManager game, Vector2 at)
+    {
+        var body = GD.Load<PackedScene>("res://scenes/body.tscn").Instantiate<Body>();
+        body.Configure(BodyKind.Drifter);
+        body.GlobalPosition = at;
+        game.AddEntity(body);
+        body.SetPhysicsProcess(false);
+        return body;
+    }
+
     private async Task Journey()
     {
         GetTree().CurrentScene = null; // Keep the harness alive when the real game changes scenes.
@@ -24,7 +45,7 @@ public partial class ReleaseQa : Node
             var active = GetTree().CurrentScene as GameManager;
             Check(active != null, $"journey {attempt}: enters arena");
             if (active == null) return;
-            Check(active.Run.Mass == 0 && UpgradeCount(active.Run) == 0 && active.Run.Weapon == WeaponId.Comet, "retry resets mass upgrades and weapon");
+            Check(active.Run.TotalLevels == 0 && !active.Run.HasShield && active.Run.Weapon == WeaponId.Comet && !active.Run.HasDash, "retry resets upgrades, shield, abilities and weapon");
             var player = active.GetNode<Player>("player"); player.Invulnerable = true;
             Invoke(active, "TogglePause");
             float time = active.RunTime;
@@ -35,16 +56,15 @@ public partial class ReleaseQa : Node
             Check(active.RunTime > time, "resume advances simulation");
             int orbits = PlayerProfile.TotalOrbits;
             player.Invulnerable = false;
-            active.Run.ConsumeShield();
             player.KillByBlast("QA contact");
             player.KillByBlast("duplicate contact");
-            await Wait(1.8);
+            await Wait(2.2);
             var recap = GetTree().CurrentScene as GameOver;
-            Check(recap != null, "lethal contact reaches results");
-            Check(PlayerProfile.TotalOrbits == orbits + 1, "duplicate death records exactly one orbit");
+            Check(recap != null, "one lethal hit with no shield reaches results");
+            Check(PlayerProfile.TotalOrbits == orbits + 1, "duplicate death records exactly one run");
             Check(Engine.TimeScale == 1 && !GetTree().Paused, "results restore time and pause state");
             if (recap == null) return;
-            ((BaseButton)recap.FindChild(attempt == 2 ? "ReturnToMenu" : "Retry",true,false)).EmitSignal(BaseButton.SignalName.Pressed);
+            ((BaseButton)recap.FindChild(attempt == 2 ? "ReturnToMenu" : "Retry", true, false)).EmitSignal(BaseButton.SignalName.Pressed);
             await Wait(1.6);
         }
         Check(GetTree().CurrentScene is Menu, "results returns to main menu");
@@ -55,221 +75,293 @@ public partial class ReleaseQa : Node
             Check(GetTree().CurrentScene.SceneFilePath == $"res://scenes/{name}.tscn", name + " screen loads");
         }
     }
+
+    private void Persistence()
+    {
+        foreach (string file in new[] { "highscore.cfg", "leaderboard.cfg", "profile.cfg" })
+            foreach (string suffix in new[] { "", ".bak" })
+                if (FileAccess.FileExists("user://" + file + suffix)) DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath("user://" + file + suffix));
+        Check(Leaderboard.Sanitise(" \t\u0001‮ ") == "PLAYER", "nonprinting names fall back safely");
+        Check(Leaderboard.Submit("bad", -1, float.NaN, -1) == -1, "invalid leaderboard submission rejected");
+        Check(Leaderboard.Sanitise("A\ud800B").Length > 0, "malformed Unicode names cannot crash results");
+        Check(Leaderboard.Submit("FIRST", 500, 60, 2) == 1 && Leaderboard.Submit("SECOND", 500, 60, 3) == 2, "tied runs retain arrival order");
+        Check(Leaderboard.Submit("LONGER", 10, 90, 1) == 1, "leaderboard ranks by survival time, not score");
+        typeof(Leaderboard).GetField("isLoaded", BindingFlags.NonPublic | BindingFlags.Static)!.SetValue(null, false);
+        ((List<Leaderboard.Entry>)typeof(Leaderboard).GetField("entries", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
+        Check(Leaderboard.Entries.Count == 3 && Leaderboard.Entries[0].Name == "LONGER" && Leaderboard.Entries[1].Name == "FIRST", "leaderboard survives reload in time order");
+        for (int i = 0; i < 12; i++) Leaderboard.Submit("TEST", 10 + i, 1 + i, 1);
+        Check(Leaderboard.Entries.Count == 10 && !Leaderboard.WouldPlace(0f), "leaderboard stays bounded at ten entries");
+        var cfg = new ConfigFile(); cfg.SetValue("test", "wrong", "not a number"); cfg.SetValue("test", "nan", double.NaN);
+        Check(SaveStore.Value(cfg, "test", "wrong", 7).AsInt32() == 7 && SaveStore.Value(cfg, "test", "nan", 7).AsInt32() == 7, "invalid saved values use safe defaults");
+        var settings = GameSettings.Instance;
+        float volume = settings.MasterVolume;
+        settings.SetMasterVolume(0.35f); settings.SaveSettings(); settings.SetMasterVolume(0.9f);
+        Invoke(settings, "LoadSettings");
+        Check(Mathf.IsEqualApprox(settings.MasterVolume, 0.35f), "settings survive a save and reload");
+        settings.SetMasterVolume(volume); settings.SaveSettings();
+        int before = ScoreManager.BestScore;
+        ScoreManager.SaveRun(float.NaN, 1, 1, int.MaxValue);
+        Check(ScoreManager.BestScore == before && float.IsFinite(ScoreManager.BestTime), "invalid runs cannot poison records");
+        ScoreManager.SaveRun(10, 1, 1, 100);
+        ScoreManager.SaveRun(20, 2, 2, 200);
+        Check(FileAccess.FileExists("user://highscore.cfg.bak"), "saving retains a recoverable previous record");
+        DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath("user://highscore.cfg"));
+        typeof(ScoreManager).GetField("isLoaded", BindingFlags.NonPublic | BindingFlags.Static)!.SetValue(null, false);
+        Check(ScoreManager.BestScore == 100, "missing primary save recovers the backup");
+    }
+
+    private void RunRules()
+    {
+        var state = FreshRun(this);
+        Check(!state.HasShield, "a run starts without a shield");
+        Check(!state.HasDash && !state.HasOverdrive && !state.HasNova, "a run starts with no abilities");
+        state._Process(Balance.DashUnlockAt - 1f);
+        Check(!state.HasDash, "dash stays locked before its time");
+        state._Process(2f);
+        Check(state.HasDash && !state.HasOverdrive && !state.HasNova, "dash unlocks first, on time");
+        state._Process(Balance.OverdriveUnlockAt - state.SurvivalTime + 0.1f);
+        Check(state.HasOverdrive && !state.HasNova, "overdrive unlocks second");
+        state._Process(Balance.NovaUnlockAt - state.SurvivalTime + 0.1f);
+        Check(state.HasNova, "nova unlocks third");
+        Check(Balance.DashUnlockAt < Balance.OverdriveUnlockAt && Balance.OverdriveUnlockAt < Balance.NovaUnlockAt, "unlock order is Dash, Overdrive, Nova");
+        Check(Balance.DashCooldown < Balance.OverdriveCooldown && Balance.OverdriveCooldown < Balance.NovaCooldown, "cooldowns rise with ability strength");
+        state.Free();
+
+        var locked = FreshRun(this);
+        Check(!locked.TryGrant(RunUpgradeId.DashBoost) && !locked.TryGrant(RunUpgradeId.BiggerNova) && !locked.TryGrant(RunUpgradeId.OverdriveBoost), "ability upgrades need their ability");
+        for (int i = 0; i < 10; i++) locked.TryGrant(RunUpgradeId.SpreadShot);
+        Check(locked.LevelOf(RunUpgradeId.SpreadShot) == RunUpgrades.SpreadShot.MaxLevel, "upgrades stop at their maximum");
+        Check(locked.TryGrant(RunUpgradeId.DebrisCannon) && locked.Weapon == WeaponId.DebrisCannon, "debris cannon replaces the comet");
+        Check(!locked.TryGrant(RunUpgradeId.IonLance) && locked.Weapon == WeaponId.DebrisCannon, "weapon swaps are mutually exclusive");
+        locked.GrantShield(); locked.GrantShield();
+        Check(locked.HasShield && locked.ConsumeShield() && !locked.ConsumeShield(), "at most one shield, spent by one hit");
+        locked.Free();
+
+        // Drops: never maxed, never locked, never a second shield or weapon, over many rolls in several states.
+        var drops = FreshRun(this);
+        bool clean = true;
+        for (int round = 0; round < 3; round++)
+        {
+            if (round == 1) { drops.Unlock(Ability.Dash); drops.GrantShield(); drops.TryGrant(RunUpgradeId.IonLance); }
+            if (round == 2) { drops.Unlock(Ability.Overdrive); drops.Unlock(Ability.Nova); for (int i = 0; i < 4; i++) drops.TryGrant(RunUpgradeId.FireRate); }
+            for (int roll = 0; roll < 400; roll++)
+            {
+                var pending = new List<Reward>();
+                if (!UpgradeDrops.TryRoll(drops, pending, roll % 2 == 0, out Reward reward)) continue;
+                if (reward.IsShield) { clean &= !drops.HasShield; continue; }
+                var profile = RunUpgrades.Get(reward.Upgrade);
+                clean &= !drops.IsMaxed(reward.Upgrade);
+                clean &= profile.Requires is not Ability need || drops.IsUnlocked(need);
+                clean &= profile.Equips == null || drops.Weapon == WeaponId.Comet;
+            }
+        }
+        Check(clean, "drops are never maxed, locked, a second weapon or a second shield");
+        var lastLevel = new List<Reward> { new(RunUpgradeId.FireRate) };
+        var fresh = FreshRun(this);
+        for (int i = 0; i < 3; i++) fresh.TryGrant(RunUpgradeId.FireRate);
+        bool noDoubleLast = true;
+        for (int roll = 0; roll < 300; roll++)
+            if (UpgradeDrops.TryRoll(fresh, lastLevel, false, out Reward r) && !r.IsShield && r.Upgrade == RunUpgradeId.FireRate) noDoubleLast = false;
+        Check(noDoubleLast, "a pickup already on the field counts as taken");
+        fresh.Free();
+
+        // Drop cadence: a gap in a fixed window, and only for a player who is fighting.
+        var meter = FreshRun(this);
+        meter.AddDropProgress(100f);
+        Check(!meter.DropDue, "no drop before the first gap has passed");
+        meter._Process(Balance.DropGapMax + 1f);
+        Check(meter.DropDue, "a fighting player always gets a drop within the gap window");
+        meter.SpendDrop();
+        meter._Process(Balance.DropGapMax * Balance.DropGapGrowthCap + 1f);
+        Check(!meter.DropDue, "a player who stops fighting earns no drops");
+        meter.AddDropProgress(Balance.DropMinFighting);
+        Check(meter.DropDue, "fighting again makes the waiting drop fall");
+        drops.Free(); meter.Free();
+    }
+
+    private async Task ArenaChecks(GameManager game, Player player)
+    {
+        Check(Balance.ArenaSize.X >= 2.5f * 1920f && Balance.ArenaSize.Y >= 2.5f * 1080f, "the world is several screens across");
+        var camera = game.GetNode<GameCamera>("GameCamera");
+        player.GlobalPosition = Arena.Playable.Position;
+        for (int i = 0; i < 90; i++) camera._Process(0.05);
+        Check(Arena.World.Encloses(Arena.View), "camera never shows past the arena edge");
+        player.GlobalPosition = Arena.Centre;
+        for (int i = 0; i < 90; i++) camera._Process(0.05);
+        Check(Arena.View.GetCenter().DistanceTo(player.GlobalPosition) < Balance.CameraDeadZone + Balance.CameraAimLead + 2f, "camera follows the planet");
+        player.GlobalPosition = new Vector2(-500, -500);
+        Invoke(player, "StayInArena");
+        Check(Arena.Playable.HasPoint(player.GlobalPosition), "the planet cannot leave the arena");
+
+        bool safeSpawns = true, offscreen = true;
+        foreach (Vector2 from in new[] { Arena.Centre, Arena.Playable.Position + new Vector2(80, 80), Arena.Playable.End - new Vector2(80, 80) })
+        {
+            player.GlobalPosition = from;
+            for (int i = 0; i < 90; i++) camera._Process(0.05);
+            for (int i = 0; i < 150; i++)
+            {
+                if (!Arena.TryFindSpawnPoint(from, out Vector2 at)) { safeSpawns = false; continue; }
+                safeSpawns &= Arena.Playable.HasPoint(at) && at.DistanceTo(from) >= Balance.SpawnMinDistance * 0.85f;
+                if (from == Arena.Centre) offscreen &= !Arena.View.HasPoint(at);
+            }
+        }
+        Check(safeSpawns, "enemies always enter inside the arena and far from the planet, even in corners");
+        Check(offscreen, "in open space, enemies enter from off screen");
+        player.GlobalPosition = Arena.Centre;
+        for (int i = 0; i < 90; i++) camera._Process(0.05);
+        await Frames();
+    }
+
+    private async Task Dash(GameManager game, Player player)
+    {
+        player.Invulnerable = false;
+        player.SetPhysicsProcess(false);
+        game.Run.Unlock(Ability.Dash);
+        player.GlobalPosition = Arena.Centre;
+        player.Velocity = Vector2.Zero;
+        var line = new List<Body>();
+        for (int i = 1; i <= 5; i++) line.Add(Drifter(game, player.GlobalPosition + Vector2.Right * 62f * i));
+        await PhysicsFrames(2);
+
+        Input.ActionPress("right");
+        Invoke(player.Abilities, "StartDash");
+        Input.ActionRelease("right");
+        int frames = 0;
+        while (player.IsDashing && frames++ < 60) player._PhysicsProcess(1.0 / 60.0);
+        bool allGone = line.TrueForAll(b => !IsInstanceValid(b) || b.IsDestroyed);
+        Check(allGone, "a dash through five enemies destroys all five");
+        Check(!IsDead(player), "the planet cannot die during a valid dash");
+        Check(player.IsBlinking, "a dash ends in a blinking grace period");
+
+        // The same test at a quarter of the frame rate: the sweep must still see everything.
+        await PhysicsFrames(2);
+        player.GlobalPosition = Arena.Centre + new Vector2(0, 400);
+        for (int i = 0; i < 200; i++) player.Abilities.Update(0.05);
+        line.Clear();
+        for (int i = 1; i <= 5; i++) line.Add(Drifter(game, player.GlobalPosition + Vector2.Right * 62f * i));
+        await PhysicsFrames(2);
+        Input.ActionPress("right");
+        Invoke(player.Abilities, "StartDash");
+        Input.ActionRelease("right");
+        frames = 0;
+        while (player.IsDashing && frames++ < 60) player._PhysicsProcess(1.0 / 15.0);
+        Check(line.TrueForAll(b => !IsInstanceValid(b) || b.IsDestroyed) && !IsDead(player), "dash kills are frame-rate safe");
+
+        var survivor = Drifter(game, player.GlobalPosition);
+        await PhysicsFrames(2);
+        player._PhysicsProcess(1.0 / 60.0);
+        Check(!IsDead(player) && IsInstanceValid(survivor) && !survivor.IsDestroyed, "grace protects, but does not destroy what it touches");
+        for (int i = 0; i < 60 && player.IsBlinking; i++) player._PhysicsProcess(1.0 / 60.0);
+        player._PhysicsProcess(1.0 / 60.0);
+        Check(IsDead(player), "staying inside an enemy after the blink ends is lethal");
+    }
+
     public override async void _Ready()
     {
         if (!OS.GetUserDataDir().Contains("Grinfinity-QA")) { GD.PushError("QA requires an isolated Grinfinity-QA project."); GetTree().Quit(2); return; }
         ProcessMode = ProcessModeEnum.Always;
         try
         {
-            foreach (string file in new[] { "highscore.cfg", "leaderboard.cfg", "profile.cfg" })
-                foreach (string suffix in new[] { "", ".bak" })
-                    if (FileAccess.FileExists("user://" + file + suffix)) DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath("user://" + file + suffix));
-            Check(Leaderboard.Sanitise(" \t\u0001\u202e ") == "PLAYER", "nonprinting names fall back safely");
-            Check(Leaderboard.Submit("bad", -1, float.NaN, -1) == -1, "invalid leaderboard submission rejected");
-            Check(Leaderboard.Sanitise("A\ud800B").Length > 0, "malformed Unicode names cannot crash results");
-            Check(Leaderboard.Submit("FIRST", 500, 10, 2) == 1 && Leaderboard.Submit("SECOND", 500, 12, 3) == 2, "tied scores retain arrival order");
-            typeof(Leaderboard).GetField("isLoaded", BindingFlags.NonPublic | BindingFlags.Static)!.SetValue(null, false);
-            ((System.Collections.Generic.List<Leaderboard.Entry>)typeof(Leaderboard).GetField("entries", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-            Check(Leaderboard.Entries.Count == 2 && Leaderboard.Entries[0].Name == "FIRST", "leaderboard survives reload without changing ties");
-            for (int i = 0; i < 12; i++) Leaderboard.Submit("TEST", 10 + i, 1, 1);
-            Check(Leaderboard.Entries.Count == 10 && !Leaderboard.WouldPlace(0), "leaderboard stays bounded at ten entries");
-            var cfg = new ConfigFile(); cfg.SetValue("test", "wrong", "not a number"); cfg.SetValue("test", "nan", double.NaN);
-            Check(SaveStore.Value(cfg, "test", "wrong", 7).AsInt32() == 7 && SaveStore.Value(cfg, "test", "nan", 7).AsInt32() == 7, "invalid saved values use safe defaults");
-            var settings = GameSettings.Instance;
-            float volume = settings.MasterVolume;
-            settings.SetMasterVolume(0.35f); settings.SaveSettings(); settings.SetMasterVolume(0.9f);
-            Invoke(settings, "LoadSettings");
-            Check(Mathf.IsEqualApprox(settings.MasterVolume, 0.35f), "settings survive a save and reload");
-            settings.SetMasterVolume(volume); settings.SaveSettings();
-            int before = ScoreManager.BestScore;
-            ScoreManager.SaveRun(float.NaN, 1, 1, int.MaxValue);
-            Check(ScoreManager.BestScore == before && float.IsFinite(ScoreManager.BestTime), "invalid runs cannot poison records");
-            ScoreManager.SaveRun(10, 1, 1, 100);
-            ScoreManager.SaveRun(20, 2, 2, 200);
-            Check(FileAccess.FileExists("user://highscore.cfg.bak"), "saving retains a recoverable previous record");
-            DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath("user://highscore.cfg"));
-            typeof(ScoreManager).GetField("isLoaded", BindingFlags.NonPublic | BindingFlags.Static)!.SetValue(null, false);
-            Check(ScoreManager.BestScore == 100, "missing primary save recovers the backup");
-            bool cleanUpgrades=true;
-            foreach(var upgrade in RunUpgrades.All) if(upgrade.Id is RunUpgradeId.WiderPull or RunUpgradeId.RichDebris or RunUpgradeId.HungryDash or RunUpgradeId.SlowField)cleanUpgrades=false;
-            Check(cleanUpgrades,"removed utility upgrades are absent from the live catalog");
-            bool cleanDrops=true;for(int i=0;i<300;i++)if(PowerUps.Roll() is PowerUpKind.Freeze or PowerUpKind.Magnet)cleanDrops=false;
-            Check(cleanDrops,"removed freeze and magnet pickups never drop");
-            var state = new RunState(); AddChild(state); state.SetProcess(false);
-            Check(state.TryBuy(RunUpgradeId.FireRate), "earned upgrade choices require no currency");
-            Check(state.HasShield, "every fresh orbit has one forgiving shield");
-            state.GrantPowerUp(PowerUpKind.Freeze);
-            state.GrantPowerUp(PowerUpKind.Magnet);
-            state.GrantPowerUp(PowerUpKind.Damage);
-            Check(state.Frozen && state.Magnetised && state.Overcharged, "temporary pickups activate together");
-            Check(RunUpgrades.Get((RunUpgradeId)13) != null, "run has an additive multishot boost");
-            state._Process(1000);
-            Check(!state.Frozen && !state.Magnetised && !state.Overcharged, "temporary pickups expire cleanly");
-            Check(!state.TryBuy(RunUpgradeId.QuickerDash), "ability upgrades require their ability");
-            state.GrantWaveMilestones(1);
-            Check(state.HasDash&&!state.HasRapidFire&&!state.HasNova,"wave one unlocks only dash");
-            state.GrantWaveMilestones(3);
-            Check(state.HasRapidFire&&!state.HasNova,"wave three unlocks rapid fire before nova");
-            state.GrantWaveMilestones(5);
-            Check(state.HasNova,"wave five unlocks nova before splitters arrive");
-            int earned=UpgradeCount(state);state.GrantWaveMilestones(5);
-            Check(UpgradeCount(state)==earned,"milestone rewards are idempotent");
-
-            state.AddMass(float.NaN);
-            Check(float.IsFinite(state.Mass), "nonfinite mass rejected");
-            var weaponUpgrade = RunUpgrades.Get((RunUpgradeId)11);
-            Check(weaponUpgrade != null, "existing debris cannon is reachable through run progression");
-            if (weaponUpgrade != null)
-            {
-                state.TryBuy(weaponUpgrade.Id);
-                Check((WeaponId)(state.GetType().GetProperty("Weapon")?.GetValue(state) ?? WeaponId.Comet) == WeaponId.DebrisCannon, "weapon purchase equips the existing weapon");
-            }
-            state.Free();
+            Persistence();
+            RunRules();
 
             var game = GD.Load<PackedScene>("res://scenes/game.tscn").Instantiate<GameManager>();
             AddChild(game); await Frames();
             var player = game.GetNode<Player>("player"); player.Invulnerable = true;
-            Check(player.FireInterval(false)<=.181f,"starting weapon fires reliably without a spread upgrade");
-            var offerPrompt=game.GetNode<UpgradePrompt>("UI/UpgradePrompt");
-            var clearedField=typeof(UpgradePrompt).GetField("clearedWave",BindingFlags.NonPublic|BindingFlags.Instance)!;
-            var offersField=typeof(UpgradePrompt).GetField("offer",BindingFlags.NonPublic|BindingFlags.Instance)!;
-            bool noEarlySpread=true;
-            for(int roll=0;roll<30;roll++)
-            {
-                clearedField.SetValue(offerPrompt,1);Invoke(offerPrompt,"RollOffer");
-                noEarlySpread &= !((System.Collections.Generic.List<RunUpgradeId>)offersField.GetValue(offerPrompt)!).Contains(RunUpgradeId.FanShot);
-            }
-            Check(noEarlySpread,"spread shot never appears in the opening wave choices");
-            var runField=typeof(UpgradePrompt).GetField("run",BindingFlags.NonPublic|BindingFlags.Instance)!;
-            var focused=new RunState();AddChild(focused);focused.SetProcess(false);focused.GrantWaveMilestones(5);
-            focused.TryBuy(RunUpgradeId.FireRate);focused.TryBuy(RunUpgradeId.FireRate);
-            focused.TryBuy(RunUpgradeId.QuickerDash);focused.TryBuy(RunUpgradeId.QuickerDash);focused.TryBuy(RunUpgradeId.Piercing);
-            runField.SetValue(offerPrompt,focused);clearedField.SetValue(offerPrompt,6);
-            bool standardChoice=true,oneWeapon=true;
-            for(int roll=0;roll<40;roll++)
-            {
-                Invoke(offerPrompt,"RollOffer");var choices=(System.Collections.Generic.List<RunUpgradeId>)offersField.GetValue(offerPrompt)!;
-                standardChoice &= choices.Contains(RunUpgradeId.BiggerNova);
-                oneWeapon &= choices.FindAll(id=>RunUpgrades.Get(id).Equips!=null).Count<=1;
-            }
-            Check(standardChoice,"offers preserve an eligible standard upgrade instead of forcing spread or weapon swaps");
-            Check(oneWeapon,"a choice screen contains at most one weapon replacement");
-            runField.SetValue(offerPrompt,game.Run);clearedField.SetValue(offerPrompt,1);focused.Free();
-            var pacing=game.GetNode<BodySpawner>("BodySpawner");float initialSpeed=BodySpawner.CurrentSpeed;pacing._Process(120);
-            Check(Mathf.IsEqualApprox(initialSpeed,BodySpawner.CurrentSpeed),"taking longer in one wave does not increase enemy speed");
-            var waveProperty=typeof(BodySpawner).GetProperty("WaveNumber")!;
-            float previousSpeed=0;bool boundedCurve=true;
-            for(int wave=1;wave<=50;wave++)
-            {
-                waveProperty.SetValue(pacing,wave);pacing._Process(0);
-                boundedCurve &= BodySpawner.CurrentSpeed>=previousSpeed && BodySpawner.CurrentSpeed<=pacing.MaxSpeed+.01f;
-                previousSpeed=BodySpawner.CurrentSpeed;
-            }
-            Check(boundedCurve,"wave difficulty rises smoothly and remains capped in long runs");
-            waveProperty.SetValue(pacing,6);pacing._Process(0);
-            Check(!game.BossDue,"first boss cannot interrupt the sixth wave");
-            waveProperty.SetValue(pacing,7);pacing._Process(0);
-            Check(game.BossDue,"first boss becomes eligible after six clears");
-            game.NextBossIndex=1;
-            Check(!game.BossDue,"second boss cannot immediately follow the first");
-            waveProperty.SetValue(pacing,13);pacing._Process(0);
-            Check(game.BossDue,"second boss follows twelve clears");
-            game.NextBossIndex=0;waveProperty.SetValue(pacing,1);pacing._Process(0);
-            player.Rotation=1.2f;player.GetNode<PlanetVisual>("PlanetVisual")._Process(.016);
-            Check(Mathf.Abs(player.GetNode<Sprite2D>("Sprite2D").Rotation)<.2f,"planet artwork rotates with its aiming parent");
-
-            Check(game.GetNode("UI/Hud").FindChild("LiveScore",true,false) != null, "live score is visible during gameplay");
-            Check(game.GetNode("UI/Hud").FindChild("RunInfo",true,false) != null, "wave and ability hint have a live readout");
-            Check(game.GetNode("UI/Hud").FindChild("HowTo",true,false) != null, "first orbit explains objective and controls");
-            Check(game.GetNode("PauseLayer/PauseMenu").FindChild("Restart",true,false) != null, "pause offers a restart");
-            Check(game.GetNode("PauseLayer/PauseMenu").FindChild("Options",true,false) != null, "pause offers audio and accessibility options");
             game.GetNode<BodySpawner>("BodySpawner").SetProcess(false);
+            game.GetNode<HazardDirector>("HazardDirector").SetProcess(false);
+            game.Run.SetProcess(false);
+
+            Check(game.GetNode("UI/Hud").FindChild("RunInfo", true, false) is Label, "survival time is on the HUD");
+            Check(game.GetNode("UI/Hud").FindChild("LiveScore", true, false) != null, "score is on the HUD");
+            bool noWave = true;
+            foreach (Node node in game.GetNode("UI/Hud").FindChildren("*", "Label", true, false)) noWave &= !((Label)node).Text.StartsWith("WAVE");
+            Check(noWave, "no wave number on the HUD");
+            Check(game.GetNodeOrNull("UI/UpgradePrompt") == null, "no upgrade menu exists");
+            Check(game.GetNode("PauseLayer/PauseMenu").FindChild("Restart", true, false) != null, "pause offers a restart");
+
+            await ArenaChecks(game, player);
+
+            Check(player.FireInterval(false) <= .181f, "starting weapon fires reliably");
+            game.Run.Unlock(Ability.Overdrive);
+            Check(player.FireInterval(true) < player.FireInterval(false) * 0.5f, "overdrive fires far faster");
             int shots = GetTree().GetNodeCountInGroup("player_bullets");
-            game.Run.TryBuy(RunUpgradeId.FanShot);
+            game.Run.TryGrant(RunUpgradeId.SpreadShot);
             player.ShootBullet(player.GlobalPosition + Vector2.Right * 300);
-            Check(GetTree().GetNodeCountInGroup("player_bullets") - shots == 2, "first spread level adds one projectile instead of tripling firepower");
-            bool rankHeld=true;
-            for(int roll=0;roll<30;roll++)
-            {
-                clearedField.SetValue(offerPrompt,9);Invoke(offerPrompt,"RollOffer");
-                rankHeld &= !((System.Collections.Generic.List<RunUpgradeId>)offersField.GetValue(offerPrompt)!).Contains(RunUpgradeId.FanShot);
-            }
-            Check(rankHeld,"second spread level remains locked until wave ten clear");
-            clearedField.SetValue(offerPrompt,10);Invoke(offerPrompt,"RollOffer");
-            Check(((System.Collections.Generic.List<RunUpgradeId>)offersField.GetValue(offerPrompt)!).Contains(RunUpgradeId.FanShot),"second spread level is offered at its wave ten milestone");
-            game.Run.TryBuy(RunUpgradeId.FanShot);
-            shots=GetTree().GetNodeCountInGroup("player_bullets");
-            player.ShootBullet(player.GlobalPosition+Vector2.Right*300);
-            Check(GetTree().GetNodeCountInGroup("player_bullets")-shots==3,"maximum spread adds two projectiles with no five-shot jump");
-            Check(!game.Run.TryBuy(RunUpgradeId.FanShot), "multishot has a bounded maximum");
+            await Frames(1);
+            Check(GetTree().GetNodeCountInGroup("player_bullets") - shots == 2, "first spread level adds one projectile");
+            var bullets = GetTree().GetNodesInGroup("player_bullets");
+            foreach (Node node in bullets) node.QueueFree();
+            await Frames(1);
+            player.ShootBullet(player.GlobalPosition + Vector2.Right * 300, overdriven: true);
+            await Frames(1);
+            bool empowered = true;
+            foreach (Node node in GetTree().GetNodesInGroup("player_bullets")) empowered &= ((Bullet)node).Damage == 2 && ((Bullet)node).Pierce >= 1 && ((Bullet)node).Overdriven;
+            Check(empowered, "overdrive empowers the current build's own shots");
+            foreach (Node node in GetTree().GetNodesInGroup("player_bullets")) node.QueueFree();
+
             Input.ActionPress("right"); Input.ActionPress("down");
             Invoke(player, "HandleMovement", 1.0);
-            Check(player.Velocity.Length() <= player.CurrentMoveSpeed + 0.01f, "diagonal movement respects speed limit");
+            Check(player.Velocity.Length() <= player.MoveSpeed + 0.01f, "diagonal movement respects speed limit");
             Input.ActionRelease("right"); Input.ActionRelease("down");
-            game.Run._Process(1000);
 
-            player.CreateDashEffect();
-            var prompt = game.GetNode<UpgradePrompt>("UI/UpgradePrompt");
-            Invoke(prompt, "OnWaveCleared", 1);
-            Check(game.Run.HasDash,"first wave guarantees dash without spending the upgrade choice");
-            Check(GetTree().Paused, "boost choice freezes the simulation for reading");
-            var openingOffer=(System.Collections.Generic.List<RunUpgradeId>)typeof(UpgradePrompt).GetField("offer",BindingFlags.NonPublic|BindingFlags.Instance)!.GetValue(prompt)!;
-            Check(openingOffer.Count>0&&openingOffer.TrueForAll(id=>!RunUpgrades.Get(id).IsUnlock&&RunUpgrades.Get(id).MinWave<=1),"opening choices cannot roll late weapons or ability unlocks");
-
-            game.Announce("SHIELD", "test pickup", Colors.White);
-            Check(!game.GetNode<Control>("UI/Announcer").Visible, "pickup announcement cannot cover boost choices");
-            Invoke(game, "TogglePause");
-            Check(!game.GetNode<CanvasLayer>("UI").Visible, "pause hides underlying upgrade and HUD layers");
-            Invoke(game, "TogglePause");
-            Check(GetTree().Paused && prompt.Visible, "resume restores the frozen boost choice");
-            Check(GetViewport().GuiGetFocusOwner()?.IsVisibleInTree()==true,"resume restores a visible upgrade focus target");
-            Invoke(prompt, "Buy", 0);
-            Check(!GetTree().Paused, "choosing a boost resumes gameplay");
-            int chosen = UpgradeCount(game.Run);
-            Invoke(prompt, "Buy", 1);
-            Check(UpgradeCount(game.Run) == chosen, "rapid clicks cannot choose twice in one break");
-            Invoke(prompt,"OnWaveCleared",2);
-            var skipUpgrade=prompt.FindChild("SkipUpgrade",true,false) as Button;
-            Check(skipUpgrade!=null,"player can keep the current build without accepting an unwanted upgrade");
-            if(skipUpgrade!=null)
-            {
-                skipUpgrade.EmitSignal(BaseButton.SignalName.Pressed);
-                Check(!GetTree().Paused&&UpgradeCount(game.Run)==chosen,"skipping an upgrade resumes play without changing the build");
-            }
-            else Invoke(prompt,"Buy",0);
             game.Notification((int)MainLoop.NotificationApplicationFocusOut);
             Check(game.IsPaused && GetTree().Paused, "focus loss pauses gameplay");
             if (game.IsPaused) Invoke(game, "TogglePause");
-            player.GlobalPosition = new Vector2(960, 238);
-            Invoke(game, "SpawnBoss", GD.Load<PackedScene>("res://scenes/boss_coil.tscn"), "THE COIL");
+
+            // Bosses: warned, placed away from the planet, hurt but never ended by one Nova or Dash.
+            player.GlobalPosition = Arena.Centre;
+            game.NextBossAt = 0f;
+            game.Run.SetProcess(true);
+            game._Process(0.01);
+            Check(game.BossBusy && !game.BossActive, "a boss is announced before it arrives");
+            for (int i = 0; i < 80 && !game.BossActive; i++) game._Process(0.05);
             var boss = GetTree().GetFirstNodeInGroup("bosses") as Boss;
-            Check(boss != null && boss.GlobalPosition.DistanceTo(player.GlobalPosition) >= 450f, "boss arrival cannot overlap the player");
-            boss?.Free();
-            game.Run.SetProcess(false);
-            game.SetProcess(false);
-            foreach (var encounter in new[] { ("boss_coil", 0, 5000), ("boss_brood", 1, 5000), ("boss_black_hole", 2, 12000) })
+            Check(boss != null && boss.GlobalPosition.DistanceTo(player.GlobalPosition) >= 400f, "boss arrives well away from the planet");
+            Check(game.GetNode<BodySpawner>("BodySpawner").Support == 0f, "the first Coil is fought alone");
+            if (boss != null)
             {
-                game.NextBossIndex = encounter.Item2;
-                Invoke(game, "SpawnBoss", GD.Load<PackedScene>($"res://scenes/{encounter.Item1}.tscn"), encounter.Item1);
-                boss = GetTree().GetFirstNodeInGroup("bosses") as Boss;
-                int prior = game.Run.Score;
-                Check(boss.TakeDamage(9999) && !boss.TakeDamage(9999), encounter.Item1 + " defeats once");
-                Check(game.Run.Score - prior == encounter.Item3, encounter.Item1 + " pays exactly one bonus");
-                await Frames();
+                boss.SetPhysicsProcess(false);
+                boss.TakeShareOfHealth(Balance.NovaBossDamage);
+                Check(boss.HealthFraction > 0.85f && boss.HealthFraction < 0.95f, "nova takes a tenth of a boss, no more");
+                float beforeDash = boss.HealthFraction;
+                game.Run.Unlock(Ability.Dash);
+                player.GlobalPosition = boss.GlobalPosition - new Vector2(200, 0);
+                for (int i = 0; i < 200; i++) player.Abilities.Update(0.05);
+                Input.ActionPress("right");
+                Invoke(player.Abilities, "StartDash");
+                Input.ActionRelease("right");
+                for (int i = 0; i < 30 && player.IsDashing; i++) player.Abilities.Sweep(player.GlobalPosition, boss.GlobalPosition);
+                float lost = beforeDash - boss.HealthFraction;
+                Check(lost > 0.02f && lost < 0.05f, "a dash hits a boss exactly once");
+
+                int pickups = GetTree().GetNodeCountInGroup("pickups");
+                boss.TakeDamage(99999);
+                await Frames(3);
+                Check(!IsInstanceValid(boss) || boss.IsQueuedForDeletion(), "boss defeats once");
+                Check(GetTree().GetNodeCountInGroup("pickups") - pickups == Balance.BossRewardCount, "a boss drops three rewards into the arena");
+                Check(game.NextBossAt > game.Run.SurvivalTime, "the next boss is scheduled, not immediate");
             }
-            game.Run.GrantPowerUp(PowerUpKind.Shield);
+            foreach (Node node in GetTree().GetNodesInGroup("pickups")) node.QueueFree();
+
+            game.NextBossIndex = 3;
+            Check(game.BossCycle == 2 && Balance.BossSupport(2) > 0f, "the second time round, enemies join the boss fight");
+            Check(Balance.BossSupport(4) > Balance.BossSupport(2), "boss support keeps growing each cycle");
+            Check(BodySpawner.SpeedAt(3600f) > BodySpawner.SpeedAt(1800f) || BodySpawner.SpeedAt(3600f) >= Balance.EnemySpeedCeiling, "pressure keeps rising after half an hour");
+            Check(GameManager.ScheduledBossTime(9) > GameManager.ScheduledBossTime(8), "bosses keep coming after the Black Hole");
+            game.Run.SetProcess(false);
+            foreach (Node node in GetTree().GetNodesInGroup("bosses")) node.Free();
+
+            for (int i = 0; i < 20; i++) player.Abilities.Update(0.1);
+            game.Run.GrantShield();
             player.Invulnerable = false;
             player.KillByBlast("QA"); player.KillByBlast("QA");
-            Check(!(bool)player.GetType().GetField("isDead", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(player)!, "shield grants recovery against simultaneous hits");
-            player.SetPhysicsProcess(false); player.Velocity = Vector2.Zero;
-            var contact = GD.Load<PackedScene>("res://scenes/body.tscn").Instantiate<Body>();
-            contact.Configure(BodyKind.Drifter); contact.GlobalPosition = player.GlobalPosition;
-            game.AddEntity(contact); contact.SetPhysicsProcess(false);
-            Engine.TimeScale = 1; await Wait(0.1);
-            Check(player.GetNode<Area2D>("HitBox").GetOverlappingBodies().Count > 0, "contact fixture overlaps the player");
-            player._PhysicsProcess(1.1);
-            Check((bool)player.GetType().GetField("isDead", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(player)!, "remaining inside danger after shield recovery is lethal");
+            Check(!IsDead(player) && !game.Run.HasShield, "a shield blocks one lethal hit and breaks");
+
+            await Dash(game, player);
+
             game.Free(); Engine.TimeScale = 1; GetTree().Paused = false;
+            Input.ActionRelease("right");
             await Frames();
             await Journey();
             var music = GetNode<MusicManager>("/root/MusicManager");

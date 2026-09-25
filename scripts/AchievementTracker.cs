@@ -54,8 +54,13 @@ public partial class AchievementTracker : Node
 		if (run.Streak >= 25)
 			Unlock(AchievementId.Streak25);
 
-		if (run.MassNormalised >= 0.999f)
+		// The ids predate the endless run: MaxMass is now a complete build, and
+		// MinMassFinish a ten-minute run. Saved unlocks carry over as they are.
+		if (run.BuildFraction >= 0.999f)
 			Unlock(AchievementId.MaxMass);
+
+		if (run.SurvivalTime >= 600f)
+			Unlock(AchievementId.MinMassFinish);
 	}
 
 	private void Unlock(AchievementId id)
@@ -64,6 +69,6 @@ public partial class AchievementTracker : Node
 			return;
 
 		Achievements.Profile profile = Achievements.Get(id);
-		manager.Announce(profile.Name, profile.Description, new Color(1.0f, 0.72f, 0.32f));
+		manager.Toast($"ACHIEVEMENT  •  {profile.Name}", new Color(1.0f, 0.72f, 0.32f));
 	}
 }

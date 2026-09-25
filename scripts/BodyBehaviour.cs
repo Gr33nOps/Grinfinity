@@ -198,7 +198,8 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 /// </summary>
 public sealed class FlareBehaviour : BodyBehaviour
 {
-	private const float BlastRadius = 260.0f;
+	/// <summary>Shown around every Flare by <see cref="BodyMark"/>, so the danger zone is never a guess.</summary>
+	public const float BlastRadius = 260.0f;
 
 	public override void Apply(Body body)
 	{

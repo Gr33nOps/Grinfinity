@@ -44,7 +44,10 @@ public static class ArcadeSkin
         if (primary)
         {
             button.AddThemeStyleboxOverride("normal", Box(Orange, new Color("ffcd85"),18,3));
-            button.AddThemeColorOverride("font_color", Ink);
+            // Ink in every state: cream on orange is too faint to read, and the
+            // primary button is usually the focused one.
+            foreach (string state in new[] { "font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color" })
+                button.AddThemeColorOverride(state, Ink);
         }
         button.Pressed += action;
         return button;

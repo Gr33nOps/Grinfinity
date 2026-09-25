@@ -114,7 +114,7 @@ custom_minimum_size = Vector2(560, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 36
-text = "Rapid Fire: Hold To Use"
+text = "Overdrive: Hold To Use"
 
 [node name="Check" type="Button" parent="Layout/RapidFireRow"]
 custom_minimum_size = Vector2(180, 56)
@@ -139,7 +139,7 @@ custom_minimum_size = Vector2(560, 0)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 36
-text = "Assist Mode: Slower Bodies"
+text = "Assist Mode: Slower Enemies"
 
 [node name="Check" type="Button" parent="Layout/AssistRow"]
 custom_minimum_size = Vector2(180, 56)

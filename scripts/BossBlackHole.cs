@@ -18,7 +18,7 @@ public partial class BossBlackHole : Boss
 		BossName = "THE BLACK HOLE";
 		ArrivalLine = TranslationServer.Translate("BOSS_BlackHole_ARRIVAL");
 		BossColor = new Color(0.62f, 0.32f, 0.82f);
-		MaxHealth = 300;
+		MaxHealth = 1000;
 	}
 
 	[ExportGroup("Pull")]
@@ -47,7 +47,7 @@ public partial class BossBlackHole : Boss
 	protected override void OnBossReady()
 	{
 		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
-		world = GameManager.Of(this)?.GetNodeOrNull<Player>("player");
+		world = World;
 		flingTimer = 1.6f;
 		PickDriftTarget();
 		QueueRedraw();
@@ -78,19 +78,16 @@ public partial class BossBlackHole : Boss
         Windup=Mathf.Clamp(1-flingTimer/.45f,0,1);
 		if (flingTimer <= 0f)
 		{
-			flingTimer = Mathf.Lerp(MinFlingInterval, FlingInterval, HealthFraction);
+			flingTimer = Mathf.Lerp(MinFlingInterval, FlingInterval, HealthFraction) * CycleTempo;
 			FlingAtPlayer();
 		}
 	}
 
 	private void PickDriftTarget()
 	{
-		Vector2 bounds = GetViewportRect().Size;
-		// Stays in the upper-middle of the arena rather than the whole viewport —
-		// this is the anchor the fight orbits, not something that chases into a corner.
-		driftTarget = new Vector2(
-			RunState.Rng.RandfRange(bounds.X * 0.3f, bounds.X * 0.7f),
-			RunState.Rng.RandfRange(bounds.Y * 0.25f, bounds.Y * 0.6f));
+		// Slow, and always somewhere near: the anchor the fight orbits, never
+		// something that can simply be walked away from.
+		driftTarget = PointNearPlayer(260f, 520f);
 	}
 
 	private float PullAt(float distance, float strength) => strength * (PullRadius * 0.35f) / (distance + PullRadius * 0.35f);

@@ -6,10 +6,8 @@ using Godot;
 /// because a leaderboard needs to keep the ninth-best run even after a tenth
 /// arrives to bump someone off it — one scalar can't do that.
 ///
-/// One mode means one table. The per-entry weapon, world and date that v2
-/// carried existed to answer "how did this run happen" across a roster of
-/// different run shapes; with one shape there is nothing to disambiguate, so
-/// an entry is a name and a score, plus the time and kills that earned it.
+/// One mode means one table, ranked by how long the run survived. Score is
+/// kept alongside as the tie-breaker and a second number to be proud of.
 /// </summary>
 public static class Leaderboard
 {
@@ -49,15 +47,18 @@ public static class Leaderboard
 	}
 
 	/// <summary>
-	/// Would this score place? Asked before the name prompt, so a run that
-	/// missed the board is never interrupted to ask who played it.
+	/// Would a run this long place? Survival time is the record; score only
+	/// breaks ties between runs that lasted exactly as long.
 	/// </summary>
-	public static bool WouldPlace(int score)
+	public static bool WouldPlace(float survivalTime, int score = 0)
 	{
 		EnsureLoaded();
-		if (score < 0) return false;
-		return entries.Count < Capacity || score > entries[^1].Score;
+		if (survivalTime < 0f || !float.IsFinite(survivalTime)) return false;
+		return entries.Count < Capacity || Beats(survivalTime, score, entries[^1]);
 	}
+
+	private static bool Beats(float time, int score, Entry other) =>
+		time > other.SurvivalTime || (Mathf.IsEqualApprox(time, other.SurvivalTime) && score > other.Score);
 
 	/// <summary>
 	/// Records a finished orbit. Returns the 1-based rank it landed at, or -1
@@ -70,7 +71,7 @@ public static class Leaderboard
 
 		var entry = new Entry(Sanitise(name), score, survivalTime, kills);
 
-		int insertAt = entries.FindIndex(e => score > e.Score);
+		int insertAt = entries.FindIndex(e => Beats(survivalTime, score, e));
 		if (insertAt < 0)
 		{
 			if (entries.Count >= Capacity)
@@ -176,11 +177,12 @@ public static class Leaderboard
 			if (Valid(score, time, kills)) entries.Add(new Entry(Sanitise(name), score, time, kills));
 		}
 
-		// Stable insertion sort preserves arrival order for tied scores after reload.
+		// Stable insertion sort, longest run first, preserving arrival order for
+		// ties after reload. Boards saved when score led are re-ranked by time.
 		for (int i = 1; i < entries.Count; i++)
 		{
 			Entry entry = entries[i]; int j = i - 1;
-			while (j >= 0 && entries[j].Score < entry.Score) { entries[j + 1] = entries[j]; j--; }
+			while (j >= 0 && Beats(entry.SurvivalTime, entry.Score, entries[j])) { entries[j + 1] = entries[j]; j--; }
 			entries[j + 1] = entry;
 		}
 	}

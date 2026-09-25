@@ -105,7 +105,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 38
-text = "ORBITS"
+text = "RUNS PLAYED"
 
 [node name="Value" type="Label" parent="Layout/Rows/Orbits"]
 layout_mode = 2
@@ -162,7 +162,7 @@ size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 38
-text = "HEAVIEST MASS"
+text = "FULLEST BUILD"
 
 [node name="Value" type="Label" parent="Layout/Rows/Heaviestmass"]
 layout_mode = 2

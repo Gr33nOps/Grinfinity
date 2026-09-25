@@ -1,61 +1,41 @@
 using Godot;
 
+/// <summary>
+/// The planet. It moves, aims, shoots and dies in one hit — unless a shield takes
+/// it, or it is dashing, or it is still blinking after a dash or a broken shield.
+/// </summary>
 public partial class Player : CharacterBody2D
 {
-	/// <summary>Raised on every real contact attempt — shield-blocked or lethal.</summary>
+	/// <summary>Raised on every real hit — shield-blocked or lethal.</summary>
 	[Signal] public delegate void HitTakenEventHandler();
 
-	[Export] public float MoveSpeed { get; set; } = 235.0f;
+	[Export] public float MoveSpeed { get; set; } = 250.0f;
 	[Export] public float MoveSmoothing { get; set; } = 14.0f;
-	[Export] public float ScreenBorder { get; set; } = 50.0f;
 	/// <summary>
-	/// Ignores every source of death. Off in play; `tools/dev_capture.tscn` turns
-	/// it on so an unattended run can reach the late bestiary without dying to it.
+	/// Ignores every source of death. Off in play; the playtest tools turn it on
+	/// so an unattended run can reach the late game.
 	/// </summary>
 	[Export] public bool Invulnerable { get; set; } = false;
 	[Export] public PackedScene BulletScene { get; set; }
-	[Export] public PackedScene DeathEffectScene { get; set; }
-
-	[ExportGroup("Abilities")]
-	[Export] public float DashSpeed { get; set; } = 880.0f;
-	[Export] public float DashDuration { get; set; } = 0.16f;
-	[Export] public float DashCooldown { get; set; } = 1.4f;
-	[Export] public float RapidFireDuration { get; set; } = 3.5f;
-	[Export] public float RapidFireCooldown { get; set; } = 7.0f;
 
 	[ExportGroup("Feel")]
 	/// <summary>Screen shake added by a dash. Small — it happens constantly.</summary>
-	[Export] public float DashTrauma { get; set; } = 0.14f;
+	[Export] public float DashTrauma { get; set; } = 0.16f;
 	[Export] public float MuzzleFlashTime { get; set; } = 0.055f;
+	/// <summary>How quickly the blaster swings round to the aim. Higher is snappier.</summary>
+	[Export] public float AimTurnRate { get; set; } = 22.0f;
+	[Export] public float NovaTrauma { get; set; } = 0.95f;
 
-	[ExportGroup("Mass")]
-	// The risk dial. Heavy is slower, bigger and slower to dash — paid for by a
-	// wider pull, a fatter multiplier and moons.
-	/// <summary>Move speed multiplier at full mass.</summary>
-	[Export] public float HeavyMoveScale { get; set; } = 0.74f;
-	/// <summary>Dash cooldown multiplier at full mass.</summary>
-	[Export] public float HeavyDashCooldown { get; set; } = 1.55f;
-	/// <summary>Body scale at full mass. A bigger world is a bigger target.</summary>
-	[Export] public float HeavyBodyScale { get; set; } = 1.32f;
-	/// <summary>Mass spent by a dash.</summary>
-	[Export] public float DashVent { get; set; } = 4.0f;
-
-	/// <summary>How hard Solar Wind shoves the world about.</summary>
+	/// <summary>How hard Solar Wind shoves the planet about.</summary>
 	[Export] public float SolarWindPush { get; set; } = 95.0f;
-
-	[ExportGroup("Nova")]
-	/// <summary>Mass spent by a nova. Deliberately steep — it is the big cash-out.</summary>
-	[Export] public float NovaVent { get; set; } = 35.0f;
-	[Export] public float NovaRadius { get; set; } = 520.0f;
-	[Export] public float NovaTrauma { get; set; } = 0.85f;
 
 	// How far in front of the player the gamepad aim point sits.
 	private const float GamepadAimDistance = 400.0f;
 	private const float StickDeadzoneSq = 0.0625f;
 
-	// Aim assist only considers bodies within this half-angle of the stick's
-	// raw direction (~25 degrees) and this close, then softly pulls toward
-	// whichever one is most aligned — a nudge, not a snap.
+	// Aim assist only considers bodies within this half-angle of the stick's raw
+	// direction (~25 degrees) and this close, then softly pulls toward whichever
+	// one is most aligned — a nudge, not a snap.
 	private const float AimAssistConeCosine = 0.9f;
 	private const float AimAssistRange = 900.0f;
 	private const float AimAssistStrength = 0.35f;
@@ -68,40 +48,41 @@ public partial class Player : CharacterBody2D
 	private Area2D hitBox;
 	private PlayerAbilities abilities;
 	private RunState run;
-	private Vector2 baseScale = Vector2.One;
 	private Vector2 externalPush = Vector2.Zero;
 	private Vector2 lastMousePosition;
 	private Vector2 gamepadAimDirection = Vector2.Right;
 	private bool usingGamepadAim = false;
 	private bool isDead = false;
+	private bool alternateSpread;
 	private float hitRecovery;
 
 	/// <summary>World-space point the player is currently aiming at.</summary>
 	public Vector2 AimPosition { get; private set; }
 
-	/// <summary>Mass as 0..1, or 0 outside a run. Everything mass-scaled reads this.</summary>
-	public float MassNormalised => run?.MassNormalised ?? 0f;
+	public RunState Run => run;
+	public PlayerAbilities Abilities => abilities;
 
-	/// <summary>Move speed after the weight of the world is taken off it.</summary>
-	public float CurrentMoveSpeed => MoveSpeed * Mathf.Lerp(1.0f, HeavyMoveScale, MassNormalised);
-
-	/// <summary>Dash cooldown after mass has lengthened it and upgrades have cut it.</summary>
-	public float CurrentDashCooldown =>
-		DashCooldown * Mathf.Lerp(1.0f, HeavyDashCooldown, MassNormalised) * (run?.DashCooldownScale ?? 1.0f);
+	/// <summary>Blinking and safe: after a dash, or after a shield breaks.</summary>
+	public bool IsBlinking => hitRecovery > 0f || abilities.InGrace;
+	public bool IsDashing => abilities.IsDashing;
+	public bool IsOverdriven => abilities.IsOverdriven;
 
 	/// <summary>
-	/// Dash has to be earned this orbit, and Thrusters Out can close it again
-	/// afterwards. Outside a run — a tool, a test — it stays open.
+	/// An ability is usable once the run has unlocked it. Thrusters Out closes the
+	/// dash for its duration. Outside a run — a tool, a test — everything is open.
 	/// </summary>
-	public bool CanDash => run == null || (run.HasDash && !run.During(ArenaEventId.NoDash));
-
-	/// <summary>Rapid fire has to be earned this orbit.</summary>
-	public bool CanRapidFire => run == null || run.HasRapidFire;
+	public bool CanUse(Ability ability)
+	{
+		if (run == null)
+			return true;
+		if (!run.IsUnlocked(ability))
+			return false;
+		return ability != Ability.Dash || !run.During(ArenaEventId.NoDash);
+	}
 
 	public override void _Ready()
 	{
 		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
-		DeathEffectScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 
 		shootyPart = GetNode<Node2D>("shootyPart");
 		playerSprite = FindPlayerSprite();
@@ -114,7 +95,6 @@ public partial class Player : CharacterBody2D
 		if (muzzleFlash != null)
 			muzzleFlash.Visible = false;
 
-		baseScale = Scale;
 		run = GameManager.Of(this)?.Run;
 
 		hitBox = GetNodeOrNull<Area2D>("HitBox");
@@ -125,13 +105,6 @@ public partial class Player : CharacterBody2D
 
 		lastMousePosition = GetGlobalMousePosition();
 		AimPosition = lastMousePosition;
-		if (run != null) run.EffectsChanged += QueueRedraw;
-	}
-
-
-	public override void _ExitTree()
-	{
-		if (run != null && IsInstanceValid(run)) run.EffectsChanged -= QueueRedraw;
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -139,86 +112,64 @@ public partial class Player : CharacterBody2D
 		if (isDead)
 			return;
 		hitRecovery = Mathf.Max(0f, hitRecovery - (float)delta);
-		if (playerSprite != null)
-			playerSprite.Modulate = new Color(playerSprite.Modulate, hitRecovery > 0f ? 0.55f : 1f);
 
 		AimPosition = ResolveAimPosition();
 		abilities.Update(delta);
-		UpdatePlayer(AimPosition, delta);
-		MoveAndSlide();
-		StayOnScreen();
-		FollowMass(delta);
+		// Turn toward the aim quickly but not instantly, so the blaster sweeps
+		// round the planet instead of snapping. Shots still fly at the exact
+		// aim point; only the look is eased.
+		Vector2 toAim = AimPosition - GlobalPosition;
+		if (toAim.LengthSquared() > 1f)
+			Rotation = Mathf.LerpAngle(Rotation, toAim.Angle(), 1f - Mathf.Exp(-AimTurnRate * (float)delta));
+		HandleMovement(delta);
+		abilities.HandleShooting(AimPosition);
+
+		if (abilities.IsDashing)
+		{
+			// Moved by hand rather than MoveAndSlide, so the dash covers its exact
+			// distance, and swept, so nothing it crosses is missed between frames.
+			Vector2 before = GlobalPosition;
+			GlobalPosition += abilities.TakeDashStep((float)delta);
+			StayInArena();
+			abilities.Sweep(before, GlobalPosition);
+		}
+		else
+		{
+			MoveAndSlide();
+			StayInArena();
+		}
+
 		// BodyEntered does not fire again if protection expires during the same
-		// overlap. Recheck existing contacts so a shield or dash cannot leave
-		// the player permanently safe inside an enemy.
-		if (!Invulnerable && hitRecovery <= 0f && !abilities.IsDashing() && hitBox != null)
+		// overlap. Recheck existing contacts, so staying inside an enemy after
+		// the blink ends is lethal, exactly as touching one would be.
+		if (!Invulnerable && !IsProtected && hitBox != null)
 			foreach (Node2D contact in hitBox.GetOverlappingBodies())
 				OnHitBoxBodyEntered(contact);
 	}
 
-	/// <summary>
-	/// A heavier world is a physically bigger one, and therefore an easier
-	/// target. Chased rather than tweened, because absorbing debris changes mass
-	/// several times a second and competing tweens would stutter.
-	/// </summary>
-	private void FollowMass(double delta)
+	private bool IsProtected => hitRecovery > 0f || abilities.IsProtected;
+
+	/// <summary>Fires the Nova from here. The cooldown is the ability's business, not this.</summary>
+	public void FireNova()
 	{
-		Vector2 target = baseScale * Mathf.Lerp(1.0f, HeavyBodyScale, MassNormalised);
-		Scale = Scale.Lerp(target, 1f - Mathf.Exp(-6f * (float)delta));
-	}
-
-	/// <summary>Spends mass on a dash. Dashing with nothing to vent is still allowed.</summary>
-	public void VentForDash()
-	{
-		run?.Vent(DashVent);
-
-		// Greedy Dash turns the dash into a collection tool, so venting mass to
-		// move can pay for itself if there is debris on the field.
-		if (run == null || !run.Has(RelicId.VampiricDash))
-			return;
-
-		foreach (Node node in GetTree().GetNodesInGroup("debris"))
-		{
-			if (node is Debris mote && IsInstanceValid(mote))
-				mote.Yank();
-		}
-	}
-
-	/// <summary>
-	/// Cashes a large slice of mass in for a radial wipe. This is the choice the
-	/// whole mass system exists to offer: stay heavy and dangerous, or spend it.
-	/// </summary>
-	/// <returns>False if there was not enough mass, and nothing happened.</returns>
-	public bool TryNova()
-	{
-		if (run == null || !run.HasNova || !run.Vent(NovaVent))
-			return false;
-
 		var manager = GameManager.Of(this);
-		float radius = NovaRadius * run.NovaRadiusScale;
-
-		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
-		{
-			if (node is not Body body)
-				continue;
-
-			if (GlobalPosition.DistanceTo(body.GlobalPosition) > radius)
-				continue;
-
-			Body.Remains remains = body.GetRemains();
-			Vector2 outward = (body.GlobalPosition - GlobalPosition).Normalized();
-
-			// The mass is already spent on the blast, so these kills score but
-			// shed nothing — a nova must not refund itself.
-			if (body.TakeDamage(9999, outward))
-				manager?.RegisterKill(remains, body.GlobalPosition, shedDebris: false);
-		}
-
-		manager?.SpawnBlast(GlobalPosition, radius, new Color(1f, 0.86f, 0.5f));
-		manager?.Hitstop(0.12f);
+		manager?.DetonateNova(GlobalPosition, run?.NovaRadius ?? Balance.NovaRadius);
 		manager?.Shake(NovaTrauma);
-		manager?.PlayCue("nova_boom");
-		return true;
+		GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
+	}
+
+	public void OnOverdriveStarted()
+	{
+		var manager = GameManager.Of(this);
+		manager?.PlayCue("overdrive");
+		manager?.Shake(0.35f);
+		manager?.SpawnBlast(GlobalPosition, 260f, PlanetVisual.OverdriveColour);
+		GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
+	}
+
+	public void OnOverdriveEnded()
+	{
+		GameManager.Of(this)?.PlayCue("overdrive_end");
 	}
 
 	/// <summary>
@@ -242,26 +193,27 @@ public partial class Player : CharacterBody2D
 			usingGamepadAim = true;
 		}
 
-		Vector2 mousePosition = GetGlobalMousePosition();
-		if (!mousePosition.IsEqualApprox(lastMousePosition))
+		// Compared in screen space: the camera moving under a still mouse must
+		// not count as the mouse being used.
+		Vector2 mouseScreen = GetViewport().GetMousePosition();
+		if (!mouseScreen.IsEqualApprox(lastMousePosition))
 		{
-			lastMousePosition = mousePosition;
+			lastMousePosition = mouseScreen;
 			usingGamepadAim = false;
 		}
 
 		return usingGamepadAim
 			? GlobalPosition + gamepadAimDirection * GamepadAimDistance
-			: mousePosition;
+			: GetGlobalMousePosition();
 	}
 
 	/// <summary>
 	/// Pulls a raw stick direction toward the nearest body within a narrow cone
-	/// ahead of it, if there is one. Purely a settings-gated convenience for
-	/// gamepad players — mouse aim is already exact and never touches this.
+	/// ahead of it, if there is one. Settings-gated, gamepad only.
 	/// </summary>
 	private Vector2 ApplyAimAssist(Vector2 rawDirection)
 	{
-		Body best = null;
+		Node2D best = null;
 		float bestAlignment = AimAssistConeCosine;
 
 		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
@@ -289,15 +241,8 @@ public partial class Player : CharacterBody2D
 		return rawDirection.Lerp(towardBest, AimAssistStrength).Normalized();
 	}
 
-	private void UpdatePlayer(Vector2 aimPosition, double delta)
-	{
-		LookAt(aimPosition);
-		HandleMovement(delta);
-		abilities.HandleShooting(aimPosition);
-	}
-
 	/// <summary>
-	/// A push from outside — currently only a gravity well. Accumulated rather
+	/// A push from outside — a gravity well or the Black Hole. Accumulated rather
 	/// than applied immediately, since it may arrive from another node's
 	/// _PhysicsProcess in either order relative to this one's.
 	/// </summary>
@@ -308,11 +253,11 @@ public partial class Player : CharacterBody2D
 
 	private void HandleMovement(double delta)
 	{
-		if (abilities.IsDashing())
+		if (abilities.IsDashing)
 		{
-			// Dash sets velocity outright, which is exactly why it is the escape
-			// from a well's pull: nothing accumulated here can outrun it.
-			Velocity = abilities.GetDashVelocity();
+			// The dash moves the planet itself and ignores every pull. Velocity is
+			// left at walking pace, so the planet comes out of it without skidding.
+			Velocity = abilities.DashVelocity.Normalized() * MoveSpeed;
 			externalPush = Vector2.Zero;
 			return;
 		}
@@ -320,10 +265,8 @@ public partial class Player : CharacterBody2D
 		Vector2 targetVelocity = new Vector2(
 			Input.GetAxis("left", "right"),
 			Input.GetAxis("up", "down")
-		).LimitLength(1f) * CurrentMoveSpeed;
+		).LimitLength(1f) * MoveSpeed;
 
-		// The wind pushes the world too, not just the bodies — otherwise it is a
-		// change to them rather than to the arena.
 		if (run != null && run.During(ArenaEventId.SolarWind))
 			targetVelocity += run.WindDirection * SolarWindPush;
 
@@ -336,21 +279,15 @@ public partial class Player : CharacterBody2D
 
 	private void OnHitBoxBodyEntered(Node2D hit)
 	{
-		// "hazards" covers things that are lethal on contact but are not bodies —
-		// bosses, and gravity wells.
 		if (hit is Body body)
-			Die(body.Kind.ToString());
+			Die($"a {body.Kind}");
 		else if (hit is Boss boss)
 			Die(boss.BossName);
 		else if (hit.IsInGroup("hazards"))
 			Die(TranslationServer.Translate("DEATH_CAUSE_GravityWell"));
 	}
 
-	/// <summary>
-	/// Killed by something other than contact — a Flare blast, a comet, or a
-	/// hostile shot. Optional so any caller that predates the cause string
-	/// (or hasn't been told about it yet) still compiles and still kills.
-	/// </summary>
+	/// <summary>Killed by something other than contact — a blast, a comet, or a hostile shot.</summary>
 	public void KillByBlast(string cause = "")
 	{
 		Die(cause);
@@ -358,24 +295,22 @@ public partial class Player : CharacterBody2D
 
 	private void Die(string cause = "")
 	{
-		if (isDead || Invulnerable || hitRecovery > 0f || abilities.IsDashing())
+		if (isDead || Invulnerable || IsProtected)
 			return;
 
-		// Fires on every real contact attempt, shield-blocked or lethal — the
-		// Untouched achievement cares whether you were hit, not whether it cost
-		// you the run.
 		EmitSignal(SignalName.HitTaken);
 
-		// A shield is spent here rather than at each call site, so every source
-		// of death — contact, blast, hostile shot — is covered by one check.
+		// Every source of death passes through here, so one check covers them all.
 		if (run != null && run.ConsumeShield())
 		{
-			hitRecovery = 1.0f;
+			hitRecovery = Balance.ShieldBreakGrace;
 			var manager = GameManager.Of(this);
 			manager?.PlayCue("shield_pop");
-			manager?.Shake(0.45f);
-			manager?.Hitstop(0.08f);
-			manager?.SpawnBlast(GlobalPosition, 200f, PowerUps.Shield.Colour);
+			manager?.Shake(0.5f);
+			manager?.Hitstop(0.09f);
+			manager?.SpawnBlast(GlobalPosition, 240f, UpgradeDrops.ShieldColour);
+			manager?.Flash(UpgradeDrops.ShieldColour, 0.18f, 0.25f);
+			manager?.Toast("SHIELD BROKEN", UpgradeDrops.ShieldColour);
 			return;
 		}
 
@@ -388,29 +323,17 @@ public partial class Player : CharacterBody2D
 
 	private void SpawnDeathEffect()
 	{
-		if (DeathEffectScene == null)
-			return;
-
-		var effect = DeathEffectScene.Instantiate<CpuParticles2D>();
-		effect.GlobalPosition = GlobalPosition;
-		effect.Amount = 180;
-		effect.Scale = new Vector2(2.2f, 2.2f);
-		effect.Lifetime = 0.9f;
-		effect.Color = new Color(1f, 0.82f, 0.35f);
-		effect.Emitting = true;
-		GameManager.Spawn(this,effect);
+		var manager = GameManager.Of(this);
+		manager?.SpawnBlast(GlobalPosition, 360f, new Color(1f, 0.82f, 0.35f));
+		manager?.ShedChunks(GlobalPosition, 14, new Color(0.6f, 0.9f, 0.8f));
 
 		if (playerSprite != null)
 			playerSprite.Visible = false;
 	}
 
-	private void StayOnScreen()
+	private void StayInArena()
 	{
-		var screenSize = GetViewportRect().Size;
-		GlobalPosition = GlobalPosition.Clamp(
-			new Vector2(ScreenBorder, ScreenBorder),
-			screenSize - new Vector2(ScreenBorder, ScreenBorder)
-		);
+		GlobalPosition = Arena.ClampToPlayable(GlobalPosition, Arena.RadiusOf(this));
 	}
 
 	private Sprite2D FindPlayerSprite()
@@ -427,66 +350,72 @@ public partial class Player : CharacterBody2D
 		return null;
 	}
 
-	/// <summary>The weapon carried into this orbit, chosen before it started.</summary>
+	/// <summary>The weapon this run is carrying.</summary>
 	public WeaponProfile Weapon => WeaponProfile.Get(run?.Weapon ?? WeaponId.Comet);
 
-	/// <summary>Seconds until this weapon can fire again.</summary>
-	public float FireInterval(bool rapidFiring)
+	/// <summary>Seconds until the weapon can fire again.</summary>
+	public float FireInterval(bool overdriven)
 	{
-		return Weapon.FireInterval
-			* (rapidFiring ? Weapon.RapidFireScale : 1.0f)
-			* (run?.FireIntervalScale ?? 1.0f);
+		float overdrive = overdriven ? (run?.OverdriveFireScale ?? Balance.OverdriveFireScale) : 1f;
+		return Weapon.FireInterval * overdrive * (run?.FireIntervalScale ?? 1.0f);
 	}
 
-	public void ShootBullet(Vector2 aimPosition)
+	/// <summary>
+	/// One volley. Overdrive does not swap the gun — it takes whatever this run
+	/// has built and pushes all of it harder: more damage, one more pierce,
+	/// bigger and faster shots, on top of every spread and pierce level held.
+	/// </summary>
+	public void ShootBullet(Vector2 aimPosition, bool overdriven = false)
 	{
 		WeaponProfile weapon = Weapon;
 		Vector2 aim = (aimPosition - GlobalPosition).Normalized();
-		int fanLevel = run?.LevelOf(RunUpgradeId.FanShot) ?? 0;
-		int pellets = weapon.Pellets + fanLevel;
+		int spreadLevel = run?.SpreadLevel ?? 0;
+		int pellets = weapon.Pellets + spreadLevel;
 
 		// Pellets are spread evenly across the cone rather than randomly, so a
 		// shotgun pattern is something a player can learn to place.
 		for (int i = 0; i < pellets; i++)
 		{
 			float offset;
-            if(i<weapon.Pellets)
-                offset=weapon.Pellets<=1?0f:weapon.Spread*(i/(float)(weapon.Pellets-1)-.5f);
-            else
-            {
-                int side=fanLevel==1?(alternateSpread?-1:1):(i-weapon.Pellets==0?-1:1);
-                offset=side*(weapon.Spread*.5f+Mathf.DegToRad(18));
-            }
+			if (i < weapon.Pellets)
+				offset = weapon.Pellets <= 1 ? 0f : weapon.Spread * (i / (float)(weapon.Pellets - 1) - 0.5f);
+			else
+			{
+				// Spread Shot's extra shots sit outside the weapon's own cone. One
+				// level alternates sides each volley; two fires both.
+				int side = spreadLevel == 1 ? (alternateSpread ? -1 : 1) : (i - weapon.Pellets == 0 ? -1 : 1);
+				offset = side * (weapon.Spread * 0.5f + Mathf.DegToRad(18));
+			}
 
 			var bullet = BulletScene.Instantiate<Bullet>();
 			bullet.ApplyProfile(weapon);
-            bullet.Scale*=Scale.X/2f;
+			if (run != null)
+				bullet.Pierce += run.ExtraPierce;
 
-			// Overcharge stacks on top of whatever the weapon already does, so it
-			// is worth the same to every weapon rather than only to the slow ones.
-			if (run != null && run.Overcharged)
-				bullet.Damage += run.OverchargeBonus;
-
-			if (run != null && run.Has(RelicId.Piercing))
-				bullet.Pierce += 2;
+			if (overdriven)
+			{
+				bullet.Damage *= Balance.OverdriveDamageMultiplier;
+				bullet.Pierce += Balance.OverdriveExtraPierce;
+				bullet.Speed *= 1.15f;
+				bullet.Scale *= 1.3f;
+				bullet.Overdriven = true;
+			}
 
 			bullet.GlobalPosition = shootyPart.GlobalPosition;
 			bullet.Direction = aim.Rotated(offset);
 			GameManager.Spawn(this, bullet);
 		}
 
-		FlashMuzzle();
-		alternateSpread=!alternateSpread;
+		FlashMuzzle(overdriven);
+		alternateSpread = !alternateSpread;
 		GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Kick();
 	}
-
-    private bool alternateSpread;
 
 	/// <summary>
 	/// One frame of light at the barrel. Randomised scale and roll so a held
 	/// trigger does not look like a strobing decal.
 	/// </summary>
-	private void FlashMuzzle()
+	private void FlashMuzzle(bool overdriven)
 	{
 		if (muzzleFlash == null)
 			return;
@@ -494,58 +423,28 @@ public partial class Player : CharacterBody2D
 		muzzleTween?.Kill();
 		muzzleFlash.Visible = true;
 		muzzleFlash.Rotation = RunState.Rng.RandfRange(-0.5f, 0.5f);
-		muzzleFlash.Scale = Vector2.One * RunState.Rng.RandfRange(0.32f, 0.48f);
-		muzzleFlash.Modulate = new Color(1f, 1f, 1f, 1f);
+		muzzleFlash.Scale = Vector2.One * RunState.Rng.RandfRange(0.32f, 0.48f) * (overdriven ? 1.5f : 1f);
+		muzzleFlash.Modulate = overdriven ? new Color(1.4f, 0.8f, 1f) : Colors.White;
 
 		muzzleTween = CreateTween();
 		muzzleTween.TweenProperty(muzzleFlash, "modulate:a", 0.0f, MuzzleFlashTime);
 		muzzleTween.TweenCallback(Callable.From(() => muzzleFlash.Visible = false));
 	}
 
-	public void PlayShootSound(bool isRapidFire = false)
+	public void PlayShootSound(bool overdriven = false)
 	{
 		if (shootSound == null)
 			return;
 
-		shootSound.PitchScale = isRapidFire ? 1.2f : 1.0f;
+		shootSound.PitchScale = overdriven ? 1.28f + RunState.Rng.RandfRange(-0.04f, 0.04f) : 1.0f;
 		shootSound.Play();
 	}
 
 	public void CreateDashEffect()
 	{
-		GameManager.Of(this)?.PlayCue("dash_swish");
-		GameManager.Of(this)?.Shake(DashTrauma);
-
-		if (playerSprite == null)
-			return;
-
-		var tween = CreateTween();
-		tween.TweenProperty(playerSprite, "modulate:a", 0.5f, 0.1f);
-		tween.TweenProperty(playerSprite, "modulate:a", 1.0f, 0.1f);
-	}
-
-	public void CreateRapidFireEffect()
-	{
-		if (playerSprite == null)
-			return;
-
-		var tween = CreateTween();
-		tween.TweenProperty(playerSprite, "modulate", Colors.Orange, 0.2f);
-		tween.TweenProperty(playerSprite, "modulate", Colors.White, 0.2f);
-	}
-
-	public float GetDashCooldownPercent()
-	{
-		return abilities.GetDashCooldownPercent();
-	}
-
-	public float GetRapidFireCooldownPercent()
-	{
-		return abilities.GetRapidFireCooldownPercent();
-	}
-
-	public bool IsRapidFiring()
-	{
-		return abilities.IsRapidFiring();
+		var manager = GameManager.Of(this);
+		manager?.PlayCue("dash_swish");
+		manager?.Shake(DashTrauma);
+		GetNodeOrNull<PlanetVisual>("PlanetVisual")?.StartDashTrail();
 	}
 }

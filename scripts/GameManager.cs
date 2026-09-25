@@ -1,51 +1,54 @@
+using System.Collections.Generic;
 using Godot;
 
+/// <summary>What finished an enemy off. Decides how loud the kill is.</summary>
+public enum KillSource
+{
+	Shot,
+	Dash,
+	Nova
+}
+
+/// <summary>
+/// Runs one endless run: the bosses, the kill payoff, the drops, pause, death
+/// and the hand-over to the recap. Enemy pressure lives in
+/// <see cref="BodySpawner"/>; the run's numbers in <see cref="RunState"/>.
+///
+/// Bosses come on a clock, not a kill count: Coil, Brood, Black Hole, then round
+/// again, forever. The first time round each is fought alone. After that the
+/// ordinary enemies keep coming during the fight, more of them each cycle —
+/// the bosses get only a little tougher themselves. Beating one scatters three
+/// strong upgrades from the wreck.
+/// </summary>
 public partial class GameManager : Node2D
 {
 	[ExportGroup("Feel")]
 	/// <summary>Time scale held during a hitstop. Low enough to read as a freeze.</summary>
 	[Export] public float HitstopScale { get; set; } = 0.04f;
-	[Export] public float LightKillHitstop { get; set; } = 0.045f;
-	[Export] public float HeavyKillHitstop { get; set; } = 0.085f;
+	[Export] public float LightKillHitstop { get; set; } = 0.035f;
+	[Export] public float HeavyKillHitstop { get; set; } = 0.075f;
 	[Export] public float DeathHitstop { get; set; } = 0.14f;
-	[Export] public float LightKillTrauma { get; set; } = 0.17f;
-	[Export] public float HeavyKillTrauma { get; set; } = 0.42f;
+	[Export] public float LightKillTrauma { get; set; } = 0.15f;
+	[Export] public float HeavyKillTrauma { get; set; } = 0.38f;
 	[Export] public float DeathTrauma { get; set; } = 1.0f;
 
-	[ExportGroup("Gravity")]
+	[ExportGroup("Effects")]
 	[Export] public PackedScene DebrisScene { get; set; }
-	[Export] public PackedScene BurstScene { get; set; }
-	/// <summary>Ceiling on live motes, so a wipe cannot flood the arena.</summary>
-	[Export] public int MaxDebris { get; set; } = 220;
-
-	[ExportGroup("Pickups")]
+	/// <summary>Ceiling on live chunks, so a Nova cannot flood the arena.</summary>
+	[Export] public int MaxDebris { get; set; } = 160;
 	[Export] public PackedScene PowerUpScene { get; set; }
-	/// <summary>Chance a killed body leaves a pickup. "Short, loud, frequent."</summary>
-	[Export] public float PowerUpDropChance { get; set; } = 0.05f;
-	/// <summary>Tougher bodies are likelier to drop, so a hard kill pays twice.</summary>
-	[Export] public float HeavyDropBonus { get; set; } = 0.14f;
-	/// <summary>Radius a Nuke clears. Generous — it is meant to feel like relief.</summary>
-	[Export] public float NukeRadius { get; set; } = 1400.0f;
 
 	[ExportGroup("Bosses")]
 	[Export] public PackedScene CoilScene { get; set; }
-	/// <summary>Seconds into an orbit before The Coil arrives.</summary>
-	[Export] public float CoilTime { get; set; } = 180.0f;
 	[Export] public PackedScene BroodScene { get; set; }
-	/// <summary>Seconds into an orbit before The Brood arrives, once the Coil is dealt with.</summary>
-	[Export] public float BroodTime { get; set; } = 330.0f;
 	[Export] public PackedScene BlackHoleScene { get; set; }
-	/// <summary>Seconds into an orbit before The Black Hole arrives, once the Brood is dealt with.</summary>
-	[Export] public float BlackHoleTime { get; set; } = 480.0f;
 	/// <summary>
-	/// Which boss is next: 0 Coil, 1 Brood, 2 Black Hole, 3 none left. Export
-	/// rather than a plain field so a boss can be skipped straight to for
-	/// tuning, without having to survive and beat everything before it first.
+	/// How many bosses have arrived. The next is Coil, Brood or Black Hole by this
+	/// count, and its cycle is this over three. Exported so a tool can skip ahead.
 	/// </summary>
 	[Export] public int NextBossIndex { get; set; } = 0;
-	[Export] public int BossScoreBonus { get; set; } = 5000;
-	/// <summary>The Black Hole is the climax; beating it pays out accordingly.</summary>
-	[Export] public int BlackHoleScoreBonus { get; set; } = 12000;
+	/// <summary>Survival time the next boss is due. Exported so a tool can bring it forward.</summary>
+	[Export] public float NextBossAt { get; set; } = Balance.FirstBossAt;
 	/// <summary>Time scale held while a boss dies. Slow motion, not a freeze.</summary>
 	[Export] public float BossKillSlowMo { get; set; } = 0.22f;
 	[Export] public float BossKillSlowMoTime { get; set; } = 1.1f;
@@ -59,17 +62,19 @@ public partial class GameManager : Node2D
 	private UIManager uiManager;
 	private PlayerManager playerManager;
 	private GameCamera gameCamera;
+	private Player player;
 	private Node2D entities;
 	private AudioStreamPlayer killSound;
 	private AudioStreamPlayer streakSound;
-	private AudioStreamPlayer absorbSound;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
-	private readonly System.Collections.Generic.Dictionary<string, AudioStreamPlayer> cues = new();
-	public bool InWaveBreak => bodySpawner?.InCalm == true;
+	private ColorRect flash;
+	private Tween flashTween;
+	private readonly Dictionary<string, AudioStreamPlayer> cues = new();
 	private bool isPaused = false;
 	private bool isGameOver = false;
 	private bool isDying = false;
+	private ulong lastKillSoundMsec;
 
 	private bool hitstopActive = false;
 	private ulong hitstopEndMsec = 0;
@@ -79,25 +84,35 @@ public partial class GameManager : Node2D
 	private ProgressBar bossHealth;
 	private Label bossNameLabel;
 	private Announcer announcer;
-	private UpgradePrompt upgradePrompt;
+	private float warningLeft = -1f;
+	private Vector2 incomingAt;
+	private Node2D incomingMarker;
 
 	public bool IsPaused => isPaused;
 
-	/// <summary>True while a boss is on the field. The spawner stands down.</summary>
+	/// <summary>True from the killing hit on. Read by the playtest tools.</summary>
+	public bool IsOver => isDying || isGameOver;
+
+	/// <summary>What ended this run, once it has ended.</summary>
+	public string DeathCause { get; private set; } = "";
+
+	/// <summary>True while a boss is on the field.</summary>
 	public bool BossActive => boss != null && IsInstanceValid(boss);
 
-	/// <summary>The live orbit: time, kills, streak, mass, moons and score.</summary>
+	/// <summary>True from the warning until the boss is beaten.</summary>
+	public bool BossBusy => BossActive || warningLeft > 0f;
+
+	/// <summary>Which time round the bosses the current or next one belongs to, from 1.</summary>
+	public int BossCycle => (BossActive ? NextBossIndex - 1 : NextBossIndex) / 3 + 1;
+
 	public RunState Run => run;
 
-	/// <summary>Seconds survived so far. Read by the music layer and the spawner.</summary>
+	/// <summary>Seconds survived so far.</summary>
 	public float RunTime => run?.SurvivalTime ?? 0f;
-	public bool ChoosingBoost { get; private set; }
-    public int WaveNumber=>bodySpawner?.WaveNumber??1;
-    public bool BossDue=>NextBossIndex<3 && (WaveNumber>=7+NextBossIndex*6 || (NextBossIndex==0?CoilTime:NextBossIndex==1?BroodTime:BlackHoleTime)<=1 && RunTime>=.5f);
 
 	// _EnterTree runs top-down, _Ready bottom-up. The player and everything under
-	// it read mass during their own _Ready, which is *before* this node's, so the
-	// group registration and RunState have to be in place by here.
+	// it read the run during their own _Ready, which is *before* this node's, so
+	// the group registration and RunState have to be in place by here.
 	public override void _EnterTree()
 	{
 		RunState.Rng.Randomize();
@@ -111,13 +126,21 @@ public partial class GameManager : Node2D
 	{
 		SetupComponents();
 		ConnectSignals();
-		AddChild(new CosmicBackdrop());
+		AddChild(new ArenaBackdrop());
 	}
 
 	/// <summary>The game manager for the current scene, or null outside gameplay.</summary>
 	public static GameManager Of(Node context)
 	{
-		return context.GetTree().GetFirstNodeInGroup("game_manager") as GameManager;
+		// Skips a run that is on its way out, so nothing in a new run can latch
+		// onto the one being freed in the same frame.
+		foreach (Node node in context.GetTree().GetNodesInGroup("game_manager"))
+		{
+			if (node is GameManager manager && !manager.IsQueuedForDeletion())
+				return manager;
+		}
+
+		return null;
 	}
 
 	private void SetupComponents()
@@ -125,34 +148,45 @@ public partial class GameManager : Node2D
 		pauseMenu = GetNode<PauseMenu>("PauseLayer/PauseMenu");
 		entities = GetNode<Node2D>("Entities");
 		gameCamera = GetNodeOrNull<GameCamera>("GameCamera");
+		player = GetNode<Player>("player");
 		killSound = GetNode<AudioStreamPlayer>("KillSound");
 		streakSound = GetNodeOrNull<AudioStreamPlayer>("StreakSound");
-		absorbSound = GetNodeOrNull<AudioStreamPlayer>("AbsorbSound");
 		buttonSound = GetNode<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNode<AudioStreamPlayer>("HoverSound");
 		streakSound.Stream = GD.Load<AudioStream>("res://sounds/streak_chirp.wav");
-		absorbSound.Stream = GD.Load<AudioStream>("res://sounds/pickup_chirp.wav");
-		foreach (string cue in new[] { "upgrade_chirp", "shield_pop", "dash_swish", "nova_boom" })
-		{
-			var sound = new AudioStreamPlayer { Stream = GD.Load<AudioStream>($"res://sounds/{cue}.wav"), Bus = "SFX", VolumeDb = -12f };
-			AddChild(sound);
-			cues[cue] = sound;
-		}
+
+		// Cues with no dedicated sample yet borrow a close one at another pitch.
+		AddCue("upgrade_chirp", "upgrade_chirp", -12f, 1f);
+		AddCue("shield_get", "pickup_chirp", -9f, 0.8f);
+		AddCue("shield_pop", "shield_pop", -8f, 1f);
+		AddCue("dash_swish", "dash_swish", -10f, 1f);
+		AddCue("nova_boom", "nova_boom", -4f, 0.85f);
+		AddCue("overdrive", "upgrade_chirp", -7f, 0.62f);
+		AddCue("overdrive_end", "pickup_chirp", -16f, 0.7f);
+		AddCue("unlock", "streak_chirp", -6f, 1.2f);
+		AddCue("boss_warning", "streak_chirp", -4f, 0.5f);
+		AddCue("comet_warning", "dash_swish", -8f, 0.55f);
 
 		DebrisScene ??= GD.Load<PackedScene>("res://scenes/debris.tscn");
-		BurstScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 		CoilScene ??= GD.Load<PackedScene>("res://scenes/boss_coil.tscn");
 		BroodScene ??= GD.Load<PackedScene>("res://scenes/boss_brood.tscn");
 		BlackHoleScene ??= GD.Load<PackedScene>("res://scenes/boss_black_hole.tscn");
 		PowerUpScene ??= GD.Load<PackedScene>("res://scenes/power_up.tscn");
 
 		announcer = GetNodeOrNull<Announcer>("UI/Announcer");
-		upgradePrompt = GetNodeOrNull<UpgradePrompt>("UI/UpgradePrompt");
 		bossBar = GetNodeOrNull<Control>("UI/BossBar");
 		bossHealth = GetNodeOrNull<ProgressBar>("UI/BossBar/Health");
 		bossNameLabel = GetNodeOrNull<Label>("UI/BossBar/Name");
 		if (bossBar != null)
 			bossBar.Visible = false;
+
+		// Under the HUD, over the world: the one layer a Nova or a broken shield
+		// is allowed to wash.
+		flash = new ColorRect { Name = "Flash", MouseFilter = Control.MouseFilterEnum.Ignore, Color = new Color(1, 1, 1, 0) };
+		var ui = GetNode<CanvasLayer>("UI");
+		ui.AddChild(flash);
+		ui.MoveChild(flash, 0);
+		flash.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 
 		bodySpawner = AddPausableChild(new BodySpawner());
 		eventDirector = AddPausableChild(new EventDirector());
@@ -160,11 +194,13 @@ public partial class GameManager : Node2D
 		achievementTracker = AddPausableChild(new AchievementTracker());
 		uiManager = AddPausableChild(new UIManager());
 		playerManager = AddPausableChild(new PlayerManager());
+	}
 
-		// Wired after the spawner exists: the prompt listens for its wave
-		// signals rather than polling, so the offer appears on the same frame
-		// the arena actually goes quiet.
-		upgradePrompt?.Bind(run, bodySpawner);
+	private void AddCue(string cue, string file, float volume, float pitch)
+	{
+		var sound = new AudioStreamPlayer { Stream = GD.Load<AudioStream>($"res://sounds/{file}.wav"), Bus = "SFX", VolumeDb = volume, PitchScale = pitch };
+		AddChild(sound);
+		cues[cue] = sound;
 	}
 
 	// The game root runs with ProcessMode.Always so it can still read the pause
@@ -172,8 +208,6 @@ public partial class GameManager : Node2D
 	private T AddPausableChild<T>(T node) where T : Node
 	{
 		node.ProcessMode = ProcessModeEnum.Pausable;
-		// Named after its type rather than left with Godot's generated name, so
-		// these show up legibly in the remote scene tree and can be addressed.
 		node.Name = typeof(T).Name;
 		AddChild(node);
 		return node;
@@ -184,13 +218,21 @@ public partial class GameManager : Node2D
 		pauseMenu.ResumeGame += OnResumeGame;
 		pauseMenu.GiveUpGame += OnGiveUpGame;
 		run.StreakChanged += OnStreakChanged;
+		run.AbilityUnlocked += OnAbilityUnlocked;
 	}
 
-	/// <summary>Shouts something in the middle of the screen. See <see cref="Announcer"/>.</summary>
+	/// <summary>Shouts something at the top of the screen. See <see cref="Announcer"/>.</summary>
 	public void Announce(string title, string detail, Color colour)
 	{
-		if (ChoosingBoost || isPaused || isDying || isGameOver) return;
+		if (isPaused || isDying || isGameOver) return;
 		announcer?.Announce(title, detail, colour);
+	}
+
+	/// <summary>A small, quick line above the ability bar — for pickups, never for bosses.</summary>
+	public void Toast(string text, Color colour)
+	{
+		if (isPaused || isDying || isGameOver) return;
+		uiManager?.Toast(text, colour);
 	}
 
 	/// <summary>Parents runtime-spawned nodes under the pausable entity container.</summary>
@@ -200,9 +242,8 @@ public partial class GameManager : Node2D
 	}
 
 	/// <summary>
-	/// Parents a runtime-spawned node (bullet, body, particle burst) under the
-	/// pausable entity container so it pauses along with the rest of the game.
-	/// Falls back to the current scene if no game manager is present.
+	/// Parents a runtime-spawned node under the pausable entity container so it
+	/// pauses along with the rest of the game. Falls back to the current scene.
 	/// </summary>
 	public static void Spawn(Node context, Node node)
 	{
@@ -221,7 +262,6 @@ public partial class GameManager : Node2D
 
 	public override void _Input(InputEvent inputEvent)
 	{
-		// isDying covers the death freeze, before the recap has been handed over.
 		if (isGameOver || isDying)
 			return;
 
@@ -243,20 +283,8 @@ public partial class GameManager : Node2D
 	// time: delta is scaled by Engine.TimeScale and would stretch with it.
 	public override void _Process(double delta)
 	{
-		if (!isPaused && !isGameOver && !ChoosingBoost)
-		{
-			// The run has no clock to run out and no final wave. Bosses simply
-			// interrupt after six completed waves apiece.
-			if (!isDying && !BossActive && GetTree().GetNodeCountInGroup("bodies") == 0 && bodySpawner?.InCalm != true)
-			{
-				if (NextBossIndex == 0 && BossDue)
-					SpawnBoss(CoilScene, "THE COIL");
-				else if (NextBossIndex == 1 && BossDue)
-					SpawnBoss(BroodScene, "THE BROOD");
-				else if (NextBossIndex == 2 && BossDue)
-					SpawnBoss(BlackHoleScene, "THE BLACK HOLE");
-			}
-		}
+		if (!isPaused && !isGameOver && !isDying)
+			UpdateBosses((float)delta);
 
 		if (!hitstopActive)
 			return;
@@ -265,32 +293,140 @@ public partial class GameManager : Node2D
 			EndHitstop();
 	}
 
-	private void SpawnBoss(PackedScene scene, string encounterName)
+	// --- Bosses ---------------------------------------------------------------
+
+	/// <summary>Scheduled arrival of the nth boss, before any breather pushes it back.</summary>
+	public static float ScheduledBossTime(int index)
 	{
+		if (index < 3)
+			return Balance.FirstBossAt + index * Balance.BossGapFirstCycle;
+		return Balance.FirstBossAt + 2 * Balance.BossGapFirstCycle + (index - 2) * Balance.BossGapLaterCycles;
+	}
+
+	private void UpdateBosses(float delta)
+	{
+		int cycle = BossCycle;
+
+		if (BossActive)
+		{
+			bodySpawner.Support = Balance.BossSupport(cycle);
+			return;
+		}
+
+		if (warningLeft > 0f)
+		{
+			// First time round, the arena is left to thin out before the boss.
+			bodySpawner.Support = Balance.BossSupport(cycle);
+			warningLeft -= delta;
+			if (warningLeft <= 0f)
+				SpawnBoss();
+			return;
+		}
+
+		bodySpawner.Support = 1f;
+		if (run.SurvivalTime >= NextBossAt)
+			BeginBossWarning();
+	}
+
+	private (PackedScene scene, string name, Color colour) NextBoss() => (NextBossIndex % 3) switch
+	{
+		0 => (CoilScene, "THE COIL", new Color(0.86f, 0.72f, 1.0f)),
+		1 => (BroodScene, "THE BROOD", new Color(0.58f, 0.82f, 0.4f)),
+		_ => (BlackHoleScene, "THE BLACK HOLE", new Color(0.62f, 0.32f, 0.82f))
+	};
+
+	private string ArrivalLine() => (NextBossIndex % 3) switch
+	{
+		0 => TranslationServer.Translate("BOSS_Coil_ARRIVAL"),
+		1 => TranslationServer.Translate("BOSS_Brood_ARRIVAL"),
+		_ => TranslationServer.Translate("BOSS_BlackHole_ARRIVAL")
+	};
+
+	/// <summary>
+	/// A clear warning first: the name at the top of the screen and a pulsing
+	/// marker where it will appear, well away from the planet.
+	/// </summary>
+	private void BeginBossWarning()
+	{
+		var (_, name, colour) = NextBoss();
+		warningLeft = Balance.BossWarning;
+		incomingAt = PickBossArrival();
+
+		string detail = BossCycle > 1 ? $"ROUND {BossCycle}  •  {ArrivalLine()}" : ArrivalLine();
+		Announce($"{name} IS COMING", detail, colour);
+		PlayCue("boss_warning");
+		Shake(0.3f);
+
+		incomingMarker = new BossMarker { Colour = colour, Duration = Balance.BossWarning };
+		incomingMarker.GlobalPosition = incomingAt;
+		AddEntity(incomingMarker);
+	}
+
+	/// <summary>
+	/// Toward open space from the planet, inside the arena. The offset is an
+	/// ellipse rather than a circle: wide sideways, shorter up and down, so the
+	/// marker and the boss land on screen however the planet is placed.
+	/// </summary>
+	private Vector2 PickBossArrival()
+	{
+		Vector2 from = player.GlobalPosition;
+		Vector2 toward = (Arena.Centre - from).LengthSquared() > 1f
+			? (Arena.Centre - from).Normalized()
+			: Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau);
+
+		Vector2 best = from;
+		float bestDistance = -1f;
+		foreach (float turn in new[] { 0f, 0.6f, -0.6f, 1.2f, -1.2f, 2.0f, -2.0f, Mathf.Pi })
+		{
+			Vector2 dir = toward.Rotated(turn);
+			Vector2 offset = new Vector2(dir.X, dir.Y * 0.62f) * Balance.BossArrivalDistance;
+			Vector2 candidate = Arena.ClampToPlayable(from + offset, 220f);
+			float distance = candidate.DistanceTo(from);
+			if (distance >= offset.Length() * 0.9f)
+				return candidate;
+			if (distance > bestDistance)
+			{
+				bestDistance = distance;
+				best = candidate;
+			}
+		}
+
+		return best;
+	}
+
+	private void SpawnBoss()
+	{
+		warningLeft = -1f;
+		if (IsInstanceValid(incomingMarker))
+			incomingMarker.QueueFree();
+
+		var (scene, name, _) = NextBoss();
 		if (scene == null)
 			return;
 
-		boss = scene.Instantiate<Boss>();
+		// The planet may have wandered toward the marker during the warning.
+		// Arriving on top of it would be the one unfair thing a boss can do.
+		Vector2 at = incomingAt;
+		Vector2 away = at - player.GlobalPosition;
+		if (away.Length() < 400f)
+			at = Arena.ClampToPlayable(player.GlobalPosition + (away.LengthSquared() > 1f ? away.Normalized() : Vector2.Right) * 520f, 220f);
+		if (at.DistanceTo(player.GlobalPosition) < 400f)
+			at = PickBossArrival();
 
-		// Arrives off to one side rather than on top of the player.
-		Vector2 bounds = GetViewportRect().Size;
-		var player = GetNodeOrNull<Player>("player");
-		Vector2 safest = bounds * new Vector2(0.25f, 0.25f);
-		foreach (Vector2 fraction in new[] { new Vector2(0.75f, 0.25f), new Vector2(0.25f, 0.75f), new Vector2(0.75f, 0.75f) })
-			if (player != null && (bounds * fraction).DistanceSquaredTo(player.GlobalPosition) > safest.DistanceSquaredTo(player.GlobalPosition)) safest = bounds * fraction;
-		boss.GlobalPosition = safest;
-		run.StartEvent(ArenaEventId.Calm, 0f);
+		boss = scene.Instantiate<Boss>();
+		boss.Cycle = NextBossIndex / 3 + 1;
+		boss.GlobalPosition = at;
+		NextBossIndex++;
 
 		boss.HealthChanged += OnBossHealthChanged;
 		boss.Defeated += OnBossDefeated;
 		AddEntity(boss);
 
 		if (bossNameLabel != null)
-			bossNameLabel.Text = encounterName;
+			bossNameLabel.Text = boss.Cycle > 1 ? $"{name}  •  ROUND {boss.Cycle}" : name;
 		if (bossHealth != null)
 		{
-			// A fresh stylebox per encounter, so each boss reads in its own
-			// colour instead of every bar defaulting to the Coil's lilac.
+			// A fresh stylebox per encounter, so each boss reads in its own colour.
 			bossHealth.AddThemeStyleboxOverride("fill", new StyleBoxFlat
 			{
 				BgColor = boss.BossColor,
@@ -301,26 +437,12 @@ public partial class GameManager : Node2D
 			});
 		}
 		OnBossHealthChanged(1.0f);
-
-		Announce(encounterName, boss.ArrivalLine, boss.BossColor);
-		Shake(0.5f);
-		PlayStreakSting(0.6f);
-		RevealBossBarAfterAnnouncement();
-	}
-
-	/// <summary>
-	/// The bar waits for the announcement to finish. Both live at the bottom of
-	/// the screen and both name the same boss, so showing them together was one
-	/// idea said twice, competing for the same strip.
-	/// </summary>
-	private async void RevealBossBarAfterAnnouncement()
-	{
-		float wait = announcer != null ? announcer.HoldTime + announcer.FadeTime : 0f;
-		await ToSignal(GetTree().CreateTimer(wait, processAlways: true), SceneTreeTimer.SignalName.Timeout);
-
-		// The boss can be dead, or the orbit over, before the banner clears.
-		if (IsInstanceValid(this) && !isGameOver && BossActive && bossBar != null)
+		if (bossBar != null)
 			bossBar.Visible = true;
+
+		SpawnBlast(at, 360f, boss.BossColor);
+		Shake(0.55f);
+		PlayStreakSting(0.6f);
 	}
 
 	private void OnBossHealthChanged(float fraction)
@@ -334,27 +456,81 @@ public partial class GameManager : Node2D
 		if (bossBar != null)
 			bossBar.Visible = false;
 
-		Vector2 at = IsInstanceValid(boss) ? boss.GlobalPosition : Vector2.Zero;
+		Vector2 at = IsInstanceValid(boss) ? boss.GlobalPosition : player.GlobalPosition;
 		Color colour = IsInstanceValid(boss) ? boss.BossColor : new Color(0.86f, 0.72f, 1.0f);
-		int defeatedIndex = NextBossIndex;
-		bool wasFinalBoss = defeatedIndex == 2;
+		int cycle = IsInstanceValid(boss) ? boss.Cycle : 1;
+		int kind = (NextBossIndex - 1) % 3;
 		boss = null;
-		NextBossIndex++;
+
+		NextBossAt = Mathf.Max(ScheduledBossTime(NextBossIndex), run.SurvivalTime + Balance.BossBreather);
 
 		// Slow motion rather than a freeze: the payoff is watching it come apart.
 		Hitstop(BossKillSlowMoTime, BossKillSlowMo);
-		Shake(wasFinalBoss ? 1.3f : 0.9f);
-		SpawnBlast(at, wasFinalBoss ? 620.0f : 420.0f, colour);
-		run?.AddBonus(wasFinalBoss ? BlackHoleScoreBonus : BossScoreBonus);
+		Shake(1.1f);
+		SpawnBlast(at, 560f, colour);
+		ShedChunks(at, 26, colour);
+		Flash(colour, 0.22f, 0.4f);
+		run.AddBonus(Balance.BossScoreBonus * cycle);
 		PlayStreakSting(0.45f);
+		ClearHostileShots();
 
-		UnlockBossAchievement(defeatedIndex switch
+		DropBossRewards(at);
+
+		UnlockBossAchievement(kind switch
 		{
 			0 => AchievementId.BeatCoil,
 			1 => AchievementId.BeatBrood,
 			_ => AchievementId.BeatBlackHole
 		});
+	}
 
+	/// <summary>
+	/// A beaten boss takes its shots with it. Otherwise the reward is the last
+	/// ring still in the air, and the win turns into a death on the way to it.
+	/// </summary>
+	private void ClearHostileShots()
+	{
+		foreach (Node node in GetTree().GetNodesInGroup("hostile_bullets"))
+		{
+			if (node is not Node2D shot || !IsInstanceValid(shot))
+				continue;
+			SpawnImpact(shot.GlobalPosition, new Color(1f, 0.55f, 0.5f));
+			shot.QueueFree();
+		}
+	}
+
+	/// <summary>
+	/// Three strong, useful upgrades thrown out of the wreck — random, but only
+	/// from things that would help right now. Never a menu.
+	/// </summary>
+	private void DropBossRewards(Vector2 at)
+	{
+		var pending = PendingRewards();
+		var batch = new List<Reward>();
+		for (int i = 0; i < Balance.BossRewardCount; i++)
+		{
+			var considered = new List<Reward>(pending);
+			considered.AddRange(batch);
+			if (UpgradeDrops.TryRoll(run, considered, boss: true, out Reward reward))
+				batch.Add(reward);
+		}
+
+		if (batch.Count == 0)
+		{
+			// A finished build: nothing left to give but points.
+			run.AddBonus(Balance.BossScoreBonus);
+			Toast($"FULLY LOADED  •  +{Balance.BossScoreBonus:N0}", ArcadeSkin.Orange);
+			return;
+		}
+
+		float start = RunState.Rng.Randf() * Mathf.Tau;
+		for (int i = 0; i < batch.Count; i++)
+		{
+			if (batch[i].IsShield)
+				run.LastShieldDropAt = run.SurvivalTime;
+			Vector2 rest = at + Vector2.FromAngle(start + Mathf.Tau * i / batch.Count) * 170f;
+			SpawnPickup(batch[i], at, Balance.BossRewardLifetime, rest);
+		}
 	}
 
 	private void UnlockBossAchievement(AchievementId id)
@@ -363,8 +539,39 @@ public partial class GameManager : Node2D
 			return;
 
 		Achievements.Profile profile = Achievements.Get(id);
-		Announce(profile.Name, profile.Description, new Color(1.0f, 0.72f, 0.32f));
+		Toast($"ACHIEVEMENT  •  {profile.Name}", new Color(1.0f, 0.72f, 0.32f));
 	}
+
+	// --- Abilities -----------------------------------------------------------
+
+	private void OnAbilityUnlocked(int which)
+	{
+		var ability = (Ability)which;
+		Announce($"{RunUpgrades.AbilityName(ability)} ONLINE", $"Press {UIManager.ControlHint(ability)} to {RunUpgrades.AbilityVerb(ability)}", ArcadeSkin.Orange);
+		PlayCue("unlock");
+		Shake(0.25f);
+		SpawnBlast(player.GlobalPosition, 300f, ArcadeSkin.Orange);
+		player.GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
+		uiManager?.PulseAbility(ability);
+	}
+
+	/// <summary>Sets off a Nova here. The planet decides when; this does the rest.</summary>
+	public void DetonateNova(Vector2 at, float radius)
+	{
+		var blast = new NovaBlast { MaxRadius = radius };
+		blast.GlobalPosition = at;
+		AddEntity(blast);
+
+		ShedChunks(at, 16, new Color(1f, 0.86f, 0.55f), 3.2f);
+		PopEffect.Spawn(this, at, 150f, new Color("ffd66b"), 14, 0.6f);
+
+		PlayCue("nova_boom");
+		// Warm and short. A cooler or longer wash read as the screen going grey.
+		Flash(new Color("ffc46b"), 0.16f, 0.2f);
+		Hitstop(0.1f);
+	}
+
+	// --- Run flow -----------------------------------------------------------
 
 	public override void _ExitTree()
 	{
@@ -376,9 +583,9 @@ public partial class GameManager : Node2D
 	private void TogglePause()
 	{
 		isPaused = !isPaused;
-		GetTree().Paused = isPaused || ChoosingBoost;
+		GetTree().Paused = isPaused;
 		GetNode<CanvasLayer>("UI").Visible = !isPaused;
-		uiManager.SetGameplayVisible(!isPaused && !ChoosingBoost);
+		uiManager.SetGameplayVisible(!isPaused);
 
 		if (isPaused)
 		{
@@ -389,8 +596,7 @@ public partial class GameManager : Node2D
 		else
 		{
 			pauseMenu.HidePauseMenu();
-			if (!ChoosingBoost) uiManager.HideCursor();
-            else upgradePrompt.RestoreFocus();
+			uiManager.HideCursor();
 		}
 	}
 
@@ -403,24 +609,6 @@ public partial class GameManager : Node2D
 		SceneTransition.Instance.ChangeScene("res://scenes/game.tscn");
 	}
 
-	public void BeginBoostChoice()
-	{
-		ChoosingBoost = true;
-		EndHitstop();
-		GetTree().Paused = true;
-		uiManager.SetGameplayVisible(false);
-		uiManager.ShowCursor();
-		announcer.Hide();
-	}
-	public void EndBoostChoice()
-	{
-		ChoosingBoost = false;
-		GetTree().Paused = isPaused;
-		uiManager.SetGameplayVisible(!isPaused);
-		if (!isPaused) uiManager.HideCursor();
-		GetNode<Player>("player").GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
-	}
-
 	private void FreezeSimulation()
 	{
 		run.ProcessMode = ProcessModeEnum.Disabled;
@@ -428,17 +616,14 @@ public partial class GameManager : Node2D
 		bodySpawner.ProcessMode = ProcessModeEnum.Disabled;
 		eventDirector.ProcessMode = ProcessModeEnum.Disabled;
 		hazardDirector.ProcessMode = ProcessModeEnum.Disabled;
-		GetNode<Player>("player").ProcessMode = ProcessModeEnum.Disabled;
+		player.ProcessMode = ProcessModeEnum.Disabled;
 	}
 
 	/// <summary>
 	/// Briefly drops the engine time scale so an impact lands. Overlapping calls
 	/// extend the freeze rather than cutting it short.
 	/// </summary>
-	/// <param name="scale">
-	/// Time scale to hold. Defaults to a near-freeze; a boss kill passes a
-	/// higher value to get slow motion out of the same machinery.
-	/// </param>
+	/// <param name="scale">Time scale to hold. A boss kill passes a higher value for slow motion.</param>
 	public void Hitstop(float seconds, float scale = -1f)
 	{
 		if (isGameOver || seconds <= 0f || isPaused)
@@ -468,6 +653,18 @@ public partial class GameManager : Node2D
 		gameCamera?.AddTrauma(trauma);
 	}
 
+	/// <summary>Washes the screen with a colour for a moment. Kept faint: it must never hide a threat.</summary>
+	public void Flash(Color colour, float alpha, float seconds)
+	{
+		if (flash == null || GameSettings.Instance?.ShakeIntensity <= 0f)
+			return;
+
+		flashTween?.Kill();
+		flash.Color = new Color(colour, alpha);
+		flashTween = CreateTween();
+		flashTween.TweenProperty(flash, "color:a", 0f, seconds);
+	}
+
 	public void TriggerGameOver()
 	{
 		if (isGameOver)
@@ -482,40 +679,25 @@ public partial class GameManager : Node2D
 		// The transition runs on an AnimationPlayer, which obeys Engine.TimeScale.
 		EndHitstop();
 
-		// Snapshot first: clearing the tiers below would zero the moon count the
-		// recap is meant to report.
 		GameOver.SurvivalTimeToShow = run.SurvivalTime;
 		GameOver.KillsToShow = run.Kills;
 		GameOver.BestComboToShow = run.BestStreak;
 		GameOver.ScoreToShow = run.Score;
-		GameOver.MassAtDeath = run.MassNormalised;
-		GameOver.MoonsAtDeath = run.Moons;
+		GameOver.BossesBeaten = Mathf.Max(0, NextBossIndex - (BossActive ? 1 : 0));
 		GameOver.StardustEarned = run.StardustEarned;
-
-		// Every moon breaks away with the world that held them.
-		run.ClearTiers();
 
 		var records = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak, run.Score);
 		GameOver.IsNewBestScore = records.NewBestScore;
 		GameOver.IsNewBestTime = records.NewBestTime;
 
-		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakMassNormalised, run.Weapon);
+		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakBuildFraction, run.Weapon);
 
 		GameOver.LeaderboardRank = Leaderboard.Submit(
 			PlayerProfile.PlayerName, run.Score, run.SurvivalTime, run.Kills);
 
-		// Checked after RecordOrbit, not before: a world can be earned by the
-		// very orbit that satisfies it, and the recap is the only place left to
-		// say so before the scene changes out from under the in-game Announcer.
+		// Checked after RecordOrbit: a world can be earned by the very run that
+		// satisfies it, and the recap is the only place left to say so.
 		GameOver.NewlyUnlockedWorlds = Worlds.RefreshUnlocks();
-
-		// Finish-time achievement: has to be checked here, not in
-		// AchievementTracker, because there is no earlier moment at which "the
-		// orbit is over" is true. A near-zero threshold, not exactly zero — a
-		// moon block or Deep Well can leave mass at some vanishing fraction of
-		// a unit that should still read as "finished light".
-		if (run.Mass <= 0.01f && PlayerProfile.UnlockAchievement(AchievementId.MinMassFinish))
-			GameOver.NewlyUnlockedAchievement = Achievements.Get(AchievementId.MinMassFinish);
 
 		SceneTransition.Instance.ChangeScene("res://scenes/gameOver.tscn");
 	}
@@ -532,115 +714,109 @@ public partial class GameManager : Node2D
 		isDying = true;
 		run.SetProcess(false);
 		GameOver.DeathCause = cause;
+		DeathCause = cause;
 		Shake(DeathTrauma);
 		Hitstop(DeathHitstop);
+		Flash(new Color(1f, 0.82f, 0.35f), 0.25f, 0.6f);
 
-		// ignoreTimeScale, or the wait would stretch by the freeze it is timing.
+		// A beat longer than the freeze, so the planet visibly bursts before the fade.
 		await ToSignal(
-			GetTree().CreateTimer(DeathHitstop, processAlways: true, processInPhysics: false, ignoreTimeScale: true),
+			GetTree().CreateTimer(0.75f, processAlways: true, processInPhysics: false, ignoreTimeScale: true),
 			SceneTreeTimer.SignalName.Timeout);
 
 		if (IsInstanceValid(this))
 			TriggerGameOver();
 	}
 
+	// --- Kills and drops -----------------------------------------------------
+
 	/// <summary>
-	/// Called by bullets when they destroy a body. Owns the whole kill payoff —
-	/// score, debris, sound, freeze and shake — so the weighting stays in one place.
+	/// Every kill comes through here, whatever made it. Owns the payoff — score,
+	/// chunks, sound, freeze, shake and the drop roll — so the weighting stays in
+	/// one place. Dash and Nova kills skip the per-kill freeze: they arrive in
+	/// bunches and have their own, bigger moment.
 	/// </summary>
-	/// <param name="shedDebris">
-	/// False for a nova, whose kills are already paid for in mass. Refunding that
-	/// mass as debris would make the ability free.
-	/// </param>
-	public void RegisterKill(in Body.Remains remains, Vector2 at, bool shedDebris = true)
+	public void RegisterKill(in Body.Remains remains, Vector2 at, KillSource source)
 	{
 		if (isDying || isGameOver) return;
 		bool heavy = remains.Kind is BodyKind.Planetoid or BodyKind.Bulwark or BodyKind.Flare;
 
-		run?.AddKill();
+		run.AddKill();
+		// The pop, centred on what died and sized to it, plus a few chunks.
+		PopEffect.Spawn(this, at, 30f + 28f * remains.BurstScale, remains.BurstColor, 5 + Mathf.RoundToInt(remains.BurstScale * 2f));
+		ShedChunks(at, Mathf.Min(remains.DebrisCount + 1, 4), remains.BurstColor);
 
-		if (shedDebris)
+		run.AddDropProgress(UpgradeDrops.PointsFor(remains.Kind));
+		TryDropUpgrade(at);
+
+		// Many kills in one frame would stack into one ugly blare.
+		if (Time.GetTicksMsec() - lastKillSoundMsec > 45)
 		{
-			ShedDebris(remains, at);
-			MaybeDropPowerUp(remains, at, heavy);
+			lastKillSoundMsec = Time.GetTicksMsec();
+			PlayKillSound(heavy);
 		}
 
-		PlayKillSound(heavy);
-		Hitstop(heavy ? HeavyKillHitstop : LightKillHitstop);
-		Shake(heavy ? HeavyKillTrauma : LightKillTrauma);
-	}
-
-	/// <summary>
-	/// Draws a shockwave ring and its burst. The ring is not decoration: it is
-	/// the only thing that shows how far the blast actually reached, which the
-	/// player needs in order to learn the spacing.
-	/// </summary>
-	public void SpawnBlast(Vector2 at, float radius, Color colour)
-	{
-		var wave = new NovaWave { MaxRadius = radius, WaveColor = colour };
-		wave.GlobalPosition = at;
-		AddEntity(wave);
-
-		if (BurstScene == null)
-			return;
-
-		var burst = BurstScene.Instantiate<CpuParticles2D>();
-		burst.GlobalPosition = at;
-		burst.Amount = 220;
-		burst.Scale = new Vector2(radius / 165.0f, radius / 165.0f);
-		burst.Color = colour;
-		burst.Lifetime = 0.8f;
-		burst.Emitting = true;
-		burst.Finished += burst.QueueFree;
-		AddEntity(burst);
-	}
-
-	/// <summary>
-	/// Scatters the motes a dead body leaves behind. Gravity does the rest — the
-	/// player's own pull is what turns them into mass.
-	/// </summary>
-	private void ShedDebris(in Body.Remains remains, Vector2 at)
-	{
-		if (DebrisScene == null || remains.DebrisCount <= 0)
-			return;
-
-		int shed = remains.DebrisCount;
-		if (run != null && run.Has(RelicId.DoubleDebris))
-			shed *= 2;
-
-		int budget = MaxDebris - GetTree().GetNodeCountInGroup("debris");
-		int count = Mathf.Min(shed, budget);
-
-		for (int i = 0; i < count; i++)
+		if (source == KillSource.Shot)
 		{
-			var mote = DebrisScene.Instantiate<Debris>();
-			mote.GlobalPosition = at;
-			mote.Modulate = remains.BurstColor;
-			mote.AddToGroup("debris");
-			AddEntity(mote);
+			Hitstop(heavy ? HeavyKillHitstop : LightKillHitstop);
+			Shake(heavy ? HeavyKillTrauma : LightKillTrauma);
+		}
+		else
+		{
+			Shake(0.08f);
 		}
 	}
 
-	private void MaybeDropPowerUp(in Body.Remains remains, Vector2 at, bool heavy)
+	private void TryDropUpgrade(Vector2 at)
 	{
-		if (PowerUpScene == null || GetTree().GetNodeCountInGroup("pickups")>=2)
+		if (!run.DropDue)
 			return;
 
-		float chance = PowerUpDropChance + (heavy ? HeavyDropBonus : 0f);
-		if (RunState.Rng.Randf() > chance)
+		// Nothing useful right now: the meter stays full and the next kill tries again.
+		if (!UpgradeDrops.TryRoll(run, PendingRewards(), boss: false, out Reward reward))
+			return;
+
+		run.SpendDrop();
+		if (reward.IsShield)
+			run.LastShieldDropAt = run.SurvivalTime;
+		SpawnPickup(reward, at, Balance.DropLifetime, null);
+	}
+
+	/// <summary>
+	/// What is already lying in the arena, or about to be, so the roll can count
+	/// it as taken. Pickups enter the tree a frame late, so those still on their
+	/// way in are tracked separately.
+	/// </summary>
+	private List<Reward> PendingRewards()
+	{
+		var pending = new List<Reward>(arriving);
+		foreach (Node node in GetTree().GetNodesInGroup("pickups"))
+		{
+			if (node is PowerUp pickup && IsInstanceValid(pickup) && !pickup.IsQueuedForDeletion())
+				pending.Add(pickup.Reward);
+		}
+		return pending;
+	}
+
+	private readonly List<Reward> arriving = new();
+
+	private void SpawnPickup(Reward reward, Vector2 at, float lifetime, Vector2? flyTo)
+	{
+		if (PowerUpScene == null)
 			return;
 
 		var pickup = PowerUpScene.Instantiate<PowerUp>();
-		var kind=PowerUps.Roll();
-        if(kind==PowerUpKind.Nuke&&WaveNumber<5)kind=PowerUpKind.Damage;
-        if(kind==PowerUpKind.Shield&&run.HasShield)kind=PowerUpKind.Damage;
-        pickup.Configure(kind);
-		pickup.GlobalPosition = at;
+		pickup.Configure(reward, lifetime);
+		pickup.GlobalPosition = Arena.ClampToPlayable(at, 40f);
+		if (flyTo is Vector2 target)
+			pickup.FlyTo(target);
 
 		// Kills happen inside collision callbacks, and inserting an Area2D while
 		// the physics server is flushing queries is an error.
+		arriving.Add(reward);
 		Callable.From(() =>
 		{
+			arriving.Remove(reward);
 			if (IsInstanceValid(this) && IsInstanceValid(pickup))
 				AddEntity(pickup);
 			else
@@ -648,83 +824,107 @@ public partial class GameManager : Node2D
 		}).CallDeferred();
 	}
 
-	/// <summary>Applies a taken pickup. Nuke is the only one that acts immediately.</summary>
-	public void CollectPowerUp(PowerUpKind kind, Vector2 at)
+	/// <summary>
+	/// For the asset gallery tool: places a pickup directly. 0-7 are the
+	/// upgrades in catalogue order, anything else is a shield.
+	/// </summary>
+	public void PlaceRewardForTools(int index, Vector2 at)
 	{
-		PowerUps.Profile profile = PowerUps.Get(kind);
-
-		run?.GrantPowerUp(kind);
-		Announce(profile.Name, profile.Effect, profile.Colour);
-		SpawnBlast(at, 170f, profile.Colour);
-		Shake(0.18f);
-		PlayStreakSting(1.75f);
-
-		if (kind == PowerUpKind.Nuke)
-			DetonateNuke(at);
+		Reward reward = index >= 0 && index < RunUpgrades.All.Length ? new Reward(RunUpgrades.All[index].Id) : Reward.Shield;
+		SpawnPickup(reward, at, 60f, null);
 	}
 
-	/// <summary>
-	/// Clears the arena. These kills score — the pickup was earned — but shed no
-	/// debris, or a Nuke would hand back more mass than a nova costs.
-	/// </summary>
-	private void DetonateNuke(Vector2 at)
+	/// <summary>Applies a pickup the planet just touched. Instant; nothing pauses.</summary>
+	public void CollectReward(Reward reward, Vector2 at)
 	{
-		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
+		if (reward.IsShield)
 		{
-			if (node is not Body body || !IsInstanceValid(body))
-				continue;
-
-			if (at.DistanceTo(body.GlobalPosition) > NukeRadius)
-				continue;
-
-			Body.Remains remains = body.GetRemains();
-			if (body.TakeDamage(9999, (body.GlobalPosition - at).Normalized()))
-				RegisterKill(remains, body.GlobalPosition, shedDebris: false);
+			run.GrantShield();
+			Toast("SHIELD  •  BLOCKS ONE HIT", UpgradeDrops.ShieldColour);
+			PlayCue("shield_get");
+		}
+		else if (run.TryGrant(reward.Upgrade))
+		{
+			RunUpgrades.Profile profile = RunUpgrades.Get(reward.Upgrade);
+			int level = run.LevelOf(profile.Id);
+			string rank = profile.Equips != null ? "EQUIPPED" : level >= profile.MaxLevel ? "MAX" : $"LV {level}";
+			Toast($"{profile.Name}  •  {rank}", profile.Colour);
+			PlayCue("upgrade_chirp");
+		}
+		else
+		{
+			// Only reachable if the build changed between drop and pickup.
+			run.AddBonus(500);
+			Toast("BONUS  •  +500", ArcadeSkin.Orange);
+			PlayCue("upgrade_chirp");
 		}
 
-		SpawnBlast(at, NukeRadius * 0.5f, PowerUps.Nuke.Colour);
-		Hitstop(0.16f);
-		Shake(1.0f);
+		SpawnBlast(at, 170f, reward.Colour);
+		Shake(0.15f);
+		player.GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
 	}
 
-	/// <summary>A mote reaching the world. Tiny by design: this fires constantly.</summary>
-	public void PlayAbsorbTick()
+	// --- Effects ----------------------------------------------------------------
+
+	/// <summary>
+	/// A shockwave ring and its burst. The ring is not decoration: it shows how far
+	/// the blast actually reached.
+	/// </summary>
+	public void SpawnBlast(Vector2 at, float radius, Color colour)
 	{
-		if (absorbSound == null)
+		if (!Arena.IsNearView(at, radius))
 			return;
 
-		absorbSound.PitchScale = RunState.Rng.RandfRange(1.6f, 2.1f);
-		absorbSound.Play();
+		var wave = new NovaWave { MaxRadius = radius, WaveColor = colour };
+		wave.GlobalPosition = at;
+		AddEntity(wave);
+
+		PopEffect.Spawn(this, at, Mathf.Min(radius * 0.32f, 170f), colour, radius > 300f ? 12 : 8, 0.5f);
 	}
 
-	/// <summary>A moon took a hit meant for the world, and breaks away with the mass that earned it.</summary>
-	public void OnMoonBlocked(Vector2 at)
+	/// <summary>A small bright pop where a dash, a Nova or a cleared shot connected.</summary>
+	public void SpawnImpact(Vector2 at, Color colour)
 	{
-		run?.BreakMoon();
-		Hitstop(HeavyKillHitstop);
-		Shake(HeavyKillTrauma);
-		PlayKillSound(true);
+		PopEffect.Spawn(this, at, 28f, colour, 4, 0.3f);
+	}
+
+	/// <summary>Chunks that tumble off something breaking apart. Skipped off screen.</summary>
+	public void ShedChunks(Vector2 at, int count, Color colour, float speedScale = 1f)
+	{
+		if (DebrisScene == null || count <= 0 || !Arena.IsNearView(at, 200f))
+			return;
+
+		int budget = MaxDebris - GetTree().GetNodeCountInGroup("debris");
+		count = Mathf.Min(count, budget);
+
+		for (int i = 0; i < count; i++)
+		{
+			var chunk = DebrisScene.Instantiate<Debris>();
+			chunk.GlobalPosition = at;
+			chunk.Modulate = colour;
+			chunk.LaunchSpeedMin *= speedScale;
+			chunk.LaunchSpeedMax *= speedScale;
+			chunk.AddToGroup("debris");
+			AddEntity(chunk);
+		}
 	}
 
 	private void OnResumeGame()
 	{
 		if (isPaused)
-		{
 			TogglePause();
-		}
 	}
 
 	private void OnGiveUpGame()
 	{
-		// Not a death — no cause left over from a previous orbit should show.
+		// Not a death — no cause left over from a previous run should show.
 		GameOver.DeathCause = "";
 		TriggerGameOver();
 	}
 
 	/// <summary>
-	/// One sample stands in for the light/heavy kill sounds until the real ones
-	/// exist: heavy kills drop the pitch and gain volume, and every shot gets a
-	/// little jitter so a long streak does not fatigue.
+	/// One sample stands in for the light and heavy kill sounds: heavy kills drop
+	/// the pitch and gain volume, and every shot gets a little jitter.
 	/// </summary>
 	private void PlayKillSound(bool heavy)
 	{
@@ -739,15 +939,10 @@ public partial class GameManager : Node2D
 		if (!milestone || streakSound == null)
 			return;
 
-		// Each milestone lands a step higher, capped so it stays musical.
 		PlayStreakSting(streak >= 25 ? 2.0f : streak >= 10 ? 1.7f : 1.45f);
 		Shake(0.12f);
 	}
 
-	/// <summary>
-	/// One sample doing several jobs: streak milestones ring up, boss arrival and
-	/// defeat ring down. Placeholder until the real stings exist.
-	/// </summary>
 	private void PlayStreakSting(float pitch)
 	{
 		if (streakSound == null)
@@ -760,12 +955,6 @@ public partial class GameManager : Node2D
 	public void PlayButtonSound()
 	{
 		buttonSound.Play();
-	}
-
-	public void PlayUpgradeSound()
-	{
-		PlayCue("upgrade_chirp");
-		Shake(0.12f);
 	}
 
 	public void PlayHoverSound()
