@@ -12,6 +12,9 @@ public partial class CoreBar : Control
 	private static readonly Color Filling = new("c66e80");
 	private static readonly Color Full = new("f5a451");
 
+	/// <summary>Size of the word written inside the bar.</summary>
+	public int TextSize { get; init; } = 16;
+
 	private float shown;
 	private float target;
 	private bool ready;
@@ -50,7 +53,10 @@ public partial class CoreBar : Control
 		DrawStyleBox(Box(Track, Rim, radius, 2), area);
 
 		if (complete)
+		{
+			Caption("ALL UPGRADES", ArcadeSkin.Muted);
 			return;
+		}
 
 		float width = Mathf.Max((Size.X - 6f) * shown, 0f);
 		if (width > 1f)
@@ -62,6 +68,19 @@ public partial class CoreBar : Control
 
 		if (ready)
 			DrawStyleBox(Box(new Color(0, 0, 0, 0), new Color(Full, 0.5f + 0.4f * Mathf.Sin(time * 6f)), radius + 4f, 3), area.Grow(4f));
+
+		Caption(ready ? "CORE FULL" : "CORE", ready ? ArcadeSkin.Ink : ArcadeSkin.Cream);
+	}
+
+	/// <summary>The bar's name, centred in it, outlined so it reads over any fill.</summary>
+	private void Caption(string text, Color colour)
+	{
+		Font font = ArcadeSkin.Font;
+		Vector2 size = font.GetStringSize(text, HorizontalAlignment.Left, -1, TextSize);
+		var at = new Vector2((Size.X - size.X) * 0.5f, (Size.Y + font.GetAscent(TextSize) - font.GetDescent(TextSize)) * 0.5f);
+		if (colour != ArcadeSkin.Ink)
+			DrawStringOutline(font, at, text, HorizontalAlignment.Left, -1, TextSize, 5, new Color(0.1f, 0.05f, 0.12f));
+		DrawString(font, at, text, HorizontalAlignment.Left, -1, TextSize, colour);
 	}
 
 	private static StyleBoxFlat Box(Color fill, Color border, float radius, int line)

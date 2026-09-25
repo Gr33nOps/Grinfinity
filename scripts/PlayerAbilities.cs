@@ -37,6 +37,11 @@ public class PlayerAbilities
 	public PlayerAbilities(Player playerRef)
 	{
 		player = playerRef;
+		// Every ability starts the run charging, so the first Overdrive and Nova
+		// are earned by surviving rather than spent in the first second.
+		dashCooldownLeft = Balance.DashCooldown;
+		overdriveCooldownLeft = Balance.OverdriveCooldown;
+		novaCooldownLeft = Balance.NovaCooldown;
 	}
 
 	public bool IsDashing => isDashing;

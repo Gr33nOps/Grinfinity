@@ -129,6 +129,8 @@ public partial class RunState : Node
 			return false;
 		if (RunUpgrades.AbilityFor(profile.Branch) is Ability required && !IsUnlocked(required))
 			return false;
+		if (profile.Requires is RunUpgradeId below && LevelOf(below) == 0)
+			return false;
 		if (profile.Equips != null && Weapon != WeaponId.Comet)
 			return false;
 
@@ -262,6 +264,8 @@ public partial class RunState : Node
 		if (profile == null || IsMaxed(id))
 			return false;
 		if (RunUpgrades.AbilityFor(profile.Branch) is Ability required && !IsUnlocked(required))
+			return false;
+		if (profile.Requires is RunUpgradeId below && LevelOf(below) == 0)
 			return false;
 		return profile.Equips == null || Weapon == WeaponId.Comet;
 	}

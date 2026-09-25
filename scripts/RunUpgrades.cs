@@ -51,6 +51,8 @@ public static class RunUpgrades
 		public WeaponId? Equips { get; init; }
 		/// <summary>Relative chance in a boss reward. Zero keeps it out of boss rewards.</summary>
 		public float BossWeight { get; init; } = 1f;
+		/// <summary>The node below this one in the tree. Needs one rank before this opens.</summary>
+		public RunUpgradeId? Requires { get; init; }
 	}
 
 	private static readonly Color Gun = new("f5a451");
@@ -67,13 +69,13 @@ public static class RunUpgrades
 	public static readonly Profile SpreadShot = new()
 	{
 		Id = RunUpgradeId.SpreadShot, Branch = Branch.Gun, Name = "SPREAD SHOT",
-		Short = "Extra angled shots", Icon = "spread", Colour = Gun, MaxLevel = 2, BossWeight = 1.2f
+		Short = "Extra angled shots", Icon = "spread", Colour = Gun, MaxLevel = 2, BossWeight = 1.2f, Requires = RunUpgradeId.FireRate
 	};
 
 	public static readonly Profile Piercing = new()
 	{
 		Id = RunUpgradeId.Piercing, Branch = Branch.Gun, Name = TranslationServer.Translate("UPG_Piercing_NAME"),
-		Short = "Shots go through foes", Icon = "pierce", Colour = Gun, MaxLevel = 2, BossWeight = 1.1f
+		Short = "Shots go through foes", Icon = "pierce", Colour = Gun, MaxLevel = 2, BossWeight = 1.1f, Requires = RunUpgradeId.SpreadShot
 	};
 
 	// The two weapons are a choice, not a pair: taking one closes the other, and
@@ -81,13 +83,13 @@ public static class RunUpgrades
 	public static readonly Profile DebrisCannon = new()
 	{
 		Id = RunUpgradeId.DebrisCannon, Branch = Branch.Gun, Name = "DEBRIS CANNON",
-		Short = "Six pellets, close range", Icon = "cannon", Colour = new Color("c9a0ff"), Equips = WeaponId.DebrisCannon, BossWeight = 0f
+		Short = "Six pellets, close range", Icon = "cannon", Colour = new Color("c9a0ff"), Equips = WeaponId.DebrisCannon, BossWeight = 0f, Requires = RunUpgradeId.Piercing
 	};
 
 	public static readonly Profile IonLance = new()
 	{
 		Id = RunUpgradeId.IonLance, Branch = Branch.Gun, Name = "ION LANCE",
-		Short = "Slow, heavy, pierces lines", Icon = "lance", Colour = new Color("8ce6ff"), Equips = WeaponId.IonLance, BossWeight = 0f
+		Short = "Slow, heavy, pierces lines", Icon = "lance", Colour = new Color("8ce6ff"), Equips = WeaponId.IonLance, BossWeight = 0f, Requires = RunUpgradeId.Piercing
 	};
 
 	public static readonly Profile DashReach = new()
@@ -99,7 +101,7 @@ public static class RunUpgrades
 	public static readonly Profile DashBlink = new()
 	{
 		Id = RunUpgradeId.DashBlink, Branch = Branch.Dash, Name = "DASH BLINK",
-		Short = "Longer safe blink", Icon = "dash", Colour = Move, MaxLevel = 2
+		Short = "Longer safe blink", Icon = "dash", Colour = Move, MaxLevel = 2, Requires = RunUpgradeId.DashReach
 	};
 
 	public static readonly Profile OverdrivePower = new()
@@ -111,7 +113,7 @@ public static class RunUpgrades
 	public static readonly Profile OverdriveDuration = new()
 	{
 		Id = RunUpgradeId.OverdriveDuration, Branch = Branch.Overdrive, Name = "OVERDRIVE TIME",
-		Short = "Overdrive lasts longer", Icon = "rapid", Colour = Power, MaxLevel = 2
+		Short = "Overdrive lasts longer", Icon = "rapid", Colour = Power, MaxLevel = 2, Requires = RunUpgradeId.OverdrivePower
 	};
 
 	public static readonly Profile BiggerNova = new()
@@ -123,7 +125,7 @@ public static class RunUpgrades
 	public static readonly Profile NovaPower = new()
 	{
 		Id = RunUpgradeId.NovaPower, Branch = Branch.Nova, Name = "NOVA POWER",
-		Short = "Stronger, recharges faster", Icon = "nova", Colour = Blast, MaxLevel = 2
+		Short = "Stronger, recharges faster", Icon = "nova", Colour = Blast, MaxLevel = 2, Requires = RunUpgradeId.BiggerNova
 	};
 
 	// Declared last: static field initialisers run in source order.

@@ -18,7 +18,7 @@ A **shield** blocks exactly one hit. You never start with one; it drops like an 
 
 ## Abilities
 
-All three are ready from the first second, each on its own cooldown. There is no energy meter. (Setting the unlock times in `Balance.cs` above zero staggers them again.)
+All three are unlocked from the first second but start the run charging, so the first Dash comes at 0:02, Overdrive at 0:26 and Nova at 0:40. Each has its own cooldown. There is no energy meter. (Setting the unlock times in `Balance.cs` above zero staggers them again.)
 
 | Ability | Cooldown | Keys | What it does |
 |---|---|---|---|
@@ -49,7 +49,7 @@ The whole game is paused while the upgrade screen is open: enemies, shots, coold
 | Nova | Bigger Nova | 3 | +15% Nova radius per rank |
 | Nova | Nova Power | 2 | +3% boss damage and 15% shorter cooldown per rank |
 
-The Dash, Overdrive and Nova branches stay locked until their ability is online. Rings appear around the planet at 5, 11 and 17 ranks, out of 23.
+The upgrade screen is drawn as a tree growing out of the CORE: each branch runs bottom to top in the order above, and every node needs one rank in the node below it before it opens. The gun branch ends in a fork: Debris Cannon or Ion Lance, reached after one rank of Piercing Shots. The Dash, Overdrive and Nova branches stay locked until their ability is online. Rings appear around the planet at 5, 11 and 17 ranks, out of 23.
 
 ## Pickups
 

@@ -128,8 +128,12 @@ public partial class ReleaseQa : Node
 
         var locked = FreshRun(this);
         Check(!locked.TryGrant(RunUpgradeId.DashReach) && !locked.TryGrant(RunUpgradeId.BiggerNova) && !locked.TryGrant(RunUpgradeId.OverdrivePower), "ability branches stay locked until their ability is");
+        Check(!locked.TryGrant(RunUpgradeId.SpreadShot), "a node needs one rank in the node below it");
+        locked.TryGrant(RunUpgradeId.FireRate);
         for (int i = 0; i < 10; i++) locked.TryGrant(RunUpgradeId.SpreadShot);
         Check(locked.LevelOf(RunUpgradeId.SpreadShot) == RunUpgrades.SpreadShot.MaxLevel, "upgrades stop at their maximum");
+        Check(!locked.TryGrant(RunUpgradeId.DebrisCannon), "the weapons sit above Piercing Shots");
+        locked.TryGrant(RunUpgradeId.Piercing);
         Check(locked.TryGrant(RunUpgradeId.DebrisCannon) && locked.Weapon == WeaponId.DebrisCannon, "debris cannon replaces the comet");
         Check(!locked.TryGrant(RunUpgradeId.IonLance) && locked.Weapon == WeaponId.DebrisCannon, "the two weapons are one choice");
         locked.GrantShield(); locked.GrantShield();
@@ -307,6 +311,7 @@ public partial class ReleaseQa : Node
             game.Run.Unlock(Ability.Overdrive);
             Check(player.FireInterval(true) < player.FireInterval(false) * 0.5f, "overdrive fires far faster");
             int shots = GetTree().GetNodeCountInGroup("player_bullets");
+            game.Run.TryGrant(RunUpgradeId.FireRate);
             game.Run.TryGrant(RunUpgradeId.SpreadShot);
             player.ShootBullet(player.GlobalPosition + Vector2.Right * 300);
             await Frames(1);

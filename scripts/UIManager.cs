@@ -15,7 +15,6 @@ public partial class UIManager : Node
 	private Label time, score, streak, best, hint, toast;
 	private TextureRect shieldChip;
 	private CoreBar coreBar;
-	private Label coreLabel;
 	private Button upgradePrompt;
 	private Player player;
 	private RunState run;
@@ -23,6 +22,7 @@ public partial class UIManager : Node
 	private Tween toastTween;
 	private float refresh;
 	private readonly Dictionary<Ability, AbilitySlot> slots = new();
+	private const float HintSeconds = 5f;
 
 	/// <summary>"SHIFT / B" — the keyboard key as bound, and the pad button.</summary>
 	/// <summary>"TAB / BACK" — how to open the upgrade screen.</summary>
@@ -90,17 +90,14 @@ public partial class UIManager : Node
 			slots[ability] = slot;
 		}
 
-		// CORE: a slim bar just above the abilities, with the upgrade prompt
-		// sitting on top of it when a bar is full. Clickable as well as keyed.
-		coreBar = new CoreBar { Name = "CoreBar" };
+		// CORE: a bar exactly as wide as the three ability rings, sitting on
+		// them, with its name inside it rather than hanging off one end. The
+		// upgrade prompt sits on top of it when a bar is full.
+		float ringSpan = (3 * (Size(84) + 40f) + 2 * Size(14)) * 0.5f - 20f;
+		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(16) };
 		coreBar.AnchorLeft = .5f; coreBar.AnchorRight = .5f; coreBar.AnchorTop = 1; coreBar.AnchorBottom = 1;
-		coreBar.OffsetLeft = -Size(210); coreBar.OffsetRight = Size(210); coreBar.OffsetTop = -Size(150) - 30; coreBar.OffsetBottom = -Size(150) - 12;
+		coreBar.OffsetLeft = -ringSpan; coreBar.OffsetRight = ringSpan; coreBar.OffsetTop = -Size(150) - Size(34); coreBar.OffsetBottom = -Size(150) - 10;
 		hud.AddChild(coreBar);
-		coreLabel = ArcadeSkin.Label("CORE", Size(17), ArcadeSkin.Muted);
-		coreLabel.HorizontalAlignment = HorizontalAlignment.Right;
-		coreLabel.AnchorLeft = .5f; coreLabel.AnchorRight = .5f; coreLabel.AnchorTop = 1; coreLabel.AnchorBottom = 1;
-		coreLabel.OffsetLeft = -Size(210) - 90; coreLabel.OffsetRight = -Size(210) - 12; coreLabel.OffsetTop = -Size(150) - 36; coreLabel.OffsetBottom = -Size(150) - 8;
-		hud.AddChild(coreLabel);
 
 		upgradePrompt = ArcadeSkin.Button("", () => GameManager.Of(this)?.OpenUpgradeTree(), true);
 		upgradePrompt.Name = "UpgradePrompt";
@@ -108,7 +105,7 @@ public partial class UIManager : Node
 		upgradePrompt.AddThemeFontSizeOverride("font_size", Size(22));
 		upgradePrompt.CustomMinimumSize = new Vector2(0, Size(42));
 		upgradePrompt.AnchorLeft = .5f; upgradePrompt.AnchorRight = .5f; upgradePrompt.AnchorTop = 1; upgradePrompt.AnchorBottom = 1;
-		upgradePrompt.OffsetLeft = -Size(190); upgradePrompt.OffsetRight = Size(190); upgradePrompt.OffsetTop = -Size(150) - 84; upgradePrompt.OffsetBottom = -Size(150) - 42;
+		upgradePrompt.OffsetLeft = -ringSpan; upgradePrompt.OffsetRight = ringSpan; upgradePrompt.OffsetTop = -Size(150) - Size(34) - 12 - Size(42); upgradePrompt.OffsetBottom = -Size(150) - Size(34) - 12;
 		upgradePrompt.Visible = false;
 		hud.AddChild(upgradePrompt);
 
@@ -167,7 +164,10 @@ public partial class UIManager : Node
 				.SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
 		}
 		upgradePrompt.Visible = ready;
-		coreLabel.Text = run.BuildComplete ? "MAXED" : "CORE";
+
+		// The how-to lines are for the first few seconds only, then fade away.
+		hint.Visible = run.SurvivalTime < HintSeconds;
+		hint.Modulate = new Color(1, 1, 1, Mathf.Clamp(HintSeconds - run.SurvivalTime, 0f, 1f));
 
 		foreach (var (ability, slot) in slots)
 		{
@@ -191,7 +191,6 @@ public partial class UIManager : Node
 		score.Text = $"SCORE  {run.Score:N0}";
 		streak.Text = run.Streak >= 2 ? $"{run.Streak} COMBO" : "";
 		best.Text = ScoreManager.BestTime > 0f ? $"BEST  {ScoreManager.FormatTime(ScoreManager.BestTime)}" : "";
-		hint.Visible = run.SurvivalTime < 10f;
 		shieldChip.Visible = run.HasShield;
 	}
 
