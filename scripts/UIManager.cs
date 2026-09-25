@@ -13,7 +13,8 @@ using Godot;
 public partial class UIManager : Node
 {
 	private Control hud;
-	private Label time, streak, best, hint, toast;
+	private Label time, streak, best, toast;
+	private ControlsCard hint;
 	private TextureRect shieldChip;
 	private CoreBar coreBar;
 	private Button upgradePrompt;
@@ -42,12 +43,6 @@ public partial class UIManager : Node
 	private static string KeyName(string action) =>
 		OS.GetKeycodeString(GameSettings.GetActionKey(action)).ToUpperInvariant();
 
-	/// <summary>The first-seconds how-to, for keyboard and mouse or for a controller. Never both.</summary>
-	private static string HowTo() =>
-		(InputDevice.Pad
-			? "Left stick to move     •     Right stick to aim     •     RT to shoot"
-			: "WASD to move     •     Mouse to aim     •     Click to shoot")
-		+ "\n" + $"{ControlHint(Ability.Dash)} to dash     •     {ControlHint(Ability.Overdrive)} for overdrive     •     {ControlHint(Ability.Nova)} for nova";
 
 	public override void _Ready()
 	{
@@ -144,12 +139,12 @@ public partial class UIManager : Node
 		toast.Modulate = new Color(1, 1, 1, 0);
 		hud.AddChild(toast);
 
-		// Two lines: the basics, then the three ability buttons, which are all
-		// live from the first second.
-		hint = ArcadeSkin.Label(HowTo(), Size(23), ArcadeSkin.Muted);
-		hint.Name = "HowTo";
+		// The how-to: pictures of the keys or buttons, just under the planet
+		// where the player is already looking, for the first few seconds.
+		hint = new ControlsCard { Name = "HowTo", UiScale = scale };
 		hint.AnchorLeft = .5f; hint.AnchorRight = .5f; hint.AnchorTop = .5f; hint.AnchorBottom = .5f;
-		hint.OffsetLeft = -650; hint.OffsetRight = 650; hint.OffsetTop = 140; hint.OffsetBottom = 220;
+		hint.OffsetTop = 150;
+		hint.GrowHorizontal = Control.GrowDirection.Both;
 		hud.AddChild(hint);
 
 		var bossBar = root.GetNode<Control>("UI/BossBar");
@@ -177,7 +172,7 @@ public partial class UIManager : Node
 		if (padHints != InputDevice.Pad)
 		{
 			padHints = InputDevice.Pad;
-			hint.Text = HowTo();
+			hint.Build();
 			promptKey.Text = $"PRESS {UpgradeHint()}";
 		}
 		bool ready = run.CoreReady;

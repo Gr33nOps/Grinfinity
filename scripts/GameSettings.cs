@@ -32,11 +32,12 @@ public partial class GameSettings : Node
 	private const float MinAudibleLinear = 0.001f;
 
 	// v2 moved rapid fire off Q. v3 adds mode and difficulty. v4 adds every
-	// M7 option and accessibility toggle. Bumping the version lets
+	// M7 option and accessibility toggle. v5 moves Nova's default from R to Q.
+	// Bumping the version lets
 	// LoadSettings drop the stale bind instead of restoring the key the
 	// migration exists to escape; an older save simply has none of the new
 	// fields on record and falls back to their defaults.
-	private const int SaveVersion = 4;
+	private const int SaveVersion = 5;
 
 	/// <summary>Windowed-mode choices. Fullscreen ignores this and uses the display's own size.</summary>
 	public static readonly (int Width, int Height)[] Resolutions =
@@ -437,7 +438,12 @@ public partial class GameSettings : Node
 
 			// v1 saves carry the old Q default for rapid fire. Some setups emit
 			// phantom Q presses, so restoring it would self-trigger the ability.
-			if (version < SaveVersion && action == "rapid_fire" && (Key)stored == Key.Q)
+			if (version < 2 && action == "rapid_fire" && (Key)stored == Key.Q)
+				continue;
+
+			// Before v5 Nova defaulted to R, and every save records every key.
+			// A stored R is that old default, so the new one (Q) wins.
+			if (version < 5 && action == "nova" && (Key)stored == Key.R)
 				continue;
 
 			SetActionKey(action, (Key)stored);

@@ -24,7 +24,7 @@ All three are unlocked from the first second but start the run charging, so the 
 |---|---|---|---|
 | Dash | 2.0 s | Shift / B | Zooms 340 units in your move direction (or aim direction when standing still). While moving you cannot be hurt, and every normal enemy the path crosses is destroyed. Then the planet blinks for 0.4 s: still safe, but no longer destroying anything. Get clear before the blink ends. A boss takes 3.5% of its health, once per dash. |
 | Overdrive | 26 s | E / X | 6 seconds of your current gun going wild: 2.5× fire rate, double damage, +1 pierce, bigger and faster shots. It keeps your spread and pierce. |
-| Nova | 40 s | R / Y | A shockwave out to 720 units. Normal enemies it reaches are destroyed, enemy shots in it are wiped, and a boss takes 10% of its health. |
+| Nova | 40 s | Q / Y | A shockwave out to 720 units. Normal enemies it reaches are destroyed, enemy shots in it are wiped, and a boss takes 10% of its health. |
 
 The Accessibility menu can switch Overdrive to hold-to-use.
 
@@ -108,7 +108,7 @@ The combo counter under the time counts kills in a row, and breaks after 2.5 sec
 
 ## On-screen buttons
 
-Hints only show the controls you are using. Touch the keyboard or mouse and they say SHIFT, E, R, TAB; touch a controller and they say B, X, Y, BACK. Plugging a controller in switches to controller hints.
+Hints only show the controls you are using. Touch the keyboard or mouse and they say SHIFT, E, Q, TAB; touch a controller and they say B, X, Y, BACK. Plugging a controller in switches to controller hints. For the first 5 seconds of a run a small card under the planet shows pictures of the keys (or buttons) to move, aim, shoot and use each ability, then fades away.
 
 ## Faces
 
