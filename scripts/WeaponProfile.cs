@@ -57,7 +57,7 @@ public sealed class WeaponProfile
 		Name = TranslationServer.Translate("WEAPON_Comet_NAME"),
 		Fantasy = TranslationServer.Translate("WEAPON_Comet_FANTASY"),
 		Tradeoff = TranslationServer.Translate("WEAPON_Comet_TRADEOFF"),
-		FireInterval = 0.22f,
+		FireInterval = 0.18f,
 		Speed = 950f,
 		Range = 3.0f,
 		Tint = new Color(0.95f, 0.62f, 0.35f)

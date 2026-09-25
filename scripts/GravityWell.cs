@@ -29,6 +29,7 @@ public partial class GravityWell : Node2D
 
 	public override void _Ready()
 	{
+        AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/vortex.svg"),Scale=Vector2.One*.48f});
 		manager = GameManager.Of(this);
 		world = manager?.GetNodeOrNull<Player>("player");
 		AddToGroup("hazards");
@@ -47,10 +48,14 @@ public partial class GravityWell : Node2D
 			return;
 		}
 
-		PullBodies(step);
-		PullDebris(step);
-		PullBullets(step);
-		PullWorld(step);
+		// A visible warning before the core becomes dangerous.
+		if (age >= 1.2f)
+		{
+			PullBodies(step);
+			PullDebris(step);
+			PullBullets(step);
+			PullWorld(step);
+		}
 
 		// Fade in and out over the first and last second, so it never simply
 		// pops into or out of existence mid-fight.

@@ -16,7 +16,7 @@ public partial class BossBrood : Boss
 		BossName = "THE BROOD";
 		ArrivalLine = TranslationServer.Translate("BOSS_Brood_ARRIVAL");
 		BossColor = new Color(0.58f, 0.82f, 0.4f);
-		MaxHealth = 140;
+		MaxHealth = 220;
 	}
 
 	[Export] public float ChaseSpeed { get; set; } = 62.0f;
@@ -58,6 +58,7 @@ public partial class BossBrood : Boss
 		MoveAndSlide();
 
 		spawnTimer -= step;
+        Windup=Mathf.Clamp(1-spawnTimer/.45f,0,1);
 		if (spawnTimer <= 0f)
 		{
 			spawnTimer = Mathf.Lerp(MinSpawnInterval, SpawnInterval, HealthFraction);
@@ -72,7 +73,7 @@ public partial class BossBrood : Boss
 
 		// The arena's own cap still applies — a boss fight flooding past it would
 		// undo the measurement in ROADMAP.md that said pooling wasn't needed yet.
-		if (GetTree().GetNodeCountInGroup("bodies") >= 90)
+		if (GetTree().GetNodeCountInGroup("bodies") >= 12)
 			return;
 
 		if (BodyScene.Instantiate() is not Body shard)

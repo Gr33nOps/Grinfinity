@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
@@ -49,21 +50,34 @@ public partial class Body : CharacterBody2D, IShootable
 	[Export] public PackedScene BodyScene { get; set; }
 
 	/// <summary>
-	/// The nine face sprites, loaded once and shared by every body. Centralised
-	/// here rather than kept per-spawner, so every path that creates a body —
-	/// the spawner, a Fracture's splinters, a boss's broodlings — gets the same
-	/// correct face instead of only the spawner's own spawns being dressed.
+	/// One distinct silhouette per kind, loaded once and shared by every body.
+	/// Centralised here rather than kept per-spawner, so every path that creates
+	/// a body — the spawner, a Fracture's splinters, a boss's broodlings — gets
+	/// the same correct face instead of only the spawner's own spawns being dressed.
 	/// </summary>
-	private static Texture2D[] faceTextures;
+	private static Dictionary<BodyKind, Texture2D> faceTextures;
+
+	/// <summary>Splinter is drawn at half the family canvas — see ASSETS.md.</summary>
+	private static readonly Dictionary<BodyKind, string> FaceFiles = new()
+	{
+		[BodyKind.Drifter] = "body_drifter",
+		[BodyKind.Shard] = "body_shard",
+		[BodyKind.Planetoid] = "body_planetoid",
+		[BodyKind.Fracture] = "body_fracture",
+		[BodyKind.Splinter] = "body_fracture_mini",
+		[BodyKind.Satellite] = "body_satellite",
+		[BodyKind.Flare] = "body_flare",
+		[BodyKind.Bulwark] = "body_bulwark"
+	};
 
 	private static void EnsureFacesLoaded()
 	{
 		if (faceTextures != null)
 			return;
 
-		faceTextures = new Texture2D[9];
-		for (int i = 0; i < faceTextures.Length; i++)
-			faceTextures[i] = GD.Load<Texture2D>($"res://sprites/enemy {i + 1}.png");
+		faceTextures = new Dictionary<BodyKind, Texture2D>();
+		foreach (var (kind, file) in FaceFiles)
+			faceTextures[kind] = GD.Load<Texture2D>($"res://art/cosmic/{file}.svg");
 	}
 
 	private Node2D world;
@@ -76,6 +90,7 @@ public partial class Body : CharacterBody2D, IShootable
 	private int maxHealth = 1;
 	private bool destroyed;
 	private Tween hitFlash;
+    private float visualTime;
 
 	public BodyKind Kind { get; private set; } = BodyKind.Drifter;
 
@@ -86,12 +101,6 @@ public partial class Body : CharacterBody2D, IShootable
 	public Color BaseTint { get; set; } = Colors.White;
 	public float KnockbackStrength { get; set; } = 260.0f;
 	public int DebrisCount { get; set; } = 2;
-
-	/// <summary>
-	/// Which face sprite this kind wears. Fixed per kind so a Bulwark always
-	/// looks like a Bulwark; -1 leaves it to the spawner to pick at random.
-	/// </summary>
-	public int TextureIndex { get; set; } = -1;
 
 	/// <summary>Current velocity under gravity, before knockback is added.</summary>
 	public Vector2 Drift { get; set; } = Vector2.Zero;
@@ -192,10 +201,10 @@ public partial class Body : CharacterBody2D, IShootable
 	}
 
 	/// <summary>
-	/// Picks this body's face. Most kinds pin one via <see cref="TextureIndex"/>
-	/// so they stay recognisable between orbits; only the baseline Drifter is
-	/// left to vary. Runs in _Ready, so GlobalPosition must already be set —
-	/// every spawn path sets it before adding the body to the tree.
+	/// Picks this body's face. Every kind wears its own distinct silhouette, so
+	/// it stays recognisable at a glance in a busy fight. Runs in _Ready, so
+	/// GlobalPosition must already be set — every spawn path sets it before
+	/// adding the body to the tree.
 	/// </summary>
 	private void ApplyFace()
 	{
@@ -203,18 +212,14 @@ public partial class Body : CharacterBody2D, IShootable
 			return;
 
 		EnsureFacesLoaded();
-
-		int index = TextureIndex >= 0
-			? Mathf.Min(TextureIndex, faceTextures.Length - 1)
-			: RunState.Rng.RandiRange(0, Mathf.Min(2, faceTextures.Length - 1));
-		sprite.Texture = faceTextures[index];
+		sprite.Texture = faceTextures[Kind];
 
 		// Bodies spawned past the bottom-right edge get flipped, purely for
 		// variety — otherwise every off-screen arrival on that side looks identical.
 		Vector2 viewportSize = GetViewportRect().Size;
 		if (GlobalPosition.X > viewportSize.X || GlobalPosition.Y > viewportSize.Y)
 		{
-			sprite.FlipV = true;
+			sprite.FlipV = false;
 			sprite.FlipH = true;
 		}
 	}
@@ -242,6 +247,7 @@ public partial class Body : CharacterBody2D, IShootable
 		Kind = kind;
 		behaviour = BodyBehaviours.For(kind);
 		behaviour.Apply(this);
+        BaseTint=Colors.White;
 
 		if (GameSettings.Instance?.ColourblindMode == true)
 		{
@@ -253,6 +259,16 @@ public partial class Body : CharacterBody2D, IShootable
 		Modulate = BaseTint;
 	}
 
+    public override void _Process(double delta)
+    {
+        visualTime+=(float)delta;
+        if(sprite!=null)
+        {
+            sprite.Rotation=Kind==BodyKind.Bulwark?0:-Rotation+Mathf.Sin(visualTime*2+GetInstanceId()%19)*.09f;
+            if(hitFlash==null||!hitFlash.IsRunning())
+            {float squash=1+.025f*Mathf.Sin(visualTime*3+GetInstanceId()%13);sprite.Scale=spriteBaseScale*new Vector2(1/squash,squash);}
+        }
+    }
 	public override void _PhysicsProcess(double delta)
 	{
 		if (!HasWorld)
@@ -357,7 +373,7 @@ public partial class Body : CharacterBody2D, IShootable
 		// while the server is flushing queries is an error. The add waits for idle.
 		Callable.From(() =>
 		{
-			if (IsInstanceValid(manager) && IsInstanceValid(child))
+			if (IsInstanceValid(manager) && IsInstanceValid(child) && GetTree().GetNodeCountInGroup("bodies") < 24)
 				manager.AddEntity(child);
 			else
 				child.QueueFree();
@@ -396,7 +412,7 @@ public partial class Body : CharacterBody2D, IShootable
 		}
 
 		if (HasWorld && GlobalPosition.DistanceTo(world.GlobalPosition) <= radius)
-			(world as Player)?.KillByBlast();
+			(world as Player)?.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_FlareBlast"));
 	}
 
 	// Bodies are falling, so they should point where they are going. Below a

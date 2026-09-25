@@ -18,6 +18,7 @@ public partial class ControlsMenu : Control
 
 	public override void _Ready()
 	{
+        Callable.From(()=>ArcadeSkin.SupportingScreen(this)).CallDeferred();
 		rows = GetNode<VBoxContainer>("Layout/Rows");
 		hint = GetNode<Label>("Layout/Hint");
 		resetButton = GetNode<Button>("Layout/ResetButton");

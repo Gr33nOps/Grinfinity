@@ -19,8 +19,16 @@ public partial class Announcer : Control
 
 	public override void _Ready()
 	{
-		titleLabel = GetNode<Label>("Title");
-		detailLabel = GetNode<Label>("Detail");
+        foreach(Node child in GetChildren()) if(child is CanvasItem item)item.Hide();
+        AnchorLeft=.5f;AnchorRight=.5f;AnchorTop=0;AnchorBottom=0;
+        OffsetLeft=-290;OffsetRight=290;OffsetTop=36;OffsetBottom=118;
+        MouseFilter=MouseFilterEnum.Ignore;
+        var panel=new PanelContainer {MouseFilter=MouseFilterEnum.Ignore};AddChild(panel);ArcadeSkin.Fill(panel);
+        panel.AddThemeStyleboxOverride("panel",ArcadeSkin.Box(new Color("392339"),new Color("986077"),20,2));
+        var rows=new VBoxContainer {MouseFilter=MouseFilterEnum.Ignore};panel.AddChild(rows);
+        titleLabel=ArcadeSkin.Label("",28,ArcadeSkin.Orange);rows.AddChild(titleLabel);
+        detailLabel=ArcadeSkin.Label("",21,ArcadeSkin.Muted);rows.AddChild(detailLabel);
+
 		Modulate = new Color(1, 1, 1, 0);
 		Visible = false;
 	}

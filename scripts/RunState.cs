@@ -85,6 +85,7 @@ public partial class RunState : Node
 	[Export] public int StardustPerStreakBest { get; set; } = 3;
 
 	public float SurvivalTime { get; private set; }
+	public WeaponId Weapon { get; private set; } = WeaponId.Comet;
 	public int Kills { get; private set; }
 	public int Streak { get; private set; }
 	public int BestStreak { get; private set; }
@@ -138,25 +139,15 @@ public partial class RunState : Node
 	/// multiplier on the HUD a lie — the player has to be able to watch heavy
 	/// seconds pay more than light ones.
 	/// </summary>
-	public int Score => Mathf.RoundToInt(score);
+	public int Score => (int)System.Math.Clamp(System.Math.Round(score), 0, int.MaxValue);
 
 	/// <summary>
 	/// Stardust this orbit has earned so far — from time, kills and streaks.
 	/// Never goes down: this is what the run produced, and what the recap and
 	/// the lifetime tally are both interested in.
 	/// </summary>
-	public int StardustEarned => Mathf.RoundToInt(SurvivalTime * StardustPerSecond)
-		+ Kills * StardustPerKill + BestStreak * StardustPerStreakBest;
-
-	/// <summary>Stardust already spent on upgrades this orbit.</summary>
-	public int StardustSpent { get; private set; }
-
-	/// <summary>
-	/// What is actually available to spend right now. Derived rather than
-	/// accumulated, so the balance can never drift out of step with what the
-	/// run earned.
-	/// </summary>
-	public int Stardust => Mathf.Max(StardustEarned - StardustSpent, 0);
+	public int StardustEarned => (int)System.Math.Clamp(System.Math.Round(SurvivalTime * (double)StardustPerSecond)
+		+ Kills * (double)StardustPerKill + BestStreak * (double)StardustPerStreakBest, 0, int.MaxValue);
 
 	private readonly HashSet<RelicId> passives = new();
 	private readonly Dictionary<RunUpgradeId, int> upgradeLevels = new();
@@ -165,25 +156,21 @@ public partial class RunState : Node
 	public int LevelOf(RunUpgradeId id) => upgradeLevels.GetValueOrDefault(id, 0);
 
 	/// <summary>True once the run can no longer take this one any further.</summary>
-	public bool IsMaxed(RunUpgradeId id) => LevelOf(id) >= RunUpgrades.Get(id).MaxLevel;
+	public bool IsMaxed(RunUpgradeId id) => RunUpgrades.Get(id) is not { } profile || LevelOf(id) >= profile.MaxLevel;
 
 	/// <summary>
-	/// Buys one level, if the run can afford it and has not maxed it. Returns
-	/// false rather than throwing, because the offer UI and the purchase can
-	/// disagree by a frame's worth of earned stardust.
+	/// Grants one free level if its prerequisites and maximum permit it.
 	/// </summary>
 	public bool TryBuy(RunUpgradeId id)
 	{
 		RunUpgrades.Profile profile = RunUpgrades.Get(id);
 		if (profile == null || IsMaxed(id))
 			return false;
-
-		int cost = profile.CostAt(LevelOf(id));
-		if (cost > Stardust)
+		if (profile.Requires is RunUpgradeId required && LevelOf(required) == 0)
 			return false;
 
-		StardustSpent += cost;
 		upgradeLevels[id] = LevelOf(id) + 1;
+		if (profile.Equips is WeaponId weapon) Weapon = weapon;
 
 		if (profile.Grants != RelicId.None)
 			passives.Add(profile.Grants);
@@ -191,6 +178,15 @@ public partial class RunState : Node
 		EmitSignal(SignalName.EffectsChanged);
 		return true;
 	}
+
+    public string GrantWaveMilestones(int clearedWave)
+    {
+        string earned="";
+        if(clearedWave>=1&&!HasDash){TryBuy(RunUpgradeId.UnlockDash);earned="DASH UNLOCKED • SHIFT / B";}
+        if(clearedWave>=3&&!HasRapidFire){TryBuy(RunUpgradeId.UnlockRapidFire);earned="RAPID FIRE UNLOCKED • E / X";}
+        if(clearedWave>=5&&!HasNova){TryBuy(RunUpgradeId.UnlockNova);earned="NOVA UNLOCKED • R / Y";}
+        return earned;
+    }
 
 	// --- Derived multipliers ------------------------------------------------
 	// Read every frame by the things they modify, so a purchase takes effect on
@@ -210,7 +206,7 @@ public partial class RunState : Node
 	public bool HasNova => LevelOf(RunUpgradeId.UnlockNova) > 0;
 
 	/// <summary>Shots come this much closer together. Below 1 is faster.</summary>
-	public float FireIntervalScale => Mathf.Pow(0.86f, LevelOf(RunUpgradeId.FireRate));
+	public float FireIntervalScale => Mathf.Pow(0.82f, LevelOf(RunUpgradeId.FireRate));
 
 	/// <summary>Dash comes back this much sooner. Below 1 is quicker.</summary>
 	public float DashCooldownScale => Mathf.Pow(0.87f, LevelOf(RunUpgradeId.QuickerDash));
@@ -219,9 +215,9 @@ public partial class RunState : Node
 	public float NovaRadiusScale => 1.0f + 0.22f * LevelOf(RunUpgradeId.BiggerNova);
 
 	/// <summary>Debris is caught from this much further out.</summary>
-	public float PullScale => 1.0f + 0.25f * LevelOf(RunUpgradeId.WiderPull);
+	public float PullScale => 1.5f;
 
-	private float score;
+	private double score;
 	private float streakTimer;
 	private int nextMilestone;
 	private float massTimeIntegral;
@@ -313,6 +309,7 @@ public partial class RunState : Node
 		// run, not in a shop before it, so there is no bought mass to fold in
 		// and no relic rolled over the player's head at the top.
 		ElapsedSeconds = 0f;
+		HasShield = true;
 		Mass = Mathf.Clamp(StartMass, 0f, MaxMass);
 		PeakMassNormalised = MassNormalised;
 	}
@@ -375,6 +372,7 @@ public partial class RunState : Node
 	/// <summary>Absorbing debris. The only way mass goes up.</summary>
 	public void AddMass(float amount)
 	{
+		if (!float.IsFinite(amount)) return;
 		SetMass(Mass + Mathf.Max(amount, 0f));
 	}
 
@@ -384,6 +382,7 @@ public partial class RunState : Node
 	/// <returns>False if there was not enough to spend, in which case nothing changed.</returns>
 	public bool Vent(float amount)
 	{
+		if (!float.IsFinite(amount)) return false;
 		if (amount <= 0f)
 			return true;
 

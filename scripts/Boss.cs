@@ -25,15 +25,22 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	protected int health;
 	protected bool defeated;
 	private Tween hitFlash;
+    protected Sprite2D Art;
+    private float visualTime;
+    protected float Windup;
 
 	public float HealthFraction => MaxHealth <= 0 ? 0f : (float)health / MaxHealth;
 
 	public sealed override void _Ready()
 	{
-		health = MaxHealth;
+        health = MaxHealth;
 		AddToGroup("hazards");
 		AddToGroup("bosses");
-		OnBossReady();
+        foreach(Node child in GetChildren())if(child is Polygon2D polygon)polygon.Hide();
+        string asset=this is BossCoil?"coil":this is BossBrood?"brood":"black_hole";
+        Art=new Sprite2D {Texture=GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"),Scale=Vector2.One*.88f};AddChild(Art);
+        Modulate=Colors.White;
+        OnBossReady();
 	}
 
 	/// <summary>Subclass setup — scenes to preload, initial state. Health and groups are already set.</summary>
@@ -67,11 +74,19 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	/// <summary>Called once, on the killing blow, before the node is freed.</summary>
 	protected virtual void OnBossDefeated() { }
 
-	private void FlashHit()
+    public override void _Process(double delta)
+    {
+        visualTime+=(float)delta;
+        float pulse=1+.035f*Mathf.Sin(visualTime*3)+Windup*.1f;
+        Art.Scale=new Vector2(.88f/pulse,.88f*pulse);
+        Art.Rotation=-Rotation+Mathf.Sin(visualTime*1.5f)*.08f;
+        Art.SelfModulate=Colors.White.Lerp(new Color("ffc47c"),Windup);
+    }
+    private void FlashHit()
 	{
 		hitFlash?.Kill();
-		Modulate = Colors.White;
+		Modulate = new Color(1.6f,1.5f,1.3f);
 		hitFlash = CreateTween();
-		hitFlash.TweenProperty(this, "modulate", BossColor, 0.12f);
+		hitFlash.TweenProperty(this, "modulate", Colors.White, 0.12f);
 	}
 }

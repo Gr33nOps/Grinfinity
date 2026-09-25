@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://cst0grincrd01"]
 
 [ext_resource type="Script" path="res://scripts/Credits.cs" id="1_crdsc"]
-[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_font"]
+[ext_resource type="FontFile" path="res://fonts/LilitaOne.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_credits"]
 bg_color = Color(0, 0, 0, 0.686275)
@@ -56,11 +56,11 @@ text = "Design, code and art
 Gr33nOps
 
 Built with
-Godot Engine 4.4 (MIT License)
+Godot Engine 4.7.1 (MIT License)
 godotengine.org
 
 Font
-Bubblegum
+Lilita One - Juan Montoreano (SIL OFL 1.1)
 
 Thanks for playing!"
 horizontal_alignment = 1

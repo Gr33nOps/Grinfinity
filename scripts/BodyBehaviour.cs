@@ -81,7 +81,6 @@ public sealed class ShardBehaviour : BodyBehaviour
 		body.KnockbackStrength = 420.0f;
 		body.DebrisCount = 1;
 		body.SetBurst(26, 0.65f, new Color(0.62f, 1.0f, 0.78f));
-		body.TextureIndex = 3;
 	}
 }
 
@@ -99,7 +98,6 @@ public sealed class PlanetoidBehaviour : BodyBehaviour
 		body.KnockbackStrength = 90.0f;
 		body.DebrisCount = 6;
 		body.SetBurst(120, 2.1f, new Color(0.66f, 0.76f, 1.0f));
-		body.TextureIndex = 5;
 	}
 }
 
@@ -119,7 +117,6 @@ public sealed class FractureBehaviour : BodyBehaviour
 		body.KnockbackStrength = 170.0f;
 		body.DebrisCount = 2;
 		body.SetBurst(70, 1.3f, new Color(0.82f, 0.6f, 1.0f));
-		body.TextureIndex = 6;
 	}
 
 	public override void OnDestroyed(Body body)
@@ -144,7 +141,6 @@ public sealed class SplinterBehaviour : BodyBehaviour
 		body.KnockbackStrength = 380.0f;
 		body.DebrisCount = 1;
 		body.SetBurst(22, 0.6f, new Color(0.82f, 0.6f, 1.0f));
-		body.TextureIndex = 6;
 	}
 }
 
@@ -168,7 +164,6 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 		body.KnockbackStrength = 300.0f;
 		body.DebrisCount = 3;
 		body.SetBurst(60, 1.0f, new Color(1.0f, 0.82f, 0.5f));
-		body.TextureIndex = 7;
 		body.BehaviourTimer = RunState.Rng.RandfRange(0.4f, FireInterval);
 	}
 
@@ -215,7 +210,6 @@ public sealed class FlareBehaviour : BodyBehaviour
 		body.KnockbackStrength = 150.0f;
 		body.DebrisCount = 3;
 		body.SetBurst(150, 2.4f, new Color(1.0f, 0.6f, 0.35f));
-		body.TextureIndex = 8;
 	}
 
 	public override void OnDestroyed(Body body)
@@ -243,7 +237,6 @@ public sealed class BulwarkBehaviour : BodyBehaviour
 		body.KnockbackStrength = 110.0f;
 		body.DebrisCount = 4;
 		body.SetBurst(90, 1.6f, new Color(0.8f, 0.84f, 0.9f));
-		body.TextureIndex = 4;
 	}
 
 	public override bool Deflects(Body body, Vector2 impactDirection)

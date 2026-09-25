@@ -81,11 +81,13 @@ public partial class GameSettings : Node
 	public bool AssistMode { get; private set; } = false;
 
 	private readonly System.Collections.Generic.Dictionary<string, Key> defaultKeys = new();
+	private bool quitting;
 
 	public override void _Ready()
 	{
 		Instance = this;
 		ProcessMode = ProcessModeEnum.Always;
+		GetTree().AutoAcceptQuit = false;
 
 		// Captured before any saved bindings are applied, so Reset can restore them.
 		CaptureDefaultKeys();
@@ -101,6 +103,28 @@ public partial class GameSettings : Node
 	{
 		foreach (var (action, _) in RebindableActions)
 			defaultKeys[action] = GetActionKey(action);
+	}
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationWMCloseRequest) QuitGame();
+	}
+
+	public async void QuitGame()
+	{
+		if (quitting) return;
+		quitting = true;
+		SaveSettings();
+		StopAudio(GetTree().Root);
+		await ToSignal(GetTree().CreateTimer(0.15, processAlways: true, ignoreTimeScale: true), SceneTreeTimer.SignalName.Timeout);
+		GetTree().Quit();
+	}
+
+	private static void StopAudio(Node node)
+	{
+		if (node is AudioStreamPlayer audio) audio.Stop();
+		if (node is AudioStreamPlayer2D audio2D) audio2D.Stop();
+		foreach (Node child in node.GetChildren()) StopAudio(child);
 	}
 
 	/// <summary>The keyboard key currently bound to an action, or None.</summary>
@@ -359,7 +383,7 @@ public partial class GameSettings : Node
 		foreach (var (action, _) in RebindableActions)
 			config.SetValue(InputSection, action, (int)GetActionKey(action));
 
-		Error error = config.Save(SavePath);
+		Error error = SaveStore.Save(config, SavePath);
 		if (error != Error.Ok)
 			GD.PushWarning($"GameSettings: could not write '{SavePath}' ({error}).");
 	}
@@ -367,23 +391,23 @@ public partial class GameSettings : Node
 	private void LoadSettings()
 	{
 		var config = new ConfigFile();
-		if (config.Load(SavePath) != Error.Ok)
+		if (SaveStore.Load(config, SavePath) != Error.Ok)
 			return;
 
-		MasterVolume = Mathf.Clamp(config.GetValue(Section, "master_volume", MasterVolume).AsSingle(), 0f, 1f);
-		MusicVolume = Mathf.Clamp(config.GetValue(Section, "music_volume", MusicVolume).AsSingle(), 0f, 1f);
-		SfxVolume = Mathf.Clamp(config.GetValue(Section, "sfx_volume", SfxVolume).AsSingle(), 0f, 1f);
-		Fullscreen = config.GetValue(Section, "fullscreen", Fullscreen).AsBool();
-		ShakeIntensity = Mathf.Clamp(config.GetValue(Section, "shake_intensity", ShakeIntensity).AsSingle(), 0f, 1f);
+		MasterVolume = Mathf.Clamp(SaveStore.Value(config, Section, "master_volume", MasterVolume).AsSingle(), 0f, 1f);
+		MusicVolume = Mathf.Clamp(SaveStore.Value(config, Section, "music_volume", MusicVolume).AsSingle(), 0f, 1f);
+		SfxVolume = Mathf.Clamp(SaveStore.Value(config, Section, "sfx_volume", SfxVolume).AsSingle(), 0f, 1f);
+		Fullscreen = SaveStore.Value(config, Section, "fullscreen", Fullscreen).AsBool();
+		ShakeIntensity = Mathf.Clamp(SaveStore.Value(config, Section, "shake_intensity", ShakeIntensity).AsSingle(), 0f, 1f);
 
-		int storedWeapon = config.GetValue(Section, "weapon", 0).AsInt32();
+		int storedWeapon = SaveStore.Value(config, Section, "weapon", 0).AsInt32();
 		if (System.Enum.IsDefined(typeof(WeaponId), storedWeapon))
 		{
 			Weapon = (WeaponId)storedWeapon;
 			Loadout.Restore(Weapon);
 		}
 
-		int storedWorld = config.GetValue(Section, "world", 1).AsInt32();
+		int storedWorld = SaveStore.Value(config, Section, "world", 1).AsInt32();
 		if (storedWorld is >= 1 and <= 12)
 			World = storedWorld;
 
@@ -391,22 +415,22 @@ public partial class GameSettings : Node
 		// file. They are read by nothing now and are left to rot rather than
 		// migrated — there is nothing they could be migrated into.
 
-		ResolutionIndex = Mathf.Clamp(config.GetValue(Section, "resolution_index", ResolutionIndex).AsInt32(), 0, Resolutions.Length - 1);
-		VSyncEnabled = config.GetValue(Section, "vsync", VSyncEnabled).AsBool();
-		FpsCapIndex = Mathf.Clamp(config.GetValue(Section, "fps_cap_index", FpsCapIndex).AsInt32(), 0, FpsCaps.Length - 1);
-		UiScale = Mathf.Clamp(config.GetValue(Section, "ui_scale", UiScale).AsSingle(), 0.85f, 1.3f);
-		ShowDamageNumbers = config.GetValue(Section, "show_damage_numbers", ShowDamageNumbers).AsBool();
-		GamepadAimAssist = config.GetValue(Section, "gamepad_aim_assist", GamepadAimAssist).AsBool();
-		ColourblindMode = config.GetValue(Section, "colourblind_mode", ColourblindMode).AsBool();
-		HighContrastOutlines = config.GetValue(Section, "high_contrast_outlines", HighContrastOutlines).AsBool();
-		RapidFireHoldMode = config.GetValue(Section, "rapid_fire_hold_mode", RapidFireHoldMode).AsBool();
-		AssistMode = config.GetValue(Section, "assist_mode", AssistMode).AsBool();
+		ResolutionIndex = Mathf.Clamp(SaveStore.Value(config, Section, "resolution_index", ResolutionIndex).AsInt32(), 0, Resolutions.Length - 1);
+		VSyncEnabled = SaveStore.Value(config, Section, "vsync", VSyncEnabled).AsBool();
+		FpsCapIndex = Mathf.Clamp(SaveStore.Value(config, Section, "fps_cap_index", FpsCapIndex).AsInt32(), 0, FpsCaps.Length - 1);
+		UiScale = Mathf.Clamp(SaveStore.Value(config, Section, "ui_scale", UiScale).AsSingle(), 0.85f, 1.3f);
+		ShowDamageNumbers = SaveStore.Value(config, Section, "show_damage_numbers", ShowDamageNumbers).AsBool();
+		GamepadAimAssist = SaveStore.Value(config, Section, "gamepad_aim_assist", GamepadAimAssist).AsBool();
+		ColourblindMode = SaveStore.Value(config, Section, "colourblind_mode", ColourblindMode).AsBool();
+		HighContrastOutlines = SaveStore.Value(config, Section, "high_contrast_outlines", HighContrastOutlines).AsBool();
+		RapidFireHoldMode = SaveStore.Value(config, Section, "rapid_fire_hold_mode", RapidFireHoldMode).AsBool();
+		AssistMode = SaveStore.Value(config, Section, "assist_mode", AssistMode).AsBool();
 
-		int version = config.GetValue(Section, "version", 1).AsInt32();
+		int version = SaveStore.Value(config, Section, "version", 1).AsInt32();
 
 		foreach (var (action, _) in RebindableActions)
 		{
-			var stored = config.GetValue(InputSection, action, 0).AsInt32();
+			var stored = SaveStore.Value(config, InputSection, action, 0).AsInt32();
 			if (stored == 0)
 				continue;
 

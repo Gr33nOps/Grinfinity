@@ -55,6 +55,7 @@ public static class Leaderboard
 	public static bool WouldPlace(int score)
 	{
 		EnsureLoaded();
+		if (score < 0) return false;
 		return entries.Count < Capacity || score > entries[^1].Score;
 	}
 
@@ -65,6 +66,7 @@ public static class Leaderboard
 	public static int Submit(string name, int score, float survivalTime, int kills)
 	{
 		EnsureLoaded();
+		if (!Valid(score, survivalTime, kills)) return -1;
 
 		var entry = new Entry(Sanitise(name), score, survivalTime, kills);
 
@@ -111,12 +113,22 @@ public static class Leaderboard
 		if (string.IsNullOrWhiteSpace(name))
 			return "PLAYER";
 
-		string trimmed = name.Trim().Replace("\n", "").Replace("\r", "");
-		if (trimmed.Length > MaxNameLength)
-			trimmed = trimmed[..MaxNameLength];
-
-		return trimmed.ToUpperInvariant();
+		var clean = new System.Text.StringBuilder();
+		foreach (var rune in name.EnumerateRunes())
+		{
+			var category = System.Text.Rune.GetUnicodeCategory(rune);
+			if (category is System.Globalization.UnicodeCategory.Control or System.Globalization.UnicodeCategory.Format
+				or System.Globalization.UnicodeCategory.LineSeparator or System.Globalization.UnicodeCategory.ParagraphSeparator) continue;
+			string printable = rune.ToString().ToUpperInvariant();
+			if (clean.Length + printable.Length > MaxNameLength) break;
+			clean.Append(printable);
+		}
+		string trimmed = clean.ToString().Trim();
+		return string.IsNullOrWhiteSpace(trimmed) ? "PLAYER" : trimmed;
 	}
+
+	private static bool Valid(int score, float time, int kills) =>
+		score >= 0 && kills >= 0 && float.IsFinite(time) && time >= 0f && time <= 36000f;
 
 	private static void EnsureLoaded()
 	{
@@ -126,10 +138,10 @@ public static class Leaderboard
 		isLoaded = true;
 
 		var config = new ConfigFile();
-		if (config.Load(SavePath) != Error.Ok)
+		if (SaveStore.Load(config, SavePath) != Error.Ok)
 			return;
 
-		int version = config.GetValue(Section, "version", 1).AsInt32();
+		int version = SaveStore.Value(config, Section, "version", 1).AsInt32();
 
 		if (version >= 3)
 		{
@@ -146,25 +158,31 @@ public static class Leaderboard
 	private static void LoadSection(string section)
 	{
 		var config = new ConfigFile();
-		if (config.Load(SavePath) != Error.Ok)
+		if (SaveStore.Load(config, SavePath) != Error.Ok)
 			return;
 
-		int count = Mathf.Clamp(config.GetValue(section, "count", 0).AsInt32(), 0, Capacity);
+		int count = Mathf.Clamp(SaveStore.Value(config, section, "count", 0).AsInt32(), 0, Capacity);
 		if (count <= 0)
 			return;
 
 		for (int i = 0; i < count; i++)
 		{
-			int score = config.GetValue(section, $"score_{i}", 0).AsInt32();
-			float time = config.GetValue(section, $"time_{i}", 0.0f).AsSingle();
-			int kills = config.GetValue(section, $"kills_{i}", 0).AsInt32();
+			int score = SaveStore.Value(config, section, $"score_{i}", 0).AsInt32();
+			float time = SaveStore.Value(config, section, $"time_{i}", 0.0f).AsSingle();
+			int kills = SaveStore.Value(config, section, $"kills_{i}", 0).AsInt32();
 			// Older entries predate the board asking who was playing.
-			string name = config.GetValue(section, $"name_{i}", "PLAYER").AsString();
+			string name = SaveStore.Value(config, section, $"name_{i}", "PLAYER").AsString();
 
-			entries.Add(new Entry(Sanitise(name), score, time, kills));
+			if (Valid(score, time, kills)) entries.Add(new Entry(Sanitise(name), score, time, kills));
 		}
 
-		entries.Sort((a, b) => b.Score.CompareTo(a.Score));
+		// Stable insertion sort preserves arrival order for tied scores after reload.
+		for (int i = 1; i < entries.Count; i++)
+		{
+			Entry entry = entries[i]; int j = i - 1;
+			while (j >= 0 && entries[j].Score < entry.Score) { entries[j + 1] = entries[j]; j--; }
+			entries[j + 1] = entry;
+		}
 	}
 
 	private static void SaveToFile()
@@ -182,7 +200,7 @@ public static class Leaderboard
 			config.SetValue(Section, $"kills_{i}", entry.Kills);
 		}
 
-		Error error = config.Save(SavePath);
+		Error error = SaveStore.Save(config, SavePath);
 		if (error != Error.Ok)
 			GD.PushWarning($"Leaderboard: could not write '{SavePath}' ({error}).");
 	}

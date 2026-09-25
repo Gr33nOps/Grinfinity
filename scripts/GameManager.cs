@@ -65,6 +65,8 @@ public partial class GameManager : Node2D
 	private AudioStreamPlayer absorbSound;
 	private AudioStreamPlayer buttonSound;
 	private AudioStreamPlayer hoverSound;
+	private readonly System.Collections.Generic.Dictionary<string, AudioStreamPlayer> cues = new();
+	public bool InWaveBreak => bodySpawner?.InCalm == true;
 	private bool isPaused = false;
 	private bool isGameOver = false;
 	private bool isDying = false;
@@ -89,12 +91,18 @@ public partial class GameManager : Node2D
 
 	/// <summary>Seconds survived so far. Read by the music layer and the spawner.</summary>
 	public float RunTime => run?.SurvivalTime ?? 0f;
+	public bool ChoosingBoost { get; private set; }
+    public int WaveNumber=>bodySpawner?.WaveNumber??1;
+    public bool BossDue=>NextBossIndex<3 && (WaveNumber>=7+NextBossIndex*6 || (NextBossIndex==0?CoilTime:NextBossIndex==1?BroodTime:BlackHoleTime)<=1 && RunTime>=.5f);
 
 	// _EnterTree runs top-down, _Ready bottom-up. The player and everything under
 	// it read mass during their own _Ready, which is *before* this node's, so the
 	// group registration and RunState have to be in place by here.
 	public override void _EnterTree()
 	{
+		RunState.Rng.Randomize();
+		GameOver.NewlyUnlockedAchievement = null;
+		GameOver.DeathCause = "";
 		AddToGroup("game_manager");
 		run = AddPausableChild(new RunState());
 	}
@@ -103,6 +111,7 @@ public partial class GameManager : Node2D
 	{
 		SetupComponents();
 		ConnectSignals();
+		AddChild(new CosmicBackdrop());
 	}
 
 	/// <summary>The game manager for the current scene, or null outside gameplay.</summary>
@@ -121,6 +130,14 @@ public partial class GameManager : Node2D
 		absorbSound = GetNodeOrNull<AudioStreamPlayer>("AbsorbSound");
 		buttonSound = GetNode<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNode<AudioStreamPlayer>("HoverSound");
+		streakSound.Stream = GD.Load<AudioStream>("res://sounds/streak_chirp.wav");
+		absorbSound.Stream = GD.Load<AudioStream>("res://sounds/pickup_chirp.wav");
+		foreach (string cue in new[] { "upgrade_chirp", "shield_pop", "dash_swish", "nova_boom" })
+		{
+			var sound = new AudioStreamPlayer { Stream = GD.Load<AudioStream>($"res://sounds/{cue}.wav"), Bus = "SFX", VolumeDb = -12f };
+			AddChild(sound);
+			cues[cue] = sound;
+		}
 
 		DebrisScene ??= GD.Load<PackedScene>("res://scenes/debris.tscn");
 		BurstScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
@@ -172,6 +189,7 @@ public partial class GameManager : Node2D
 	/// <summary>Shouts something in the middle of the screen. See <see cref="Announcer"/>.</summary>
 	public void Announce(string title, string detail, Color colour)
 	{
+		if (ChoosingBoost || isPaused || isDying || isGameOver) return;
 		announcer?.Announce(title, detail, colour);
 	}
 
@@ -209,25 +227,33 @@ public partial class GameManager : Node2D
 
 		if (inputEvent.IsActionPressed("pause"))
 		{
+			if (isPaused && pauseMenu.CloseOptions()) { GetViewport().SetInputAsHandled(); return; }
 			TogglePause();
+			GetViewport().SetInputAsHandled();
 		}
+	}
+
+	public override void _Notification(int what)
+	{
+		if (what == NotificationApplicationFocusOut && IsNodeReady() && !isPaused && !isDying && !isGameOver)
+			TogglePause();
 	}
 
 	// Runs with ProcessMode.Always, so hitstop is measured against wall-clock
 	// time: delta is scaled by Engine.TimeScale and would stretch with it.
 	public override void _Process(double delta)
 	{
-		if (!isPaused && !isGameOver)
+		if (!isPaused && !isGameOver && !ChoosingBoost)
 		{
 			// The run has no clock to run out and no final wave. Bosses simply
-			// interrupt on a rhythm, each gated on survival time.
-			if (!BossActive)
+			// interrupt after six completed waves apiece.
+			if (!isDying && !BossActive && GetTree().GetNodeCountInGroup("bodies") == 0 && bodySpawner?.InCalm != true)
 			{
-				if (NextBossIndex == 0 && RunTime >= CoilTime)
+				if (NextBossIndex == 0 && BossDue)
 					SpawnBoss(CoilScene, "THE COIL");
-				else if (NextBossIndex == 1 && RunTime >= BroodTime)
+				else if (NextBossIndex == 1 && BossDue)
 					SpawnBoss(BroodScene, "THE BROOD");
-				else if (NextBossIndex == 2 && RunTime >= BlackHoleTime)
+				else if (NextBossIndex == 2 && BossDue)
 					SpawnBoss(BlackHoleScene, "THE BLACK HOLE");
 			}
 		}
@@ -248,7 +274,12 @@ public partial class GameManager : Node2D
 
 		// Arrives off to one side rather than on top of the player.
 		Vector2 bounds = GetViewportRect().Size;
-		boss.GlobalPosition = new Vector2(bounds.X * 0.5f, bounds.Y * 0.22f);
+		var player = GetNodeOrNull<Player>("player");
+		Vector2 safest = bounds * new Vector2(0.25f, 0.25f);
+		foreach (Vector2 fraction in new[] { new Vector2(0.75f, 0.25f), new Vector2(0.25f, 0.75f), new Vector2(0.75f, 0.75f) })
+			if (player != null && (bounds * fraction).DistanceSquaredTo(player.GlobalPosition) > safest.DistanceSquaredTo(player.GlobalPosition)) safest = bounds * fraction;
+		boss.GlobalPosition = safest;
+		run.StartEvent(ArenaEventId.Calm, 0f);
 
 		boss.HealthChanged += OnBossHealthChanged;
 		boss.Defeated += OnBossDefeated;
@@ -345,7 +376,9 @@ public partial class GameManager : Node2D
 	private void TogglePause()
 	{
 		isPaused = !isPaused;
-		GetTree().Paused = isPaused;
+		GetTree().Paused = isPaused || ChoosingBoost;
+		GetNode<CanvasLayer>("UI").Visible = !isPaused;
+		uiManager.SetGameplayVisible(!isPaused && !ChoosingBoost);
 
 		if (isPaused)
 		{
@@ -356,8 +389,46 @@ public partial class GameManager : Node2D
 		else
 		{
 			pauseMenu.HidePauseMenu();
-			uiManager.HideCursor();
+			if (!ChoosingBoost) uiManager.HideCursor();
+            else upgradePrompt.RestoreFocus();
 		}
+	}
+
+	public void RestartOrbit()
+	{
+		if (isGameOver || isDying) return;
+		isGameOver = true;
+		EndHitstop();
+		FreezeSimulation();
+		SceneTransition.Instance.ChangeScene("res://scenes/game.tscn");
+	}
+
+	public void BeginBoostChoice()
+	{
+		ChoosingBoost = true;
+		EndHitstop();
+		GetTree().Paused = true;
+		uiManager.SetGameplayVisible(false);
+		uiManager.ShowCursor();
+		announcer.Hide();
+	}
+	public void EndBoostChoice()
+	{
+		ChoosingBoost = false;
+		GetTree().Paused = isPaused;
+		uiManager.SetGameplayVisible(!isPaused);
+		if (!isPaused) uiManager.HideCursor();
+		GetNode<Player>("player").GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
+	}
+
+	private void FreezeSimulation()
+	{
+		run.ProcessMode = ProcessModeEnum.Disabled;
+		entities.ProcessMode = ProcessModeEnum.Disabled;
+		bodySpawner.ProcessMode = ProcessModeEnum.Disabled;
+		eventDirector.ProcessMode = ProcessModeEnum.Disabled;
+		hazardDirector.ProcessMode = ProcessModeEnum.Disabled;
+		GetNode<Player>("player").ProcessMode = ProcessModeEnum.Disabled;
 	}
 
 	/// <summary>
@@ -404,6 +475,7 @@ public partial class GameManager : Node2D
 
 		isGameOver = true;
 		isPaused = false;
+		FreezeSimulation();
 		GetTree().Paused = false;
 		pauseMenu.HidePauseMenu();
 
@@ -427,7 +499,7 @@ public partial class GameManager : Node2D
 		GameOver.IsNewBestScore = records.NewBestScore;
 		GameOver.IsNewBestTime = records.NewBestTime;
 
-		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakMassNormalised, Loadout.Weapon);
+		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakMassNormalised, run.Weapon);
 
 		GameOver.LeaderboardRank = Leaderboard.Submit(
 			PlayerProfile.PlayerName, run.Score, run.SurvivalTime, run.Kills);
@@ -458,6 +530,7 @@ public partial class GameManager : Node2D
 			return;
 
 		isDying = true;
+		run.SetProcess(false);
 		GameOver.DeathCause = cause;
 		Shake(DeathTrauma);
 		Hitstop(DeathHitstop);
@@ -481,6 +554,7 @@ public partial class GameManager : Node2D
 	/// </param>
 	public void RegisterKill(in Body.Remains remains, Vector2 at, bool shedDebris = true)
 	{
+		if (isDying || isGameOver) return;
 		bool heavy = remains.Kind is BodyKind.Planetoid or BodyKind.Bulwark or BodyKind.Flare;
 
 		run?.AddKill();
@@ -549,7 +623,7 @@ public partial class GameManager : Node2D
 
 	private void MaybeDropPowerUp(in Body.Remains remains, Vector2 at, bool heavy)
 	{
-		if (PowerUpScene == null)
+		if (PowerUpScene == null || GetTree().GetNodeCountInGroup("pickups")>=2)
 			return;
 
 		float chance = PowerUpDropChance + (heavy ? HeavyDropBonus : 0f);
@@ -557,7 +631,10 @@ public partial class GameManager : Node2D
 			return;
 
 		var pickup = PowerUpScene.Instantiate<PowerUp>();
-		pickup.Configure(PowerUps.Roll());
+		var kind=PowerUps.Roll();
+        if(kind==PowerUpKind.Nuke&&WaveNumber<5)kind=PowerUpKind.Damage;
+        if(kind==PowerUpKind.Shield&&run.HasShield)kind=PowerUpKind.Damage;
+        pickup.Configure(kind);
 		pickup.GlobalPosition = at;
 
 		// Kills happen inside collision callbacks, and inserting an Area2D while
@@ -685,8 +762,19 @@ public partial class GameManager : Node2D
 		buttonSound.Play();
 	}
 
+	public void PlayUpgradeSound()
+	{
+		PlayCue("upgrade_chirp");
+		Shake(0.12f);
+	}
+
 	public void PlayHoverSound()
 	{
 		hoverSound.Play();
+	}
+
+	public void PlayCue(string cue)
+	{
+		if (cues.TryGetValue(cue, out var sound)) sound.Play();
 	}
 }

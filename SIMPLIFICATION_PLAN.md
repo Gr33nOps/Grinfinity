@@ -1,3 +1,5 @@
+> Historical document. Current release scope and verification are in RELEASE.md; the September 2026 single endless-mode direction supersedes conflicting plans below.
+
 # Simplification Pass — Implementation Plan
 
 Companion to `GRINFINITY_SIMPLIFIED.md`. That document decides *what*; this one

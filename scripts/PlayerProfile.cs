@@ -180,31 +180,31 @@ public static class PlayerProfile
 		isLoaded = true;
 
 		var config = new ConfigFile();
-		if (config.Load(SavePath) != Error.Ok)
+		if (SaveStore.Load(config, SavePath) != Error.Ok)
 			return;
 
 		// A v1 file's "stardust" was a spendable balance. Reading it forward as
 		// a lifetime tally understates anyone who spent some in the old shop,
 		// which is the honest direction to be wrong in: it never claims they
 		// earned more than they did.
-		StardustEarned = Mathf.Max(config.GetValue(Section, "stardust", 0).AsInt32(), 0);
-		TotalOrbits = Mathf.Max(config.GetValue(Section, "total_orbits", 0).AsInt32(), 0);
-		TotalKills = Mathf.Max(config.GetValue(Section, "total_kills", 0).AsInt32(), 0);
-		TotalTimePlayed = Mathf.Max(config.GetValue(Section, "total_time", 0.0f).AsSingle(), 0f);
-		HeaviestMassEver = Mathf.Clamp(config.GetValue(Section, "heaviest_mass", 0.0f).AsSingle(), 0f, 1f);
-		PlayerName = Leaderboard.Sanitise(config.GetValue(Section, "name", "PLAYER").AsString());
+		StardustEarned = Mathf.Max(SaveStore.Value(config, Section, "stardust", 0).AsInt32(), 0);
+		TotalOrbits = Mathf.Max(SaveStore.Value(config, Section, "total_orbits", 0).AsInt32(), 0);
+		TotalKills = Mathf.Max(SaveStore.Value(config, Section, "total_kills", 0).AsInt32(), 0);
+		TotalTimePlayed = Mathf.Max(SaveStore.Value(config, Section, "total_time", 0.0f).AsSingle(), 0f);
+		HeaviestMassEver = Mathf.Clamp(SaveStore.Value(config, Section, "heaviest_mass", 0.0f).AsSingle(), 0f, 1f);
+		PlayerName = Leaderboard.Sanitise(SaveStore.Value(config, Section, "name", "PLAYER").AsString());
 
-		foreach (int worldId in config.GetValue(WorldSection, "unlocked", new int[] { 1 }).AsInt32Array())
+		foreach (int worldId in SaveStore.Value(config, WorldSection, "unlocked", new int[] { 1 }).AsInt32Array())
 			unlockedWorlds.Add(worldId);
 
-		foreach (string name in config.GetValue(AchievementSection, "unlocked", System.Array.Empty<string>()).AsStringArray())
+		foreach (string name in SaveStore.Value(config, AchievementSection, "unlocked", System.Array.Empty<string>()).AsStringArray())
 		{
 			if (System.Enum.TryParse(name, out AchievementId id))
 				unlockedAchievements.Add(id);
 		}
 
 		foreach (WeaponId id in System.Enum.GetValues<WeaponId>())
-			weaponTally[id] = Mathf.Max(config.GetValue(WeaponTallySection, id.ToString(), 0).AsInt32(), 0);
+			weaponTally[id] = Mathf.Max(SaveStore.Value(config, WeaponTallySection, id.ToString(), 0).AsInt32(), 0);
 	}
 
 	private static void SaveToFile()
@@ -231,7 +231,7 @@ public static class PlayerProfile
 		foreach ((WeaponId id, int count) in weaponTally)
 			config.SetValue(WeaponTallySection, id.ToString(), count);
 
-		Error error = config.Save(SavePath);
+		Error error = SaveStore.Save(config, SavePath);
 		if (error != Error.Ok)
 			GD.PushWarning($"PlayerProfile: could not write '{SavePath}' ({error}).");
 	}

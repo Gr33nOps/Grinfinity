@@ -17,6 +17,7 @@ public partial class Bullet : Area2D
 	private static readonly Color HostileTint = new Color(1.0f, 0.30f, 0.30f);
 
 	private Line2D trail;
+    private Sprite2D art;
 	private bool hasHit = false;
 	private bool hostile = false;
 
@@ -34,7 +35,10 @@ public partial class Bullet : Area2D
 
 	public override void _Ready()
 	{
-		ExplosionScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
+        foreach(Node child in GetChildren()) if(child is Polygon2D polygon)polygon.Hide();
+        art=new Sprite2D {Texture=GD.Load<Texture2D>(hostile?"res://art/cosmic/hostile.svg":"res://art/cosmic/shot.svg"),Scale=Vector2.One*(hostile?.065f:.29f)};AddChild(art);
+        Modulate=Colors.White;
+        ExplosionScene ??= GD.Load<PackedScene>("res://scenes/explosion.tscn");
 		BodyEntered += OnBodyEntered;
 
 		// Not just the player's own gun: moon shots count too, since both are
@@ -45,6 +49,8 @@ public partial class Bullet : Area2D
 
 		trail = GetNodeOrNull<Line2D>("Trail");
 		trail?.ClearPoints();
+        if(trail!=null){trail.Width=hostile?5:6;trail.DefaultColor=hostile?new Color(1,.4f,.4f,.5f):new Color(1,.75f,.4f,.5f);}
+        TrailLength=3;
 
 		var lifetime = GetNodeOrNull<Timer>("Timer");
 		if (lifetime != null)
@@ -73,6 +79,7 @@ public partial class Bullet : Area2D
 
 	public override void _PhysicsProcess(double delta)
 	{
+		art.Rotation=Direction.Angle();
 		GlobalPosition += Direction * Speed * (float)delta;
 		UpdateTrail();
 	}

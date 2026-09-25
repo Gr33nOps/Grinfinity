@@ -1,328 +1,77 @@
-using System.Collections.Generic;
 using Godot;
+using System.Collections.Generic;
 
-/// <summary>
-/// Everything the HUD draws, read from <see cref="RunState"/>. The run itself
-/// owns no labels — it raises signals and this decides how loud they look.
-/// </summary>
 public partial class UIManager : Node
 {
-	/// <summary>Resting streak colour — the UI accent from the style guide.</summary>
-	private static readonly Color StreakIdle = new Color(1.0f, 0.72f, 0.32f);
-	private static readonly Color StreakFlash = Colors.White;
-
-	// Reused rather than reallocated; the effects readout runs every frame.
-	private readonly List<string> effects = new();
-
-	private Sprite2D crosshair;
-	private Sprite2D dashIcon;
-	private Sprite2D rapidFireIcon;
-	private Label dashKeyLabel;
-	private Label rapidFireKeyLabel;
-	private Label timeLabel;
-	private Label bestLabel;
-	private Label killsLabel;
-	private Label streakLabel;
-	private Label effectsLabel;
-	private Player player;
-	private RunState run;
-	private Tween streakPop;
-
-	// The HUD lives in the two top corners, which the world can still fly into.
-	// Outlines keep the text readable over it, but nothing keeps the world
-	// readable under the text — so whichever corner is being occupied steps
-	// aside. Grouped rather than faded whole, so the far corner stays at full
-	// strength and the player never loses both readouts at once.
-	private readonly List<CanvasItem> leftCluster = new();
-	private readonly List<CanvasItem> rightCluster = new();
-	private float leftAlpha = 1f;
-	private float rightAlpha = 1f;
-
-	/// <summary>How far the HUD fades when the world is sitting on top of it.</summary>
-	private const float OccludedAlpha = 0.25f;
-	/// <summary>Corner box, in screen pixels, that counts as "the world is here".</summary>
-	private const float ClusterWidth = 660f;
-	private const float ClusterHeight = 300f;
-
-	public override void _Ready()
-	{
-		// Resolved relative to the game root rather than by absolute path, so
-		// renaming or reparenting the scene cannot silently break the HUD.
-		var gameRoot = GetParent();
-		crosshair = gameRoot?.GetNodeOrNull<Sprite2D>("CrosshairLayer/Crosshair");
-		dashIcon = gameRoot?.GetNodeOrNull<Sprite2D>("UI/dash");
-		rapidFireIcon = gameRoot?.GetNodeOrNull<Sprite2D>("UI/rapid_fire");
-		dashKeyLabel = gameRoot?.GetNodeOrNull<Label>("UI/DashKey");
-		rapidFireKeyLabel = gameRoot?.GetNodeOrNull<Label>("UI/RapidFireKey");
-		timeLabel = gameRoot?.GetNodeOrNull<Label>("UI/ScoreLabel");
-		bestLabel = gameRoot?.GetNodeOrNull<Label>("UI/HighScoreLabel");
-		killsLabel = gameRoot?.GetNodeOrNull<Label>("UI/KillsLabel");
-		streakLabel = gameRoot?.GetNodeOrNull<Label>("UI/ComboLabel");
-		effectsLabel = gameRoot?.GetNodeOrNull<Label>("UI/EffectsLabel");
-		player = gameRoot?.GetNodeOrNull<Player>("player");
-		run = GameManager.Of(this)?.Run;
-
-		// Scales the HUD alone — gameplay lives on Entities, a sibling of this
-		// CanvasLayer, so nothing about the arena itself changes size.
-		var uiLayer = gameRoot?.GetNodeOrNull<CanvasLayer>("UI");
-		if (uiLayer != null && GameSettings.Instance != null)
-			uiLayer.Scale = Vector2.One * GameSettings.Instance.UiScale;
-
-		// The best score cannot change mid-orbit, so it only needs writing once.
-		if (bestLabel != null)
-			bestLabel.Text = ScoreManager.GetFormattedHighScore();
-
-		// The banner is left-aligned in the HUD's left column, so it has to grow
-		// rightward from its own left edge. Scaling from the box centre would
-		// swing the text sideways, because the glyphs start at the left edge
-		// while the box runs the full width of the column.
-		if (streakLabel != null)
-			streakLabel.PivotOffset = new Vector2(0f, streakLabel.Size.Y * 0.5f);
-
-		if (run != null)
-		{
-			run.KillsChanged += OnKillsChanged;
-			run.StreakChanged += OnStreakChanged;
-			OnKillsChanged(run.Kills);
-			OnStreakChanged(run.Streak, false);
-		}
-
-		RefreshKeyLabels();
-		HideCursor();
-		BuildClusters();
-	}
-
-	private void BuildClusters()
-	{
-		foreach (CanvasItem item in new CanvasItem[] { dashIcon, rapidFireIcon, dashKeyLabel, rapidFireKeyLabel, streakLabel })
-		{
-			if (item != null)
-				leftCluster.Add(item);
-		}
-
-		foreach (CanvasItem item in new CanvasItem[] { timeLabel, killsLabel, bestLabel })
-		{
-			if (item != null)
-				rightCluster.Add(item);
-		}
-	}
-
-	/// <summary>
-	/// Fades whichever top corner the world is currently sitting in. Eased
-	/// rather than switched, because a HUD that blinks on and off as the player
-	/// grazes the corner is worse than one that is simply in the way.
-	/// </summary>
-	private void UpdateHudFade(double delta)
-	{
-		if (player == null || leftCluster.Count == 0)
-			return;
-
-		Vector2 screen = GetViewport().CanvasTransform * player.GlobalPosition;
-		Vector2 size = GetViewport().GetVisibleRect().Size;
-
-		bool inLeft = screen.X < ClusterWidth && screen.Y < ClusterHeight;
-		bool inRight = screen.X > size.X - ClusterWidth && screen.Y < ClusterHeight;
-
-		float step = 1f - Mathf.Exp(-9f * (float)delta);
-		leftAlpha = Mathf.Lerp(leftAlpha, inLeft ? OccludedAlpha : 1f, step);
-		rightAlpha = Mathf.Lerp(rightAlpha, inRight ? OccludedAlpha : 1f, step);
-
-		Apply(leftCluster, leftAlpha);
-		Apply(rightCluster, rightAlpha);
-	}
-
-	private static void Apply(List<CanvasItem> cluster, float alpha)
-	{
-		foreach (CanvasItem item in cluster)
-		{
-			Color colour = item.Modulate;
-			colour.A = alpha;
-			item.Modulate = colour;
-		}
-	}
-
-	public override void _ExitTree()
-	{
-		if (run == null || !IsInstanceValid(run))
-			return;
-
-		run.KillsChanged -= OnKillsChanged;
-		run.StreakChanged -= OnStreakChanged;
-	}
-
-	/// <summary>
-	/// The icon art bakes a key name into its top third, which goes stale the
-	/// moment anything is rebound. The sprites are cropped to the icon itself and
-	/// the key is drawn here instead, read from the live input map.
-	/// </summary>
-	private void RefreshKeyLabels()
-	{
-		SetKeyLabel(dashKeyLabel, "dash");
-		SetKeyLabel(rapidFireKeyLabel, "rapid_fire");
-	}
-
-	private static void SetKeyLabel(Label label, string action)
-	{
-		if (label == null)
-			return;
-
-		Key key = GameSettings.GetActionKey(action);
-		label.Text = key == Key.None ? "—" : OS.GetKeycodeString(key).ToUpperInvariant();
-	}
-
-	// This node is pausable, so _Process stops while the pause menu is open and
-	// the icon states set by ShowCursor() are left alone.
-	public override void _Process(double delta)
-	{
-		// The crosshair lives on a CanvasLayer, which ignores the camera. Aim is a
-		// world position, so it has to be pushed through the canvas transform or
-		// the reticle would drift with every screen shake.
-		if (crosshair != null && crosshair.Visible && player != null)
-			crosshair.GlobalPosition = GetViewport().CanvasTransform * player.AimPosition;
-
-		UpdateAbilityIcons();
-		UpdateRunLabels();
-		UpdateHudFade(delta);
-	}
-
-	private void UpdateRunLabels()
-	{
-		if (run == null)
-			return;
-
-		if (timeLabel != null)
-			timeLabel.Text = ScoreManager.FormatTime(run.SurvivalTime);
-
-		RefreshEffects();
-	}
-
-	/// <summary>
-	/// What is currently up, and for how long. Counting down beats a static icon:
-	/// the decision a pickup creates is "how long have I got", not "do I have it".
-	/// </summary>
-	private void RefreshEffects()
-	{
-		if (effectsLabel == null)
-			return;
-
-		effects.Clear();
-
-		// The event first and in its own colour: it is a rule change, not a buff,
-		// and the player needs to know how long they are living under it.
-		if (run.Event != ArenaEventId.Calm)
-			effects.Add($"{ArenaEvents.Get(run.Event).Name} {Mathf.CeilToInt(run.EventTimeLeft)}");
-
-		if (run.HasShield)
-			effects.Add(PowerUps.Shield.Name);
-
-		AppendTimed(PowerUpKind.Freeze);
-		AppendTimed(PowerUpKind.Magnet);
-		AppendTimed(PowerUpKind.Damage);
-
-		effectsLabel.Visible = effects.Count > 0;
-		effectsLabel.Text = string.Join("   ", effects);
-	}
-
-	private void AppendTimed(PowerUpKind kind)
-	{
-		float left = run.TimeLeft(kind);
-		if (left > 0f)
-			effects.Add($"{PowerUps.Get(kind).Name} {Mathf.CeilToInt(left)}");
-	}
-
-	private void OnKillsChanged(int kills)
-	{
-		if (killsLabel != null)
-			killsLabel.Text = $"KILLS: {kills}";
-	}
-
-	private void OnStreakChanged(int streak, bool milestone)
-	{
-		if (streakLabel == null)
-			return;
-
-		// A streak of one is just a kill; only shout about actual chains.
-		bool wasVisible = streakLabel.Visible;
-		streakLabel.Visible = streak >= 2;
-		streakLabel.Text = $"x{streak} STREAK";
-
-		if (!streakLabel.Visible)
-		{
-			if (wasVisible)
-				ResetStreakBanner();
-			return;
-		}
-
-		// A milestone gets a much bigger punch so it reads without being counted.
-		PopStreak(milestone ? 1.85f : 1.26f);
-	}
-
-	private void ResetStreakBanner()
-	{
-		streakPop?.Kill();
-		streakLabel.Scale = Vector2.One;
-		streakLabel.AddThemeColorOverride("font_color", StreakIdle);
-	}
-
-	/// <summary>Scale-and-flash punch on the streak banner, restarted on every kill.</summary>
-	private void PopStreak(float scale)
-	{
-		streakPop?.Kill();
-		streakLabel.Scale = new Vector2(scale, scale);
-		streakLabel.AddThemeColorOverride("font_color", StreakFlash);
-
-		streakPop = CreateTween().SetParallel();
-		streakPop.TweenProperty(streakLabel, "scale", Vector2.One, 0.24f)
-			.SetTrans(Tween.TransitionType.Back)
-			.SetEase(Tween.EaseType.Out);
-		streakPop.TweenProperty(streakLabel, "theme_override_colors/font_color", StreakIdle, 0.3f);
-	}
-
-	private void UpdateAbilityIcons()
-	{
-		if (player == null)
-			return;
-
-		// An ability the run has not bought yet shows nothing at all. Greying it
-		// out would advertise a key that does nothing, and the wave-break card
-		// is where the player is meant to find out it exists.
-		bool hasDash = run == null || run.HasDash;
-		bool hasRapid = run == null || run.HasRapidFire;
-
-		bool dashReady = hasDash && player.GetDashCooldownPercent() >= 1.0f;
-		bool rapidReady = hasRapid && player.GetRapidFireCooldownPercent() >= 1.0f && !player.IsRapidFiring();
-
-		SetAbilityVisible(dashIcon, dashKeyLabel, dashReady);
-		SetAbilityVisible(rapidFireIcon, rapidFireKeyLabel, rapidReady);
-	}
-
-	private void SetAbilityVisible(Sprite2D icon, Label key, bool visible)
-	{
-		if (icon != null)
-			icon.Visible = visible;
-
-		if (key != null)
-			key.Visible = visible;
-	}
-
-	public void ShowCursor()
-	{
-		Input.MouseMode = Input.MouseModeEnum.Visible;
-		SetHudVisible(false);
-	}
-
-	public void HideCursor()
-	{
-		Input.MouseMode = Input.MouseModeEnum.Hidden;
-		SetHudVisible(true);
-	}
-
-	private void SetHudVisible(bool visible)
-	{
-		if (crosshair != null)
-			crosshair.Visible = visible;
-
-		SetAbilityVisible(dashIcon, dashKeyLabel, visible);
-		SetAbilityVisible(rapidFireIcon, rapidFireKeyLabel, visible);
-	}
+    private Control hud;
+    private Control bossBar;
+    private Label score, detail, wave, time, hint;
+    private HBoxContainer abilityRow, effectsRow;
+    private Player player;
+    private RunState run;
+    private BodySpawner spawner;
+    private Sprite2D crosshair;
+    private float refresh;
+    private readonly Dictionary<string, Label> abilityLabels = new();
+    private readonly Dictionary<string, Control> abilityChips = new();
+    private readonly Dictionary<PowerUpKind, Control> effectChips = new();
+    public override void _Ready()
+    {
+        var root=GetParent(); var layer=root.GetNode<CanvasLayer>("UI");
+        foreach(Node child in layer.GetChildren())
+            if(child is CanvasItem item && child.Name!="UpgradePrompt" && child.Name!="Announcer" && child.Name!="BossBar") item.Hide();
+        player=root.GetNode<Player>("player"); run=GameManager.Of(this).Run; spawner=root.GetNode<BodySpawner>("BodySpawner");
+        crosshair=root.GetNode<Sprite2D>("CrosshairLayer/Crosshair");
+        crosshair.Texture=GD.Load<Texture2D>("res://art/cosmic/crosshair.svg");
+        hud=new Control {Name="Hud", MouseFilter=Control.MouseFilterEnum.Ignore, Theme=ArcadeSkin.Theme()}; layer.AddChild(hud); ArcadeSkin.Fill(hud);
+        var scoreBox=new VBoxContainer {Position=new Vector2(34,24),MouseFilter=Control.MouseFilterEnum.Ignore}; hud.AddChild(scoreBox);
+        var caption=ArcadeSkin.Label("YOUR SCORE",18,ArcadeSkin.Muted);caption.HorizontalAlignment=HorizontalAlignment.Left;scoreBox.AddChild(caption);
+        score=ArcadeSkin.Label("0",58);score.Name="Score";score.HorizontalAlignment=HorizontalAlignment.Left;scoreBox.AddChild(score);
+        detail=ArcadeSkin.Label("x1.0",23,ArcadeSkin.Orange);detail.Name="LiveScore";detail.HorizontalAlignment=HorizontalAlignment.Left;scoreBox.AddChild(detail);
+        var info=new VBoxContainer {AnchorLeft=1,AnchorRight=1,OffsetLeft=-320,OffsetRight=-34,OffsetTop=30,MouseFilter=Control.MouseFilterEnum.Ignore};hud.AddChild(info);
+        wave=ArcadeSkin.Label("WAVE 01",26,ArcadeSkin.Cream);wave.Name="RunInfo";wave.HorizontalAlignment=HorizontalAlignment.Right; info.AddChild(wave);
+        time=ArcadeSkin.Label("00:00",22,ArcadeSkin.Muted);time.HorizontalAlignment=HorizontalAlignment.Right;info.AddChild(time);
+        abilityRow=new HBoxContainer {AnchorLeft=.5f,AnchorRight=.5f,AnchorTop=1,AnchorBottom=1,OffsetLeft=-320,OffsetRight=320,OffsetTop=-92,OffsetBottom=-28,Alignment=BoxContainer.AlignmentMode.Center};hud.AddChild(abilityRow);abilityRow.AddThemeConstantOverride("separation",12);
+        foreach(var pair in new[]{("dash","dash"),("rapid_fire","rapid"),("nova","nova")})
+        {
+            var chip=new PanelContainer();chip.AddThemeStyleboxOverride("panel",ArcadeSkin.Box(new Color("392339"),new Color("986077"),18,2));
+            var row=new HBoxContainer();chip.AddChild(row);row.AddChild(ArcadeSkin.Icon(pair.Item2,36));
+            var key=ArcadeSkin.Label("",22);row.AddChild(key);abilityRow.AddChild(chip);abilityChips[pair.Item1]=chip;abilityLabels[pair.Item1]=key;
+        }
+        effectsRow=new HBoxContainer {AnchorTop=1,AnchorBottom=1,OffsetTop=-84,OffsetBottom=-28,OffsetLeft=34};hud.AddChild(effectsRow);effectsRow.AddThemeConstantOverride("separation",10);
+        foreach(var pair in new[]{(PowerUpKind.Shield,"shield"),(PowerUpKind.Damage,"rapid")})
+        {var icon=ArcadeSkin.Icon(pair.Item2,42);icon.TooltipText=PowerUps.Get(pair.Item1).Name;effectsRow.AddChild(icon);effectChips[pair.Item1]=icon;}
+        hint=ArcadeSkin.Label("WASD / left stick to move     •     Mouse / right stick to aim     •     Click / RT to shoot",23,ArcadeSkin.Muted);
+        hint.Name="HowTo";hint.AnchorLeft=.5f;hint.AnchorRight=.5f;hint.AnchorTop=1;hint.AnchorBottom=1;hint.OffsetLeft=-650;hint.OffsetRight=650;hint.OffsetTop=-140;hint.OffsetBottom=-100;hud.AddChild(hint);
+        float scale=GameSettings.Instance?.UiScale??1;
+        foreach(var label in new[]{score,detail,wave,time,hint}) label.AddThemeFontSizeOverride("font_size",Mathf.RoundToInt(label.GetThemeFontSize("font_size")*scale));
+        bossBar=root.GetNode<Control>("UI/BossBar");
+        bossBar.AnchorLeft=.5f;bossBar.AnchorRight=.5f;bossBar.AnchorTop=0;bossBar.AnchorBottom=0;
+        bossBar.OffsetLeft=-300;bossBar.OffsetRight=300;bossBar.OffsetTop=144;bossBar.OffsetBottom=222;
+        if(bossBar.FindChild("Name",true,false) is Label bossName)bossName.AddThemeFontSizeOverride("font_size",23);
+        if(bossBar.FindChild("Health",true,false) is ProgressBar health)
+        {health.AddThemeStyleboxOverride("background",ArcadeSkin.Box(new Color("392339"),ArcadeSkin.Ink,8,2));health.AddThemeStyleboxOverride("fill",ArcadeSkin.Box(ArcadeSkin.Berry,ArcadeSkin.Orange,8,1));}
+        HideCursor(); UpdateLabels();
+    }
+    private static string KeyName(string action)=>OS.GetKeycodeString(GameSettings.GetActionKey(action)).ToUpperInvariant();
+    public override void _Process(double delta)
+    {
+        if(crosshair.Visible)crosshair.GlobalPosition=GetViewport().CanvasTransform*player.AimPosition;
+        refresh-=(float)delta;if(refresh<=0){refresh=.1f;UpdateLabels();}
+    }
+    private void UpdateLabels()
+    {
+        score.Text=$"{run.Score:N0}";detail.Text=$"x{run.ScoreMultiplier:0.0}"+(run.Streak>=2?$"   •   {run.Streak} COMBO":"");
+        wave.Text=$"WAVE {spawner.WaveNumber:00}";time.Text=ScoreManager.FormatTime(run.SurvivalTime);
+        hint.Visible=run.SurvivalTime<8;
+        SetAbility("dash",run.HasDash,player.CanDash&&player.GetDashCooldownPercent()>=1,player.GetDashCooldownPercent(),"B");
+        SetAbility("rapid_fire",run.HasRapidFire,player.GetRapidFireCooldownPercent()>=1,player.GetRapidFireCooldownPercent(),"X");
+        SetAbility("nova",run.HasNova,run.Mass>=player.NovaVent,run.Mass/player.NovaVent,"Y");
+        foreach(var pair in effectChips) {pair.Value.Visible=pair.Key==PowerUpKind.Shield?run.HasShield:run.TimeLeft(pair.Key)>0;pair.Value.Modulate=new Color(1,1,1,pair.Key!=PowerUpKind.Shield&&run.TimeLeft(pair.Key)<2?.5f:1);}
+    }
+    private void SetAbility(string key,bool owned,bool ready,float fraction,string pad)
+    {abilityChips[key].Visible=owned;abilityChips[key].Modulate=ready?Colors.White:new Color(.65f,.6f,.7f);abilityLabels[key].Text=ready?$"{KeyName(key)} / {pad}":$"{Mathf.Clamp(fraction,0,1):P0}";}
+    public void SetGameplayVisible(bool visible) {hud.Visible=visible;if(!visible)GetParent().GetNode<Control>("UI/Announcer").Hide();}
+    public void ShowCursor() {Input.MouseMode=Input.MouseModeEnum.Visible;crosshair.Hide();}
+    public void HideCursor() {Input.MouseMode=Input.MouseModeEnum.Hidden;crosshair.Show();}
 }

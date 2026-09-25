@@ -1,3 +1,5 @@
+> Historical document. Current release scope and verification are in RELEASE.md; the September 2026 single endless-mode direction supersedes conflicting plans below.
+
 # Grinfinity — Audit & Fix Report
 
 Audited and fixed 2026-07-31 against Godot 4.4.1 stable (mono).

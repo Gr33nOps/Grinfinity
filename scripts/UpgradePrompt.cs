@@ -1,41 +1,42 @@
 using System.Collections.Generic;
 using Godot;
 
-/// <summary>
-/// The wave-break offer. Two or three upgrades, priced in this run's stardust,
-/// picked with a number key or a click.
-///
-/// It does not pause. The arena is still live, the world still moves, and the
-/// window shuts when the next pack arrives whether or not anything was taken —
-/// the pressure is the point. Skipping is always legal.
-/// </summary>
+/// <summary>One untimed, free upgrade at each wave break. Simulation pauses while reading.</summary>
 public partial class UpgradePrompt : Control
 {
 	private const int OfferCount = 3;
 
-	private static readonly Color Affordable = new Color(1f, 0.85f, 0.4f);
-	private static readonly Color TooDear = new Color(0.55f, 0.55f, 0.62f);
 
-	private const float CardWidth = 280f;
-	private const float CardHeight = 150f;
+
+
 
 	private RunState run;
+	private BodySpawner spawner;
+
 	private HBoxContainer cards;
 	private Label heading;
+    private int clearedWave=1;
 	private readonly List<RunUpgradeId> offer = new();
 	private readonly List<Button> buttons = new();
 
-	public override void _Ready()
-	{
-		cards = GetNodeOrNull<HBoxContainer>("Cards");
-		heading = GetNodeOrNull<Label>("Heading");
-		Visible = false;
-	}
+    public override void _Ready()
+    {
+        foreach(Node child in GetChildren()) if(child is CanvasItem item) item.Hide();
+        ProcessMode=ProcessModeEnum.Always;
+        var rows=ArcadeSkin.Modal(this,"CHOOSE AN UPGRADE",1040);
+        heading=ArcadeSkin.Label("WAVE CLEAR",23,ArcadeSkin.Orange);rows.AddChild(heading);
+        cards=new HBoxContainer();cards.AddThemeConstantOverride("separation",18);rows.AddChild(cards);
+        rows.AddChild(ArcadeSkin.Label("Choose one • 1 / 2 / 3 or D-pad + A • Take your time",22,ArcadeSkin.Muted));
+        var skip=ArcadeSkin.Button("KEEP CURRENT BUILD",Skip);skip.Name="SkipUpgrade";
+        skip.CustomMinimumSize=new Vector2(0,52);rows.AddChild(skip);
+        Hide();
+    }
 
 	/// <summary>Wires itself to the spawner's wave signals. Called by GameManager.</summary>
 	public void Bind(RunState state, BodySpawner spawner)
 	{
 		run = state;
+		this.spawner = spawner;
 		if (spawner == null)
 			return;
 
@@ -48,15 +49,22 @@ public partial class UpgradePrompt : Control
 		if (run == null)
 			return;
 
+        clearedWave=waveNumber;
+        string milestone=run.GrantWaveMilestones(waveNumber);
 		RollOffer();
 
-		// Nothing left to sell — every upgrade is maxed. Better to stay quiet
+		// Nothing left to offer — every upgrade is maxed. Better to stay quiet
 		// than to show an empty box.
 		if (offer.Count == 0)
 			return;
 
+		GameManager.Of(this)?.BeginBoostChoice();
 		Show();
+        heading.Text=string.IsNullOrEmpty(milestone)?$"WAVE {waveNumber:00} CLEAR • ONE FREE BOOST":milestone;
+        RestoreFocus();
+        Callable.From(()=>ArcadeSkin.Pop(cards.GetParent<Control>().GetParent<Control>())).CallDeferred();
 	}
+
 
 	private void OnWaveStarted(int waveNumber)
 	{
@@ -64,109 +72,33 @@ public partial class UpgradePrompt : Control
 	}
 
 	/// <summary>
-	/// Picks what is on the table. Always includes a mass-economy option when one
-	/// is still available: it is the family tied to the gravity spine, and the
-	/// one a player will walk past if it is not visibly competing for attention.
+	/// Offers useful upgrades whose wave and ability prerequisites are satisfied.
 	/// </summary>
-	private void RollOffer()
-	{
-		offer.Clear();
-
-		var pool = new List<RunUpgradeId>();
-		var massPool = new List<RunUpgradeId>();
-		var unlockPool = new List<RunUpgradeId>();
-
-		foreach (RunUpgrades.Profile profile in RunUpgrades.All)
-		{
-			if (run.IsMaxed(profile.Id))
-				continue;
-
-			// An improvement to something the run cannot do yet is a card that
-			// cannot mean anything to the player reading it.
-			if (profile.Requires is RunUpgradeId required && run.LevelOf(required) == 0)
-				continue;
-
-			if (profile.IsUnlock)
-				unlockPool.Add(profile.Id);
-			else if (profile.Family == UpgradeFamily.Mass)
-				massPool.Add(profile.Id);
-			else
-				pool.Add(profile.Id);
-		}
-
-		// An ability the player does not have yet outranks a bigger number for
-		// one they do. While any verb is still missing, one is always on offer,
-		// so the opening breaks reliably hand back dash, then rapid fire, then
-		// nova, instead of leaving it to the roll.
-		if (unlockPool.Count > 0)
-			offer.Add(TakeCheapest(unlockPool));
-
-		if (massPool.Count > 0)
-			offer.Add(Take(massPool));
-
-		while (offer.Count < OfferCount && (pool.Count > 0 || massPool.Count > 0 || unlockPool.Count > 0))
-		{
-			List<RunUpgradeId> from = pool.Count > 0 ? pool : massPool.Count > 0 ? massPool : unlockPool;
-			offer.Add(Take(from));
-		}
-
-		GuaranteeSomethingAffordable();
-		BuildCards();
-	}
-
-	/// <summary>
-	/// A break where every option is out of reach reads as a punishment for
-	/// having played well enough to earn one. If the roll came up all-expensive
-	/// but the run can afford *something*, swap the dearest offer for that.
-	/// </summary>
-	private void GuaranteeSomethingAffordable()
-	{
-		foreach (RunUpgradeId id in offer)
-		{
-			if (RunUpgrades.Get(id).CostAt(run.LevelOf(id)) <= run.Stardust)
-				return;
-		}
-
-		RunUpgradeId cheapest = default;
-		int cheapestCost = int.MaxValue;
-		bool found = false;
-
-		foreach (RunUpgrades.Profile profile in RunUpgrades.All)
-		{
-			if (run.IsMaxed(profile.Id) || offer.Contains(profile.Id))
-				continue;
-
-			if (profile.Requires is RunUpgradeId required && run.LevelOf(required) == 0)
-				continue;
-
-			int cost = profile.CostAt(run.LevelOf(profile.Id));
-			if (cost > run.Stardust || cost >= cheapestCost)
-				continue;
-
-			cheapest = profile.Id;
-			cheapestCost = cost;
-			found = true;
-		}
-
-		// Nothing anywhere is affordable — the offer stands as it is, and the
-		// greyed-out prices tell the player what to keep playing toward.
-		if (!found || offer.Count == 0)
-			return;
-
-		int dearestSlot = 0;
-		int dearestCost = -1;
-		for (int i = 0; i < offer.Count; i++)
-		{
-			int cost = RunUpgrades.Get(offer[i]).CostAt(run.LevelOf(offer[i]));
-			if (cost > dearestCost)
-			{
-				dearestCost = cost;
-				dearestSlot = i;
-			}
-		}
-
-		offer[dearestSlot] = cheapest;
-	}
+    private void RollOffer()
+    {
+        offer.Clear();var pool=new List<RunUpgradeId>();
+        foreach(var profile in RunUpgrades.All)
+        {
+            if(profile.IsUnlock||profile.RequiredWave(run.LevelOf(profile.Id))>clearedWave||run.IsMaxed(profile.Id))continue;
+            if(profile.Requires is RunUpgradeId required&&run.LevelOf(required)==0)continue;
+            if(profile.Equips!=null&&run.Weapon!=WeaponId.Comet)continue;
+            pool.Add(profile.Id);
+        }
+        // Preserve a standard build option whenever an eligible one exists.
+        var standard=pool.FindAll(id=>id!=RunUpgradeId.FanShot&&RunUpgrades.Get(id).Equips==null);
+        if(standard.Count>0){var id=Take(standard);offer.Add(id);pool.Remove(id);}
+        // Introduce spread ranks predictably, instead of making them a lucky roll.
+        if(pool.Contains(RunUpgradeId.FanShot)&&RunUpgrades.FanShot.RequiredWave(run.LevelOf(RunUpgradeId.FanShot))==clearedWave)
+        {offer.Add(RunUpgradeId.FanShot);pool.Remove(RunUpgradeId.FanShot);}
+        foreach(var id in pool.ToArray())if(RunUpgrades.Get(id).Equips!=null&&RunUpgrades.Get(id).MinWave==clearedWave){offer.Add(id);pool.Remove(id);break;}
+        if(offer.Exists(id=>RunUpgrades.Get(id).Equips!=null))pool.RemoveAll(id=>RunUpgrades.Get(id).Equips!=null);
+        while(offer.Count<OfferCount&&pool.Count>0)
+        {
+            var id=Take(pool);offer.Add(id);
+            if(RunUpgrades.Get(id).Equips!=null)pool.RemoveAll(other=>RunUpgrades.Get(other).Equips!=null);
+        }
+        BuildCards();
+    }
 
 	private static RunUpgradeId Take(List<RunUpgradeId> from)
 	{
@@ -177,147 +109,53 @@ public partial class UpgradePrompt : Control
 	}
 
 	/// <summary>
-	/// Takes the cheapest of a pool rather than a random one. Used for the
-	/// missing abilities, so they arrive in a sensible order — dash, then rapid
-	/// fire, then nova — instead of dangling the dearest one first at a player
-	/// who cannot yet afford any of them.
-	/// </summary>
-	private RunUpgradeId TakeCheapest(List<RunUpgradeId> from)
-	{
-		int best = 0;
-		int bestCost = int.MaxValue;
-
-		for (int i = 0; i < from.Count; i++)
-		{
-			int cost = RunUpgrades.Get(from[i]).CostAt(run.LevelOf(from[i]));
-			if (cost >= bestCost)
-				continue;
-
-			best = i;
-			bestCost = cost;
-		}
-
-		RunUpgradeId id = from[best];
-		from.RemoveAt(best);
-		return id;
-	}
-
-	/// <summary>
 	/// One box per offer, side by side. A row of full-width lines read as a
 	/// wall of text over the arena; a card is a thing you point at, and three
 	/// of them side by side can be compared at a glance — which is the whole
 	/// job, given how little time the window gives you.
 	/// </summary>
-	private void BuildCards()
-	{
-		if (cards == null)
-			return;
+    public void RestoreFocus(){if(buttons.Count>0)buttons[0].GrabFocus();}
+    private static string IconFor(RunUpgradeId id)=>id switch
+    {
+        RunUpgradeId.UnlockDash or RunUpgradeId.QuickerDash=>"dash",
+        RunUpgradeId.UnlockNova or RunUpgradeId.BiggerNova=>"nova",
+        RunUpgradeId.Piercing or RunUpgradeId.IonLance=>"pierce",
+        RunUpgradeId.FanShot or RunUpgradeId.DebrisCannon=>"spread",
+        _=>"rapid"
+    };
+    private void BuildCards()
+    {
+        foreach(Node child in cards.GetChildren()){cards.RemoveChild(child);child.QueueFree();}
+        buttons.Clear();
+        for(int i=0;i<offer.Count;i++)
+        {
+            var profile=RunUpgrades.Get(offer[i]);int index=i;
+            var card=ArcadeSkin.Button("",()=>Buy(index));
+            card.CustomMinimumSize=new Vector2(318,320);card.SizeFlagsHorizontal=SizeFlags.ExpandFill;
+            var stack=new VBoxContainer {MouseFilter=MouseFilterEnum.Ignore,OffsetLeft=18,OffsetTop=22,OffsetRight=-18,OffsetBottom=-20,AnchorRight=1,AnchorBottom=1};
+            stack.AddThemeConstantOverride("separation",14);card.AddChild(stack);
+            stack.AddChild(ArcadeSkin.Icon(IconFor(offer[i]),78));
+            var name=ArcadeSkin.Label(profile.Name,29);name.AutowrapMode=TextServer.AutowrapMode.WordSmart;stack.AddChild(name);
+            var effect=ArcadeSkin.Label(profile.Effect,23,ArcadeSkin.Muted);effect.AutowrapMode=TextServer.AutowrapMode.WordSmart;effect.SizeFlagsVertical=SizeFlags.ExpandFill;stack.AddChild(effect);
+            string rank=profile.MaxLevel>1?$"LEVEL {run.LevelOf(profile.Id)+1}/{profile.MaxLevel}":"SELECT";
+            stack.AddChild(ArcadeSkin.Label($"{i+1}   •   {rank}",23,ArcadeSkin.Orange));cards.AddChild(card);buttons.Add(card);
+        }
+    }
 
-		foreach (Node child in cards.GetChildren())
-			child.QueueFree();
-		buttons.Clear();
-
-		if (heading != null)
-			heading.Text = string.Format(TranslationServer.Translate("UI_UPGRADE_HEADING"), run.Stardust);
-
-		Font font = heading?.GetThemeFont("font");
-
-		for (int i = 0; i < offer.Count; i++)
-		{
-			RunUpgrades.Profile profile = RunUpgrades.Get(offer[i]);
-			int cost = profile.CostAt(run.LevelOf(profile.Id));
-			bool canAfford = cost <= run.Stardust;
-			Color tint = canAfford ? Affordable : TooDear;
-
-			var card = new Button
-			{
-				Flat = false,
-				Disabled = !canAfford,
-				CustomMinimumSize = new Vector2(CardWidth, CardHeight),
-				// The label stack below draws the text; the button itself is the
-				// box and the hit target.
-				Text = string.Empty
-			};
-
-			card.AddThemeStyleboxOverride("normal", CardStyle(new Color(0.09f, 0.07f, 0.13f, 0.88f), tint));
-			card.AddThemeStyleboxOverride("hover", CardStyle(new Color(0.16f, 0.13f, 0.22f, 0.94f), Colors.White));
-			card.AddThemeStyleboxOverride("pressed", CardStyle(new Color(0.2f, 0.16f, 0.26f, 0.96f), Colors.White));
-			card.AddThemeStyleboxOverride("focus", CardStyle(new Color(0.16f, 0.13f, 0.22f, 0.94f), Colors.White));
-			card.AddThemeStyleboxOverride("disabled", CardStyle(new Color(0.07f, 0.06f, 0.1f, 0.8f), TooDear));
-
-			var stack = new VBoxContainer
-			{
-				MouseFilter = MouseFilterEnum.Ignore,
-				AnchorRight = 1f,
-				AnchorBottom = 1f,
-				OffsetLeft = 12f,
-				OffsetRight = -12f,
-				OffsetTop = 10f,
-				OffsetBottom = -10f
-			};
-			stack.AddThemeConstantOverride("separation", 2);
-
-			stack.AddChild(CardLabel($"{i + 1}", font, 26, new Color(0.6f, 0.6f, 0.7f), HorizontalAlignment.Center));
-			stack.AddChild(CardLabel(profile.Name, font, 30, tint, HorizontalAlignment.Center));
-
-			Label effect = CardLabel(profile.Effect, font, 21, new Color(0.8f, 0.8f, 0.88f), HorizontalAlignment.Center);
-			effect.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-			effect.SizeFlagsVertical = SizeFlags.ExpandFill;
-			stack.AddChild(effect);
-
-			stack.AddChild(CardLabel($"{cost}", font, 28, tint, HorizontalAlignment.Center));
-
-			card.AddChild(stack);
-
-			int index = i;
-			card.Pressed += () => Buy(index);
-
-			cards.AddChild(card);
-			buttons.Add(card);
-		}
-	}
-
-	private static StyleBoxFlat CardStyle(Color background, Color border)
-	{
-		return new StyleBoxFlat
-		{
-			BgColor = background,
-			BorderColor = new Color(border, 0.55f),
-			BorderWidthTop = 2,
-			BorderWidthBottom = 2,
-			BorderWidthLeft = 2,
-			BorderWidthRight = 2,
-			CornerRadiusTopLeft = 10,
-			CornerRadiusTopRight = 10,
-			CornerRadiusBottomLeft = 10,
-			CornerRadiusBottomRight = 10
-		};
-	}
-
-	private static Label CardLabel(string text, Font font, int size, Color colour, HorizontalAlignment align)
-	{
-		var label = new Label
-		{
-			Text = text,
-			HorizontalAlignment = align,
-			MouseFilter = Control.MouseFilterEnum.Ignore
-		};
-
-		if (font != null)
-			label.AddThemeFontOverride("font", font);
-
-		label.AddThemeFontSizeOverride("font_size", size);
-		label.AddThemeColorOverride("font_color", colour);
-		return label;
-	}
-
-	/// <summary>
-	/// Number keys, because the mouse is busy aiming. The window is short and the
-	/// arena is still live — reaching for a card with the cursor costs a dodge.
-	/// </summary>
 	public override void _UnhandledInput(InputEvent inputEvent)
 	{
-		if (!Visible || inputEvent is not InputEventKey { Pressed: true, Echo: false } key)
+		if (Visible && GameManager.Of(this)?.IsPaused != true && inputEvent is InputEventJoypadButton && (inputEvent.IsActionPressed("ui_left") || inputEvent.IsActionPressed("ui_right")))
+		{
+			int selected = buttons.FindIndex(b => b.HasFocus());
+			for (int attempt = 0; attempt < buttons.Count; attempt++)
+			{
+				selected = Mathf.PosMod(selected + (inputEvent.IsActionPressed("ui_left") ? -1 : 1), buttons.Count);
+				if (!buttons[selected].Disabled) { buttons[selected].GrabFocus(); break; }
+			}
+			GetViewport().SetInputAsHandled();
+			return;
+		}
+		if (!Visible || GameManager.Of(this)?.IsPaused == true || inputEvent is not InputEventKey { Pressed: true, Echo: false } key)
 			return;
 
 		int index = key.Keycode switch
@@ -335,16 +173,25 @@ public partial class UpgradePrompt : Control
 		GetViewport().SetInputAsHandled();
 	}
 
+    private void Skip()
+    {
+        if(!Visible||GameManager.Of(this)?.IsPaused==true)return;
+        Hide();GameManager.Of(this)?.EndBoostChoice();spawner?.FinishCalm();
+    }
+
 	private void Buy(int index)
 	{
-		if (index < 0 || index >= offer.Count || !run.TryBuy(offer[index]))
+		if (!Visible || GameManager.Of(this)?.IsPaused == true || index < 0 || index >= offer.Count || !run.TryBuy(offer[index]))
 			return;
 
 		RunUpgrades.Profile profile = RunUpgrades.Get(offer[index]);
-		GameManager.Of(this)?.Announce(profile.Name, profile.Effect, Affordable);
+		Visible=false;
+        GameManager.Of(this)?.EndBoostChoice();
+        GameManager.Of(this)?.Announce(profile.Name, "BOOST EQUIPPED", ArcadeSkin.Orange);
+		GameManager.Of(this)?.PlayUpgradeSound();
+		spawner?.FinishCalm();
 
-		// One purchase per break. The choice is meant to cost something, and a
-		// break that empties the wallet is a different game.
+		// Exactly one boost per break, even if two inputs arrive together.
 		Visible = false;
 	}
 }

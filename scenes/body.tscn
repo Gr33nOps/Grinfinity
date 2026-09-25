@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://b1vba3mpikuob"]
 
 [ext_resource type="Script" uid="uid://dp160f0d4m0rv" path="res://scripts/Body.cs" id="1_gu34h"]
-[ext_resource type="Texture2D" uid="uid://p3sioytqvib5" path="res://sprites/enemy 1.png" id="2_4ra3w"]
+[ext_resource type="Texture2D" path="res://art/cosmic/body_drifter.svg" id="2_4ra3w"]
 [ext_resource type="Script" path="res://scripts/BodyMark.cs" id="3_mark"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_xhdkv"]
@@ -19,7 +19,7 @@ shape = SubResource("CircleShape2D_xhdkv")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(-2.98023e-08, 0)
-scale = Vector2(0.234524, 0.234524)
+scale = Vector2(0.21896, 0.21896)
 texture = ExtResource("2_4ra3w")
 
 [node name="BodyMark" type="Node2D" parent="."]

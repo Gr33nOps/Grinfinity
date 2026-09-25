@@ -9,19 +9,20 @@ using Godot;
 public partial class HazardDirector : Node
 {
 	[ExportGroup("Gravity wells")]
-	[Export] public float FirstWellTime { get; set; } = 75.0f;
+	[Export] public float FirstWellTime { get; set; } = 150.0f;
 	[Export] public float WellGapMin { get; set; } = 40.0f;
 	[Export] public float WellGapMax { get; set; } = 70.0f;
 	[Export] public PackedScene WellScene { get; set; }
 
 	[ExportGroup("Comets")]
-	[Export] public float FirstCometTime { get; set; } = 25.0f;
+	[Export] public float FirstCometTime { get; set; } = 60.0f;
 	[Export] public float CometGapMin { get; set; } = 14.0f;
 	[Export] public float CometGapMax { get; set; } = 26.0f;
 
 	private RunState run;
 	private GameManager manager;
 	private float nextWellAt;
+	private float nextHazardAt;
 	private float nextCometAt;
 	private bool hadFirstWell;
 	private bool hadFirstComet;
@@ -34,21 +35,22 @@ public partial class HazardDirector : Node
 
 	public override void _Process(double delta)
 	{
-		if (run == null || manager == null || manager.BossActive)
+		if (run == null || manager == null || manager.BossActive || manager.InWaveBreak || run.SurvivalTime < nextHazardAt)
 			return;
 
 		float dueWell = hadFirstWell ? nextWellAt : FirstWellTime;
-		if (run.SurvivalTime >= dueWell)
+        float dueComet = hadFirstComet ? nextCometAt : FirstCometTime;
+		if (manager.WaveNumber>=9 && run.SurvivalTime >= dueWell && run.Event==ArenaEventId.Calm)
 			SpawnWell();
 
-		float dueComet = hadFirstComet ? nextCometAt : FirstCometTime;
-		if (run.SurvivalTime >= dueComet)
+		else if (manager.WaveNumber>=5 && run.SurvivalTime >= dueComet && run.Event==ArenaEventId.Calm)
 			SpawnComet();
 	}
 
 	private void SpawnWell()
 	{
 		hadFirstWell = true;
+		nextHazardAt = run.SurvivalTime + 14f;
 		nextWellAt = run.SurvivalTime + RunState.Rng.RandfRange(WellGapMin, WellGapMax);
 
 		WellScene ??= GD.Load<PackedScene>("res://scenes/gravity_well.tscn");
@@ -66,6 +68,7 @@ public partial class HazardDirector : Node
 	private void SpawnComet()
 	{
 		hadFirstComet = true;
+		nextHazardAt = run.SurvivalTime + 10f;
 		nextCometAt = run.SurvivalTime + RunState.Rng.RandfRange(CometGapMin, CometGapMax);
 
 		Vector2 bounds = manager.GetViewportRect().Size;

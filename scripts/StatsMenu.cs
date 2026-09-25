@@ -13,6 +13,7 @@ public partial class StatsMenu : Control
 
 	public override void _Ready()
 	{
+        Callable.From(()=>ArcadeSkin.SupportingScreen(this)).CallDeferred();
 		BuildNameField();
 		BuildWorldPicker();
 
@@ -23,7 +24,7 @@ public partial class StatsMenu : Control
 		SetRow("Favourite weapon", WeaponProfile.Get(PlayerProfile.FavouriteWeapon).Name);
 		SetRow("Worlds unlocked", $"{CountUnlockedWorlds()} / {Worlds.All.Length}");
 		SetRow("Achievements", $"{CountUnlockedAchievements()} / {Achievements.All.Length}");
-		SetRow("Stardust earned", $"{PlayerProfile.StardustEarned:N0}");
+
 
 		var backButton = GetNode<Button>("Layout/BackButton");
 		backButton.Pressed += OnBackPressed;

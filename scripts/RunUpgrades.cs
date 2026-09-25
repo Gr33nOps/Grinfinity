@@ -18,14 +18,14 @@ public enum RunUpgradeId
 	// Mass economy
 	WiderPull,
 	RichDebris,
-	SlowField
+	SlowField,
+	DebrisCannon,
+	IonLance,
+	FanShot
 }
 
 /// <summary>
-/// Which part of the game an upgrade touches. The offer generator uses this to
-/// guarantee a mass-economy option every single break: it is the family tied to
-/// the gravity spine, and the easiest one for a player to walk past when it is
-/// sat next to a bigger damage number.
+/// The gameplay system improved by a boost.
 /// </summary>
 public enum UpgradeFamily
 {
@@ -43,18 +43,12 @@ public static class RunUpgrades
 		public required string Name { get; init; }
 		/// <summary>One line, plainly. What it does, not what it is called.</summary>
 		public required string Effect { get; init; }
-		public required int BaseCost { get; init; }
 		/// <summary>How many times it can be taken. One-offs are switches, not dials.</summary>
 		public int MaxLevel { get; init; } = 5;
 		/// <summary>A passive this unlocks, if any. <see cref="RelicId.None"/> for the numeric ones.</summary>
 		public RelicId Grants { get; init; } = RelicId.None;
-		/// <summary>Cost growth per level already owned. Flat for one-offs.</summary>
-		public float CostGrowth { get; init; } = 1.55f;
 		/// <summary>
-		/// Turns on something the player cannot do at all yet, rather than
-		/// improving something they can. The offer keeps one of these on the
-		/// table until they are all bought — a run that never rolled a dash
-		/// would be a run missing a verb, not a run that built differently.
+		/// An ability granted automatically at its wave milestone.
 		/// </summary>
 		public bool IsUnlock { get; init; }
 		/// <summary>
@@ -63,8 +57,11 @@ public static class RunUpgrades
 		/// mean anything to them yet.
 		/// </summary>
 		public RunUpgradeId? Requires { get; init; }
+		public WeaponId? Equips { get; init; }
+        public int MinWave { get; init; } = 1;
+        public int WaveStep { get; init; } = 0;
+        public int RequiredWave(int currentLevel) => MinWave + WaveStep * currentLevel;
 
-		public int CostAt(int level) => Mathf.RoundToInt(BaseCost * Mathf.Pow(CostGrowth, level));
 	}
 
 	public static readonly Profile UnlockDash = new()
@@ -73,7 +70,6 @@ public static class RunUpgrades
 		Family = UpgradeFamily.Ability,
 		Name = TranslationServer.Translate("UPG_UnlockDash_NAME"),
 		Effect = TranslationServer.Translate("UPG_UnlockDash_EFFECT"),
-		BaseCost = 18,
 		MaxLevel = 1,
 		IsUnlock = true
 	};
@@ -84,7 +80,6 @@ public static class RunUpgrades
 		Family = UpgradeFamily.Ability,
 		Name = TranslationServer.Translate("UPG_UnlockRapidFire_NAME"),
 		Effect = TranslationServer.Translate("UPG_UnlockRapidFire_EFFECT"),
-		BaseCost = 30,
 		MaxLevel = 1,
 		IsUnlock = true
 	};
@@ -95,7 +90,6 @@ public static class RunUpgrades
 		Family = UpgradeFamily.Ability,
 		Name = TranslationServer.Translate("UPG_UnlockNova_NAME"),
 		Effect = TranslationServer.Translate("UPG_UnlockNova_EFFECT"),
-		BaseCost = 45,
 		MaxLevel = 1,
 		IsUnlock = true
 	};
@@ -105,8 +99,7 @@ public static class RunUpgrades
 		Id = RunUpgradeId.FireRate,
 		Family = UpgradeFamily.Weapon,
 		Name = TranslationServer.Translate("UPG_FireRate_NAME"),
-		Effect = TranslationServer.Translate("UPG_FireRate_EFFECT"),
-		BaseCost = 28
+		Effect = "18% less time between shots per level.", MaxLevel = 3, WaveStep = 3,
 	};
 
 	public static readonly Profile Piercing = new()
@@ -115,7 +108,6 @@ public static class RunUpgrades
 		Family = UpgradeFamily.Weapon,
 		Name = TranslationServer.Translate("UPG_Piercing_NAME"),
 		Effect = TranslationServer.Translate("UPG_Piercing_EFFECT"),
-		BaseCost = 90,
 		MaxLevel = 1,
 		Grants = RelicId.Piercing
 	};
@@ -126,8 +118,7 @@ public static class RunUpgrades
 		Family = UpgradeFamily.Ability,
 		Name = TranslationServer.Translate("UPG_QuickerDash_NAME"),
 		Effect = TranslationServer.Translate("UPG_QuickerDash_EFFECT"),
-		BaseCost = 28,
-		Requires = RunUpgradeId.UnlockDash
+		MinWave = 1, WaveStep = 3, MaxLevel = 3, Requires = RunUpgradeId.UnlockDash
 	};
 
 	public static readonly Profile BiggerNova = new()
@@ -136,59 +127,40 @@ public static class RunUpgrades
 		Family = UpgradeFamily.Ability,
 		Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
 		Effect = TranslationServer.Translate("UPG_BiggerNova_EFFECT"),
-		BaseCost = 45,
 		MaxLevel = 3,
-		Requires = RunUpgradeId.UnlockNova
+		MinWave = 6, WaveStep = 3, Requires = RunUpgradeId.UnlockNova
 	};
 
-	public static readonly Profile HungryDash = new()
+
+
+
+
+	public static readonly Profile DebrisCannon = new()
 	{
-		Id = RunUpgradeId.HungryDash,
-		Family = UpgradeFamily.Ability,
-		Name = TranslationServer.Translate("UPG_HungryDash_NAME"),
-		Effect = TranslationServer.Translate("UPG_HungryDash_EFFECT"),
-		BaseCost = 80,
-		MaxLevel = 1,
-		Grants = RelicId.VampiricDash,
-		Requires = RunUpgradeId.UnlockDash
+		Id = RunUpgradeId.DebrisCannon, Family = UpgradeFamily.Weapon,
+		Name = "DEBRIS CANNON", Effect = "This run: six close-range pellets. Slower, wide spread.",
+		MaxLevel = 1, MinWave = 4, Equips = WeaponId.DebrisCannon
+	};
+	public static readonly Profile IonLance = new()
+	{
+		Id = RunUpgradeId.IonLance, Family = UpgradeFamily.Weapon,
+		Name = "ION LANCE", Effect = "This run: powerful piercing shots. Aim carefully.",
+		MaxLevel = 1, MinWave = 6, Equips = WeaponId.IonLance
 	};
 
-	public static readonly Profile WiderPull = new()
+	public static readonly Profile FanShot = new()
 	{
-		Id = RunUpgradeId.WiderPull,
-		Family = UpgradeFamily.Mass,
-		Name = TranslationServer.Translate("UPG_WiderPull_NAME"),
-		Effect = TranslationServer.Translate("UPG_WiderPull_EFFECT"),
-		BaseCost = 26
-	};
-
-	public static readonly Profile RichDebris = new()
-	{
-		Id = RunUpgradeId.RichDebris,
-		Family = UpgradeFamily.Mass,
-		Name = TranslationServer.Translate("UPG_RichDebris_NAME"),
-		Effect = TranslationServer.Translate("UPG_RichDebris_EFFECT"),
-		BaseCost = 95,
-		MaxLevel = 1,
-		Grants = RelicId.DoubleDebris
-	};
-
-	public static readonly Profile SlowField = new()
-	{
-		Id = RunUpgradeId.SlowField,
-		Family = UpgradeFamily.Mass,
-		Name = TranslationServer.Translate("UPG_SlowField_NAME"),
-		Effect = TranslationServer.Translate("UPG_SlowField_EFFECT"),
-		BaseCost = 100,
-		MaxLevel = 1,
-		Grants = RelicId.SlowAura
+		Id = RunUpgradeId.FanShot, Family = UpgradeFamily.Weapon,
+		Name = "SPREAD SHOT", Effect = "Add one angled bullet per volley per level. Your aimed shot stays straight.",
+		MaxLevel = 2, MinWave = 5, WaveStep = 5
 	};
 
 	// Declared last: static field initialisers run in source order.
 	public static readonly Profile[] All =
 	{
 		UnlockDash, UnlockRapidFire, UnlockNova,
-		FireRate, Piercing, QuickerDash, BiggerNova, HungryDash, WiderPull, RichDebris, SlowField
+		FireRate, Piercing, QuickerDash, BiggerNova,
+		DebrisCannon, IonLance, FanShot
 	};
 
 	public static Profile Get(RunUpgradeId id)

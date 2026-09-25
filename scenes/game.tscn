@@ -1,28 +1,16 @@
-[gd_scene load_steps=24 format=3 uid="uid://bi5oq2qgbb1cd"]
+[gd_scene load_steps=14 format=3 uid="uid://bi5oq2qgbb1cd"]
 
 [ext_resource type="Script" uid="uid://cjaaomehr1xjw" path="res://scripts/GameManager.cs" id="1_264po"]
 [ext_resource type="PackedScene" uid="uid://bcmipct1fe830" path="res://scenes/player.tscn" id="1_uwrxv"]
-[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_iywne"]
-[ext_resource type="Texture2D" uid="uid://dnf7v3xkhucfy" path="res://sprites/Dash.png" id="3_ca42v"]
+[ext_resource type="FontFile" path="res://fonts/LilitaOne.ttf" id="2_iywne"]
 [ext_resource type="Script" uid="uid://bpyrayovp2nmu" path="res://scripts/PauseMenu.cs" id="3_lnu2h"]
-[ext_resource type="Texture2D" uid="uid://gagsxy1221rk" path="res://sprites/RapidFire.png" id="4_ca42v"]
-[ext_resource type="Texture2D" uid="uid://ca5d0ur37l0g5" path="res://sprites/resume button normal.png" id="5_u5sy4"]
-[ext_resource type="Texture2D" uid="uid://ntotnqmwcp0n" path="res://sprites/resume button pressed.png" id="6_gee14"]
-[ext_resource type="Texture2D" uid="uid://cb0aafxndmees" path="res://sprites/resume button hover.png" id="7_gee14"]
-[ext_resource type="Texture2D" uid="uid://ce2ylkaa25ks8" path="res://sprites/giveup button normal.png" id="8_kvpfn"]
-[ext_resource type="Texture2D" uid="uid://b7s532cjxyhmh" path="res://sprites/giveup button pressed.png" id="9_dinhu"]
-[ext_resource type="Texture2D" uid="uid://btoi1wiiss7ia" path="res://sprites/giveup button hover.png" id="10_kvuet"]
-[ext_resource type="Texture2D" uid="uid://djfl0p3jufn1h" path="res://sprites/paused.png" id="11_dinhu"]
-[ext_resource type="AudioStream" uid="uid://sh84xsxpvnv7" path="res://sounds/button_press.ogg" id="19_5newe"]
-[ext_resource type="AudioStream" uid="uid://dcr4vb45l3psr" path="res://sounds/button_hover.ogg" id="20_37s47"]
-[ext_resource type="AudioStream" uid="uid://cbrq0wkol4k67" path="res://sounds/kill.ogg" id="22_37s47"]
-[ext_resource type="Texture2D" uid="uid://ng7i3ihf6pe2" path="res://sprites/crosshair.png" id="23_crossh"]
+[ext_resource type="AudioStream" path="res://sounds/button_tap.wav" id="19_5newe"]
+[ext_resource type="AudioStream" path="res://sounds/button_tick.wav" id="20_37s47"]
+[ext_resource type="AudioStream" path="res://sounds/pop.wav" id="22_37s47"]
+[ext_resource type="Texture2D" path="res://art/cosmic/crosshair.svg" id="23_crossh"]
 [ext_resource type="Script" path="res://scripts/GameCamera.cs" id="24_camera"]
 [ext_resource type="Script" path="res://scripts/Announcer.cs" id="25_announce"]
 [ext_resource type="Script" path="res://scripts/UpgradePrompt.cs" id="26_upgrade"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ca42v"]
-bg_color = Color(0, 0, 0, 0.686275)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bossbg"]
 bg_color = Color(0.11, 0.06, 0.16, 0.78)
@@ -44,133 +32,6 @@ script = ExtResource("1_264po")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="ScoreLabel" type="Label" parent="UI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -400.0
-offset_top = 24.0
-offset_right = -30.0
-offset_bottom = 104.0
-grow_horizontal = 0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 12
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 68
-text = "00:00"
-horizontal_alignment = 2
-
-[node name="KillsLabel" type="Label" parent="UI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -560.0
-offset_top = 106.0
-offset_right = -30.0
-offset_bottom = 158.0
-grow_horizontal = 0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 10
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 42
-text = "KILLS: 0"
-horizontal_alignment = 2
-
-[node name="HighScoreLabel" type="Label" parent="UI"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -560.0
-offset_top = 160.0
-offset_right = -30.0
-offset_bottom = 202.0
-grow_horizontal = 0
-theme_override_colors/font_color = Color(0.72, 0.72, 0.8, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 8
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 32
-text = "BEST: 00:00"
-horizontal_alignment = 2
-
-[node name="EffectsLabel" type="Label" parent="UI"]
-visible = false
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -600.0
-offset_top = -66.0
-offset_right = 600.0
-offset_bottom = -14.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_colors/font_color = Color(0.72, 0.92, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 10
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 40
-text = "SHIELD"
-horizontal_alignment = 1
-
-[node name="ComboLabel" type="Label" parent="UI"]
-visible = false
-anchors_preset = 0
-offset_left = 30.0
-offset_top = 116.0
-offset_right = 630.0
-offset_bottom = 186.0
-pivot_offset = Vector2(0, 35)
-theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 10
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 54
-text = "x2 STREAK"
-
-[node name="dash" type="Sprite2D" parent="UI"]
-position = Vector2(64, 66)
-scale = Vector2(0.3, 0.3)
-texture = ExtResource("3_ca42v")
-region_enabled = true
-region_rect = Rect2(0, 69, 226, 224)
-
-[node name="rapid_fire" type="Sprite2D" parent="UI"]
-position = Vector2(143, 66)
-scale = Vector2(0.3, 0.3)
-texture = ExtResource("4_ca42v")
-region_enabled = true
-region_rect = Rect2(0, 69, 226, 224)
-
-[node name="DashKey" type="Label" parent="UI"]
-offset_left = 25.0
-offset_top = 6.0
-offset_right = 103.0
-offset_bottom = 34.0
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 6
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 22
-text = "SHIFT"
-horizontal_alignment = 1
-clip_text = true
-
-[node name="RapidFireKey" type="Label" parent="UI"]
-offset_left = 104.0
-offset_top = 6.0
-offset_right = 182.0
-offset_bottom = 34.0
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 6
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 22
-text = "E"
-horizontal_alignment = 1
-clip_text = true
-
 [node name="UpgradePrompt" type="Control" parent="UI"]
 visible = false
 anchors_preset = 7
@@ -187,31 +48,6 @@ grow_vertical = 0
 mouse_filter = 1
 script = ExtResource("26_upgrade")
 
-[node name="Heading" type="Label" parent="UI/UpgradePrompt"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 40.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 10
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 34
-text = "WAVE CLEAR  ·  0 STARDUST"
-horizontal_alignment = 1
-
-[node name="Cards" type="HBoxContainer" parent="UI/UpgradePrompt"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 50.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
-theme_override_constants/separation = 18
-
 [node name="Announcer" type="Control" parent="UI"]
 visible = false
 anchors_preset = 7
@@ -227,35 +63,6 @@ grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("25_announce")
-
-[node name="Title" type="Label" parent="UI/Announcer"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 78.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.35, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 12
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 64
-text = "RELIC"
-horizontal_alignment = 1
-
-[node name="Detail" type="Label" parent="UI/Announcer"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 82.0
-offset_bottom = 136.0
-grow_horizontal = 2
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
-theme_override_constants/outline_size = 8
-theme_override_fonts/font = ExtResource("2_iywne")
-theme_override_font_sizes/font_size = 38
-text = "detail"
-horizontal_alignment = 1
 
 [node name="BossBar" type="Control" parent="UI"]
 visible = false
@@ -312,56 +119,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("3_lnu2h")
-
-[node name="Panel" type="Panel" parent="PauseLayer/PauseMenu"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_ca42v")
-
-[node name="TextureRect" type="TextureRect" parent="PauseLayer/PauseMenu/Panel"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -506.0
-offset_top = 151.0
-offset_right = 506.0
-offset_bottom = 695.0
-grow_horizontal = 2
-mouse_filter = 2
-texture = ExtResource("11_dinhu")
-
-[node name="ResumeButton" type="TextureButton" parent="PauseLayer/PauseMenu/Panel"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -321.0
-offset_top = 338.0
-offset_right = 321.0
-offset_bottom = 644.0
-grow_horizontal = 2
-texture_normal = ExtResource("5_u5sy4")
-texture_pressed = ExtResource("6_gee14")
-texture_hover = ExtResource("7_gee14")
-
-[node name="GiveUpButton" type="TextureButton" parent="PauseLayer/PauseMenu/Panel"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -321.0
-offset_top = 644.0
-offset_right = 321.0
-offset_bottom = 948.0
-grow_horizontal = 2
-texture_normal = ExtResource("8_kvpfn")
-texture_pressed = ExtResource("9_dinhu")
-texture_hover = ExtResource("10_kvuet")
 
 [node name="player" parent="." instance=ExtResource("1_uwrxv")]
 process_mode = 1

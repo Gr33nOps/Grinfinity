@@ -1,6 +1,6 @@
 using Godot;
 
-/// <summary>The five pickups. Short, loud, and frequent enough to plan around.</summary>
+/// <summary>Pickup identifiers. Freeze and Magnet are retained for legacy compatibility, excluded from live drops.</summary>
 public enum PowerUpKind
 {
 	/// <summary>Absorbs exactly one hit. The only one that is not on a timer.</summary>
@@ -76,10 +76,10 @@ public static class PowerUps
 
 	// Declared after the profiles: static field initialisers run in source order,
 	// and an array up top would capture five nulls.
-	public static readonly Profile[] All = { Shield, Freeze, Magnet, Nuke, Damage };
+	public static readonly Profile[] All = { Shield, Nuke, Damage };
 
-	public static Profile Get(PowerUpKind kind) => All[(int)kind];
+	public static Profile Get(PowerUpKind kind) => kind switch {PowerUpKind.Shield=>Shield,PowerUpKind.Nuke=>Nuke,PowerUpKind.Damage=>Damage,PowerUpKind.Freeze=>Freeze,_=>Magnet};
 
-	/// <summary>Uniform for now; weighting is a tuning job for after a playtest.</summary>
-	public static PowerUpKind Roll() => (PowerUpKind)RunState.Rng.RandiRange(0, All.Length - 1);
+	/// <summary>Base weights: shield 50%, overcharge 35%, nuke 15%; the manager applies wave/ownership restrictions.</summary>
+	public static PowerUpKind Roll() {float roll=RunState.Rng.Randf();return roll<.5f?PowerUpKind.Shield:roll<.85f?PowerUpKind.Damage:PowerUpKind.Nuke;}
 }

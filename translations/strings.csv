@@ -15,9 +15,9 @@ POWERUP_Freeze_EFFECT,"Every enemy stops moving for a few seconds."
 POWERUP_Magnet_NAME,MAGNET
 POWERUP_Magnet_EFFECT,"Pulls in debris from anywhere on screen."
 POWERUP_Nuke_NAME,NUKE
-POWERUP_Nuke_EFFECT,Destroys every enemy on screen right now.
+POWERUP_Nuke_EFFECT,Destroys ordinary enemies in a large area.
 POWERUP_Damage_NAME,OVERCHARGE
-POWERUP_Damage_EFFECT,"Your shots deal extra damage for a while."
+POWERUP_Damage_EFFECT,"Shots deal +1 damage for 8 seconds."
 ACHIEVEMENT_SurviveFiveMinutes_NAME,LONG ORBIT
 ACHIEVEMENT_SurviveFiveMinutes_DESC,Survive 5:00.
 ACHIEVEMENT_HundredKills_NAME,CENTURY
@@ -48,7 +48,7 @@ WORLD_1_NAME,EMBERTIDE
 WORLD_1_FLAVOUR,"Warm, small, and entirely unbothered by what it is about to do."
 WORLD_1_HINT,Unlocked from the start.
 WORLD_2_NAME,DRIFTLIGHT
-WORLD_2_FLAVOUR,"Barely holds an orbit together, and grins the whole time anyway."
+WORLD_2_FLAVOUR,"A pale green planet with a cool turquoise surface."
 WORLD_2_HINT,Complete 3 orbits.
 WORLD_3_NAME,PALEFROST
 WORLD_3_FLAVOUR,"Cold enough that its own rings are ice, not rock."
@@ -112,9 +112,9 @@ UPG_FireRate_EFFECT,Shoot more often.
 UPG_Piercing_NAME,PIERCING SHOTS
 UPG_Piercing_EFFECT,Shots pass through two more bodies.
 UPG_QuickerDash_NAME,QUICKER DASH
-UPG_QuickerDash_EFFECT,Dash again sooner.
+UPG_QuickerDash_EFFECT,13% less dash cooldown per level.
 UPG_BiggerNova_NAME,BIGGER NOVA
-UPG_BiggerNova_EFFECT,Nova reaches further.
+UPG_BiggerNova_EFFECT,Add 22% of base nova radius per level.
 UPG_HungryDash_NAME,HUNGRY DASH
 UPG_HungryDash_EFFECT,Dashing drags all debris to you.
 UPG_WiderPull_NAME,WIDER PULL

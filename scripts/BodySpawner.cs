@@ -15,55 +15,37 @@ public partial class BodySpawner : Node
 	/// <summary>Bodies in the opening pack. Small enough to be read, not survived.</summary>
 	[Export] public int StartWaveSize { get; set; } = 6;
 	/// <summary>Extra bodies added to the pack per wave cleared.</summary>
-	[Export] public float WaveSizeGrowth { get; set; } = 2.0f;
+	[Export] public float WaveSizeGrowth { get; set; } = 1.5f;
 	/// <summary>
 	/// Ceiling on pack size. Deliberately low enough to keep a wave punchy: past
 	/// this the run escalates by what is in the pack, not by how long it takes
 	/// to grind through it. A wave nobody can finish is not a harder wave, it is
 	/// a longer one.
 	/// </summary>
-	[Export] public int MaxWaveSize { get; set; } = 34;
+	[Export] public int MaxWaveSize { get; set; } = 28;
 	/// <summary>Seconds of quiet between a pack being cleared and the next arriving.</summary>
-	[Export] public float CalmDuration { get; set; } = 7.0f;
+	[Export] public float CalmDuration { get; set; } = 1.8f;
 
-	// Tuned for a 2-6 minute orbit: the primary ramp tops out around 2:00. See
-	// "Late-game escalation" below for what happens to an orbit that outlasts it.
-	[Export] public float StartSpeed { get; set; } = 110.0f;
-	[Export] public float MaxSpeed { get; set; } = 215.0f;
-	[Export] public float SpeedIncreasePerSecond { get; set; } = 0.9f;
+	// Progression follows completed waves, never time spent struggling.
+	[Export] public float StartSpeed { get; set; } = 95.0f;
+	[Export] public float MaxSpeed { get; set; } = 220.0f;
 	[Export] public float StartSpawnInterval { get; set; } = 1.35f;
-	[Export] public float MinSpawnInterval { get; set; } = 0.38f;
-	[Export] public int MaxBodyCount { get; set; } = 90;
+	[Export] public int MaxBodyCount { get; set; } = 18;
 	[Export] public float SpawnMargin { get; set; } = 100.0f;
 	[Export] public PackedScene BodyScene { get; set; }
-
-	[ExportGroup("Late-game escalation")]
-	// The primary ramp above used to just stop at 2:00 and hold dead flat for
-	// however much longer the player survived — a bot playtest sat through
-	// minutes of literally nothing changing. This second, much slower ramp
-	// picks up exactly where the first one caps, so a long Endless Orbit keeps
-	// quietly tightening instead of going static. It has its own ceiling too —
-	// unbounded escalation would just be a different way of going nowhere,
-	// this time by becoming unwinnable instead of boring.
-	/// <summary>Final speed ceiling as a multiplier on MaxSpeed, reached slowly after the primary ramp caps.</summary>
-	[Export] public float LateGameSpeedMultiplier { get; set; } = 1.35f;
-	/// <summary>Final spawn-interval floor as a multiplier on MinSpawnInterval. Under 1 spawns faster.</summary>
-	[Export] public float LateGameSpawnMultiplier { get; set; } = 0.7f;
-	/// <summary>Seconds after the primary ramp caps before the late-game ceiling is fully reached.</summary>
-	[Export] public float LateGameRampDuration { get; set; } = 240.0f;
 
 	[ExportGroup("Bestiary")]
 	// One new kind every wave or two. Gated on waves rather than the clock so
 	// the escalation reads as progress the player made rather than time that
 	// passed — clearing fast now earns the next threat sooner, and a wave the
 	// player struggled with does not stack a new kind on top of it.
-	[Export] public int ShardUnlockWave { get; set; } = 2;
-	[Export] public int PlanetoidUnlockWave { get; set; } = 3;
-	[Export] public int FractureUnlockWave { get; set; } = 5;
-	[Export] public int BulwarkUnlockWave { get; set; } = 7;
-	[Export] public int SatelliteUnlockWave { get; set; } = 9;
-	[Export] public int FlareUnlockWave { get; set; } = 11;
-	[Export] public int ShardPackSize { get; set; } = 4;
+	[Export] public int ShardUnlockWave { get; set; } = 3;
+	[Export] public int PlanetoidUnlockWave { get; set; } = 4;
+	[Export] public int FractureUnlockWave { get; set; } = 6;
+	[Export] public int BulwarkUnlockWave { get; set; } = 10;
+	[Export] public int SatelliteUnlockWave { get; set; } = 8;
+	[Export] public int FlareUnlockWave { get; set; } = 12;
+	[Export] public int ShardPackSize { get; set; } = 3;
 
 	/// <summary>
 	/// Wave by which the mix has shifted as far toward the dangerous kinds as it
@@ -73,10 +55,6 @@ public partial class BodySpawner : Node
 	/// </summary>
 	[Export] public int CompositionPeakWave { get; set; } = 26;
 
-	[ExportGroup("Mass response")]
-	/// <summary>Spawn interval multiplier at full world mass. Under 1 means faster.</summary>
-	[Export] public float HeavySpawnRate { get; set; } = 0.78f;
-
 	/// <summary>Current ramped base speed, read by living bodies each frame.</summary>
 	public static float CurrentSpeed { get; private set; } = 100.0f;
 
@@ -84,17 +62,16 @@ public partial class BodySpawner : Node
 	public static float SpeedScale { get; private set; } = 1.0f;
 
 	private Timer spawnTimer;
-	private RunState run;
 	private float enemySpeed;
-	private float lateGameMaxSpeed;
-	private float lateGameMinSpawnInterval;
-	private float lateGameSpeedIncreasePerSecond;
 
 	// --- Waves --------------------------------------------------------------
 	/// <summary>1-based. The pack currently arriving, or the one just cleared.</summary>
 	public int WaveNumber { get; private set; } = 1;
 	/// <summary>True during the quiet window between packs.</summary>
 	public bool InCalm { get; private set; }
+	public float CalmTimeLeft => Mathf.Max(calmTimer, 0f);
+	public int Remaining => Mathf.Max(0, waveBudget - spawnedThisWave) + GetTree().GetNodeCountInGroup("bodies");
+	public void FinishCalm() { if (InCalm) calmTimer = Mathf.Min(calmTimer, 0.8f); }
 
 	private int waveBudget;
 	private int spawnedThisWave;
@@ -116,14 +93,10 @@ public partial class BodySpawner : Node
 			MaxSpeed *= 0.8f;
 		}
 
-		lateGameMaxSpeed = MaxSpeed * LateGameSpeedMultiplier;
-		lateGameMinSpawnInterval = MinSpawnInterval * LateGameSpawnMultiplier;
-		lateGameSpeedIncreasePerSecond = Mathf.Max(lateGameMaxSpeed - MaxSpeed, 0f) / Mathf.Max(LateGameRampDuration, 1f);
 
 		enemySpeed = StartSpeed;
 		CurrentSpeed = StartSpeed;
 		SpeedScale = 1.0f;
-		run = GameManager.Of(this)?.Run;
 		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 		waveBudget = StartWaveSize;
 		SetupSpawnTimer();
@@ -180,34 +153,16 @@ public partial class BodySpawner : Node
 		EmitSignal(SignalName.WaveStarted, WaveNumber);
 	}
 
-	public override void _Process(double delta)
-	{
-		UpdateWaves((float)delta);
-
-		// The primary ramp reaches MaxSpeed around 2:00, tuned to feel like a
-		// deliberate escalation. Once there, the far slower late-game ramp
-		// takes over and keeps pushing toward its own, higher ceiling — an
-		// orbit that outlasts the primary ramp keeps getting harder instead of
-		// holding flat for however much longer it lasts.
-		bool primaryRampDone = enemySpeed >= MaxSpeed;
-		float target = primaryRampDone ? lateGameMaxSpeed : MaxSpeed;
-		float rate = primaryRampDone ? lateGameSpeedIncreasePerSecond : SpeedIncreasePerSecond;
-		enemySpeed = Mathf.Min(enemySpeed + rate * (float)delta, target);
-		CurrentSpeed = enemySpeed;
-		SpeedScale = enemySpeed / Mathf.Max(StartSpeed, 1f);
-
-		// Spawn interval rides the same overall progress, from StartSpeed all
-		// the way to the late-game ceiling, so it keeps tightening in lockstep
-		// with speed across both ramps rather than flooring out on its own at 2:00.
-		float overallRange = Mathf.Max(lateGameMaxSpeed - StartSpeed, 0.001f);
-		float overallProgress = (enemySpeed - StartSpeed) / overallRange;
-		float targetInterval = Mathf.Lerp(StartSpawnInterval, lateGameMinSpawnInterval, overallProgress);
-
-		// A heavy world pulls harder, so it also draws more attention: mass
-		// tightens the spawn interval on top of the time ramp.
-		float massRate = Mathf.Lerp(1.0f, HeavySpawnRate, run?.MassNormalised ?? 0f);
-		spawnTimer.WaitTime = targetInterval * massRate;
-	}
+    public override void _Process(double delta)
+    {
+        UpdateWaves((float)delta);
+        // Progress, not time spent struggling, drives pressure. No mass penalty.
+        float early=Mathf.Clamp((WaveNumber-1)/11f,0,1);
+        float late=Mathf.Clamp((WaveNumber-12)/18f,0,1);
+        enemySpeed=Mathf.Lerp(StartSpeed,MaxSpeed*(160f/220f),early)+(MaxSpeed-MaxSpeed*(160f/220f))*late;
+        CurrentSpeed=enemySpeed;SpeedScale=enemySpeed/Mathf.Max(StartSpeed,1);
+        spawnTimer.WaitTime=Mathf.Lerp(StartSpawnInterval,.72f,early)-.22f*late;
+    }
 
 	private void SetupSpawnTimer()
 	{
@@ -227,7 +182,7 @@ public partial class BodySpawner : Node
 
 		// A boss fight is about the boss. Trash on top of it would only make the
 		// safe gaps unreadable, which is the one thing The Coil teaches.
-		if (GameManager.Of(this)?.BossActive == true)
+		if (GameManager.Of(this)?.BossActive == true || GameManager.Of(this)?.BossDue == true)
 			return;
 
 		// The quiet between packs is the whole point of the wave break. Nothing
@@ -246,7 +201,7 @@ public partial class BodySpawner : Node
 			// The whole pack counts against the budget, or a wave of shards
 			// would be several times the size of any other.
 			Vector2 origin = GetSpawnPosition();
-			int count = Mathf.Min(ShardPackSize, waveBudget - spawnedThisWave);
+			int count = Mathf.Min(WaveNumber<=4?2:ShardPackSize, Mathf.Min(waveBudget-spawnedThisWave,MaxBodyCount-GetTree().GetNodeCountInGroup("bodies")));
 			for (int i = 0; i < count; i++)
 			{
 				Vector2 jitter = new Vector2(RunState.Rng.RandiRange(-90, 90), RunState.Rng.RandiRange(-90, 90));
@@ -271,7 +226,16 @@ public partial class BodySpawner : Node
 	/// </summary>
 	private BodyKind PickKind()
 	{
-		if (WaveNumber < ShardUnlockWave)
+		if(spawnedThisWave==0)
+        {
+            if(WaveNumber==ShardUnlockWave)return BodyKind.Shard;
+            if(WaveNumber==PlanetoidUnlockWave)return BodyKind.Planetoid;
+            if(WaveNumber==FractureUnlockWave)return BodyKind.Fracture;
+            if(WaveNumber==SatelliteUnlockWave)return BodyKind.Satellite;
+            if(WaveNumber==BulwarkUnlockWave)return BodyKind.Bulwark;
+            if(WaveNumber==FlareUnlockWave)return BodyKind.Flare;
+        }
+        if (WaveNumber < ShardUnlockWave)
 			return BodyKind.Drifter;
 
 		// 0 at the last unlock, 1 by the peak. The dangerous share grows, the

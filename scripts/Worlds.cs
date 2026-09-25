@@ -1,9 +1,8 @@
 using Godot;
 
 /// <summary>
-/// The twelve existing player skins, turned into named, unlockable worlds. The
-/// art already exists — ASSETS.md calls this the cheapest content in the whole
-/// plan — so the only job here is naming them and deciding what earns each one.
+/// Twelve illustrated cosmetic planets, earned through lifetime play milestones.
+/// Cosmetics never change power.
 /// </summary>
 public static class Worlds
 {

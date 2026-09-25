@@ -24,7 +24,7 @@ public partial class DamageNumber : Node2D
 
 	private static Font EnsureFont()
 	{
-		font ??= GD.Load<Font>("res://fonts/Bubblegum.ttf");
+		font ??= GD.Load<Font>("res://fonts/LilitaOne.ttf");
 		return font;
 	}
 

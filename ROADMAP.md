@@ -1,3 +1,5 @@
+> Historical document. Current release scope and verification are in RELEASE.md; the September 2026 single endless-mode direction supersedes conflicting plans below.
+
 # Grinfinity — Design & Development Roadmap
 
 Gravity-first. The plan we build to, start to finish.

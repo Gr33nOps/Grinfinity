@@ -44,6 +44,8 @@ public partial class Debris : Node2D
 
 	public override void _Ready()
 	{
+		foreach(Node child in GetChildren())if(child is Polygon2D polygon)polygon.Hide();
+        AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/debris.svg"),Scale=Vector2.One*.55f});
 		manager = GameManager.Of(this);
 		world = manager?.GetNodeOrNull<Node2D>("player");
 		run = manager?.Run;

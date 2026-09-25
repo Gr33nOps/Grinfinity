@@ -18,7 +18,7 @@ public partial class BossBlackHole : Boss
 		BossName = "THE BLACK HOLE";
 		ArrivalLine = TranslationServer.Translate("BOSS_BlackHole_ARRIVAL");
 		BossColor = new Color(0.62f, 0.32f, 0.82f);
-		MaxHealth = 170;
+		MaxHealth = 300;
 	}
 
 	[ExportGroup("Pull")]
@@ -75,6 +75,7 @@ public partial class BossBlackHole : Boss
 		PullPlayer(step, pull);
 
 		flingTimer -= step;
+        Windup=Mathf.Clamp(1-flingTimer/.45f,0,1);
 		if (flingTimer <= 0f)
 		{
 			flingTimer = Mathf.Lerp(MinFlingInterval, FlingInterval, HealthFraction);
@@ -188,27 +189,8 @@ public partial class BossBlackHole : Boss
 		GameManager.Spawn(this, shot);
 	}
 
-	public override void _Draw()
-	{
-		var voidColor = new Color(0.05f, 0.01f, 0.08f, 1.0f);
-
-		// Layered arcs standing in for an accretion disc, each at a different
-		// radius and offset. The swirl comes from the node's own Rotation, so
-		// these never need to be redrawn to keep turning.
-		for (int i = 0; i < 4; i++)
-		{
-			float start = Mathf.Tau * i / 4f;
-			float radius = CoreRadius * (1.6f + i * 0.55f);
-			DrawArc(Vector2.Zero, radius, start, start + Mathf.Pi * 1.3f, 40,
-				new Color(BossColor, 0.55f - i * 0.1f), 5.0f, true);
-		}
-
-		DrawCircle(Vector2.Zero, CoreRadius, voidColor);
-		DrawArc(Vector2.Zero, CoreRadius, 0f, Mathf.Tau, 32, new Color(BossColor, 0.9f), 3.0f, true);
-
-		// A faint boundary for how far its pull actually reaches — the one thing
-		// the player needs in order to learn the fight, the same reason
-		// NovaWave exists for the player's own blast.
-		DrawArc(Vector2.Zero, PullRadius, 0f, Mathf.Tau, 64, new Color(BossColor, 0.12f), 2.0f, true);
-	}
+    public override void _Draw()
+    {
+        for(int i=0;i<16;i++)DrawArc(Vector2.Zero,PullRadius,i*Mathf.Tau/16,i*Mathf.Tau/16+.12f,6,new Color(.8f,.5f,.6f,.15f),2,true);
+    }
 }

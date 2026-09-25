@@ -6,7 +6,9 @@ public partial class Credits : Control
 
 	public override void _Ready()
 	{
-		backButton = GetNode<Button>("Layout/BackButton");
+        Callable.From(()=>ArcadeSkin.SupportingScreen(this)).CallDeferred();
+		GetNode<Label>("Layout/Body").Text="Design, code and art • Gr33nOps\n\nBuilt with Godot Engine 4.7.1\nMIT License • godotengine.org\n\nLilita One by Juan Montoreano\nSIL Open Font License 1.1\n\nThanks for playing!";
+        backButton = GetNode<Button>("Layout/BackButton");
 		backButton.Pressed += OnBackPressed;
 
 		Input.MouseMode = Input.MouseModeEnum.Visible;

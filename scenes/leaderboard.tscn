@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://g0bub88tvb2t"]
 
 [ext_resource type="Script" path="res://scripts/LeaderboardMenu.cs" id="1_lb"]
-[ext_resource type="FontFile" uid="uid://c4xf48r4tunrx" path="res://fonts/Bubblegum.ttf" id="2_font"]
+[ext_resource type="FontFile" path="res://fonts/LilitaOne.ttf" id="2_font"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lb"]
 bg_color = Color(0, 0, 0, 0.686275)

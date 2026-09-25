@@ -28,6 +28,8 @@ public partial class Moon : Area2D
 
 	public override void _Ready()
 	{
+		foreach(Node child in GetChildren())if(child is Polygon2D item)item.Hide();
+        AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/moon.svg"),Scale=Vector2.One*.23f});
 		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
 
 		manager = GameManager.Of(this);
@@ -52,7 +54,7 @@ public partial class Moon : Area2D
 		float step = (float)delta;
 		angle += OrbitSpeed * step;
 		GlobalPosition = world.GlobalPosition + Vector2.FromAngle(angle) * OrbitRadius;
-		Rotation = angle + Mathf.Pi * 0.5f;
+		Rotation = Mathf.Sin(angle)*.12f;
 
 		fireTimer -= step;
 		if (fireTimer <= 0f)

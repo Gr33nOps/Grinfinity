@@ -17,6 +17,7 @@ public partial class AccessibilityMenu : Control
 
 	public override void _Ready()
 	{
+        Callable.From(()=>ArcadeSkin.SupportingScreen(this)).CallDeferred();
 		colourblindCheck = GetNode<Button>("Layout/ColourblindRow/Check");
 		outlinesCheck = GetNode<Button>("Layout/OutlinesRow/Check");
 		rapidFireCheck = GetNode<Button>("Layout/RapidFireRow/Check");

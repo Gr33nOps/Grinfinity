@@ -12,6 +12,7 @@ public partial class LeaderboardMenu : Control
 
 	public override void _Ready()
 	{
+        Callable.From(()=>ArcadeSkin.SupportingScreen(this)).CallDeferred();
 		rows = GetNode<VBoxContainer>("Layout/Rows");
 		emptyLabel = GetNode<Label>("Layout/EmptyLabel");
 		backButton = GetNode<Button>("Layout/BackButton");
@@ -59,7 +60,6 @@ public partial class LeaderboardMenu : Control
 			row.AddChild(Cell(entry.Name, 40, rankColour, 300));
 			row.AddChild(Cell($"{entry.Score:N0}", 40, rankColour, 220));
 			row.AddChild(Cell(ScoreManager.FormatTime(entry.SurvivalTime), 32, Idle, 140));
-			row.AddChild(Cell($"{entry.Kills} KILLS", 32, Idle, 170));
 
 			rows.AddChild(row);
 		}

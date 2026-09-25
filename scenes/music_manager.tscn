@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cqkvyhyhf0kqw"]
 
-[ext_resource type="AudioStream" uid="uid://c8ag5t6tu4efm" path="res://sounds/background_music.ogg" id="1_tn5dr"]
+[ext_resource type="AudioStream" path="res://sounds/smile_forever.ogg" id="1_tn5dr"]
 [ext_resource type="Script" path="res://scripts/MusicManager.cs" id="2_music"]
 
 [node name="MusicManager" type="Node"]

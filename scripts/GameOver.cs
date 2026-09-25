@@ -21,8 +21,8 @@ public partial class GameOver : Control
 	/// <summary>What ended the orbit — a body kind, a boss, a hazard. Empty for a clean, non-death ending (Flyby's clock, giving up).</summary>
 	public static string DeathCause = "";
 
-	private TextureButton restartButton;
-	private TextureButton menuButton;
+	private Button restartButton;
+	private Button menuButton;
 	private Label scoreLabel;
 	private Label statsLabel;
 	private Label deathCauseLabel;
@@ -37,21 +37,26 @@ public partial class GameOver : Control
 
 	public override void _Ready()
 	{
-		scoreLabel = GetNode<Label>("Layout/Recap/ScoreLabel");
-		statsLabel = GetNodeOrNull<Label>("Layout/Recap/StatsLabel");
-		deathCauseLabel = GetNodeOrNull<Label>("Layout/Recap/DeathCauseLabel");
-		worldUnlockLabel = GetNodeOrNull<Label>("Layout/Recap/WorldUnlockLabel");
-		leaderboardLabel = GetNodeOrNull<Label>("Layout/Recap/LeaderboardLabel");
-		highScoreLabel = GetNodeOrNull<Label>("Layout/Recap/HighScoreLabel");
-		nameRow = GetNodeOrNull<HBoxContainer>("Layout/Recap/NameRow");
-		nameField = GetNodeOrNull<LineEdit>("Layout/Recap/NameRow/Field");
-		restartButton = GetNode<TextureButton>("Layout/Header/Buttons/RestartButton");
-		menuButton = GetNode<TextureButton>("Layout/Header/Buttons/MenuButton");
+        var rows=ArcadeSkin.Modal(this,"GAME OVER",850);
+        rows.AddChild(ArcadeSkin.Label("RUN COMPLETE",22,ArcadeSkin.Orange));
+        scoreLabel=ArcadeSkin.Label("0",92);scoreLabel.Name="FinalScore";rows.AddChild(scoreLabel);
+        statsLabel=ArcadeSkin.Label("",25);rows.AddChild(statsLabel);
+        deathCauseLabel=ArcadeSkin.Label("",22,ArcadeSkin.Muted);rows.AddChild(deathCauseLabel);
+        highScoreLabel=ArcadeSkin.Label("",30,ArcadeSkin.Orange);rows.AddChild(highScoreLabel);
+        leaderboardLabel=ArcadeSkin.Label("",24);rows.AddChild(leaderboardLabel);
+        worldUnlockLabel=ArcadeSkin.Label("",22,ArcadeSkin.Muted);worldUnlockLabel.AutowrapMode=TextServer.AutowrapMode.WordSmart;rows.AddChild(worldUnlockLabel);
+        nameRow=new HBoxContainer {Alignment=BoxContainer.AlignmentMode.Center};rows.AddChild(nameRow);
+        var prompt=ArcadeSkin.Label("YOUR NAME",22);prompt.Name="Prompt";nameRow.AddChild(prompt);
+        nameField=new LineEdit {Name="Field",PlaceholderText="PLAYER",MaxLength=12,CustomMinimumSize=new Vector2(260,54)};nameRow.AddChild(nameField);
+        restartButton=ArcadeSkin.Button("PLAY AGAIN",()=>{},true);restartButton.Name="Retry";rows.AddChild(restartButton);
+        menuButton=ArcadeSkin.Button("MAIN MENU",()=>{});menuButton.Name="ReturnToMenu";rows.AddChild(menuButton);
+
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNodeOrNull<AudioStreamPlayer>("HoverSound");
 		gameOverSound = GetNodeOrNull<AudioStreamPlayer>("GameOverSound");
 
 		gameOverSound?.Play();
+        Callable.From(()=>ArcadeSkin.Pop(rows.GetParent<Control>())).CallDeferred();
 		ShowRecap();
 
 		restartButton.Pressed += OnRestartButtonPressed;
@@ -71,9 +76,7 @@ public partial class GameOver : Control
 		{
 			// Mass at death is on the recap deliberately: it is the one number
 			// that says whether the risk dial was used at all.
-			statsLabel.Text = string.Format(TranslationServer.Translate("UI_RECAP_STATS"),
-				ScoreManager.FormatTime(SurvivalTimeToShow), KillsToShow, BestComboToShow,
-				Mathf.RoundToInt(MassAtDeath * 100), MoonsAtDeath);
+			statsLabel.Text = $"{ScoreManager.FormatTime(SurvivalTimeToShow)} SURVIVED  •  {KillsToShow} POPPED  •  BEST STREAK x{BestComboToShow}";
 		}
 
 		// A one-line "what actually got you" — a number alone is a tally, this
@@ -82,7 +85,7 @@ public partial class GameOver : Control
 		{
 			deathCauseLabel.Visible = !string.IsNullOrEmpty(DeathCause);
 			if (deathCauseLabel.Visible)
-				deathCauseLabel.Text = string.Format(TranslationServer.Translate("UI_DEATH_CAUSE"), DeathCause);
+				deathCauseLabel.Text = $"CAUGHT BY {DeathCause.ToUpperInvariant()}. GO AGAIN!";
 		}
 
 		if (worldUnlockLabel != null)

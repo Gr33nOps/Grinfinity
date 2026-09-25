@@ -22,6 +22,7 @@ public partial class SettingsMenu : Control
 
 	public override void _Ready()
 	{
+        Callable.From(()=>ArcadeSkin.SupportingScreen(this)).CallDeferred();
 		masterSlider = GetNode<HSlider>("Layout/MasterRow/Slider");
 		musicSlider = GetNode<HSlider>("Layout/MusicRow/Slider");
 		sfxSlider = GetNode<HSlider>("Layout/SfxRow/Slider");

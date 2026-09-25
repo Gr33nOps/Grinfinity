@@ -31,6 +31,7 @@ public partial class MusicManager : Node
 	public override void _Ready()
 	{
 		baseTrack = GetNodeOrNull<AudioStreamPlayer>("BackgroundMusic");
+		if (baseTrack?.Stream is AudioStreamOggVorbis loop) loop.Loop = true;
 		SetupIntenseLayer();
 		ApplyMix();
 	}
@@ -84,5 +85,13 @@ public partial class MusicManager : Node
 
 		if (intenseTrack != null)
 			intenseTrack.VolumeDb = Mathf.Lerp(LayerSilentDb, LayerIntenseDb, mix);
+	}
+
+	public override void _ExitTree()
+	{
+		baseTrack?.Stop();
+		intenseTrack?.Stop();
+		if (baseTrack != null) baseTrack.Stream = null;
+		if (intenseTrack != null) intenseTrack.Stream = null;
 	}
 }

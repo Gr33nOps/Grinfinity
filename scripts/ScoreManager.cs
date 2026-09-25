@@ -65,6 +65,8 @@ public static class ScoreManager
 	public static Result SaveRun(float time, int kills, int streak, int score)
 	{
 		EnsureLoaded();
+		if (!float.IsFinite(time) || time < 0 || time > MaxPlausibleTime || kills < 0 || streak < 0 || score < 0)
+			return new Result(false, false);
 
 		bool newBestTime = time > bestTime;
 		bool newBestScore = score > bestScore;
@@ -89,22 +91,22 @@ public static class ScoreManager
 		isLoaded = true;
 
 		var config = new ConfigFile();
-		if (config.Load(SavePath) == Error.Ok)
+		if (SaveStore.Load(config, SavePath) == Error.Ok)
 		{
-			bestTime = config.GetValue(Section, "best_time", 0.0f).AsSingle();
-			bestKills = config.GetValue(Section, "best_kills", 0).AsInt32();
-			bestStreak = config.GetValue(Section, "best_combo", 0).AsInt32();
-			bestScore = config.GetValue(Section, "best_score", 0).AsInt32();
+			bestTime = SaveStore.Value(config, Section, "best_time", 0.0f).AsSingle();
+			bestKills = SaveStore.Value(config, Section, "best_kills", 0).AsInt32();
+			bestStreak = SaveStore.Value(config, Section, "best_combo", 0).AsInt32();
+			bestScore = SaveStore.Value(config, Section, "best_score", 0).AsInt32();
 
 			// v4 kept a table per mode, and the globals above were the best of
 			// all of them — so a Flyby score could be sitting in a number that
 			// now claims to be an Endless Orbit record. Endless Orbit's own row
 			// is the only honest one to carry forward, and it wins wherever the
 			// two disagree. The other four modes' rows are left unread.
-			float endlessTime = config.GetValue(Section, "mode_EndlessOrbit_time", 0.0f).AsSingle();
-			int endlessKills = config.GetValue(Section, "mode_EndlessOrbit_kills", 0).AsInt32();
-			int endlessStreak = config.GetValue(Section, "mode_EndlessOrbit_streak", 0).AsInt32();
-			int endlessScore = config.GetValue(Section, "mode_EndlessOrbit_score", 0).AsInt32();
+			float endlessTime = SaveStore.Value(config, Section, "mode_EndlessOrbit_time", 0.0f).AsSingle();
+			int endlessKills = SaveStore.Value(config, Section, "mode_EndlessOrbit_kills", 0).AsInt32();
+			int endlessStreak = SaveStore.Value(config, Section, "mode_EndlessOrbit_streak", 0).AsInt32();
+			int endlessScore = SaveStore.Value(config, Section, "mode_EndlessOrbit_score", 0).AsInt32();
 
 			if (endlessTime > 0f || endlessScore > 0 || endlessKills > 0 || endlessStreak > 0)
 			{
@@ -150,7 +152,7 @@ public static class ScoreManager
 		config.SetValue(Section, "best_combo", bestStreak);
 		config.SetValue(Section, "best_score", bestScore);
 
-		Error error = config.Save(SavePath);
+		Error error = SaveStore.Save(config, SavePath);
 		if (error != Error.Ok)
 			GD.PushWarning($"ScoreManager: could not write '{SavePath}' ({error}).");
 	}

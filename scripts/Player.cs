@@ -74,6 +74,7 @@ public partial class Player : CharacterBody2D
 	private Vector2 gamepadAimDirection = Vector2.Right;
 	private bool usingGamepadAim = false;
 	private bool isDead = false;
+	private float hitRecovery;
 
 	/// <summary>World-space point the player is currently aiming at.</summary>
 	public Vector2 AimPosition { get; private set; }
@@ -124,12 +125,22 @@ public partial class Player : CharacterBody2D
 
 		lastMousePosition = GetGlobalMousePosition();
 		AimPosition = lastMousePosition;
+		if (run != null) run.EffectsChanged += QueueRedraw;
+	}
+
+
+	public override void _ExitTree()
+	{
+		if (run != null && IsInstanceValid(run)) run.EffectsChanged -= QueueRedraw;
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
 		if (isDead)
 			return;
+		hitRecovery = Mathf.Max(0f, hitRecovery - (float)delta);
+		if (playerSprite != null)
+			playerSprite.Modulate = new Color(playerSprite.Modulate, hitRecovery > 0f ? 0.55f : 1f);
 
 		AimPosition = ResolveAimPosition();
 		abilities.Update(delta);
@@ -137,6 +148,12 @@ public partial class Player : CharacterBody2D
 		MoveAndSlide();
 		StayOnScreen();
 		FollowMass(delta);
+		// BodyEntered does not fire again if protection expires during the same
+		// overlap. Recheck existing contacts so a shield or dash cannot leave
+		// the player permanently safe inside an enemy.
+		if (!Invulnerable && hitRecovery <= 0f && !abilities.IsDashing() && hitBox != null)
+			foreach (Node2D contact in hitBox.GetOverlappingBodies())
+				OnHitBoxBodyEntered(contact);
 	}
 
 	/// <summary>
@@ -200,6 +217,7 @@ public partial class Player : CharacterBody2D
 		manager?.SpawnBlast(GlobalPosition, radius, new Color(1f, 0.86f, 0.5f));
 		manager?.Hitstop(0.12f);
 		manager?.Shake(NovaTrauma);
+		manager?.PlayCue("nova_boom");
 		return true;
 	}
 
@@ -273,10 +291,6 @@ public partial class Player : CharacterBody2D
 
 	private void UpdatePlayer(Vector2 aimPosition, double delta)
 	{
-		if (playerSprite != null)
-		{
-			playerSprite.FlipV = aimPosition.X < GlobalPosition.X;
-		}
 		LookAt(aimPosition);
 		HandleMovement(delta);
 		abilities.HandleShooting(aimPosition);
@@ -306,7 +320,7 @@ public partial class Player : CharacterBody2D
 		Vector2 targetVelocity = new Vector2(
 			Input.GetAxis("left", "right"),
 			Input.GetAxis("up", "down")
-		) * CurrentMoveSpeed;
+		).LimitLength(1f) * CurrentMoveSpeed;
 
 		// The wind pushes the world too, not just the bodies — otherwise it is a
 		// change to them rather than to the arena.
@@ -344,7 +358,7 @@ public partial class Player : CharacterBody2D
 
 	private void Die(string cause = "")
 	{
-		if (isDead || Invulnerable)
+		if (isDead || Invulnerable || hitRecovery > 0f || abilities.IsDashing())
 			return;
 
 		// Fires on every real contact attempt, shield-blocked or lethal — the
@@ -356,7 +370,9 @@ public partial class Player : CharacterBody2D
 		// of death — contact, blast, hostile shot — is covered by one check.
 		if (run != null && run.ConsumeShield())
 		{
+			hitRecovery = 1.0f;
 			var manager = GameManager.Of(this);
+			manager?.PlayCue("shield_pop");
 			manager?.Shake(0.45f);
 			manager?.Hitstop(0.08f);
 			manager?.SpawnBlast(GlobalPosition, 200f, PowerUps.Shield.Colour);
@@ -412,7 +428,7 @@ public partial class Player : CharacterBody2D
 	}
 
 	/// <summary>The weapon carried into this orbit, chosen before it started.</summary>
-	public WeaponProfile Weapon => Loadout.Profile;
+	public WeaponProfile Weapon => WeaponProfile.Get(run?.Weapon ?? WeaponId.Comet);
 
 	/// <summary>Seconds until this weapon can fire again.</summary>
 	public float FireInterval(bool rapidFiring)
@@ -426,17 +442,25 @@ public partial class Player : CharacterBody2D
 	{
 		WeaponProfile weapon = Weapon;
 		Vector2 aim = (aimPosition - GlobalPosition).Normalized();
+		int fanLevel = run?.LevelOf(RunUpgradeId.FanShot) ?? 0;
+		int pellets = weapon.Pellets + fanLevel;
 
 		// Pellets are spread evenly across the cone rather than randomly, so a
 		// shotgun pattern is something a player can learn to place.
-		for (int i = 0; i < weapon.Pellets; i++)
+		for (int i = 0; i < pellets; i++)
 		{
-			float offset = weapon.Pellets <= 1
-				? 0f
-				: weapon.Spread * (i / (float)(weapon.Pellets - 1) - 0.5f);
+			float offset;
+            if(i<weapon.Pellets)
+                offset=weapon.Pellets<=1?0f:weapon.Spread*(i/(float)(weapon.Pellets-1)-.5f);
+            else
+            {
+                int side=fanLevel==1?(alternateSpread?-1:1):(i-weapon.Pellets==0?-1:1);
+                offset=side*(weapon.Spread*.5f+Mathf.DegToRad(18));
+            }
 
 			var bullet = BulletScene.Instantiate<Bullet>();
 			bullet.ApplyProfile(weapon);
+            bullet.Scale*=Scale.X/2f;
 
 			// Overcharge stacks on top of whatever the weapon already does, so it
 			// is worth the same to every weapon rather than only to the slow ones.
@@ -452,7 +476,11 @@ public partial class Player : CharacterBody2D
 		}
 
 		FlashMuzzle();
+		alternateSpread=!alternateSpread;
+		GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Kick();
 	}
+
+    private bool alternateSpread;
 
 	/// <summary>
 	/// One frame of light at the barrel. Randomised scale and roll so a held
@@ -466,7 +494,7 @@ public partial class Player : CharacterBody2D
 		muzzleTween?.Kill();
 		muzzleFlash.Visible = true;
 		muzzleFlash.Rotation = RunState.Rng.RandfRange(-0.5f, 0.5f);
-		muzzleFlash.Scale = Vector2.One * RunState.Rng.RandfRange(0.85f, 1.2f);
+		muzzleFlash.Scale = Vector2.One * RunState.Rng.RandfRange(0.32f, 0.48f);
 		muzzleFlash.Modulate = new Color(1f, 1f, 1f, 1f);
 
 		muzzleTween = CreateTween();
@@ -485,6 +513,7 @@ public partial class Player : CharacterBody2D
 
 	public void CreateDashEffect()
 	{
+		GameManager.Of(this)?.PlayCue("dash_swish");
 		GameManager.Of(this)?.Shake(DashTrauma);
 
 		if (playerSprite == null)

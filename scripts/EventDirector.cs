@@ -10,7 +10,7 @@ using Godot;
 /// </summary>
 public partial class EventDirector : Node
 {
-	[Export] public float FirstEventTime { get; set; } = 60.0f;
+	[Export] public float FirstEventTime { get; set; } = 180.0f;
 	/// <summary>Seconds between events, measured from the end of the last one.</summary>
 	[Export] public float GapMin { get; set; } = 32.0f;
 	[Export] public float GapMax { get; set; } = 55.0f;
@@ -48,14 +48,14 @@ public partial class EventDirector : Node
 
 		// Hold the clock while a boss is up rather than skipping the slot, so an
 		// event still lands soon after the fight instead of being lost.
-		if (manager.BossActive)
+		if (manager.BossActive || manager.InWaveBreak)
 		{
 			hadFirst = true;
 			nextAt = run.SurvivalTime + GapMin;
 			return;
 		}
 
-		if (run.SurvivalTime >= DueAt)
+		if (manager.WaveNumber>=10 && run.SurvivalTime >= DueAt)
 			Begin();
 	}
 

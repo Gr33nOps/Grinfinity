@@ -1,175 +1,79 @@
-# Grinfinity
+# GRINFINITY
 
-A top-down twin-stick survival shooter built with **Godot 4.4** and **C#**.
+An arcade space shooter: clear waves, defeat bosses, and chase a high score.
 
-You are a small, cheerful planet with a gun. Your gravity is why they come.
+Move, aim and shoot. Clear a wave, choose one free boost while the action pauses, then dive back in. Collect debris to grow rings, orbiting moons and your score multiplier. You begin with one shield; after it breaks, the next unprotected hit ends the orbit. Retry straight from the results screen.
 
-Bodies do not chase you — they *fall* toward you, gain momentum, overshoot and
-clump. Every one you destroy sheds debris your gravity drags back in, and
-absorbing it makes you heavier. Mass is the risk dial and the score multiplier at
-the same time: heavy means a wider pull, visible rings, moons that orbit and
-shoot for you, and a fatter multiplier — paid for with a bigger hitbox, slower
-movement and a longer dash cooldown. Spend it with a nova, or ride it.
+## Play the Windows build
 
-## Controls
+Extract `builds/Grinfinity-1.0.0-rc4-windows-x64.zip` into a folder and launch `Grinfinity.exe`. Keep the `.pck` and `data_Grinfinity_windows_x86_64` folder beside it. No separate .NET installation is required for the exported game.
 
-| Action | Keyboard / Mouse | Gamepad |
-|--------|------------------|---------|
-| Move | `W` `A` `S` `D` | Left stick |
+| Action | Keyboard / mouse | Xbox-style controller |
+|---|---|---|
+| Move | WASD | Left stick |
 | Aim | Mouse | Right stick |
-| Shoot | Left mouse / `Space` | Right trigger |
-| Dash | `Shift` | B |
-| Rapid fire | `E` | X |
-| Nova (spends mass) | `R` | Y |
-| Pause | `Esc` | Start |
-| Toggle fullscreen | `F11` | — |
+| Shoot | Left mouse | Right trigger |
+| Dash, once unlocked | Shift | B |
+| Rapid fire, once unlocked | E | X |
+| Nova, once unlocked and charged | R | Y |
+| Choose a boost | 1 / 2 / 3 or click | D-pad, then A |
+| Pause | Escape | Start |
 
-Aiming switches automatically between mouse and right stick — whichever you used last.
-Every keyboard binding above can be changed in **Settings → Controls**.
+Keys can be rebound. Settings include audio, fullscreen, resolution, VSync, frame cap, HUD text scale, reduced shake, colourblind palette, high-contrast outlines, aim assist and assist speed. Cosmetic planet choices and your leaderboard name live in Stats. Cosmetics have no power advantage.
 
-## Features
+## What is in this version
 
-- Five modes, chosen before an orbit: **Endless Orbit** (survive as long as
-  you can), **Flyby** (60 seconds, maximum score), **Daily Alignment** (a
-  fixed seed shared by everyone that day, one attempt), **Convergence**
-  (three bosses back to back, no trash to hide behind) and **Glass Planet**
-  (one hit kills you, your own shots hit five times as hard)
-- Easy / Normal / Hard difficulty, scaling spawn rate, body speed and contact
-  radius — never player damage
-- A seeded RNG every gameplay roll draws from, so Daily Alignment reproduces
-  the same orbit on every machine
-- Gravity, not pathfinding: bodies orbit, overshoot, clump and slingshot
-- Three weapons, chosen at orbit start: Comet, Debris Cannon, Ion Lance
-- Seven body kinds that each teach something — splitting, armoured, orbiting,
-  detonating — plus **The Coil**, a boss of spinning rings with one safe gap
-- Mass as a single risk-and-reward dial — rings, moons, venting and a live
-  score multiplier all read from it
-- Score, survival timer, kill count and streak counter, saved as personal
-  bests — per mode, alongside one "best of any mode" figure the menu shows
-- Stardust, earned from time, kills and streaks, carried across every orbit
-- Three soft-capped permanent upgrades bought with stardust: Thrust, Coolant, Ballast
-- Nine achievements, tracked live and persisted
-- A local top-10 leaderboard per mode: score, time, kills, weapon, world and date
-- A lifetime stats screen: orbits, kills, time played, heaviest mass, favourite weapon
-- Death recap: score, time, kills, best streak, mass at death and moons held
-- Bodies unlock as an orbit goes on:
-  - **Drifter** — the baseline, falls straight in
-  - **Shard** — small and fast, arrives in packs (0:18)
-  - **Planetoid** — large and slow, takes four hits (0:40)
-  - **Fracture** — breaks into three Splinters when killed (1:02)
-  - **Bulwark** — armoured across its leading face; flank it (1:25)
-  - **Satellite** — holds a ring at fixed range and shoots inward (1:48)
-  - **Flare** — detonates lethally on death; kill it at a distance (2:10)
-  - **The Coil** — spinning rings with one safe gap, at 3:00
-  - **The Brood** — spawns Shards continuously until it dies, once dealt with
-  - **The Black Hole** — a rival gravity well with health, the thematic
-	centrepiece, once dealt with
-- Power-ups (Shield, Freeze, Magnet, Nuke, Overcharge), a relic rolled per
-  orbit, 20-second arena events, gravity wells and comet flybys
-- Twelve named, unlockable worlds — chosen before an orbit and held for the
-  whole of it
-- Ramping body speed and spawn rate
-- Random player skins and enemy variants
-- Dash and rapid-fire abilities
-- Hitstop, trauma-based screen shake, bullet trails, muzzle flash and per-enemy
-  death bursts
-- Procedural deep-space background: a drifting nebula wash under three parallax
-  star layers, drawn entirely in a shader
-- Music that swells with how dangerous the run has become
-- Pause menu and game over flow
-- Settings: master / music / SFX volume, screen shake intensity (0 = off),
-  fullscreen or windowed at a chosen resolution, VSync, an FPS cap, UI scale,
-  and key rebinding
-- Accessibility: a colourblind-safe body palette, high-contrast sprite
-  outlines, hold-or-toggle rapid fire, an Assist Mode that gently slows
-  bodies, a damage-numbers toggle, and gamepad aim assist
-- Localisation-ready: every dynamic string and data-table description routes
-  through a translation table (`translations/strings.csv`) — adding a
-  language is a data change, not a code change
-- Gamepad support
-- Background music and SFX on separate audio buses
+The main menu now shares the illustrated gameplay theme. Gameplay now uses an original illustrated asset set: expressive planets, a separate recoiling blaster, distinct enemies and bosses, warm star effects, illustrated pickups and a layered space background. Compact HUD, untimed boost choices, exclusive pause screens and score-first results replace the overlapping interface.
 
-## Requirements
+- One endless survival mode, with short waves and a gradually changing enemy mix.
+- Distinct chasing, swarming, armoured, splitting, orbiting/shooting and exploding threats.
+- Three boss encounters within a continuing endless run, plus telegraphed comets, gravity wells and brief arena events.
+- Dash unlocks after wave 1, rapid fire after wave 3, and nova after wave 5. Free between-wave boosts improve shooting, piercing, spread and abilities, with optional weapon choices. Spread Shot adds one angled bullet per level, first available after waves 5 and 10. The starting gun fires every 0.18 seconds. Nothing to buy or grind outside a run.
+- Three pickup types (shield, overcharge and nova burst), growing rings and helper moons, impact effects, and original synthesized music and sound effects.
+- Local score-ranked top ten, personal bests, lifetime records and cosmetic achievements. Fully offline; no account or network required.
 
-- [Godot 4.4](https://godotengine.org/download) with **.NET** / C# support
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+Survival earns points; kills and quick streaks earn more. Absorbing debris raises the visible multiplier from x1 to x3. Bosses add a flat bonus. Upgrade timing, enemy behaviours and boss attacks are listed in [GAMEPLAY_GUIDE.md](GAMEPLAY_GUIDE.md). Release verification is in [RELEASE.md](RELEASE.md).
 
-## Run locally
+## Develop
 
-```bash
-git clone https://github.com/Gr33nOps/Grinfinity.git
+Use **Godot 4.7.1 .NET**, the .NET 8 SDK or a compatible newer SDK, and the matching **mono** export templates. The standard Godot binary cannot load this project's C# scripts.
+
+```powershell
+dotnet build --configuration Debug
+& $Godot --headless --path . --editor --import --quit
+& $Godot --path .
 ```
 
-1. Open the project folder in Godot 4.4 (.NET) **once** so it imports the assets.
-   The `.godot/` cache is not committed, so a fresh clone has no imported
-   textures until the editor (or `godot --headless --import`) has run. Skipping
-   this step makes scenes fail to load with
-   `referenced non-existent resource` errors.
-2. Wait for the C# solution to build.
-3. Press **Play** (main scene is the menu).
+Set `$Godot` to the .NET engine console executable. For the isolated integration suite:
 
-To import and build without opening the editor:
-
-```bash
-godot --headless --path . --import && dotnet build
+```powershell
+& tools/run-qa.ps1 -Godot $Godot
 ```
 
-## Project layout
+It copies the project to a builds/qa/isolated-project directory and uses a separate `Grinfinity-QA` save folder. Success requires `QA RESULT: 0 failure(s)`. The runner builds first and aborts on compilation failure before copying the fresh assembly. `tools/ReleaseQa.cs` is compiled only in Debug and `tools/` is excluded from exports.
 
-```
-scenes/       Game, menu, settings, credits, player, enemies, UI, shaders
-scripts/      C# gameplay systems
-sprites/      Art and UI textures (trimmed for runtime)
-art_source/   Untrimmed original art masters, excluded from the Godot import
-sounds/       Music and SFX
-fonts/        UI font
-tools/        Dev-only helpers, not part of the game
-```
+### Rendered playtests
 
-### Unattended screenshots
-
-`tools/dev_capture.tscn` runs a scene without a human at the keyboard and writes
-a PNG, which is how visual changes get checked. It plays the game for real —
-holding fire and sweeping the aim — with contact damage switched off so a run can
-reach its busy late minutes.
-
-```bash
-GRIN_SCENE=res://scenes/game.tscn GRIN_RUN=60 GRIN_SHOT=/tmp/shot.png godot --path . --windowed res://tools/dev_capture.tscn
+```powershell
+$env:GRIN_RUN = '90'
+$env:GRIN_AUTO_BUY = '1'
+$env:GRIN_SIZE = '1280x720'
+$env:GRIN_SHOT = 'C:/Temp/grinfinity.png'
+& $Godot --path "builds/qa/isolated-project" res://tools/playtest.tscn
 ```
 
-| Variable | Effect |
-|---|---|
-| `GRIN_SCENE` | Scene to load (default `res://scenes/game.tscn`) |
-| `GRIN_SHOT` | Where to write the PNG |
-| `GRIN_RUN` | Seconds to play for |
-| `GRIN_WEAPON` | Loadout index: 0 Comet, 1 Debris Cannon, 2 Ion Lance |
-| `GRIN_MODE` | Mode index: 0 Endless Orbit, 1 Flyby, 2 Daily Alignment, 3 Convergence, 4 Glass Planet |
-| `GRIN_DIFFICULTY` | Difficulty index: 0 Easy, 1 Normal, 2 Hard |
-| `GRIN_BOSS` | Seconds before The Coil arrives |
-| `GRIN_MORTAL` | Leave contact damage on, to exercise death and the recap |
-| `GRIN_PACIFIST` | Hold fire, so bodies pile to the spawn cap |
+The capture harness moves, aims and fires through actual gameplay. By default it is invulnerable so longer runs can be inspected. `GRIN_MORTAL=1` enables real deaths; `GRIN_PACIFIST=1` stops shooting. `GRIN_CAPTURE_BREAK=1` captures the first choice, `GRIN_VIEW=options` captures pause settings, `GRIN_BOSS_INDEX=0/1/2` accelerates a boss, and `GRIN_UNCAPPED=1` measures uncapped rendering. `GRIN_SCENE` can select a menu scene. Clear environment overrides between tests. Automated play does not establish subjective fun or physical controller compatibility.
 
-Every run also prints frame-time statistics — average, worst, and how many frames
-went over the 16.67 ms budget — which is how the object-pooling question in
-`ROADMAP.md` gets answered with a number instead of a guess.
+Godot MCP is supported by `tools/godot-mcp-smoke.mjs`; pass the installed MCP server entry point, the .NET executable, and project path. This avoids accidentally launching the standard non-C# engine.
 
-`art_source/` holds the full-canvas originals of the character sprites. The
-files under `sprites/` are cropped to their artwork bounds — symmetrically about
-the original canvas centre, so every node's position, scale and flip stays valid.
-Edit the masters, re-crop, and drop the result into `sprites/`.
+## Saves
 
-## Saved data
+Windows: `%APPDATA%/Godot/app_userdata/Grinfinity/`.
 
-Stored under Godot's user data directory (`%APPDATA%\Godot\app_userdata\Grinfinity` on Windows):
+`highscore.cfg`, `leaderboard.cfg`, `profile.cfg`, and `settings.cfg` use atomic replacement and keep the previous `.bak`. Missing or unreadable primary files can recover from that backup; invalid field types fall back safely. Old Endless Orbit records migrate forward. There is no active-run resume.
 
-- `highscore.cfg` — best survival time, kills, streak and score, per mode and
-  overall
-- `leaderboard.cfg` — the local top-10, per mode
-- `profile.cfg` — stardust, lifetime stats, unlocked worlds and achievements,
-  upgrade levels, and the day Daily Alignment was last played
-- `settings.cfg` — volume, fullscreen, key bindings, and the last weapon,
-  world, mode and difficulty picked
+To reset, close the game and rename the entire save directory as a backup. A fresh directory is created on next launch. Renaming only one primary file can restore its `.bak`, so move the pair if resetting an individual record.
 
-## License
+## Assets and rights
 
-All rights reserved unless otherwise noted.
+Main-menu art remains part of the original project. The new gameplay SVG assets live in `art/cosmic/`; `tools/make_vector_art.py` generates the principal character and icon set. New synthesized audio is generated by `tools/make_audio.py`, without samples. Lilita One uses SIL OFL; see `fonts/OFL-LilitaOne.txt`. Godot and bundled runtime notices are included in the release package. All rights to original project material remain with its owner unless otherwise stated. Historical roadmap documents are not the current feature list.

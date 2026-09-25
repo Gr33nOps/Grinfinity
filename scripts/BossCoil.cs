@@ -13,6 +13,7 @@ public partial class BossCoil : Boss
 	public BossCoil()
 	{
 		BossName = "THE COIL";
+		MaxHealth = 140;
 		ArrivalLine = TranslationServer.Translate("BOSS_Coil_ARRIVAL");
 	}
 
@@ -53,6 +54,7 @@ public partial class BossCoil : Boss
 		MoveAndSlide();
 
 		ringTimer -= step;
+        Windup=Mathf.Clamp(1-ringTimer/.45f,0,1);
 		if (ringTimer <= 0f)
 		{
 			// Wounded means faster, not merely closer to dead.
