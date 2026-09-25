@@ -87,6 +87,7 @@ func _physics_process(_delta: float) -> void:
 		_finish("reached the time limit")
 		return
 	_watch(t)
+	_spend_core()
 	_drive()
 	_capture(t)
 
@@ -139,7 +140,7 @@ func _watch(t: float) -> void:
 
 	if t >= next_log:
 		next_log += 30.0
-		_log("alive=%d kills=%d drops=%d levels=%d shield=%s nodes=%d objects=%d" % [get_tree().get_nodes_in_group("bodies").size(), run_state.get("Kills"), drops_seen, levels, shield, get_tree().get_node_count(), Performance.get_monitor(Performance.OBJECT_COUNT)])
+		_log("alive=%d kills=%d pickups=%d levels=%d bought=%d core=%d%% shield=%s" % [get_tree().get_nodes_in_group("bodies").size(), run_state.get("Kills"), drops_seen, levels, run_state.get("UpgradesBought"), int(run_state.get("CoreFraction") * 100), shield])
 
 func _set_axis(negative: String, positive: String, value: float) -> void:
 	Input.action_release(negative)
@@ -280,3 +281,16 @@ func _save(label: String) -> void:
 	var path := "%s/run%d_%s.png" % [shot_dir, run_number, label]
 	get_viewport().get_texture().get_image().save_png(path)
 	_log("SHOT %s" % path)
+
+# Buys an upgrade the moment the CORE bar is full, the way a player who taps
+# the upgrade key straight away would. Order: gun first, then the abilities.
+# Ids follow RunUpgradeId: 0 FireRate, 1 Spread, 2 Piercing, 3 Cannon, 4 Lance,
+# 5 DashReach, 6 DashBlink, 7 OverdrivePower, 8 OverdriveTime, 9 BiggerNova, 10 NovaPower.
+const BUY_ORDER := [0, 1, 0, 2, 7, 9, 0, 4, 1, 5, 7, 10, 2, 9, 8, 5, 6, 7, 9, 10, 8, 6, 5]
+
+func _spend_core() -> void:
+	if not run_state.get("CoreReady"):
+		return
+	for id in BUY_ORDER:
+		if game.call("BuyUpgradeForTools", id):
+			return

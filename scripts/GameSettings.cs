@@ -19,6 +19,7 @@ public partial class GameSettings : Node
 		("dash", "Dash"),
 		("rapid_fire", "Overdrive"),
 		("nova", "Nova"),
+		("upgrades", "Upgrades"),
 		("pause", "Pause")
 	};
 

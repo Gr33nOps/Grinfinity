@@ -146,6 +146,8 @@ public partial class GameManager : Node2D
 	private void SetupComponents()
 	{
 		pauseMenu = GetNode<PauseMenu>("PauseLayer/PauseMenu");
+		upgradeTree = new UpgradeTree { Name = "UpgradeTree", ProcessMode = ProcessModeEnum.Always };
+		GetNode<CanvasLayer>("PauseLayer").AddChild(upgradeTree);
 		entities = GetNode<Node2D>("Entities");
 		gameCamera = GetNodeOrNull<GameCamera>("GameCamera");
 		player = GetNode<Player>("player");
@@ -219,6 +221,7 @@ public partial class GameManager : Node2D
 		pauseMenu.GiveUpGame += OnGiveUpGame;
 		run.StreakChanged += OnStreakChanged;
 		run.AbilityUnlocked += OnAbilityUnlocked;
+		run.CoreChanged += OnCoreChanged;
 	}
 
 	/// <summary>Shouts something at the top of the screen. See <see cref="Announcer"/>.</summary>
@@ -265,6 +268,24 @@ public partial class GameManager : Node2D
 		if (isGameOver || isDying)
 			return;
 
+		if (UpgradeTreeOpen)
+		{
+			// The tree is modal: its own key or Pause closes it, nothing else gets through.
+			if (inputEvent.IsActionPressed("upgrades") || inputEvent.IsActionPressed("pause"))
+			{
+				CloseUpgradeTree();
+				GetViewport().SetInputAsHandled();
+			}
+			return;
+		}
+
+		if (inputEvent.IsActionPressed("upgrades") && !isPaused)
+		{
+			OpenUpgradeTree();
+			GetViewport().SetInputAsHandled();
+			return;
+		}
+
 		if (inputEvent.IsActionPressed("pause"))
 		{
 			if (isPaused && pauseMenu.CloseOptions()) { GetViewport().SetInputAsHandled(); return; }
@@ -273,9 +294,90 @@ public partial class GameManager : Node2D
 		}
 	}
 
+	// --- The skill tree ---------------------------------------------------------
+
+	private UpgradeTree upgradeTree;
+	private bool boughtThisVisit;
+
+	public bool UpgradeTreeOpen => upgradeTree != null && upgradeTree.Visible;
+
+	/// <summary>
+	/// Opens the tree and freezes everything: enemies, shots, cooldowns and the
+	/// survival clock. Opening it costs nothing; only buying earns a grace blink
+	/// on the way out.
+	/// </summary>
+	public void OpenUpgradeTree()
+	{
+		if (isGameOver || isDying || isPaused || UpgradeTreeOpen || upgradeTree == null)
+			return;
+
+		boughtThisVisit = false;
+		EndHitstop();
+		GetTree().Paused = true;
+		uiManager.SetGameplayVisible(false);
+		uiManager.ShowCursor();
+		upgradeTree.Open();
+		PlayButtonSound();
+	}
+
+	public void CloseUpgradeTree()
+	{
+		if (!UpgradeTreeOpen)
+			return;
+
+		upgradeTree.Hide();
+		GetTree().Paused = isPaused;
+		uiManager.SetGameplayVisible(true);
+		uiManager.HideCursor();
+
+		// A short blink back into the fight, but only if something was bought:
+		// otherwise the tree would be a free panic button.
+		if (boughtThisVisit)
+			player.GiveGrace(Balance.UpgradeGrace);
+		boughtThisVisit = false;
+	}
+
+	/// <summary>Spends a full CORE bar on one rank. Called by the tree, and by the playtest bot.</summary>
+	public bool BuyUpgrade(RunUpgradeId id)
+	{
+		if (!run.BuyWithCore(id))
+			return false;
+
+		boughtThisVisit = true;
+		RunUpgrades.Profile profile = RunUpgrades.Get(id);
+		int level = run.LevelOf(id);
+		string rank = profile.Equips != null ? "EQUIPPED" : level >= profile.MaxLevel ? "MAX" : $"RANK {level}";
+		Toast($"{profile.Name}  •  {rank}", profile.Colour);
+		PlayCue("upgrade_chirp");
+		player.GetNodeOrNull<PlanetVisual>("PlanetVisual")?.Celebrate();
+
+		// Bought outside the tree (the bot): it still gets its grace.
+		if (!UpgradeTreeOpen)
+		{
+			player.GiveGrace(Balance.UpgradeGrace);
+			boughtThisVisit = false;
+		}
+		return true;
+	}
+
+	/// <summary>For the playtest bot: the int form of <see cref="BuyUpgrade"/>, callable from GDScript.</summary>
+	public bool BuyUpgradeForTools(int id) => BuyUpgrade((RunUpgradeId)id);
+
+	private void OnCoreChanged(float fraction, bool ready)
+	{
+		if (ready && !coreWasReady)
+		{
+			Toast($"UPGRADE READY  •  {UIManager.UpgradeHint()}", Pickups.CoreColour);
+			PlayCue("unlock");
+		}
+		coreWasReady = ready;
+	}
+
+	private bool coreWasReady;
+
 	public override void _Notification(int what)
 	{
-		if (what == NotificationApplicationFocusOut && IsNodeReady() && !isPaused && !isDying && !isGameOver)
+		if (what == NotificationApplicationFocusOut && IsNodeReady() && !isPaused && !isDying && !isGameOver && !UpgradeTreeOpen)
 			TogglePause();
 	}
 
@@ -500,8 +602,9 @@ public partial class GameManager : Node2D
 	}
 
 	/// <summary>
-	/// Three strong, useful upgrades thrown out of the wreck — random, but only
-	/// from things that would help right now. Never a menu.
+	/// Three strong upgrades thrown out of the wreck, on top of whatever the CORE
+	/// bar buys. Random, but only ranks the run can still take, and never a
+	/// weapon: that is the player's choice to make in the tree.
 	/// </summary>
 	private void DropBossRewards(Vector2 at)
 	{
@@ -511,7 +614,7 @@ public partial class GameManager : Node2D
 		{
 			var considered = new List<Reward>(pending);
 			considered.AddRange(batch);
-			if (UpgradeDrops.TryRoll(run, considered, boss: true, out Reward reward))
+			if (Pickups.TryRollBossReward(run, considered, out Reward reward))
 				batch.Add(reward);
 		}
 
@@ -755,8 +858,10 @@ public partial class GameManager : Node2D
 		PopEffect.Spawn(this, at, 30f + 28f * remains.BurstScale, remains.BurstColor, 5 + Mathf.RoundToInt(remains.BurstScale * 2f));
 		ShedChunks(at, Mathf.Min(remains.DebrisCount + 1, 4), remains.BurstColor);
 
-		run.AddDropProgress(UpgradeDrops.PointsFor(remains.Kind));
-		TryDropUpgrade(at);
+		float core = Pickups.CoreFor(remains.Kind);
+		run.AddCore(core);
+		run.AddDropProgress(core);
+		TryDropPickup(at);
 
 		// Many kills in one frame would stack into one ugly blare.
 		if (Time.GetTicksMsec() - lastKillSoundMsec > 45)
@@ -776,13 +881,16 @@ public partial class GameManager : Node2D
 		}
 	}
 
-	private void TryDropUpgrade(Vector2 at)
+	private void TryDropPickup(Vector2 at)
 	{
 		if (!run.DropDue)
 			return;
 
-		// Nothing useful right now: the meter stays full and the next kill tries again.
-		if (!UpgradeDrops.TryRoll(run, PendingRewards(), boss: false, out Reward reward))
+		// Nothing useful right now: the timer stays due and the next kill tries again.
+		bool charging = false;
+		foreach (Ability ability in System.Enum.GetValues<Ability>())
+			charging |= run.IsUnlocked(ability) && player.Abilities.Readiness(ability) < 1f;
+		if (!Pickups.TryRollEnemyDrop(run, PendingRewards(), charging, out Reward reward))
 			return;
 
 		run.SpendDrop();
@@ -853,11 +961,25 @@ public partial class GameManager : Node2D
 	/// <summary>Applies a pickup the planet just touched. Instant; nothing pauses.</summary>
 	public void CollectReward(Reward reward, Vector2 at)
 	{
-		if (reward.IsShield)
+		if (reward.Kind == RewardKind.Shield)
 		{
 			run.GrantShield();
-			Toast("SHIELD  •  BLOCKS ONE HIT", UpgradeDrops.ShieldColour);
+			Toast("SHIELD  •  BLOCKS ONE HIT", Pickups.ShieldColour);
 			PlayCue("shield_get");
+		}
+		else if (reward.Kind == RewardKind.CoreBurst)
+		{
+			run.FillCore();
+			PlayCue("upgrade_chirp");
+		}
+		else if (reward.Kind == RewardKind.PowerCell)
+		{
+			player.Abilities.ResetCooldowns();
+			Toast("POWER CELL  •  ABILITIES READY", Pickups.PowerCellColour);
+			PlayCue("unlock");
+			uiManager?.PulseAbility(Ability.Dash);
+			uiManager?.PulseAbility(Ability.Overdrive);
+			uiManager?.PulseAbility(Ability.Nova);
 		}
 		else if (run.TryGrant(reward.Upgrade))
 		{

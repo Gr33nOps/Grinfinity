@@ -14,6 +14,9 @@ public partial class UIManager : Node
 	private Control hud;
 	private Label time, score, streak, best, hint, toast;
 	private TextureRect shieldChip;
+	private CoreBar coreBar;
+	private Label coreLabel;
+	private Button upgradePrompt;
 	private Player player;
 	private RunState run;
 	private Sprite2D crosshair;
@@ -22,6 +25,10 @@ public partial class UIManager : Node
 	private readonly Dictionary<Ability, AbilitySlot> slots = new();
 
 	/// <summary>"SHIFT / B" — the keyboard key as bound, and the pad button.</summary>
+	/// <summary>"TAB / BACK" — how to open the upgrade screen.</summary>
+	public static string UpgradeHint() =>
+		$"{OS.GetKeycodeString(GameSettings.GetActionKey("upgrades")).ToUpperInvariant()} / BACK";
+
 	public static string ControlHint(Ability ability)
 	{
 		string action = RunUpgrades.ActionFor(ability);
@@ -83,10 +90,32 @@ public partial class UIManager : Node
 			slots[ability] = slot;
 		}
 
+		// CORE: a slim bar just above the abilities, with the upgrade prompt
+		// sitting on top of it when a bar is full. Clickable as well as keyed.
+		coreBar = new CoreBar { Name = "CoreBar" };
+		coreBar.AnchorLeft = .5f; coreBar.AnchorRight = .5f; coreBar.AnchorTop = 1; coreBar.AnchorBottom = 1;
+		coreBar.OffsetLeft = -Size(210); coreBar.OffsetRight = Size(210); coreBar.OffsetTop = -Size(150) - 30; coreBar.OffsetBottom = -Size(150) - 12;
+		hud.AddChild(coreBar);
+		coreLabel = ArcadeSkin.Label("CORE", Size(17), ArcadeSkin.Muted);
+		coreLabel.HorizontalAlignment = HorizontalAlignment.Right;
+		coreLabel.AnchorLeft = .5f; coreLabel.AnchorRight = .5f; coreLabel.AnchorTop = 1; coreLabel.AnchorBottom = 1;
+		coreLabel.OffsetLeft = -Size(210) - 90; coreLabel.OffsetRight = -Size(210) - 12; coreLabel.OffsetTop = -Size(150) - 36; coreLabel.OffsetBottom = -Size(150) - 8;
+		hud.AddChild(coreLabel);
+
+		upgradePrompt = ArcadeSkin.Button("", () => GameManager.Of(this)?.OpenUpgradeTree(), true);
+		upgradePrompt.Name = "UpgradePrompt";
+		upgradePrompt.FocusMode = Control.FocusModeEnum.None;
+		upgradePrompt.AddThemeFontSizeOverride("font_size", Size(22));
+		upgradePrompt.CustomMinimumSize = new Vector2(0, Size(42));
+		upgradePrompt.AnchorLeft = .5f; upgradePrompt.AnchorRight = .5f; upgradePrompt.AnchorTop = 1; upgradePrompt.AnchorBottom = 1;
+		upgradePrompt.OffsetLeft = -Size(190); upgradePrompt.OffsetRight = Size(190); upgradePrompt.OffsetTop = -Size(150) - 84; upgradePrompt.OffsetBottom = -Size(150) - 42;
+		upgradePrompt.Visible = false;
+		hud.AddChild(upgradePrompt);
+
 		shieldChip = ArcadeSkin.Icon("shield", Size(64));
 		shieldChip.AnchorTop = 1; shieldChip.AnchorBottom = 1;
 		shieldChip.OffsetLeft = 34; shieldChip.OffsetTop = -Size(64) - 34; shieldChip.OffsetBottom = -34; shieldChip.OffsetRight = 34 + Size(64);
-		shieldChip.TooltipText = UpgradeDrops.ShieldName;
+		shieldChip.TooltipText = "SHIELD";
 		hud.AddChild(shieldChip);
 
 		toast = ArcadeSkin.Label("", Size(30));
@@ -94,7 +123,7 @@ public partial class UIManager : Node
 		toast.AddThemeColorOverride("font_outline_color", new Color(0.12f, 0.06f, 0.15f));
 		toast.AddThemeConstantOverride("outline_size", 10);
 		toast.AnchorLeft = .5f; toast.AnchorRight = .5f; toast.AnchorTop = 1; toast.AnchorBottom = 1;
-		toast.OffsetLeft = -500; toast.OffsetRight = 500; toast.OffsetTop = -Size(150) - 58; toast.OffsetBottom = -Size(150) - 14;
+		toast.OffsetLeft = -500; toast.OffsetRight = 500; toast.OffsetTop = -Size(150) - 140; toast.OffsetBottom = -Size(150) - 96;
 		toast.Modulate = new Color(1, 1, 1, 0);
 		hud.AddChild(toast);
 
@@ -127,6 +156,19 @@ public partial class UIManager : Node
 			crosshair.GlobalPosition = GetViewport().CanvasTransform * player.AimPosition;
 
 		// Abilities every frame, so the cooldown sweep is smooth; text less often.
+		coreBar.Refresh(run.CoreFraction, run.CoreReady, run.BuildComplete);
+		bool ready = run.CoreReady;
+		if (ready && !upgradePrompt.Visible)
+		{
+			upgradePrompt.Text = $"UPGRADE READY  •  {UpgradeHint()}";
+			upgradePrompt.PivotOffset = upgradePrompt.Size * 0.5f;
+			upgradePrompt.Scale = Vector2.One * 1.2f;
+			upgradePrompt.CreateTween().TweenProperty(upgradePrompt, "scale", Vector2.One, 0.25f)
+				.SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
+		}
+		upgradePrompt.Visible = ready;
+		coreLabel.Text = run.BuildComplete ? "MAXED" : "CORE";
+
 		foreach (var (ability, slot) in slots)
 		{
 			bool owned = run.IsUnlocked(ability);

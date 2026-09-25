@@ -127,41 +127,63 @@ public partial class ReleaseQa : Node
         state.Free();
 
         var locked = FreshRun(this);
-        Check(!locked.TryGrant(RunUpgradeId.DashBoost) && !locked.TryGrant(RunUpgradeId.BiggerNova) && !locked.TryGrant(RunUpgradeId.OverdriveBoost), "ability upgrades need their ability");
+        Check(!locked.TryGrant(RunUpgradeId.DashReach) && !locked.TryGrant(RunUpgradeId.BiggerNova) && !locked.TryGrant(RunUpgradeId.OverdrivePower), "ability branches stay locked until their ability is");
         for (int i = 0; i < 10; i++) locked.TryGrant(RunUpgradeId.SpreadShot);
         Check(locked.LevelOf(RunUpgradeId.SpreadShot) == RunUpgrades.SpreadShot.MaxLevel, "upgrades stop at their maximum");
         Check(locked.TryGrant(RunUpgradeId.DebrisCannon) && locked.Weapon == WeaponId.DebrisCannon, "debris cannon replaces the comet");
-        Check(!locked.TryGrant(RunUpgradeId.IonLance) && locked.Weapon == WeaponId.DebrisCannon, "weapon swaps are mutually exclusive");
+        Check(!locked.TryGrant(RunUpgradeId.IonLance) && locked.Weapon == WeaponId.DebrisCannon, "the two weapons are one choice");
         locked.GrantShield(); locked.GrantShield();
         Check(locked.HasShield && locked.ConsumeShield() && !locked.ConsumeShield(), "at most one shield, spent by one hit");
         locked.Free();
 
-        // Drops: never maxed, never locked, never a second shield or weapon, over many rolls in several states.
+        // CORE: every kill fills the bar, a full bar buys exactly one rank, and each bar is longer.
+        var core = FreshRun(this);
+        Check(!core.CoreReady && !core.BuyWithCore(RunUpgradeId.FireRate), "no upgrade without a full CORE bar");
+        float firstBar = core.CoreNeeded;
+        core.AddCore(firstBar * 3f);
+        Check(core.CoreReady && Mathf.IsEqualApprox(core.Core, firstBar), "the bar stops at full rather than banking extra");
+        Check(core.BuyWithCore(RunUpgradeId.FireRate) && core.LevelOf(RunUpgradeId.FireRate) == 1 && !core.CoreReady, "a full bar buys one rank and empties");
+        Check(core.CoreNeeded > firstBar, "each bar needs more CORE than the last");
+        Check(Pickups.CoreFor(BodyKind.Planetoid) > Pickups.CoreFor(BodyKind.Drifter) && Pickups.CoreFor(BodyKind.Drifter) > 0f, "every kill gives CORE, tougher ones more");
+        core.FillCore();
+        Check(core.CoreReady, "a CORE Burst fills the bar");
+        core.Free();
+
+        // Enemy pickups: only Shield, CORE Burst and Power Cell, and only when each would do something.
         var drops = FreshRun(this);
-        bool clean = true;
+        bool onlyThree = true, useful = true;
         for (int round = 0; round < 3; round++)
         {
-            if (round == 1) { drops.Unlock(Ability.Dash); drops.GrantShield(); drops.TryGrant(RunUpgradeId.IonLance); }
-            if (round == 2) { drops.Unlock(Ability.Overdrive); drops.Unlock(Ability.Nova); for (int i = 0; i < 4; i++) drops.TryGrant(RunUpgradeId.FireRate); }
-            for (int roll = 0; roll < 400; roll++)
+            if (round == 1) drops.GrantShield();
+            if (round == 2) drops.FillCore();
+            for (int roll = 0; roll < 300; roll++)
             {
-                var pending = new List<Reward>();
-                if (!UpgradeDrops.TryRoll(drops, pending, roll % 2 == 0, out Reward reward)) continue;
-                if (reward.IsShield) { clean &= !drops.HasShield; continue; }
-                var profile = RunUpgrades.Get(reward.Upgrade);
-                clean &= !drops.IsMaxed(reward.Upgrade);
-                clean &= profile.Requires is not Ability need || drops.IsUnlocked(need);
-                clean &= profile.Equips == null || drops.Weapon == WeaponId.Comet;
+                bool charging = roll % 2 == 0;
+                if (!Pickups.TryRollEnemyDrop(drops, new List<Reward>(), charging, out Reward reward)) continue;
+                onlyThree &= reward.Kind != RewardKind.Upgrade;
+                if (reward.Kind == RewardKind.Shield) useful &= !drops.HasShield;
+                if (reward.Kind == RewardKind.CoreBurst) useful &= !drops.CoreReady;
+                if (reward.Kind == RewardKind.PowerCell) useful &= charging;
             }
         }
-        Check(clean, "drops are never maxed, locked, a second weapon or a second shield");
-        var lastLevel = new List<Reward> { new(RunUpgradeId.FireRate) };
+        Check(onlyThree, "enemies drop only Shield, CORE Burst and Power Cell");
+        Check(useful, "no shield on a shield, no burst into a full bar, no Power Cell when all is ready");
+        var pendingShield = new List<Reward> { Reward.Shield };
+        bool noDouble = true;
         var fresh = FreshRun(this);
-        for (int i = 0; i < RunUpgrades.FireRate.MaxLevel - 1; i++) fresh.TryGrant(RunUpgradeId.FireRate);
-        bool noDoubleLast = true;
+        for (int roll = 0; roll < 200; roll++)
+            if (Pickups.TryRollEnemyDrop(fresh, pendingShield, true, out Reward r) && r.IsShield) noDouble = false;
+        Check(noDouble, "a pickup already on the field counts as taken");
+
+        // Boss rewards: strong upgrades only, never a weapon, never past a maximum.
+        bool bossClean = true;
+        fresh.Unlock(Ability.Dash); fresh.Unlock(Ability.Overdrive); fresh.Unlock(Ability.Nova);
         for (int roll = 0; roll < 300; roll++)
-            if (UpgradeDrops.TryRoll(fresh, lastLevel, false, out Reward r) && !r.IsShield && r.Upgrade == RunUpgradeId.FireRate) noDoubleLast = false;
-        Check(noDoubleLast, "a pickup already on the field counts as taken");
+        {
+            if (!Pickups.TryRollBossReward(fresh, new List<Reward>(), out Reward reward)) continue;
+            bossClean &= reward.Kind == RewardKind.Upgrade && RunUpgrades.Get(reward.Upgrade).Equips == null && !fresh.IsMaxed(reward.Upgrade);
+        }
+        Check(bossClean, "boss rewards are upgrades the run can take, never a weapon");
         fresh.Free();
 
         // Drop cadence: a gap in a fixed window, and only for a player who is fighting.
@@ -352,6 +374,23 @@ public partial class ReleaseQa : Node
             foreach (Node node in GetTree().GetNodesInGroup("bosses")) node.Free();
 
             for (int i = 0; i < 20; i++) player.Abilities.Update(0.1);
+
+            // The skill tree: everything stops; buying earns a blink back in, browsing does not.
+            game.Run.SetProcess(true);
+            game.OpenUpgradeTree();
+            Check(GetTree().Paused && game.UpgradeTreeOpen, "the upgrade screen pauses the game");
+            float frozen = game.RunTime;
+            await Wait(0.2);
+            Check(game.RunTime == frozen, "the survival clock stops while upgrading");
+            game.CloseUpgradeTree();
+            Check(!GetTree().Paused && !player.IsBlinking, "closing without buying gives no grace");
+            game.Run.FillCore();
+            game.OpenUpgradeTree();
+            Check(game.BuyUpgrade(RunUpgradeId.FireRate), "a full bar buys from the tree");
+            game.CloseUpgradeTree();
+            Check(player.IsBlinking, "buying an upgrade gives a short grace blink");
+            game.Run.SetProcess(false);
+            for (int i = 0; i < 40; i++) player._PhysicsProcess(0.05);
             game.Run.GrantShield();
             player.Invulnerable = false;
             player.KillByBlast("QA"); player.KillByBlast("QA");

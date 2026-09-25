@@ -98,7 +98,7 @@ public class PlayerAbilities
 
 		if (Input.IsActionJustPressed("nova") && novaCooldownLeft <= 0f && player.CanUse(Ability.Nova))
 		{
-			novaCooldownLeft = Balance.NovaCooldown;
+			novaCooldownLeft = NovaCooldown;
 			player.FireNova();
 		}
 	}
@@ -233,8 +233,18 @@ public class PlayerAbilities
 	{
 		Ability.Dash => 1f - dashCooldownLeft / Balance.DashCooldown,
 		Ability.Overdrive => 1f - overdriveCooldownLeft / Balance.OverdriveCooldown,
-		_ => 1f - novaCooldownLeft / Balance.NovaCooldown
+		_ => 1f - novaCooldownLeft / NovaCooldown
 	};
+
+	private float NovaCooldown => player.Run?.NovaCooldown ?? Balance.NovaCooldown;
+
+	/// <summary>A Power Cell: every ability ready now. An Overdrive already running keeps running.</summary>
+	public void ResetCooldowns()
+	{
+		dashCooldownLeft = 0f;
+		overdriveCooldownLeft = 0f;
+		novaCooldownLeft = 0f;
+	}
 
 	public float CooldownLeft(Ability ability) => ability switch
 	{

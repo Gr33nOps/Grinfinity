@@ -149,6 +149,15 @@ public partial class Player : CharacterBody2D
 
 	private bool IsProtected => hitRecovery > 0f || abilities.IsProtected;
 
+	/// <summary>
+	/// A blinking safe window, used when coming back from the upgrade screen.
+	/// Safety only: unlike a dash, it destroys nothing.
+	/// </summary>
+	public void GiveGrace(float seconds)
+	{
+		hitRecovery = Mathf.Max(hitRecovery, seconds);
+	}
+
 	/// <summary>Fires the Nova from here. The cooldown is the ability's business, not this.</summary>
 	public void FireNova()
 	{
@@ -308,9 +317,9 @@ public partial class Player : CharacterBody2D
 			manager?.PlayCue("shield_pop");
 			manager?.Shake(0.5f);
 			manager?.Hitstop(0.09f);
-			manager?.SpawnBlast(GlobalPosition, 240f, UpgradeDrops.ShieldColour);
-			manager?.Flash(UpgradeDrops.ShieldColour, 0.18f, 0.25f);
-			manager?.Toast("SHIELD BROKEN", UpgradeDrops.ShieldColour);
+			manager?.SpawnBlast(GlobalPosition, 240f, Pickups.ShieldColour);
+			manager?.Flash(Pickups.ShieldColour, 0.18f, 0.25f);
+			manager?.Toast("SHIELD BROKEN", Pickups.ShieldColour);
 			return;
 		}
 

@@ -5,7 +5,7 @@ extends Node
 # Environment:
 #   GRIN_SCENE    scene to open (default res://scenes/game.tscn)
 #   GRIN_RUN      seconds to wait before the capture (default 3)
-#   GRIN_VIEW     "pause" or "options" to open the pause menu first (game only)
+#   GRIN_VIEW     "pause"/"options" opens the pause menu, "upgrades" the skill tree (game only)
 #   GRIN_SHOT     output path (default user://capture.png)
 #   GRIN_SIZE     window size, e.g. 1280x720
 #   GRIN_UI_SCALE UI scale to apply first
@@ -62,6 +62,10 @@ func _run() -> void:
 		duration = 3
 	await get_tree().create_timer(duration, true, false, true).timeout
 	var view := OS.get_environment("GRIN_VIEW")
+	if view == "upgrades":
+		scene.get_node("RunState").call("FillCore")
+		scene.call("OpenUpgradeTree")
+		await get_tree().create_timer(0.5, true, false, true).timeout
 	if scene.has_method("_Input") and view in ["pause", "options"]:
 		var event := InputEventAction.new()
 		event.action = "pause"

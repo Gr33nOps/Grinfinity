@@ -83,7 +83,7 @@ public partial class NovaBlast : Node2D
 				continue;
 
 			bossesHit.Add(boss.GetInstanceId());
-			boss.TakeShareOfHealth(Balance.NovaBossDamage, offset.Normalized());
+			boss.TakeShareOfHealth(manager?.Run?.NovaBossDamage ?? Balance.NovaBossDamage, offset.Normalized());
 			manager?.SpawnImpact(boss.GlobalPosition, Afterglow);
 		}
 

@@ -92,7 +92,7 @@ public static class Balance
 	/// <summary>Each Dash upgrade level adds this fraction of the base distance.</summary>
 	public const float DashDistancePerLevel = 0.14f;
 	/// <summary>Each Dash upgrade level adds this much grace, in seconds.</summary>
-	public const float DashGracePerLevel = 0.08f;
+	public const float DashGracePerLevel = 0.12f;
 	/// <summary>Share of a boss's full health one dash takes. Counted once per dash.</summary>
 	public const float DashBossDamage = 0.035f;
 
@@ -101,7 +101,7 @@ public static class Balance
 	/// <summary>Fire interval multiplier while Overdrive is up. Lower is faster.</summary>
 	public const float OverdriveFireScale = 0.4f;
 	public const float OverdriveFireScalePerLevel = 0.88f;
-	public const float OverdriveDurationPerLevel = 1.2f;
+	public const float OverdriveDurationPerLevel = 1.5f;
 	public const int OverdriveDamageMultiplier = 2;
 	public const int OverdriveExtraPierce = 1;
 
@@ -112,30 +112,45 @@ public static class Balance
 	public const float NovaExpandTime = 0.4f;
 	/// <summary>Share of a boss's full health one Nova takes.</summary>
 	public const float NovaBossDamage = 0.1f;
+	/// <summary>Nova Power adds this much boss damage per level.</summary>
+	public const float NovaBossDamagePerLevel = 0.03f;
+	/// <summary>Nova Power multiplies the cooldown by this per level.</summary>
+	public const float NovaCooldownPerLevel = 0.85f;
 
 	/// <summary>Invulnerable blinking after a Shield breaks.</summary>
 	public const float ShieldBreakGrace = 1.0f;
 
-	// --- Upgrade drops ------------------------------------------------------
-	// A drop comes due after a gap rolled in a range, and then falls from the
-	// next kill — but only once the player has also been fighting since the last
-	// one. Time sets the cadence, so two players in comparable runs see a
-	// comparable number of drops; the kill requirement means hiding earns none.
-	// Kill counts alone were tried first: kill rates climb so steeply with enemy
-	// density that the whole build was maxed by six minutes.
+	// --- CORE and the skill tree ------------------------------------------------
+	// Every kill gives CORE (tougher enemies give more, see Pickups.CoreFor).
+	// A full bar buys one upgrade from the tree, whenever the player chooses to
+	// open it. Each bar needs a little more than the last, so upgrades come
+	// thick and fast early and slow down once the build is strong.
 
-	/// <summary>Seconds between enemy drops, rolled between these each time.</summary>
-	public const float DropGapMin = 18f;
-	public const float DropGapMax = 28f;
-	/// <summary>The first drop comes sooner, so the gun changes within the first quarter minute.</summary>
-	public const float FirstDropGapMin = 8f;
-	public const float FirstDropGapMax = 14f;
-	/// <summary>A drop from a kill off screen lands this far from the planet, toward the kill.</summary>
+	/// <summary>CORE needed for the first upgrade.</summary>
+	public const float CoreFirstBar = 35f;
+	/// <summary>Each later bar needs this much more than the one before.</summary>
+	public const float CoreBarGrowth = 1.32f;
+	/// <summary>Blinking safety after buying an upgrade, so returning to the fight is never an instant death.</summary>
+	public const float UpgradeGrace = 1.4f;
+
+	// --- Random pickups ----------------------------------------------------------
+	// Only three things drop from enemies: a Shield, a CORE Burst (fills the bar)
+	// and a Power Cell (every ability ready at once). A drop comes due after a
+	// gap rolled in a range and falls from the next kill, but only once the
+	// player has also been fighting since the last one, so hiding earns none.
+
+	/// <summary>Seconds between pickups, rolled between these each time.</summary>
+	public const float DropGapMin = 24f;
+	public const float DropGapMax = 36f;
+	/// <summary>The first pickup comes a little sooner.</summary>
+	public const float FirstDropGapMin = 18f;
+	public const float FirstDropGapMax = 26f;
+	/// <summary>A pickup from a kill off screen lands this far from the planet, toward the kill.</summary>
 	public const float DropMaxDistance = 520f;
 	/// <summary>The gap grows by this share per minute survived.</summary>
-	public const float DropGapGrowthPerMinute = 0.08f;
-	public const float DropGapGrowthCap = 1.8f;
-	/// <summary>Kill value needed since the last drop (a Drifter is 1).</summary>
+	public const float DropGapGrowthPerMinute = 0.05f;
+	public const float DropGapGrowthCap = 1.5f;
+	/// <summary>Kill value needed since the last pickup (a Drifter is 1).</summary>
 	public const float DropMinFighting = 10f;
 	/// <summary>Seconds an enemy drop stays on the field. It blinks for the last quarter.</summary>
 	public const float DropLifetime = 22f;
@@ -144,8 +159,6 @@ public static class Balance
 	/// <summary>Pickups drift to the planet from this close.</summary>
 	public const float PickupMagnetRadius = 440f;
 	public const int BossRewardCount = 3;
-	/// <summary>Weapon swaps cannot drop before this.</summary>
-	public const float WeaponSwapAt = 90f;
 	/// <summary>
 	/// Seconds after one shield drops before an enemy can drop another. Without
 	/// it, a finished build turns every drop into a spare life.

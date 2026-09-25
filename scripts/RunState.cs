@@ -24,7 +24,7 @@ public partial class RunState : Node
 	public static readonly int[] StreakMilestones = { 5, 10, 25, 50, 100 };
 
 	/// <summary>Total upgrade levels at which each ring appears.</summary>
-	private static readonly int[] RingThresholds = { 5, 11, 18 };
+	private static readonly int[] RingThresholds = { 5, 11, 17 };
 
 	/// <summary>
 	/// The RNG driving this run. Every gameplay roll should draw from this instead
@@ -127,7 +127,7 @@ public partial class RunState : Node
 		RunUpgrades.Profile profile = RunUpgrades.Get(id);
 		if (profile == null || IsMaxed(id))
 			return false;
-		if (profile.Requires is Ability required && !IsUnlocked(required))
+		if (RunUpgrades.AbilityFor(profile.Branch) is Ability required && !IsUnlocked(required))
 			return false;
 		if (profile.Equips != null && Weapon != WeaponId.Comet)
 			return false;
@@ -184,24 +184,89 @@ public partial class RunState : Node
 	// Read every time they are used, so a pickup takes effect on the next shot.
 
 	/// <summary>Shots come this much closer together. Below 1 is faster.</summary>
-	public float FireIntervalScale => Mathf.Pow(0.88f, LevelOf(RunUpgradeId.FireRate));
+	public float FireIntervalScale => Mathf.Pow(0.84f, LevelOf(RunUpgradeId.FireRate));
 
 	/// <summary>Extra enemies each shot passes through.</summary>
-	public int ExtraPierce => LevelOf(RunUpgradeId.Piercing);
+	public int ExtraPierce => LevelOf(RunUpgradeId.Piercing) switch { 0 => 0, 1 => 1, _ => 3 };
 
 	public int SpreadLevel => LevelOf(RunUpgradeId.SpreadShot);
 
-	public float DashDistance => Balance.DashDistance * (1f + Balance.DashDistancePerLevel * LevelOf(RunUpgradeId.DashBoost));
+	public float DashDistance => Balance.DashDistance * (1f + Balance.DashDistancePerLevel * LevelOf(RunUpgradeId.DashReach));
 
-	public float DashGrace => Balance.DashGrace + Balance.DashGracePerLevel * LevelOf(RunUpgradeId.DashBoost);
+	public float DashGrace => Balance.DashGrace + Balance.DashGracePerLevel * LevelOf(RunUpgradeId.DashBlink);
 
 	public float NovaRadius => Balance.NovaRadius * (1f + Balance.NovaRadiusPerLevel * LevelOf(RunUpgradeId.BiggerNova));
 
-	public float OverdriveDuration => Balance.OverdriveDuration + Balance.OverdriveDurationPerLevel * LevelOf(RunUpgradeId.OverdriveBoost);
+	public float OverdriveDuration => Balance.OverdriveDuration + Balance.OverdriveDurationPerLevel * LevelOf(RunUpgradeId.OverdriveDuration);
 
-	public float OverdriveFireScale => Balance.OverdriveFireScale * Mathf.Pow(Balance.OverdriveFireScalePerLevel, LevelOf(RunUpgradeId.OverdriveBoost));
+	public float OverdriveFireScale => Balance.OverdriveFireScale * Mathf.Pow(Balance.OverdriveFireScalePerLevel, LevelOf(RunUpgradeId.OverdrivePower));
 
-	// --- Upgrade drops -------------------------------------------------------
+	/// <summary>Share of a boss's health one Nova takes.</summary>
+	public float NovaBossDamage => Balance.NovaBossDamage + Balance.NovaBossDamagePerLevel * LevelOf(RunUpgradeId.NovaPower);
+
+	/// <summary>Nova's cooldown after Nova Power has shortened it.</summary>
+	public float NovaCooldown => Balance.NovaCooldown * Mathf.Pow(Balance.NovaCooldownPerLevel, LevelOf(RunUpgradeId.NovaPower));
+
+	// --- CORE ---------------------------------------------------------------------
+	// Every kill fills the bar; a full bar buys one upgrade from the tree. The bar
+	// stops at full rather than banking a second one, so an upgrade waiting to
+	// be spent is always obvious.
+
+	[Signal] public delegate void CoreChangedEventHandler(float fraction, bool ready);
+
+	public float Core { get; private set; }
+	/// <summary>Upgrades bought with CORE so far. Each makes the next bar a little longer.</summary>
+	public int UpgradesBought { get; private set; }
+	public float CoreNeeded => Balance.CoreFirstBar * Mathf.Pow(Balance.CoreBarGrowth, UpgradesBought);
+	public bool CoreReady => Core >= CoreNeeded && !BuildComplete;
+	public float CoreFraction => Mathf.Clamp(Core / CoreNeeded, 0f, 1f);
+
+	/// <summary>Nothing left in the tree to buy.</summary>
+	public bool BuildComplete => TotalLevels >= RunUpgrades.MaxTotalLevels;
+
+	public void AddCore(float amount)
+	{
+		if (!float.IsFinite(amount) || amount <= 0f || BuildComplete)
+			return;
+
+		bool wasReady = CoreReady;
+		Core = Mathf.Min(Core + amount, CoreNeeded);
+		if (Core > 0f || wasReady != CoreReady)
+			EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
+	}
+
+	/// <summary>A CORE Burst: the bar is full at once.</summary>
+	public void FillCore()
+	{
+		Core = CoreNeeded;
+		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
+	}
+
+	/// <summary>Spends a full bar on one rank of an upgrade.</summary>
+	/// <returns>False if the bar is not full or the upgrade cannot be taken.</returns>
+	public bool BuyWithCore(RunUpgradeId id)
+	{
+		if (!CoreReady || !TryGrant(id))
+			return false;
+
+		Core = 0f;
+		UpgradesBought++;
+		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
+		return true;
+	}
+
+	/// <summary>Whether one more rank of this upgrade could be taken right now, CORE aside.</summary>
+	public bool CanTake(RunUpgradeId id)
+	{
+		RunUpgrades.Profile profile = RunUpgrades.Get(id);
+		if (profile == null || IsMaxed(id))
+			return false;
+		if (RunUpgrades.AbilityFor(profile.Branch) is Ability required && !IsUnlocked(required))
+			return false;
+		return profile.Equips == null || Weapon == WeaponId.Comet;
+	}
+
+	// --- Pickup timing ----------------------------------------------------------
 	// A drop is due once a rolled gap has passed and the player has done some
 	// fighting since the last one. Hidden on purpose: drops should feel random,
 	// not like a bar filling.

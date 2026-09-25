@@ -1,16 +1,19 @@
 using Godot;
 
-/// <summary>Everything a run can pick up. Each is permanent until the run ends.</summary>
+/// <summary>Everything the skill tree sells. Each is permanent until the run ends.</summary>
 public enum RunUpgradeId
 {
 	FireRate,
-	Piercing,
 	SpreadShot,
-	DashBoost,
-	BiggerNova,
-	OverdriveBoost,
+	Piercing,
 	DebrisCannon,
-	IonLance
+	IonLance,
+	DashReach,
+	DashBlink,
+	OverdrivePower,
+	OverdriveDuration,
+	BiggerNova,
+	NovaPower
 }
 
 /// <summary>The three abilities. They unlock by survival time, always in this order.</summary>
@@ -21,24 +24,32 @@ public enum Ability
 	Nova
 }
 
+/// <summary>The four branches of the skill tree, left to right.</summary>
+public enum Branch
+{
+	Gun,
+	Dash,
+	Overdrive,
+	Nova
+}
+
 public static class RunUpgrades
 {
 	public sealed class Profile
 	{
 		public required RunUpgradeId Id { get; init; }
+		public required Branch Branch { get; init; }
 		public required string Name { get; init; }
+		/// <summary>A few words, for the tree. What it does, not how much.</summary>
+		public required string Short { get; init; }
 		/// <summary>Icon under art/cosmic/icon_*.svg.</summary>
 		public required string Icon { get; init; }
-		/// <summary>Disc colour behind the icon, so pickups sharing an icon still differ.</summary>
+		/// <summary>Rim colour on a pickup and the tree, so upgrades sharing an icon still differ.</summary>
 		public required Color Colour { get; init; }
 		public int MaxLevel { get; init; } = 1;
-		/// <summary>An ability the run must have unlocked before this can mean anything.</summary>
-		public Ability? Requires { get; init; }
 		/// <summary>Replaces the starting Comet. Only one swap per run.</summary>
 		public WeaponId? Equips { get; init; }
-		/// <summary>Relative chance among eligible drops from ordinary enemies.</summary>
-		public float Weight { get; init; } = 1f;
-		/// <summary>Relative chance in a boss reward.</summary>
+		/// <summary>Relative chance in a boss reward. Zero keeps it out of boss rewards.</summary>
 		public float BossWeight { get; init; } = 1f;
 	}
 
@@ -49,62 +60,92 @@ public static class RunUpgrades
 
 	public static readonly Profile FireRate = new()
 	{
-		Id = RunUpgradeId.FireRate, Name = TranslationServer.Translate("UPG_FireRate_NAME"),
-		Icon = "firerate", Colour = Gun, MaxLevel = 6, Weight = 1.1f, BossWeight = 1.2f
-	};
-
-	public static readonly Profile Piercing = new()
-	{
-		Id = RunUpgradeId.Piercing, Name = TranslationServer.Translate("UPG_Piercing_NAME"),
-		Icon = "pierce", Colour = Gun, MaxLevel = 4, Weight = 0.9f, BossWeight = 1.1f
+		Id = RunUpgradeId.FireRate, Branch = Branch.Gun, Name = TranslationServer.Translate("UPG_FireRate_NAME"),
+		Short = "Shoot faster", Icon = "firerate", Colour = Gun, MaxLevel = 3, BossWeight = 1.2f
 	};
 
 	public static readonly Profile SpreadShot = new()
 	{
-		Id = RunUpgradeId.SpreadShot, Name = "SPREAD SHOT",
-		Icon = "spread", Colour = Gun, MaxLevel = 2, Weight = 0.9f, BossWeight = 1.3f
+		Id = RunUpgradeId.SpreadShot, Branch = Branch.Gun, Name = "SPREAD SHOT",
+		Short = "Extra angled shots", Icon = "spread", Colour = Gun, MaxLevel = 2, BossWeight = 1.2f
 	};
 
-	public static readonly Profile DashBoost = new()
+	public static readonly Profile Piercing = new()
 	{
-		Id = RunUpgradeId.DashBoost, Name = "LONGER DASH",
-		Icon = "dash", Colour = Move, MaxLevel = 3, Requires = Ability.Dash, Weight = 0.8f
+		Id = RunUpgradeId.Piercing, Branch = Branch.Gun, Name = TranslationServer.Translate("UPG_Piercing_NAME"),
+		Short = "Shots go through foes", Icon = "pierce", Colour = Gun, MaxLevel = 2, BossWeight = 1.1f
 	};
 
-	public static readonly Profile BiggerNova = new()
-	{
-		Id = RunUpgradeId.BiggerNova, Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
-		Icon = "nova", Colour = Blast, MaxLevel = 4, Requires = Ability.Nova, Weight = 0.7f, BossWeight = 1.1f
-	};
-
-	public static readonly Profile OverdriveBoost = new()
-	{
-		Id = RunUpgradeId.OverdriveBoost, Name = "OVERDRIVE BOOST",
-		Icon = "rapid", Colour = Power, MaxLevel = 4, Requires = Ability.Overdrive, Weight = 0.8f, BossWeight = 1.2f
-	};
-
+	// The two weapons are a choice, not a pair: taking one closes the other, and
+	// a boss never picks one for you.
 	public static readonly Profile DebrisCannon = new()
 	{
-		Id = RunUpgradeId.DebrisCannon, Name = "DEBRIS CANNON",
-		Icon = "cannon", Colour = new Color("c9a0ff"), Equips = WeaponId.DebrisCannon, Weight = 0.3f, BossWeight = 0.6f
+		Id = RunUpgradeId.DebrisCannon, Branch = Branch.Gun, Name = "DEBRIS CANNON",
+		Short = "Six pellets, close range", Icon = "cannon", Colour = new Color("c9a0ff"), Equips = WeaponId.DebrisCannon, BossWeight = 0f
 	};
 
 	public static readonly Profile IonLance = new()
 	{
-		Id = RunUpgradeId.IonLance, Name = "ION LANCE",
-		Icon = "lance", Colour = new Color("8ce6ff"), Equips = WeaponId.IonLance, Weight = 0.3f, BossWeight = 0.6f
+		Id = RunUpgradeId.IonLance, Branch = Branch.Gun, Name = "ION LANCE",
+		Short = "Slow, heavy, pierces lines", Icon = "lance", Colour = new Color("8ce6ff"), Equips = WeaponId.IonLance, BossWeight = 0f
+	};
+
+	public static readonly Profile DashReach = new()
+	{
+		Id = RunUpgradeId.DashReach, Branch = Branch.Dash, Name = "DASH REACH",
+		Short = "Dash further", Icon = "dash", Colour = Move, MaxLevel = 3
+	};
+
+	public static readonly Profile DashBlink = new()
+	{
+		Id = RunUpgradeId.DashBlink, Branch = Branch.Dash, Name = "DASH BLINK",
+		Short = "Longer safe blink", Icon = "dash", Colour = Move, MaxLevel = 2
+	};
+
+	public static readonly Profile OverdrivePower = new()
+	{
+		Id = RunUpgradeId.OverdrivePower, Branch = Branch.Overdrive, Name = "OVERDRIVE POWER",
+		Short = "Even faster firing", Icon = "rapid", Colour = Power, MaxLevel = 3, BossWeight = 1.2f
+	};
+
+	public static readonly Profile OverdriveDuration = new()
+	{
+		Id = RunUpgradeId.OverdriveDuration, Branch = Branch.Overdrive, Name = "OVERDRIVE TIME",
+		Short = "Overdrive lasts longer", Icon = "rapid", Colour = Power, MaxLevel = 2
+	};
+
+	public static readonly Profile BiggerNova = new()
+	{
+		Id = RunUpgradeId.BiggerNova, Branch = Branch.Nova, Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
+		Short = "Wider blast", Icon = "nova", Colour = Blast, MaxLevel = 3, BossWeight = 1.1f
+	};
+
+	public static readonly Profile NovaPower = new()
+	{
+		Id = RunUpgradeId.NovaPower, Branch = Branch.Nova, Name = "NOVA POWER",
+		Short = "Stronger, recharges faster", Icon = "nova", Colour = Blast, MaxLevel = 2
 	};
 
 	// Declared last: static field initialisers run in source order.
 	public static readonly Profile[] All =
 	{
-		FireRate, Piercing, SpreadShot, DashBoost, BiggerNova, OverdriveBoost, DebrisCannon, IonLance
+		FireRate, SpreadShot, Piercing, DebrisCannon, IonLance,
+		DashReach, DashBlink, OverdrivePower, OverdriveDuration, BiggerNova, NovaPower
 	};
 
-	/// <summary>Every level a single run can hold. A weapon swap counts once — only one can be taken.</summary>
-	public static readonly int MaxTotalLevels =
-		FireRate.MaxLevel + Piercing.MaxLevel + SpreadShot.MaxLevel + DashBoost.MaxLevel
-		+ BiggerNova.MaxLevel + OverdriveBoost.MaxLevel + 1;
+	/// <summary>Every rank the tree holds. A weapon counts once — only one can be taken.</summary>
+	public static readonly int MaxTotalLevels = CountMaxLevels();
+
+	private static int CountMaxLevels()
+	{
+		int total = 1;
+		foreach (Profile profile in All)
+		{
+			if (profile.Equips == null)
+				total += profile.MaxLevel;
+		}
+		return total;
+	}
 
 	public static Profile Get(RunUpgradeId id)
 	{
@@ -116,6 +157,31 @@ public static class RunUpgrades
 
 		return null;
 	}
+
+	/// <summary>The ability a branch belongs to, or null for the gun, which is always open.</summary>
+	public static Ability? AbilityFor(Branch branch) => branch switch
+	{
+		Branch.Dash => Ability.Dash,
+		Branch.Overdrive => Ability.Overdrive,
+		Branch.Nova => Ability.Nova,
+		_ => null
+	};
+
+	public static string BranchName(Branch branch) => branch switch
+	{
+		Branch.Gun => "GUN",
+		Branch.Dash => "DASH",
+		Branch.Overdrive => "OVERDRIVE",
+		_ => "NOVA"
+	};
+
+	public static string BranchIcon(Branch branch) => branch switch
+	{
+		Branch.Gun => "firerate",
+		Branch.Dash => "dash",
+		Branch.Overdrive => "rapid",
+		_ => "nova"
+	};
 
 	public static string AbilityName(Ability ability) => ability switch
 	{

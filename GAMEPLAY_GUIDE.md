@@ -28,25 +28,42 @@ All three are ready from the first second, each on its own cooldown. There is no
 
 The Accessibility menu can switch Overdrive to hold-to-use.
 
-## Upgrades and drops
+## CORE and upgrades
 
-There is no upgrade menu. Some kills drop a glowing pickup; touch it and it applies at once. The first drop comes 8–14 seconds in, then one every 18–28 seconds (the gap grows by 8% per minute survived, to at most 1.8 times as long). It falls from your next kill, but only if you have also been fighting since the last one. A kill off screen drops its pickup a short way from you instead, so nothing expires out of sight. Pickups last 22 seconds and slide to you from about half a screen away.
+Every kill fills the **CORE** bar at the bottom of the screen, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, **UPGRADE READY** appears. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the prompt, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it.
 
-A drop is only ever something that would help right now: nothing already maxed, no second weapon, no second shield. A shield cannot drop more than once every 60 seconds.
+The first bar needs 35 CORE and each one after needs 32% more, so upgrades come quickly early and slow down as the build gets strong.
 
-| Pickup | Levels | Effect |
+The whole game is paused while the upgrade screen is open: enemies, shots, cooldowns and the survival clock. If you buy something, the planet blinks safely for 1.4 seconds when you return, so you are never killed the instant you come back. The blink only protects; it destroys nothing. Opening the screen and buying nothing gives no blink.
+
+| Branch | Upgrade | Ranks | Effect |
+|---|---|---|---|
+| Gun | Faster Shots | 3 | 16% less time between shots per rank |
+| Gun | Spread Shot | 2 | One extra angled shot (alternating sides), then two |
+| Gun | Piercing Shots | 2 | Shots pass through 1, then 3 extra enemies |
+| Gun | Debris Cannon **or** Ion Lance | 1 | Replace the Comet with six close-range pellets, or slow heavy shots that pierce eight. Pick one; it closes the other. |
+| Dash | Dash Reach | 3 | +14% dash distance per rank |
+| Dash | Dash Blink | 2 | +0.12 s safe blink after a dash per rank |
+| Overdrive | Overdrive Power | 3 | Overdrive fires 12% faster per rank |
+| Overdrive | Overdrive Time | 2 | +1.5 s Overdrive per rank |
+| Nova | Bigger Nova | 3 | +15% Nova radius per rank |
+| Nova | Nova Power | 2 | +3% boss damage and 15% shorter cooldown per rank |
+
+The Dash, Overdrive and Nova branches stay locked until their ability is online. Rings appear around the planet at 5, 11 and 17 ranks, out of 23.
+
+## Pickups
+
+Enemies drop only three things, and only when they would help:
+
+| Pickup | Does | Never drops when |
 |---|---|---|
-| Faster Shots | 6 | 12% less time between shots per level |
-| Piercing Shots | 4 | Shots pass through one more enemy per level |
-| Spread Shot | 2 | One extra angled shot (alternating sides), then two |
-| Longer Dash | 3 | +14% dash distance and +0.08 s blink per level |
-| Overdrive Boost | 4 | +1.2 s Overdrive and 12% faster Overdrive fire per level |
-| Bigger Nova | 4 | +15% Nova radius per level |
-| Debris Cannon | 1 | Replaces the Comet: six short-range pellets. Not before 1:30 |
-| Ion Lance | 1 | Replaces the Comet: slow, heavy shots that pierce eight enemies. Not before 1:30 |
-| Shield | 1 held | Blocks one hit |
+| Shield | Blocks one lethal hit. You can hold one. | You already have one, or one dropped in the last 60 s |
+| CORE Burst | Fills the CORE bar at once | The bar is already full |
+| Power Cell | Every unlocked ability ready again | Every ability is already ready |
 
-The two weapon swaps rule each other out. Rings appear around the planet at 5, 11 and 18 upgrade levels, out of 24.
+The first pickup comes 18–26 seconds in, then one every 24–36 seconds (a little slower as the run goes on). It falls from your next kill, but only if you have been fighting since the last one. A kill off screen drops its pickup a short way from you instead. Pickups last 22 seconds and slide to you from about half a screen away.
+
+Bosses still drop three upgrade ranks each, on top of what CORE buys, but never a weapon. That choice stays yours.
 
 ## Enemies
 
