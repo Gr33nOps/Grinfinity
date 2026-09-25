@@ -377,11 +377,9 @@ public partial class GameManager : Node2D
 
 	private void OnCoreChanged(float fraction, bool ready)
 	{
+		// The bar itself turns orange and says so; this is just the sound.
 		if (ready && !coreWasReady)
-		{
-			Toast($"UPGRADE READY  •  {UIManager.UpgradeHint()}", Pickups.CoreColour);
 			PlayCue("unlock");
-		}
 		coreWasReady = ready;
 	}
 

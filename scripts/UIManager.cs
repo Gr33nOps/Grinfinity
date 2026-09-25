@@ -5,10 +5,11 @@ using Godot;
 /// The gameplay HUD, fixed to the screen while the world moves under it.
 ///
 /// Top right holds the run's numbers: time first because time is the only
-/// result, then the best time. Top left holds the kit: the three abilities in a column
-/// with the CORE bar standing beside them. A shield chip sits bottom left, and
-/// pickups announce themselves in a short line at the bottom centre; the banner
-/// at the top is kept for bigger moments. Nothing else.
+/// result, then the best time. Top left holds the three abilities in a column.
+/// The CORE bar runs along the bottom centre and says "UPGRADE READY" inside
+/// itself when it is full. A shield chip sits bottom left, and pickups announce
+/// themselves in a short line just above the bar; the banner at the top is
+/// kept for bigger moments. Nothing else.
 /// </summary>
 public partial class UIManager : Node
 {
@@ -17,16 +18,12 @@ public partial class UIManager : Node
 	private ControlsCard hint;
 	private TextureRect shieldChip;
 	private CoreBar coreBar;
-	private Button upgradePrompt;
-	private Label promptKey;
 	private Player player;
 	private RunState run;
 	private Sprite2D crosshair;
 	private Tween toastTween;
 	private float refresh;
 	private readonly Dictionary<Ability, AbilitySlot> slots = new();
-	private VBoxContainer column;
-	private int barWidth;
 	private bool padHints;
 	private const float HintSeconds = 5f;
 
@@ -81,12 +78,10 @@ public partial class UIManager : Node
 			numbers.AddChild(label);
 		}
 
-		// Top left: what the player has to use. The CORE bar stands beside the
-		// three abilities, running from the top of the first ring to the bottom
-		// of the last, and the upgrade prompt appears under them when it is full.
+		// Top left: the three abilities in a column. A slot pads its ring by 20
+		// each side, so the rings themselves line up with the screen margin.
 		int diameter = Size(76), gap = Size(4);
-		barWidth = Size(26);
-		column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Position = new Vector2(34 + barWidth + 14 - 20, 24) };
+		var column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Position = new Vector2(34 - 20, 24) };
 		column.AddThemeConstantOverride("separation", gap);
 		hud.AddChild(column);
 		foreach (Ability ability in System.Enum.GetValues<Ability>())
@@ -96,33 +91,13 @@ public partial class UIManager : Node
 			slots[ability] = slot;
 		}
 
-		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(16) };
+		// Bottom centre: the CORE bar. When it is full, the notice to go and
+		// upgrade is written inside it, and it can be clicked.
+		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(17), ReadyText = ReadyText(), Pressed = () => GameManager.Of(this)?.OpenUpgradeTree() };
+		coreBar.AnchorLeft = .5f; coreBar.AnchorRight = .5f; coreBar.AnchorTop = 1; coreBar.AnchorBottom = 1;
+		coreBar.OffsetLeft = -Size(290); coreBar.OffsetRight = Size(290);
+		coreBar.OffsetTop = -34 - Size(32); coreBar.OffsetBottom = -34;
 		hud.AddChild(coreBar);
-
-		// The prompt is a small tag exactly as wide as the bar and rings above
-		// it: the word, then the button to press. Flat, so it sits with the kit
-		// rather than floating over the game like a dialog.
-		upgradePrompt = ArcadeSkin.Button("", () => GameManager.Of(this)?.OpenUpgradeTree(), true);
-		upgradePrompt.Name = "UpgradePrompt";
-		upgradePrompt.FocusMode = Control.FocusModeEnum.None;
-		upgradePrompt.CustomMinimumSize = Vector2.Zero;
-		var tag = ArcadeSkin.Box(ArcadeSkin.Orange, new Color("ffcd85"), 12, 2);
-		tag.ShadowSize = 0;
-		tag.ContentMarginLeft = tag.ContentMarginRight = tag.ContentMarginTop = tag.ContentMarginBottom = 4;
-		upgradePrompt.AddThemeStyleboxOverride("normal", tag);
-		var tagHover = (StyleBoxFlat)tag.Duplicate();
-		tagHover.BgColor = new Color("ffc27a");
-		upgradePrompt.AddThemeStyleboxOverride("hover", tagHover);
-		upgradePrompt.AddThemeStyleboxOverride("pressed", tagHover);
-		upgradePrompt.Visible = false;
-		hud.AddChild(upgradePrompt);
-		var words = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
-		words.AddThemeConstantOverride("separation", -4);
-		upgradePrompt.AddChild(words);
-		ArcadeSkin.Fill(words);
-		words.AddChild(ArcadeSkin.Label("UPGRADE", Size(20), ArcadeSkin.Ink));
-		promptKey = ArcadeSkin.Label($"PRESS {UpgradeHint()}", Size(15), new Color(ArcadeSkin.Ink, 0.75f));
-		words.AddChild(promptKey);
 
 		shieldChip = ArcadeSkin.Icon("shield", Size(64));
 		shieldChip.AnchorTop = 1; shieldChip.AnchorBottom = 1;
@@ -135,7 +110,7 @@ public partial class UIManager : Node
 		toast.AddThemeColorOverride("font_outline_color", new Color(0.12f, 0.06f, 0.15f));
 		toast.AddThemeConstantOverride("outline_size", 10);
 		toast.AnchorLeft = .5f; toast.AnchorRight = .5f; toast.AnchorTop = 1; toast.AnchorBottom = 1;
-		toast.OffsetLeft = -500; toast.OffsetRight = 500; toast.OffsetTop = -Size(140); toast.OffsetBottom = -Size(90);
+		toast.OffsetLeft = -500; toast.OffsetRight = 500; toast.OffsetTop = -34 - Size(32) - 16 - Size(44); toast.OffsetBottom = -34 - Size(32) - 16;
 		toast.Modulate = new Color(1, 1, 1, 0);
 		hud.AddChild(toast);
 
@@ -167,24 +142,13 @@ public partial class UIManager : Node
 			crosshair.GlobalPosition = GetViewport().CanvasTransform * player.AimPosition;
 
 		// Abilities every frame, so the cooldown sweep is smooth; text less often.
-		LineUpKit();
 		coreBar.Refresh(run.CoreFraction, run.CoreReady, run.BuildComplete);
 		if (padHints != InputDevice.Pad)
 		{
 			padHints = InputDevice.Pad;
 			hint.Build();
-			promptKey.Text = $"PRESS {UpgradeHint()}";
+			coreBar.ReadyText = ReadyText();
 		}
-		bool ready = run.CoreReady;
-		if (ready && !upgradePrompt.Visible)
-		{
-			promptKey.Text = $"PRESS {UpgradeHint()}";
-			upgradePrompt.PivotOffset = upgradePrompt.Size * 0.5f;
-			upgradePrompt.Scale = Vector2.One * 1.2f;
-			upgradePrompt.CreateTween().TweenProperty(upgradePrompt, "scale", Vector2.One, 0.25f)
-				.SetTrans(Tween.TransitionType.Back).SetEase(Tween.EaseType.Out);
-		}
-		upgradePrompt.Visible = ready;
 
 		// The how-to lines are for the first few seconds only, then fade away.
 		hint.Visible = run.SurvivalTime < HintSeconds;
@@ -206,23 +170,7 @@ public partial class UIManager : Node
 		}
 	}
 
-	/// <summary>
-	/// Sets the CORE bar from where the rings actually are once the column has
-	/// laid itself out: top of the first ring to the foot of the last ring's
-	/// button label, whatever the HUD scale. The prompt goes just under the last button label, from
-	/// the bar's left edge to the rings' right edge.
-	/// </summary>
-	private void LineUpKit()
-	{
-		AbilitySlot first = slots[Ability.Dash], last = slots[Ability.Nova];
-		float top = column.Position.Y + first.Position.Y;
-		float bottom = column.Position.Y + last.Position.Y + last.LabelBottom;
-		coreBar.Position = new Vector2(34, top);
-		coreBar.Size = new Vector2(barWidth, bottom - top);
-		float ringRight = column.Position.X + first.Position.X + (first.Size.X + first.Diameter) * 0.5f;
-		upgradePrompt.Position = new Vector2(34, column.Position.Y + last.Position.Y + last.Size.Y + 8);
-		upgradePrompt.Size = new Vector2(ringRight - 34, 50 * (GameSettings.Instance?.UiScale ?? 1f));
-	}
+	private static string ReadyText() => $"UPGRADE READY  •  PRESS {UpgradeHint()}";
 
 	private void UpdateLabels()
 	{
@@ -232,7 +180,7 @@ public partial class UIManager : Node
 		shieldChip.Visible = run.HasShield;
 	}
 
-	/// <summary>A short line at the bottom centre. A new one replaces the old at once.</summary>
+	/// <summary>A short line just above the CORE bar. A new one replaces the old at once.</summary>
 	public void Toast(string text, Color colour)
 	{
 		toastTween?.Kill();

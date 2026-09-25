@@ -30,7 +30,7 @@ The Accessibility menu can switch Overdrive to hold-to-use.
 
 ## CORE and upgrades
 
-Every kill fills the **CORE** bar, the tall bar in the top-left corner beside your three abilities, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, **UPGRADE READY** appears under the abilities. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the prompt, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it. Once every upgrade is bought, the bar turns purple and becomes **OVERCHARGE**: kills keep filling it, and each full bar recharges all three abilities at once.
+Every kill fills the **CORE** bar along the bottom of the screen, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, it turns orange and reads **UPGRADE READY** with the button to press, right inside the bar. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the bar, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it. Once every upgrade is bought, the bar turns purple and becomes **OVERCHARGE**: kills keep filling it, and each full bar recharges all three abilities at once.
 
 The first bar needs 35 CORE and each one after needs 32% more, so upgrades come quickly early and slow down as the build gets strong.
 
