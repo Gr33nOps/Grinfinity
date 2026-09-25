@@ -788,6 +788,13 @@ public partial class GameManager : Node2D
 		run.SpendDrop();
 		if (reward.IsShield)
 			run.LastShieldDropAt = run.SurvivalTime;
+
+		// Kills often happen at range, even off screen. A pickup left out there
+		// just expires unseen, so it lands between the planet and the kill
+		// instead, close enough to see and grab.
+		Vector2 here = player.GlobalPosition;
+		if (!Arena.View.Grow(-140f).HasPoint(at))
+			at = here + (at - here).LimitLength(Balance.DropMaxDistance * 0.8f);
 		SpawnPickup(reward, at, Balance.DropLifetime, null);
 	}
 

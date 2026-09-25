@@ -100,14 +100,14 @@ public static class Balance
 	public const float OverdriveDuration = 6f;
 	/// <summary>Fire interval multiplier while Overdrive is up. Lower is faster.</summary>
 	public const float OverdriveFireScale = 0.4f;
-	public const float OverdriveFireScalePerLevel = 0.85f;
-	public const float OverdriveDurationPerLevel = 1.5f;
+	public const float OverdriveFireScalePerLevel = 0.88f;
+	public const float OverdriveDurationPerLevel = 1.2f;
 	public const int OverdriveDamageMultiplier = 2;
 	public const int OverdriveExtraPierce = 1;
 
 	public const float NovaCooldown = 40f;
 	public const float NovaRadius = 720f;
-	public const float NovaRadiusPerLevel = 0.18f;
+	public const float NovaRadiusPerLevel = 0.15f;
 	/// <summary>How long the blast takes to reach its full radius. Enemies pop as it passes.</summary>
 	public const float NovaExpandTime = 0.4f;
 	/// <summary>Share of a boss's full health one Nova takes.</summary>
@@ -125,22 +125,24 @@ public static class Balance
 	// density that the whole build was maxed by six minutes.
 
 	/// <summary>Seconds between enemy drops, rolled between these each time.</summary>
-	public const float DropGapMin = 28f;
-	public const float DropGapMax = 42f;
-	/// <summary>The first drop comes sooner, so the gun changes within the first half minute.</summary>
-	public const float FirstDropGapMin = 16f;
-	public const float FirstDropGapMax = 24f;
+	public const float DropGapMin = 18f;
+	public const float DropGapMax = 28f;
+	/// <summary>The first drop comes sooner, so the gun changes within the first quarter minute.</summary>
+	public const float FirstDropGapMin = 8f;
+	public const float FirstDropGapMax = 14f;
+	/// <summary>A drop from a kill off screen lands this far from the planet, toward the kill.</summary>
+	public const float DropMaxDistance = 520f;
 	/// <summary>The gap grows by this share per minute survived.</summary>
-	public const float DropGapGrowthPerMinute = 0.14f;
-	public const float DropGapGrowthCap = 2.2f;
+	public const float DropGapGrowthPerMinute = 0.08f;
+	public const float DropGapGrowthCap = 1.8f;
 	/// <summary>Kill value needed since the last drop (a Drifter is 1).</summary>
 	public const float DropMinFighting = 10f;
 	/// <summary>Seconds an enemy drop stays on the field. It blinks for the last quarter.</summary>
-	public const float DropLifetime = 16f;
+	public const float DropLifetime = 22f;
 	/// <summary>Seconds a boss reward stays.</summary>
 	public const float BossRewardLifetime = 40f;
 	/// <summary>Pickups drift to the planet from this close.</summary>
-	public const float PickupMagnetRadius = 320f;
+	public const float PickupMagnetRadius = 440f;
 	public const int BossRewardCount = 3;
 	/// <summary>Weapon swaps cannot drop before this.</summary>
 	public const float WeaponSwapAt = 90f;

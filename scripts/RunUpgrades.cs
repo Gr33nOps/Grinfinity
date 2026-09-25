@@ -50,13 +50,13 @@ public static class RunUpgrades
 	public static readonly Profile FireRate = new()
 	{
 		Id = RunUpgradeId.FireRate, Name = TranslationServer.Translate("UPG_FireRate_NAME"),
-		Icon = "firerate", Colour = Gun, MaxLevel = 4, Weight = 1.1f, BossWeight = 1.2f
+		Icon = "firerate", Colour = Gun, MaxLevel = 6, Weight = 1.1f, BossWeight = 1.2f
 	};
 
 	public static readonly Profile Piercing = new()
 	{
 		Id = RunUpgradeId.Piercing, Name = TranslationServer.Translate("UPG_Piercing_NAME"),
-		Icon = "pierce", Colour = Gun, MaxLevel = 3, Weight = 0.9f, BossWeight = 1.1f
+		Icon = "pierce", Colour = Gun, MaxLevel = 4, Weight = 0.9f, BossWeight = 1.1f
 	};
 
 	public static readonly Profile SpreadShot = new()
@@ -74,13 +74,13 @@ public static class RunUpgrades
 	public static readonly Profile BiggerNova = new()
 	{
 		Id = RunUpgradeId.BiggerNova, Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
-		Icon = "nova", Colour = Blast, MaxLevel = 3, Requires = Ability.Nova, Weight = 0.7f, BossWeight = 1.1f
+		Icon = "nova", Colour = Blast, MaxLevel = 4, Requires = Ability.Nova, Weight = 0.7f, BossWeight = 1.1f
 	};
 
 	public static readonly Profile OverdriveBoost = new()
 	{
 		Id = RunUpgradeId.OverdriveBoost, Name = "OVERDRIVE BOOST",
-		Icon = "rapid", Colour = Power, MaxLevel = 3, Requires = Ability.Overdrive, Weight = 0.8f, BossWeight = 1.2f
+		Icon = "rapid", Colour = Power, MaxLevel = 4, Requires = Ability.Overdrive, Weight = 0.8f, BossWeight = 1.2f
 	};
 
 	public static readonly Profile DebrisCannon = new()

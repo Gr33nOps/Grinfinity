@@ -157,7 +157,7 @@ public partial class ReleaseQa : Node
         Check(clean, "drops are never maxed, locked, a second weapon or a second shield");
         var lastLevel = new List<Reward> { new(RunUpgradeId.FireRate) };
         var fresh = FreshRun(this);
-        for (int i = 0; i < 3; i++) fresh.TryGrant(RunUpgradeId.FireRate);
+        for (int i = 0; i < RunUpgrades.FireRate.MaxLevel - 1; i++) fresh.TryGrant(RunUpgradeId.FireRate);
         bool noDoubleLast = true;
         for (int roll = 0; roll < 300; roll++)
             if (UpgradeDrops.TryRoll(fresh, lastLevel, false, out Reward r) && !r.IsShield && r.Upgrade == RunUpgradeId.FireRate) noDoubleLast = false;

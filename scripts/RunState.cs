@@ -24,7 +24,7 @@ public partial class RunState : Node
 	public static readonly int[] StreakMilestones = { 5, 10, 25, 50, 100 };
 
 	/// <summary>Total upgrade levels at which each ring appears.</summary>
-	private static readonly int[] RingThresholds = { 4, 9, 15 };
+	private static readonly int[] RingThresholds = { 5, 11, 18 };
 
 	/// <summary>
 	/// The RNG driving this run. Every gameplay roll should draw from this instead
@@ -184,7 +184,7 @@ public partial class RunState : Node
 	// Read every time they are used, so a pickup takes effect on the next shot.
 
 	/// <summary>Shots come this much closer together. Below 1 is faster.</summary>
-	public float FireIntervalScale => Mathf.Pow(0.86f, LevelOf(RunUpgradeId.FireRate));
+	public float FireIntervalScale => Mathf.Pow(0.88f, LevelOf(RunUpgradeId.FireRate));
 
 	/// <summary>Extra enemies each shot passes through.</summary>
 	public int ExtraPierce => LevelOf(RunUpgradeId.Piercing);

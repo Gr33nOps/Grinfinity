@@ -30,23 +30,23 @@ The Accessibility menu can switch Overdrive to hold-to-use.
 
 ## Upgrades and drops
 
-There is no upgrade menu. Some kills drop a glowing pickup; touch it and it applies at once. The first drop comes 16–24 seconds in, then one every 28–42 seconds (the gap grows by 14% per minute survived) and falls from your next kill, but only if you have also been fighting since the last one. Pickups last 16 seconds and slide to you when you are close.
+There is no upgrade menu. Some kills drop a glowing pickup; touch it and it applies at once. The first drop comes 8–14 seconds in, then one every 18–28 seconds (the gap grows by 8% per minute survived, to at most 1.8 times as long). It falls from your next kill, but only if you have also been fighting since the last one. A kill off screen drops its pickup a short way from you instead, so nothing expires out of sight. Pickups last 22 seconds and slide to you from about half a screen away.
 
 A drop is only ever something that would help right now: nothing already maxed, no second weapon, no second shield. A shield cannot drop more than once every 60 seconds.
 
 | Pickup | Levels | Effect |
 |---|---|---|
-| Faster Shots | 4 | 14% less time between shots per level |
-| Piercing Shots | 3 | Shots pass through one more enemy per level |
+| Faster Shots | 6 | 12% less time between shots per level |
+| Piercing Shots | 4 | Shots pass through one more enemy per level |
 | Spread Shot | 2 | One extra angled shot (alternating sides), then two |
 | Longer Dash | 3 | +14% dash distance and +0.08 s blink per level |
-| Overdrive Boost | 3 | +1.5 s Overdrive and 15% faster Overdrive fire per level |
-| Bigger Nova | 3 | +18% Nova radius per level |
+| Overdrive Boost | 4 | +1.2 s Overdrive and 12% faster Overdrive fire per level |
+| Bigger Nova | 4 | +15% Nova radius per level |
 | Debris Cannon | 1 | Replaces the Comet: six short-range pellets. Not before 1:30 |
 | Ion Lance | 1 | Replaces the Comet: slow, heavy shots that pierce eight enemies. Not before 1:30 |
 | Shield | 1 held | Blocks one hit |
 
-The two weapon swaps rule each other out. Rings appear around the planet at 4, 9 and 15 upgrade levels.
+The two weapon swaps rule each other out. Rings appear around the planet at 5, 11 and 18 upgrade levels, out of 24.
 
 ## Enemies
 
