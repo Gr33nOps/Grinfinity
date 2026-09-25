@@ -186,7 +186,6 @@ public static class Balance
 	/// </summary>
 	public static float BossSupport(int cycle) => cycle <= 1 ? 0f : Mathf.Min(0.35f + 0.2f * (cycle - 2), 0.95f);
 
-	public const int BossScoreBonus = 5000;
 
 	// --- Hazards and events -----------------------------------------------------
 	public const float FirstCometAt = 170f;
@@ -199,9 +198,6 @@ public static class Balance
 	public const float WellGapMax = 75f;
 	public const float FirstEventAt = 380f;
 
-	// --- Score ----------------------------------------------------------------
-	public const float PointsPerSecond = 10f;
-	public const float PointsPerKill = 25f;
 
 	/// <summary>
 	/// Reads a (time, value) table. Linear between keys, flat before the first,

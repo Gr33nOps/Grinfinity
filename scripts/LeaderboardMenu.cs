@@ -59,7 +59,6 @@ public partial class LeaderboardMenu : Control
 			row.AddChild(Cell($"#{i + 1}", 40, rankColour, 90));
 			row.AddChild(Cell(entry.Name, 40, rankColour, 300));
 			row.AddChild(Cell(ScoreManager.FormatTime(entry.SurvivalTime), 40, rankColour, 170));
-			row.AddChild(Cell($"{entry.Score:N0}", 32, Idle, 200));
 
 			rows.AddChild(row);
 		}

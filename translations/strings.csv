@@ -45,10 +45,10 @@ WORLD_5_FLAVOUR,"Quiet, deep and just a little bit spooky."
 WORLD_5_HINT,Pop 300 enemies in total.
 WORLD_6_NAME,DUSKWARDEN
 WORLD_6_FLAVOUR,Takes guard duty very seriously. Nobody asked it to.
-WORLD_6_HINT,"Score {0} in one run."
+WORLD_6_HINT,Survive for 2 minutes in one run.
 WORLD_7_NAME,VERDANT HALO
 WORLD_7_FLAVOUR,Wears its leafy green ring like a crown.
-WORLD_7_HINT,"Score {0} in one run."
+WORLD_7_HINT,Survive for 4 minutes in one run.
 WORLD_8_NAME,ASHEN COIL
 WORLD_8_FLAVOUR,Beat The Coil enough times and you start to look like it.
 WORLD_8_HINT,Survive for 3 minutes in one run.
@@ -63,7 +63,7 @@ WORLD_11_FLAVOUR,Has been out here so long it calls empty space home.
 WORLD_11_HINT,Play for 1 hour in total.
 WORLD_12_NAME,STARFORGED
 WORLD_12_FLAVOUR,Made from every planet that came before it.
-WORLD_12_HINT,"Play {0} runs, and score {1} in one."
+WORLD_12_HINT,"Play {0} runs, and survive 10 minutes in one."
 BOSS_Coil_ARRIVAL,Its rings have a gap. Slip through it or dash.
 BOSS_Brood_ARRIVAL,It keeps making Shards. Keep shooting the big one.
 BOSS_BlackHole_ARRIVAL,It pulls you in. Stay away from the middle.
@@ -74,9 +74,7 @@ DEATH_CAUSE_EnemyShot,an enemy shot
 UI_NEW_WORLD,"NEW PLANET: {0}"
 UI_NEW_ACHIEVEMENT,"ACHIEVEMENT: {0}"
 UI_LEADERBOARD_RANK,"#{0} ON THE LEADERBOARD"
-UI_NEW_BEST,NEW BEST SCORE!
 UI_LONGEST_YET,YOUR LONGEST RUN YET!
-UI_BEST_SCORE_LABEL,BEST: {0}
 STATS_ORBITS,RUNS PLAYED
 STATS_KILLS,ENEMIES POPPED
 STATS_TIMEPLAYED,TIME PLAYED

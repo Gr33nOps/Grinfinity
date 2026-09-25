@@ -1,6 +1,6 @@
 # Gameplay guide
 
-One endless run. Enemies keep coming, the arena gets harder the longer you last, and the run ends the first time something touches the planet without a shield. Your survival time is the record; score is kept alongside it.
+One endless run. Enemies keep coming, the arena gets harder the longer you last, and the run ends the first time something touches the planet without a shield. Your survival time is the only result. There is no score.
 
 Every tuning number mentioned here lives in `scripts/Balance.cs`.
 
@@ -100,8 +100,16 @@ Bosses arrive on a clock, with a warning banner and a marker where they will lan
 
 After the Black Hole the run carries on, and the bosses come round again every 2 minutes 10 seconds: The Coil at 8:55, The Brood at 11:05, The Black Hole at 13:15, and so on forever. Each round the bosses get 70% more health (so a full late-game build still has a fight on its hands) and attack a little faster. More of the difficulty comes from company, though: the first time round each boss fights alone, and from round two ordinary enemies keep arriving during the fight (35% of the normal rate in round 2, 55% in round 3, up to 95%). There is always at least 45 seconds between one boss dying and the next arriving.
 
-## Score
+## Records
 
-10 points per second survived, 25 per kill plus 3 for each link in your current combo (up to 25 links). A combo breaks after 2.5 seconds without a kill. Beating a boss is worth 5,000 × its round.
+How long you survived is the only result. The HUD shows it top right, the game over screen shows it big, and the leaderboard ranks runs by it and nothing else. Kills and bosses beaten are shown on the game over screen for interest, but they do not add up to anything.
 
-The leaderboard ranks runs by survival time, with score breaking ties.
+The combo counter under the time counts kills in a row, and breaks after 2.5 seconds without one. It is just for show.
+
+## On-screen buttons
+
+Hints only show the controls you are using. Touch the keyboard or mouse and they say SHIFT, E, R, TAB; touch a controller and they say B, X, Y, BACK. Plugging a controller in switches to controller hints.
+
+## Faces
+
+Only your planet is happy. Every enemy has its own bad mood: Drifters are sad (three different sad faces), Shards angry (two), Planetoids grumpy, Fractures worried and their Splinters scared, Satellites suspicious, Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares.

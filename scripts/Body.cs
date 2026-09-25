@@ -48,20 +48,24 @@ public partial class Body : CharacterBody2D, IShootable
 	/// Centralised here rather than kept per-spawner, so every path that creates
 	/// a body — the spawner, a Fracture's splinters, a boss's broodlings — gets
 	/// the same correct face instead of only the spawner's own spawns being dressed.
+	///
+	/// Each kind has its own bad mood (see tools/make_moods.py). The kinds seen
+	/// most often have a few versions of it, picked at random per body, so a
+	/// crowd of them does not look like one face copied.
 	/// </summary>
-	private static Dictionary<BodyKind, Texture2D> faceTextures;
+	private static Dictionary<BodyKind, Texture2D[]> faceTextures;
 
 	/// <summary>Splinter is drawn at half the family canvas — see ASSETS.md.</summary>
-	private static readonly Dictionary<BodyKind, string> FaceFiles = new()
+	private static readonly Dictionary<BodyKind, string[]> FaceFiles = new()
 	{
-		[BodyKind.Drifter] = "body_drifter",
-		[BodyKind.Shard] = "body_shard",
-		[BodyKind.Planetoid] = "body_planetoid",
-		[BodyKind.Fracture] = "body_fracture",
-		[BodyKind.Splinter] = "body_fracture_mini",
-		[BodyKind.Satellite] = "body_satellite",
-		[BodyKind.Flare] = "body_flare",
-		[BodyKind.Bulwark] = "body_bulwark"
+		[BodyKind.Drifter] = new[] { "body_drifter", "body_drifter_2", "body_drifter_3" },
+		[BodyKind.Shard] = new[] { "body_shard", "body_shard_2" },
+		[BodyKind.Planetoid] = new[] { "body_planetoid" },
+		[BodyKind.Fracture] = new[] { "body_fracture" },
+		[BodyKind.Splinter] = new[] { "body_fracture_mini" },
+		[BodyKind.Satellite] = new[] { "body_satellite" },
+		[BodyKind.Flare] = new[] { "body_flare" },
+		[BodyKind.Bulwark] = new[] { "body_bulwark" }
 	};
 
 	private static void EnsureFacesLoaded()
@@ -69,9 +73,9 @@ public partial class Body : CharacterBody2D, IShootable
 		if (faceTextures != null)
 			return;
 
-		faceTextures = new Dictionary<BodyKind, Texture2D>();
-		foreach (var (kind, file) in FaceFiles)
-			faceTextures[kind] = GD.Load<Texture2D>($"res://art/cosmic/{file}.svg");
+		faceTextures = new Dictionary<BodyKind, Texture2D[]>();
+		foreach (var (kind, files) in FaceFiles)
+			faceTextures[kind] = System.Array.ConvertAll(files, file => GD.Load<Texture2D>($"res://art/cosmic/{file}.svg"));
 	}
 
 	private Node2D world;
@@ -198,8 +202,8 @@ public partial class Body : CharacterBody2D, IShootable
 	}
 
 	/// <summary>
-	/// Picks this body's face. Every kind wears its own distinct silhouette, so
-	/// it stays recognisable at a glance in a busy fight. Runs in _Ready, so
+	/// Picks this body's face. Every kind wears its own distinct silhouette and
+	/// mood, so it stays recognisable at a glance in a busy fight. Runs in _Ready, so
 	/// GlobalPosition must already be set — every spawn path sets it before
 	/// adding the body to the tree.
 	/// </summary>
@@ -209,7 +213,9 @@ public partial class Body : CharacterBody2D, IShootable
 			return;
 
 		EnsureFacesLoaded();
-		sprite.Texture = faceTextures[Kind];
+		// Looks only, so it stays off the run's seeded generator.
+		Texture2D[] faces = faceTextures[Kind];
+		sprite.Texture = faces[(int)(GD.Randi() % (uint)faces.Length)];
 
 		// Bodies arriving from the right are mirrored, purely for variety —
 		// otherwise every arrival looks identical.
@@ -386,7 +392,7 @@ public partial class Body : CharacterBody2D, IShootable
 
 	/// <summary>
 	/// Blows up everything nearby, including the world. Chained bodies do not
-	/// score, so two Flares next to each other cannot cascade into free points.
+	/// count as kills, so two Flares side by side cannot cascade into free CORE.
 	/// </summary>
 	public void Detonate(float radius)
 	{

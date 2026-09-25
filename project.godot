@@ -23,6 +23,7 @@ config/icon="uid://cgq7b3o6g7yae"
 [autoload]
 
 GameSettings="*res://scripts/GameSettings.cs"
+InputDevice="*res://scripts/InputDevice.cs"
 Background="*res://scenes/background.tscn"
 MusicManager="*res://scenes/music_manager.tscn"
 SceneTransition="*res://scenes/scene_transition.tscn"

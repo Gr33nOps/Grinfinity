@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Godot;
 
 /// <summary>
-/// The single owner of one run: time, kills, streak, score, the build and the
+/// The single owner of one run: time, kills, streak, the build and the
 /// shield. Nothing in this class touches the UI; it raises signals and
 /// <see cref="UIManager"/> decides how to draw them.
 ///
@@ -41,18 +41,10 @@ public partial class RunState : Node
 	/// </summary>
 	public static float ElapsedSeconds { get; private set; }
 
-	[ExportGroup("Scoring")]
-	/// <summary>Extra points per kill for each link already in the streak.</summary>
-	[Export] public float PointsPerStreakLink { get; set; } = 3.0f;
-	/// <summary>Links past this stop paying, or an unbroken streak would outweigh the whole early run.</summary>
-	[Export] public int StreakBonusCap { get; set; } = 25;
+	[ExportGroup("Streak")]
 	/// <summary>How long a streak survives without a kill before it resets.</summary>
 	[Export] public float StreakWindow { get; set; } = 2.5f;
 
-	[ExportGroup("Stardust")]
-	[Export] public float StardustPerSecond { get; set; } = 0.4f;
-	[Export] public int StardustPerKill { get; set; } = 2;
-	[Export] public int StardustPerStreakBest { get; set; } = 3;
 
 	public float SurvivalTime { get; private set; }
 	public int Kills { get; private set; }
@@ -62,12 +54,6 @@ public partial class RunState : Node
 
 	/// <summary>A shield blocks exactly one lethal hit. Runs start without one.</summary>
 	public bool HasShield { get; private set; }
-
-	public int Score => (int)System.Math.Clamp(System.Math.Round(score), 0, int.MaxValue);
-
-	/// <summary>Stardust this run has earned — time, kills and the best streak. Spent on nothing in-run.</summary>
-	public int StardustEarned => (int)System.Math.Clamp(System.Math.Round(SurvivalTime * (double)StardustPerSecond)
-		+ Kills * (double)StardustPerKill + BestStreak * (double)StardustPerStreakBest, 0, int.MaxValue);
 
 	/// <summary>How much of the full build this run holds, 0..1. Recorded as the run's high-water mark.</summary>
 	public float BuildFraction => Mathf.Clamp(TotalLevels / (float)RunUpgrades.MaxTotalLevels, 0f, 1f);
@@ -328,9 +314,8 @@ public partial class RunState : Node
 		EmitSignal(SignalName.EffectsChanged);
 	}
 
-	// --- Clock and score ---------------------------------------------------------
+	// --- Clock and streak ---------------------------------------------------------
 
-	private double score;
 	private float streakTimer;
 	private int nextMilestone;
 
@@ -344,7 +329,6 @@ public partial class RunState : Node
 	{
 		SurvivalTime += (float)delta;
 		ElapsedSeconds = SurvivalTime;
-		score += Balance.PointsPerSecond * (float)delta;
 
 		if (EventTimeLeft > 0f)
 			EventTimeLeft -= (float)delta;
@@ -376,10 +360,6 @@ public partial class RunState : Node
 		if (Streak > BestStreak)
 			BestStreak = Streak;
 
-		// A long chain is worth more per kill than the same kills spread out.
-		int paidLinks = Mathf.Min(Streak - 1, StreakBonusCap);
-		score += Balance.PointsPerKill + PointsPerStreakLink * paidLinks;
-
 		bool milestone = nextMilestone < StreakMilestones.Length
 			&& Streak >= StreakMilestones[nextMilestone];
 
@@ -390,9 +370,4 @@ public partial class RunState : Node
 		EmitSignal(SignalName.StreakChanged, Streak, milestone);
 	}
 
-	/// <summary>A flat award — beating a boss.</summary>
-	public void AddBonus(int points)
-	{
-		score += Mathf.Max(points, 0);
-	}
 }

@@ -2,8 +2,7 @@ using Godot;
 
 /// <summary>
 /// Everything played, added up. Purely a display screen — every number here
-/// already lives on <see cref="PlayerProfile"/>, tracked since M5's stardust
-/// work; this is the one place a player can actually see it.
+/// already lives on <see cref="PlayerProfile"/>, tracked across every run; this is the one place a player can actually see it.
 /// </summary>
 public partial class StatsMenu : Control
 {

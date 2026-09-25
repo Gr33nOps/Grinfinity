@@ -171,7 +171,7 @@ public static class RunUpgrades
 		_ => "NOVA"
 	};
 
-	/// <summary>What the ability does, finishing "Press SHIFT / B to ...". Shown once, when it comes online.</summary>
+	/// <summary>What the ability does, finishing "Press SHIFT to ..." or "Press B to ...". Shown once, when it comes online.</summary>
 	public static string AbilityVerb(Ability ability) => ability switch
 	{
 		Ability.Dash => "zoom through enemies and pop them",

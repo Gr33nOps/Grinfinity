@@ -4,8 +4,8 @@ using Godot;
 /// <summary>
 /// The gameplay HUD, fixed to the screen while the world moves under it.
 ///
-/// Top right holds the run's numbers: time first because time is the record,
-/// then score and best. Top left holds the kit: the three abilities in a column
+/// Top right holds the run's numbers: time first because time is the only
+/// result, then the best time. Top left holds the kit: the three abilities in a column
 /// with the CORE bar standing beside them. A shield chip sits bottom left, and
 /// pickups announce themselves in a short line at the bottom centre; the banner
 /// at the top is kept for bigger moments. Nothing else.
@@ -13,7 +13,7 @@ using Godot;
 public partial class UIManager : Node
 {
 	private Control hud;
-	private Label time, score, streak, best, hint, toast;
+	private Label time, streak, best, hint, toast;
 	private TextureRect shieldChip;
 	private CoreBar coreBar;
 	private Button upgradePrompt;
@@ -23,19 +23,30 @@ public partial class UIManager : Node
 	private Tween toastTween;
 	private float refresh;
 	private readonly Dictionary<Ability, AbilitySlot> slots = new();
+	private VBoxContainer column;
+	private int barWidth;
+	private bool padHints;
 	private const float HintSeconds = 5f;
 
-	/// <summary>"SHIFT / B" — the keyboard key as bound, and the pad button.</summary>
-	/// <summary>"TAB / BACK" — how to open the upgrade screen.</summary>
+	/// <summary>How to open the upgrade screen on whatever the player is holding: "TAB" or "BACK".</summary>
 	public static string UpgradeHint() =>
-		$"{OS.GetKeycodeString(GameSettings.GetActionKey("upgrades")).ToUpperInvariant()} / BACK";
+		InputDevice.Pad ? "BACK" : KeyName("upgrades");
 
-	public static string ControlHint(Ability ability)
-	{
-		string action = RunUpgrades.ActionFor(ability);
-		string pad = ability switch { Ability.Dash => "B", Ability.Overdrive => "X", _ => "Y" };
-		return $"{OS.GetKeycodeString(GameSettings.GetActionKey(action)).ToUpperInvariant()} / {pad}";
-	}
+	/// <summary>The button for an ability on whatever the player is holding: the bound key, or the pad button.</summary>
+	public static string ControlHint(Ability ability) =>
+		InputDevice.Pad
+			? ability switch { Ability.Dash => "B", Ability.Overdrive => "X", _ => "Y" }
+			: KeyName(RunUpgrades.ActionFor(ability));
+
+	private static string KeyName(string action) =>
+		OS.GetKeycodeString(GameSettings.GetActionKey(action)).ToUpperInvariant();
+
+	/// <summary>The first-seconds how-to, for keyboard and mouse or for a controller. Never both.</summary>
+	private static string HowTo() =>
+		(InputDevice.Pad
+			? "Left stick to move     •     Right stick to aim     •     RT to shoot"
+			: "WASD to move     •     Mouse to aim     •     Click to shoot")
+		+ "\n" + $"{ControlHint(Ability.Dash)} to dash     •     {ControlHint(Ability.Overdrive)} for overdrive     •     {ControlHint(Ability.Nova)} for nova";
 
 	public override void _Ready()
 	{
@@ -57,8 +68,8 @@ public partial class UIManager : Node
 		ArcadeSkin.Fill(hud);
 
 		// Top right: the run's numbers. Time first and biggest, because time is
-		// the record; score and best under it; the combo last, so it can come
-		// and go without shifting anything.
+		// the only result; the best time under it; the combo last, so it can
+		// come and go without shifting anything.
 		var numbers = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
 		numbers.AnchorLeft = 1; numbers.AnchorRight = 1; numbers.OffsetLeft = -Size(420); numbers.OffsetRight = -34; numbers.OffsetTop = 20;
 		numbers.AddThemeConstantOverride("separation", -4);
@@ -66,22 +77,20 @@ public partial class UIManager : Node
 		var caption = ArcadeSkin.Label("SURVIVED", Size(18), ArcadeSkin.Muted);
 		time = ArcadeSkin.Label("00:00", Size(64));
 		time.Name = "RunInfo";
-		score = ArcadeSkin.Label("0", Size(26));
-		score.Name = "LiveScore";
 		best = ArcadeSkin.Label("", Size(22), ArcadeSkin.Muted);
 		streak = ArcadeSkin.Label("", Size(22), ArcadeSkin.Orange);
-		foreach (Label label in new[] { caption, time, score, best, streak })
+		foreach (Label label in new[] { caption, time, best, streak })
 		{
 			label.HorizontalAlignment = HorizontalAlignment.Right;
 			numbers.AddChild(label);
 		}
 
 		// Top left: what the player has to use. The CORE bar stands beside the
-		// three abilities, as tall as the column of rings, and the upgrade prompt
-		// appears under them when the bar is full.
-		int diameter = Size(76), gap = Size(4), barWidth = Size(26);
-		float slotHeight = diameter + 34f;
-		var column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Position = new Vector2(34 + barWidth + 14 - 20, 24) };
+		// three abilities, running from the top of the first ring to the bottom
+		// of the last, and the upgrade prompt appears under them when it is full.
+		int diameter = Size(76), gap = Size(4);
+		barWidth = Size(26);
+		column = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Position = new Vector2(34 + barWidth + 14 - 20, 24) };
 		column.AddThemeConstantOverride("separation", gap);
 		hud.AddChild(column);
 		foreach (Ability ability in System.Enum.GetValues<Ability>())
@@ -92,15 +101,12 @@ public partial class UIManager : Node
 		}
 
 		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(16) };
-		coreBar.Position = new Vector2(34, 24);
-		coreBar.Size = new Vector2(barWidth, 2 * (slotHeight + gap) + diameter);
 		hud.AddChild(coreBar);
 
 		upgradePrompt = ArcadeSkin.Button("", () => GameManager.Of(this)?.OpenUpgradeTree(), true);
 		upgradePrompt.Name = "UpgradePrompt";
 		upgradePrompt.FocusMode = Control.FocusModeEnum.None;
 		upgradePrompt.AddThemeFontSizeOverride("font_size", Size(20));
-		upgradePrompt.Position = new Vector2(30, 24 + 3 * slotHeight + 2 * gap + 10);
 		upgradePrompt.CustomMinimumSize = new Vector2(Size(210), Size(64));
 		upgradePrompt.Visible = false;
 		hud.AddChild(upgradePrompt);
@@ -122,8 +128,7 @@ public partial class UIManager : Node
 
 		// Two lines: the basics, then the three ability buttons, which are all
 		// live from the first second.
-		hint = ArcadeSkin.Label("WASD / left stick to move     •     Mouse / right stick to aim     •     Click / RT to shoot\n"
-			+ $"{ControlHint(Ability.Dash)} to dash     •     {ControlHint(Ability.Overdrive)} for overdrive     •     {ControlHint(Ability.Nova)} for nova", Size(23), ArcadeSkin.Muted);
+		hint = ArcadeSkin.Label(HowTo(), Size(23), ArcadeSkin.Muted);
 		hint.Name = "HowTo";
 		hint.AnchorLeft = .5f; hint.AnchorRight = .5f; hint.AnchorTop = .5f; hint.AnchorBottom = .5f;
 		hint.OffsetLeft = -650; hint.OffsetRight = 650; hint.OffsetTop = 140; hint.OffsetBottom = 220;
@@ -149,7 +154,14 @@ public partial class UIManager : Node
 			crosshair.GlobalPosition = GetViewport().CanvasTransform * player.AimPosition;
 
 		// Abilities every frame, so the cooldown sweep is smooth; text less often.
+		LineUpKit();
 		coreBar.Refresh(run.CoreFraction, run.CoreReady, run.BuildComplete);
+		if (padHints != InputDevice.Pad)
+		{
+			padHints = InputDevice.Pad;
+			hint.Text = HowTo();
+			upgradePrompt.Text = $"UPGRADE READY\n{UpgradeHint()}";
+		}
 		bool ready = run.CoreReady;
 		if (ready && !upgradePrompt.Visible)
 		{
@@ -181,10 +193,24 @@ public partial class UIManager : Node
 		}
 	}
 
+	/// <summary>
+	/// Sets the CORE bar from where the rings actually are once the column has
+	/// laid itself out: top of the first ring to bottom of the last, whatever
+	/// the HUD scale. The prompt goes just under the last button label.
+	/// </summary>
+	private void LineUpKit()
+	{
+		AbilitySlot first = slots[Ability.Dash], last = slots[Ability.Nova];
+		float top = column.Position.Y + first.Position.Y;
+		float bottom = column.Position.Y + last.Position.Y + last.Diameter;
+		coreBar.Position = new Vector2(34, top);
+		coreBar.Size = new Vector2(barWidth, bottom - top);
+		upgradePrompt.Position = new Vector2(30, column.Position.Y + last.Position.Y + last.Size.Y + 10);
+	}
+
 	private void UpdateLabels()
 	{
 		time.Text = ScoreManager.FormatTime(run.SurvivalTime);
-		score.Text = $"SCORE  {run.Score:N0}";
 		streak.Text = run.Streak >= 2 ? $"{run.Streak} COMBO" : "";
 		best.Text = ScoreManager.BestTime > 0f ? $"BEST  {ScoreManager.FormatTime(ScoreManager.BestTime)}" : "";
 		shieldChip.Visible = run.HasShield;

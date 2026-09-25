@@ -68,8 +68,8 @@ public static class Worlds
 		Id = 6,
 		Name = TranslationServer.Translate("WORLD_6_NAME"),
 		Flavour = TranslationServer.Translate("WORLD_6_FLAVOUR"),
-		UnlockHint = string.Format(TranslationServer.Translate("WORLD_6_HINT"), 5000.ToString("N0")),
-		IsEarned = () => ScoreManager.BestScore >= 5000
+		UnlockHint = TranslationServer.Translate("WORLD_6_HINT"),
+		IsEarned = () => ScoreManager.BestTime >= 120f
 	};
 
 	public static readonly Profile World7 = new()
@@ -77,8 +77,8 @@ public static class Worlds
 		Id = 7,
 		Name = TranslationServer.Translate("WORLD_7_NAME"),
 		Flavour = TranslationServer.Translate("WORLD_7_FLAVOUR"),
-		UnlockHint = string.Format(TranslationServer.Translate("WORLD_7_HINT"), 15000.ToString("N0")),
-		IsEarned = () => ScoreManager.BestScore >= 15000
+		UnlockHint = TranslationServer.Translate("WORLD_7_HINT"),
+		IsEarned = () => ScoreManager.BestTime >= 240f
 	};
 
 	public static readonly Profile World8 = new()
@@ -122,8 +122,8 @@ public static class Worlds
 		Id = 12,
 		Name = TranslationServer.Translate("WORLD_12_NAME"),
 		Flavour = TranslationServer.Translate("WORLD_12_FLAVOUR"),
-		UnlockHint = string.Format(TranslationServer.Translate("WORLD_12_HINT"), 20, 25000.ToString("N0")),
-		IsEarned = () => PlayerProfile.TotalOrbits >= 20 && ScoreManager.BestScore >= 25000
+		UnlockHint = string.Format(TranslationServer.Translate("WORLD_12_HINT"), 20),
+		IsEarned = () => PlayerProfile.TotalOrbits >= 20 && ScoreManager.BestTime >= 600f
 	};
 
 	// Declared last: static field initialisers run in source order.

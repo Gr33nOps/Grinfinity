@@ -93,9 +93,9 @@ func _physics_process(_delta: float) -> void:
 
 func _finish(reason: String) -> void:
 	var t := _now()
-	var summary := "RUN %d END %s at %02d:%02d  kills=%d levels=%d bosses=%d score=%d" % [
+	var summary := "RUN %d END %s at %02d:%02d  kills=%d levels=%d bosses=%d" % [
 		run_number, reason, int(t / 60.0), int(fmod(t, 60.0)), run_state.get("Kills"), run_state.get("TotalLevels"),
-		game.get("NextBossIndex") - (1 if game.get("BossActive") else 0), run_state.get("Score")]
+		game.get("NextBossIndex") - (1 if game.get("BossActive") else 0)]
 	print(summary)
 	results.append(summary)
 	for action in ["left", "right", "up", "down", "aim_left", "aim_right", "aim_up", "aim_down", "shoot", "dash", "rapid_fire", "nova"]:

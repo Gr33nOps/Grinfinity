@@ -1,7 +1,8 @@
 using Godot;
 
 /// <summary>
-/// Persistent records only. The live numbers for an orbit in progress belong to
+/// Persistent records only: the best time, plus the most kills and longest
+/// streak as quiet extras. There is no score; time is the only result. The live numbers for an orbit in progress belong to
 /// <see cref="RunState"/>; this class knows nothing about a run until it ends.
 /// </summary>
 public static class ScoreManager
@@ -20,19 +21,12 @@ public static class ScoreManager
 	private static float bestTime;
 	private static int bestKills;
 	private static int bestStreak;
-	private static int bestScore;
 	private static bool isLoaded;
 
 	/// <summary>The longest orbit yet. One mode means one number to beat.</summary>
 	public static float BestTime
 	{
 		get { EnsureLoaded(); return bestTime; }
-	}
-
-	/// <summary>The highest score yet. See <see cref="BestTime"/>.</summary>
-	public static int BestScore
-	{
-		get { EnsureLoaded(); return bestScore; }
 	}
 
 	public static string FormatTime(float seconds)
@@ -42,45 +36,24 @@ public static class ScoreManager
 		return $"{minutes:D2}:{remainder:D2}";
 	}
 
-	public static string GetFormattedHighScore()
+	/// <summary>Records a finished orbit. True if it was the longest yet.</summary>
+	public static bool SaveRun(float time, int kills, int streak)
 	{
 		EnsureLoaded();
-		return string.Format(TranslationServer.Translate("UI_BEST_SCORE_LABEL"), bestScore);
-	}
-
-	/// <summary>What a finished orbit beat, so the recap can celebrate the right thing.</summary>
-	public readonly struct Result
-	{
-		public Result(bool newBestScore, bool newBestTime)
-		{
-			NewBestScore = newBestScore;
-			NewBestTime = newBestTime;
-		}
-
-		public bool NewBestScore { get; }
-		public bool NewBestTime { get; }
-	}
-
-	/// <summary>Records a finished orbit and reports which records it broke.</summary>
-	public static Result SaveRun(float time, int kills, int streak, int score)
-	{
-		EnsureLoaded();
-		if (!float.IsFinite(time) || time < 0 || time > MaxPlausibleTime || kills < 0 || streak < 0 || score < 0)
-			return new Result(false, false);
+		if (!float.IsFinite(time) || time < 0 || time > MaxPlausibleTime || kills < 0 || streak < 0)
+			return false;
 
 		bool newBestTime = time > bestTime;
-		bool newBestScore = score > bestScore;
-		bool improved = newBestTime || newBestScore || kills > bestKills || streak > bestStreak;
+		bool improved = newBestTime || kills > bestKills || streak > bestStreak;
 
 		bestTime = Mathf.Max(time, bestTime);
-		bestScore = Mathf.Max(score, bestScore);
 		bestKills = Mathf.Max(kills, bestKills);
 		bestStreak = Mathf.Max(streak, bestStreak);
 
 		if (improved)
 			SaveToFile();
 
-		return new Result(newBestScore, newBestTime);
+		return newBestTime;
 	}
 
 	private static void EnsureLoaded()
@@ -96,24 +69,21 @@ public static class ScoreManager
 			bestTime = SaveStore.Value(config, Section, "best_time", 0.0f).AsSingle();
 			bestKills = SaveStore.Value(config, Section, "best_kills", 0).AsInt32();
 			bestStreak = SaveStore.Value(config, Section, "best_combo", 0).AsInt32();
-			bestScore = SaveStore.Value(config, Section, "best_score", 0).AsInt32();
 
 			// v4 kept a table per mode, and the globals above were the best of
-			// all of them — so a Flyby score could be sitting in a number that
+			// all of them — so a Flyby record could be sitting in a number that
 			// now claims to be an Endless Orbit record. Endless Orbit's own row
 			// is the only honest one to carry forward, and it wins wherever the
 			// two disagree. The other four modes' rows are left unread.
 			float endlessTime = SaveStore.Value(config, Section, "mode_EndlessOrbit_time", 0.0f).AsSingle();
 			int endlessKills = SaveStore.Value(config, Section, "mode_EndlessOrbit_kills", 0).AsInt32();
 			int endlessStreak = SaveStore.Value(config, Section, "mode_EndlessOrbit_streak", 0).AsInt32();
-			int endlessScore = SaveStore.Value(config, Section, "mode_EndlessOrbit_score", 0).AsInt32();
 
-			if (endlessTime > 0f || endlessScore > 0 || endlessKills > 0 || endlessStreak > 0)
+			if (endlessTime > 0f || endlessKills > 0 || endlessStreak > 0)
 			{
 				bestTime = endlessTime;
 				bestKills = endlessKills;
 				bestStreak = endlessStreak;
-				bestScore = endlessScore;
 			}
 		}
 		else if (FileAccess.FileExists(LegacySavePath))
@@ -129,7 +99,6 @@ public static class ScoreManager
 
 		bestKills = Mathf.Max(bestKills, 0);
 		bestStreak = Mathf.Max(bestStreak, 0);
-		bestScore = Mathf.Max(bestScore, 0);
 	}
 
 	private static float ReadLegacyBestTime()
@@ -150,7 +119,6 @@ public static class ScoreManager
 		// The key keeps its v1 name so old saves still load; "combo" became
 		// "streak" in the fiction, not in the file format.
 		config.SetValue(Section, "best_combo", bestStreak);
-		config.SetValue(Section, "best_score", bestScore);
 
 		Error error = SaveStore.Save(config, SavePath);
 		if (error != Error.Ok)

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Godot;
 
 /// <summary>
-/// Progression that outlives a single orbit: stardust, lifetime stats, unlocked
+/// Progression that outlives a single orbit: lifetime stats, unlocked
 /// worlds and achievements, and upgrade levels. Where <see cref="ScoreManager"/>
 /// answers "what is the best I have ever done", this answers "what have I built
 /// up over every orbit put together".
@@ -14,8 +14,8 @@ public static class PlayerProfile
 	private const string WorldSection = "worlds";
 	private const string AchievementSection = "achievements";
 	/// <summary>
-	/// v2 dropped the permanent upgrade shop and turned stardust from a balance
-	/// into a lifetime tally. Old files keep their "upgrades" section on disk —
+	/// v2 dropped the permanent upgrade shop. Old files keep their "upgrades"
+	/// and "stardust" entries on disk —
 	/// nothing reads it, and rewriting the file to drop it would only risk
 	/// losing the parts still worth keeping.
 	/// </summary>
@@ -24,29 +24,16 @@ public static class PlayerProfile
 	private static bool isLoaded;
 
 	// --- Lifetime stats ---------------------------------------------------
-	/// <summary>
-	/// Every point of stardust ever earned. Not a balance: there is nothing to
-	/// spend it on outside a run, and the stardust a run spends on upgrades is
-	/// the run's own, starting from zero each time. This is here to be looked
-	/// at on the Stats screen and nothing else.
-	/// </summary>
 	// Every one of these loads on access. They used to be plain auto-properties,
 	// which meant reading one before anything else had touched the profile
 	// returned a zero — the Stats screen only ever looked right because the
 	// weapon and world rows happened to be read first and pulled the file in as
 	// a side effect. Reordering that screen was enough to blank four of them.
-	private static int stardustEarned;
 	private static int totalOrbits;
 	private static int totalKills;
 	private static float totalTimePlayed;
 	private static float heaviestMassEver;
 	private static string playerName = "PLAYER";
-
-	public static int StardustEarned
-	{
-		get { EnsureLoaded(); return stardustEarned; }
-		private set => stardustEarned = value;
-	}
 
 	public static int TotalOrbits
 	{
@@ -133,15 +120,13 @@ public static class PlayerProfile
 	}
 
 	/// <summary>
-	/// Folds one finished orbit into the profile: stardust earned, lifetime
-	/// totals. Called once, from
+	/// Folds one finished orbit into the lifetime totals. Called once, from
 	/// GameManager.TriggerGameOver.
 	/// </summary>
-	public static void RecordOrbit(int stardustEarned, int kills, float survivalTime, float buildFraction)
+	public static void RecordOrbit(int kills, float survivalTime, float buildFraction)
 	{
 		EnsureLoaded();
 
-		StardustEarned += Mathf.Max(stardustEarned, 0);
 		TotalOrbits++;
 		TotalKills += Mathf.Max(kills, 0);
 		TotalTimePlayed += Mathf.Max(survivalTime, 0f);
@@ -161,11 +146,6 @@ public static class PlayerProfile
 		if (SaveStore.Load(config, SavePath) != Error.Ok)
 			return;
 
-		// A v1 file's "stardust" was a spendable balance. Reading it forward as
-		// a lifetime tally understates anyone who spent some in the old shop,
-		// which is the honest direction to be wrong in: it never claims they
-		// earned more than they did.
-		StardustEarned = Mathf.Max(SaveStore.Value(config, Section, "stardust", 0).AsInt32(), 0);
 		TotalOrbits = Mathf.Max(SaveStore.Value(config, Section, "total_orbits", 0).AsInt32(), 0);
 		TotalKills = Mathf.Max(SaveStore.Value(config, Section, "total_kills", 0).AsInt32(), 0);
 		TotalTimePlayed = Mathf.Max(SaveStore.Value(config, Section, "total_time", 0.0f).AsSingle(), 0f);
@@ -187,7 +167,6 @@ public static class PlayerProfile
 	{
 		var config = new ConfigFile();
 		config.SetValue(Section, "version", SaveVersion);
-		config.SetValue(Section, "stardust", StardustEarned);
 		config.SetValue(Section, "total_orbits", TotalOrbits);
 		config.SetValue(Section, "total_kills", TotalKills);
 		config.SetValue(Section, "total_time", TotalTimePlayed);

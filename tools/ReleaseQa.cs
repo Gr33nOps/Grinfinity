@@ -82,14 +82,14 @@ public partial class ReleaseQa : Node
             foreach (string suffix in new[] { "", ".bak" })
                 if (FileAccess.FileExists("user://" + file + suffix)) DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath("user://" + file + suffix));
         Check(Leaderboard.Sanitise(" \t\u0001‮ ") == "PLAYER", "nonprinting names fall back safely");
-        Check(Leaderboard.Submit("bad", -1, float.NaN, -1) == -1, "invalid leaderboard submission rejected");
+        Check(Leaderboard.Submit("bad", float.NaN, -1) == -1, "invalid leaderboard submission rejected");
         Check(Leaderboard.Sanitise("A\ud800B").Length > 0, "malformed Unicode names cannot crash results");
-        Check(Leaderboard.Submit("FIRST", 500, 60, 2) == 1 && Leaderboard.Submit("SECOND", 500, 60, 3) == 2, "tied runs retain arrival order");
-        Check(Leaderboard.Submit("LONGER", 10, 90, 1) == 1, "leaderboard ranks by survival time, not score");
+        Check(Leaderboard.Submit("FIRST", 60, 2) == 1 && Leaderboard.Submit("SECOND", 60, 3) == 2, "tied runs retain arrival order");
+        Check(Leaderboard.Submit("LONGER", 90, 1) == 1, "leaderboard ranks by survival time");
         typeof(Leaderboard).GetField("isLoaded", BindingFlags.NonPublic | BindingFlags.Static)!.SetValue(null, false);
         ((List<Leaderboard.Entry>)typeof(Leaderboard).GetField("entries", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
         Check(Leaderboard.Entries.Count == 3 && Leaderboard.Entries[0].Name == "LONGER" && Leaderboard.Entries[1].Name == "FIRST", "leaderboard survives reload in time order");
-        for (int i = 0; i < 12; i++) Leaderboard.Submit("TEST", 10 + i, 1 + i, 1);
+        for (int i = 0; i < 12; i++) Leaderboard.Submit("TEST", 1 + i, 1);
         Check(Leaderboard.Entries.Count == 10 && !Leaderboard.WouldPlace(0f), "leaderboard stays bounded at ten entries");
         var cfg = new ConfigFile(); cfg.SetValue("test", "wrong", "not a number"); cfg.SetValue("test", "nan", double.NaN);
         Check(SaveStore.Value(cfg, "test", "wrong", 7).AsInt32() == 7 && SaveStore.Value(cfg, "test", "nan", 7).AsInt32() == 7, "invalid saved values use safe defaults");
@@ -99,15 +99,15 @@ public partial class ReleaseQa : Node
         Invoke(settings, "LoadSettings");
         Check(Mathf.IsEqualApprox(settings.MasterVolume, 0.35f), "settings survive a save and reload");
         settings.SetMasterVolume(volume); settings.SaveSettings();
-        int before = ScoreManager.BestScore;
-        ScoreManager.SaveRun(float.NaN, 1, 1, int.MaxValue);
-        Check(ScoreManager.BestScore == before && float.IsFinite(ScoreManager.BestTime), "invalid runs cannot poison records");
-        ScoreManager.SaveRun(10, 1, 1, 100);
-        ScoreManager.SaveRun(20, 2, 2, 200);
+        float before = ScoreManager.BestTime;
+        ScoreManager.SaveRun(float.NaN, 1, 1);
+        Check(ScoreManager.BestTime == before && float.IsFinite(ScoreManager.BestTime), "invalid runs cannot poison records");
+        ScoreManager.SaveRun(10, 1, 1);
+        ScoreManager.SaveRun(20, 2, 2);
         Check(FileAccess.FileExists("user://highscore.cfg.bak"), "saving retains a recoverable previous record");
         DirAccess.RemoveAbsolute(ProjectSettings.GlobalizePath("user://highscore.cfg"));
         typeof(ScoreManager).GetField("isLoaded", BindingFlags.NonPublic | BindingFlags.Static)!.SetValue(null, false);
-        Check(ScoreManager.BestScore == 100, "missing primary save recovers the backup");
+        Check(Mathf.IsEqualApprox(ScoreManager.BestTime, 10f), "missing primary save recovers the backup");
     }
 
     private void RunRules()
@@ -295,7 +295,7 @@ public partial class ReleaseQa : Node
             game.Run.SetProcess(false);
 
             Check(game.GetNode("UI/Hud").FindChild("RunInfo", true, false) is Label, "survival time is on the HUD");
-            Check(game.GetNode("UI/Hud").FindChild("LiveScore", true, false) != null, "score is on the HUD");
+            Check(game.GetNode("UI/Hud").FindChild("LiveScore", true, false) == null, "there is no score on the HUD");
             bool noWave = true;
             foreach (Node node in game.GetNode("UI/Hud").FindChildren("*", "Label", true, false)) noWave &= !((Label)node).Text.StartsWith("WAVE");
             Check(noWave, "no wave number on the HUD");

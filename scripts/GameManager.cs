@@ -572,7 +572,6 @@ public partial class GameManager : Node2D
 		SpawnBlast(at, 560f, colour);
 		ShedChunks(at, 26, colour);
 		Flash(colour, 0.22f, 0.4f);
-		run.AddBonus(Balance.BossScoreBonus * cycle);
 		PlayStreakSting(0.45f);
 		ClearHostileShots();
 
@@ -620,9 +619,8 @@ public partial class GameManager : Node2D
 
 		if (batch.Count == 0)
 		{
-			// A finished build: nothing left to give but points.
-			run.AddBonus(Balance.BossScoreBonus);
-			Toast($"FULLY LOADED  •  +{Balance.BossScoreBonus:N0}", ArcadeSkin.Orange);
+			// A finished build: nothing left to give.
+			Toast("FULLY LOADED", ArcadeSkin.Orange);
 			return;
 		}
 
@@ -794,18 +792,13 @@ public partial class GameManager : Node2D
 		GameOver.SurvivalTimeToShow = run.SurvivalTime;
 		GameOver.KillsToShow = run.Kills;
 		GameOver.BestComboToShow = run.BestStreak;
-		GameOver.ScoreToShow = run.Score;
 		GameOver.BossesBeaten = Mathf.Max(0, NextBossIndex - (BossActive ? 1 : 0));
-		GameOver.StardustEarned = run.StardustEarned;
 
-		var records = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak, run.Score);
-		GameOver.IsNewBestScore = records.NewBestScore;
-		GameOver.IsNewBestTime = records.NewBestTime;
+		GameOver.IsNewBestTime = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak);
 
-		PlayerProfile.RecordOrbit(run.StardustEarned, run.Kills, run.SurvivalTime, run.PeakBuildFraction);
+		PlayerProfile.RecordOrbit(run.Kills, run.SurvivalTime, run.PeakBuildFraction);
 
-		GameOver.LeaderboardRank = Leaderboard.Submit(
-			PlayerProfile.PlayerName, run.Score, run.SurvivalTime, run.Kills);
+		GameOver.LeaderboardRank = Leaderboard.Submit(PlayerProfile.PlayerName, run.SurvivalTime, run.Kills);
 
 		// Checked after RecordOrbit: a world can be earned by the very run that
 		// satisfies it, and the recap is the only place left to say so.
@@ -843,7 +836,7 @@ public partial class GameManager : Node2D
 	// --- Kills and drops -----------------------------------------------------
 
 	/// <summary>
-	/// Every kill comes through here, whatever made it. Owns the payoff — score,
+	/// Every kill comes through here, whatever made it. Owns the payoff — CORE,
 	/// chunks, sound, freeze, shake and the drop roll — so the weighting stays in
 	/// one place. Dash and Nova kills skip the per-kill freeze: they arrive in
 	/// bunches and have their own, bigger moment.
@@ -992,8 +985,7 @@ public partial class GameManager : Node2D
 		else
 		{
 			// Only reachable if the build changed between drop and pickup.
-			run.AddBonus(500);
-			Toast("BONUS  •  +500", ArcadeSkin.Orange);
+			Toast("ALREADY MAXED", ArcadeSkin.Orange);
 			PlayCue("upgrade_chirp");
 		}
 

@@ -6,8 +6,8 @@ using Godot;
 /// because a leaderboard needs to keep the ninth-best run even after a tenth
 /// arrives to bump someone off it — one scalar can't do that.
 ///
-/// One mode means one table, ranked by how long the run survived. Score is
-/// kept alongside as the tie-breaker and a second number to be proud of.
+/// One mode means one table, ranked by how long the run survived. Time is
+/// the only result; runs that tie keep the order they arrived in.
 /// </summary>
 public static class Leaderboard
 {
@@ -23,16 +23,14 @@ public static class Leaderboard
 
 	public readonly struct Entry
 	{
-		public Entry(string name, int score, float survivalTime, int kills)
+		public Entry(string name, float survivalTime, int kills)
 		{
 			Name = name;
-			Score = score;
 			SurvivalTime = survivalTime;
 			Kills = kills;
 		}
 
 		public string Name { get; }
-		public int Score { get; }
 		public float SurvivalTime { get; }
 		public int Kills { get; }
 	}
@@ -47,31 +45,29 @@ public static class Leaderboard
 	}
 
 	/// <summary>
-	/// Would a run this long place? Survival time is the record; score only
-	/// breaks ties between runs that lasted exactly as long.
+	/// Would a run this long place?
 	/// </summary>
-	public static bool WouldPlace(float survivalTime, int score = 0)
+	public static bool WouldPlace(float survivalTime)
 	{
 		EnsureLoaded();
 		if (survivalTime < 0f || !float.IsFinite(survivalTime)) return false;
-		return entries.Count < Capacity || Beats(survivalTime, score, entries[^1]);
+		return entries.Count < Capacity || Beats(survivalTime, entries[^1]);
 	}
 
-	private static bool Beats(float time, int score, Entry other) =>
-		time > other.SurvivalTime || (Mathf.IsEqualApprox(time, other.SurvivalTime) && score > other.Score);
+	private static bool Beats(float time, Entry other) => time > other.SurvivalTime;
 
 	/// <summary>
 	/// Records a finished orbit. Returns the 1-based rank it landed at, or -1
 	/// if it did not place in the top <see cref="Capacity"/>.
 	/// </summary>
-	public static int Submit(string name, int score, float survivalTime, int kills)
+	public static int Submit(string name, float survivalTime, int kills)
 	{
 		EnsureLoaded();
-		if (!Valid(score, survivalTime, kills)) return -1;
+		if (!Valid(survivalTime, kills)) return -1;
 
-		var entry = new Entry(Sanitise(name), score, survivalTime, kills);
+		var entry = new Entry(Sanitise(name), survivalTime, kills);
 
-		int insertAt = entries.FindIndex(e => Beats(survivalTime, score, e));
+		int insertAt = entries.FindIndex(e => Beats(survivalTime, e));
 		if (insertAt < 0)
 		{
 			if (entries.Count >= Capacity)
@@ -101,7 +97,7 @@ public static class Leaderboard
 			return;
 
 		Entry old = entries[index];
-		entries[index] = new Entry(Sanitise(name), old.Score, old.SurvivalTime, old.Kills);
+		entries[index] = new Entry(Sanitise(name), old.SurvivalTime, old.Kills);
 		SaveToFile();
 	}
 
@@ -128,8 +124,8 @@ public static class Leaderboard
 		return string.IsNullOrWhiteSpace(trimmed) ? "PLAYER" : trimmed;
 	}
 
-	private static bool Valid(int score, float time, int kills) =>
-		score >= 0 && kills >= 0 && float.IsFinite(time) && time >= 0f && time <= 36000f;
+	private static bool Valid(float time, int kills) =>
+		kills >= 0 && float.IsFinite(time) && time >= 0f && time <= 36000f;
 
 	private static void EnsureLoaded()
 	{
@@ -168,21 +164,20 @@ public static class Leaderboard
 
 		for (int i = 0; i < count; i++)
 		{
-			int score = SaveStore.Value(config, section, $"score_{i}", 0).AsInt32();
 			float time = SaveStore.Value(config, section, $"time_{i}", 0.0f).AsSingle();
 			int kills = SaveStore.Value(config, section, $"kills_{i}", 0).AsInt32();
 			// Older entries predate the board asking who was playing.
 			string name = SaveStore.Value(config, section, $"name_{i}", "PLAYER").AsString();
 
-			if (Valid(score, time, kills)) entries.Add(new Entry(Sanitise(name), score, time, kills));
+			if (Valid(time, kills)) entries.Add(new Entry(Sanitise(name), time, kills));
 		}
 
 		// Stable insertion sort, longest run first, preserving arrival order for
-		// ties after reload. Boards saved when score led are re-ranked by time.
+		// ties after reload. Boards saved when score still counted are re-ranked by time.
 		for (int i = 1; i < entries.Count; i++)
 		{
 			Entry entry = entries[i]; int j = i - 1;
-			while (j >= 0 && Beats(entry.SurvivalTime, entry.Score, entries[j])) { entries[j + 1] = entries[j]; j--; }
+			while (j >= 0 && Beats(entry.SurvivalTime, entries[j])) { entries[j + 1] = entries[j]; j--; }
 			entries[j + 1] = entry;
 		}
 	}
@@ -197,7 +192,6 @@ public static class Leaderboard
 		{
 			Entry entry = entries[i];
 			config.SetValue(Section, $"name_{i}", entry.Name);
-			config.SetValue(Section, $"score_{i}", entry.Score);
 			config.SetValue(Section, $"time_{i}", entry.SurvivalTime);
 			config.SetValue(Section, $"kills_{i}", entry.Kills);
 		}
