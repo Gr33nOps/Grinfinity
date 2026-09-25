@@ -119,7 +119,6 @@ public partial class GameManager : Node2D
 	{
 		RunState.Rng.Randomize();
 		GameOver.NewlyUnlockedAchievement = null;
-		GameOver.DeathCause = "";
 		AddToGroup("game_manager");
 		run = AddPausableChild(new RunState());
 	}
@@ -792,9 +791,6 @@ public partial class GameManager : Node2D
 		EndHitstop();
 
 		GameOver.SurvivalTimeToShow = run.SurvivalTime;
-		GameOver.KillsToShow = run.Kills;
-		GameOver.BestComboToShow = run.BestStreak;
-		GameOver.BossesBeaten = Mathf.Max(0, NextBossIndex - (BossActive ? 1 : 0));
 
 		GameOver.IsNewBestTime = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak);
 
@@ -820,7 +816,6 @@ public partial class GameManager : Node2D
 
 		isDying = true;
 		run.SetProcess(false);
-		GameOver.DeathCause = cause;
 		DeathCause = cause;
 		Shake(DeathTrauma);
 		Hitstop(DeathHitstop);
@@ -1050,7 +1045,6 @@ public partial class GameManager : Node2D
 	private void OnGiveUpGame()
 	{
 		// Not a death — no cause left over from a previous run should show.
-		GameOver.DeathCause = "";
 		TriggerGameOver();
 	}
 

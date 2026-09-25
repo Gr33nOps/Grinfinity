@@ -3,23 +3,16 @@ using Godot;
 public partial class GameOver : Control
 {
 	public static float SurvivalTimeToShow = 0f;
-	public static int KillsToShow = 0;
-	public static int BestComboToShow = 0;
-	public static int BossesBeaten = 0;
 	public static System.Collections.Generic.List<Worlds.Profile> NewlyUnlockedWorlds = new();
 	/// <summary>The one achievement that can only be known at the exact moment an orbit ends.</summary>
 	public static Achievements.Profile NewlyUnlockedAchievement = null;
 	/// <summary>1-based leaderboard placement this orbit earned, or -1 if it did not place.</summary>
 	public static int LeaderboardRank = -1;
 	public static bool IsNewBestTime = false;
-	/// <summary>What ended the orbit — a body kind, a boss, a hazard. Empty for a clean, non-death ending (Flyby's clock, giving up).</summary>
-	public static string DeathCause = "";
 
 	private Button restartButton;
 	private Button menuButton;
 	private Label scoreLabel;
-	private Label statsLabel;
-	private Label deathCauseLabel;
 	private Label worldUnlockLabel;
 	private Label leaderboardLabel;
 	private Label highScoreLabel;
@@ -34,8 +27,6 @@ public partial class GameOver : Control
         var rows=ArcadeSkin.Modal(this,"GAME OVER",850);
         rows.AddChild(ArcadeSkin.Label("YOU SURVIVED",22,ArcadeSkin.Orange));
         scoreLabel=ArcadeSkin.Label("00:00",104);scoreLabel.Name="FinalTime";rows.AddChild(scoreLabel);
-        statsLabel=ArcadeSkin.Label("",25);statsLabel.Name="FinalStats";rows.AddChild(statsLabel);
-        deathCauseLabel=ArcadeSkin.Label("",22,ArcadeSkin.Muted);rows.AddChild(deathCauseLabel);
         highScoreLabel=ArcadeSkin.Label("",30,ArcadeSkin.Orange);rows.AddChild(highScoreLabel);
         leaderboardLabel=ArcadeSkin.Label("",24);rows.AddChild(leaderboardLabel);
         worldUnlockLabel=ArcadeSkin.Label("",22,ArcadeSkin.Muted);worldUnlockLabel.AutowrapMode=TextServer.AutowrapMode.WordSmart;rows.AddChild(worldUnlockLabel);
@@ -64,23 +55,8 @@ public partial class GameOver : Control
 
 	private void ShowRecap()
 	{
-		// Time is the record; everything else supports it.
+		// Time is the only result, so it is the only number here.
 		scoreLabel.Text = ScoreManager.FormatTime(SurvivalTimeToShow);
-
-		if (statsLabel != null)
-		{
-			string bosses = BossesBeaten > 0 ? $"  •  {BossesBeaten} BOSS{(BossesBeaten == 1 ? "" : "ES")}" : "";
-			statsLabel.Text = $"{KillsToShow} POPPED{bosses}";
-		}
-
-		// A one-line "what actually got you" — a number alone is a tally, this
-		// is what turns it into something you remember and try to avoid next time.
-		if (deathCauseLabel != null)
-		{
-			deathCauseLabel.Visible = !string.IsNullOrEmpty(DeathCause);
-			if (deathCauseLabel.Visible)
-				deathCauseLabel.Text = $"BONKED BY {DeathCause.ToUpperInvariant()}!";
-		}
 
 		if (worldUnlockLabel != null)
 		{

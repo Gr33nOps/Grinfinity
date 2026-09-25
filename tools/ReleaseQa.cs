@@ -38,7 +38,7 @@ public partial class ReleaseQa : Node
         GetTree().CurrentScene = null; // Keep the harness alive when the real game changes scenes.
         var menu = GD.Load<PackedScene>("res://scenes/menu.tscn").Instantiate();
         GetTree().Root.AddChild(menu); GetTree().CurrentScene = menu;
-        menu.GetNode<BaseButton>("UI/Buttons/PlayButton").EmitSignal(BaseButton.SignalName.Pressed);
+        ((BaseButton)menu.GetNode("UI").FindChild("PlayButton", true, false)).EmitSignal(BaseButton.SignalName.Pressed);
         await Wait(1.6);
         for (int attempt = 0; attempt < 3; attempt++)
         {

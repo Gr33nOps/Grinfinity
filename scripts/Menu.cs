@@ -12,8 +12,14 @@ public partial class Menu : Node
         buttonSound=new AudioStreamPlayer {Stream=GD.Load<AudioStream>("res://sounds/button_tap.wav"),Bus="SFX"};AddChild(buttonSound);
         hoverSound=new AudioStreamPlayer {Stream=GD.Load<AudioStream>("res://sounds/button_tick.wav"),Bus="SFX"};AddChild(hoverSound);
         var layer=new CanvasLayer {Name="UI"};AddChild(layer);
-        var title=ArcadeSkin.Label("GRINFINITY",112);title.HorizontalAlignment=HorizontalAlignment.Left;Place(title,layer,.1f,.14f,.69f,.28f);
-        var buttons=new VBoxContainer {Name="Buttons"};buttons.AddThemeConstantOverride("separation",15);Place(buttons,layer,.105f,.40f,.425f,.84f);
+        // One column, centred top to bottom: the title, what you do, then the
+        // buttons right under it. Nothing parked at the screen's edges.
+        var column=new VBoxContainer {Name="Column"};column.AddThemeConstantOverride("separation",0);
+        Place(column,layer,.105f,.5f,.425f,.5f);column.GrowVertical=Control.GrowDirection.Both;
+        var title=ArcadeSkin.Label("GRINFINITY",112);title.HorizontalAlignment=HorizontalAlignment.Left;column.AddChild(title);
+        var note=ArcadeSkin.Label("Move • Aim • Shoot • Survive",26,ArcadeSkin.Muted);note.HorizontalAlignment=HorizontalAlignment.Left;column.AddChild(note);
+        column.AddChild(new Control {CustomMinimumSize=new Vector2(0,44)});
+        var buttons=new VBoxContainer {Name="Buttons"};buttons.AddThemeConstantOverride("separation",15);column.AddChild(buttons);
         var play=AddButton(buttons,"PlayButton","PLAY",()=>GoTo("game"),true);
         AddButton(buttons,"LeaderboardButton","LEADERBOARD",()=>GoTo("leaderboard"));
         AddButton(buttons,"SettingsButton","SETTINGS",()=>GoTo("settings"));
@@ -21,9 +27,9 @@ public partial class Menu : Node
         var footer=new HBoxContainer();footer.AddThemeConstantOverride("separation",16);buttons.AddChild(footer);
         AddButton(footer,"CreditsButton","CREDITS",()=>GoTo("credits"));
         AddButton(footer,"QuitButton","QUIT",()=>GameSettings.Instance.QuitGame());
-        var best=ArcadeSkin.Label($"BEST TIME   {ScoreManager.FormatTime(ScoreManager.BestTime)}",26,ArcadeSkin.Muted);
-        Place(best,layer,.56f,.80f,.94f,.88f);
-        var note=ArcadeSkin.Label("Move • Aim • Shoot • Survive",24,ArcadeSkin.Muted);Place(note,layer,.105f,.92f,.425f,.98f);
+        var best=ArcadeSkin.Label($"BEST TIME   {ScoreManager.FormatTime(ScoreManager.BestTime)}",28,ArcadeSkin.Orange);
+        Place(best,layer,.56f,.77f,.9f,.83f);
+        best.Visible=ScoreManager.BestTime>0f;
         hero=new Node2D();AddChild(hero);
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_back.svg"),Scale=Vector2.One*.78f});
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>($"res://art/cosmic/planet_{GameSettings.Instance.World}.svg")});

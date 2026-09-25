@@ -102,7 +102,7 @@ After the Black Hole the run carries on, and the bosses come round again every 2
 
 ## Records
 
-How long you survived is the only result. The HUD shows it top right, the game over screen shows it big, and the leaderboard ranks runs by it and nothing else. Kills and bosses beaten are shown on the game over screen for interest, but they do not add up to anything.
+How long you survived is the only result. The HUD shows it top right, the game over screen shows it big, and the leaderboard ranks runs by it and nothing else. The game over screen shows just that time and your best.
 
 The combo counter under the time counts kills in a row, and breaks after 2.5 seconds without one. It is just for show.
 

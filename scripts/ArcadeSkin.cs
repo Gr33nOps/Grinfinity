@@ -61,10 +61,18 @@ public static class ArcadeSkin
         owner.AddChild(scrim); Fill(scrim);
         var center = new CenterContainer(); owner.AddChild(center); Fill(center);
         var panel = new PanelContainer { CustomMinimumSize = new Vector2(width,0) };
-        panel.AddThemeStyleboxOverride("panel", Box(new Color("392339"), new Color("986077"), 36));
+        var frame = Box(new Color("392339"), new Color("986077"), 36);
+        frame.ContentMarginLeft = frame.ContentMarginRight = 36;
+        frame.ContentMarginTop = 26; frame.ContentMarginBottom = 34;
+        panel.AddThemeStyleboxOverride("panel", frame);
         center.AddChild(panel);
         var rows = new VBoxContainer(); rows.AddThemeConstantOverride("separation",18); panel.AddChild(rows);
-        if (!string.IsNullOrEmpty(title)) rows.AddChild(Label(title, 52));
+        if (!string.IsNullOrEmpty(title))
+        {
+            var heading = Label(title, 52);
+            rows.AddChild(heading);
+            rows.AddChild(new Control { CustomMinimumSize = new Vector2(0, 4), MouseFilter = Control.MouseFilterEnum.Ignore });
+        }
         return rows;
     }
     public static TextureRect Icon(string name, float size = 64)

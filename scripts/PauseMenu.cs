@@ -14,7 +14,6 @@ public partial class PauseMenu : Control
         pausePage=new Control();AddChild(pausePage);
         var rows=ArcadeSkin.Modal(pausePage,"TAKE A BREATHER",600);
         panel=rows.GetParent<Control>();
-        rows.AddChild(ArcadeSkin.Label("The clock stops while you rest.",24,ArcadeSkin.Muted));
         resumeButton=ArcadeSkin.Button("KEEP GOING",()=>{GameManager.Of(this)?.PlayButtonSound();EmitSignal(SignalName.ResumeGame);},true);rows.AddChild(resumeButton);
         var restart=ArcadeSkin.Button("RESTART",()=>{pausePage.Hide();restartPage.Show();});restart.Name="Restart";rows.AddChild(restart);
         var options=ArcadeSkin.Button("SETTINGS",ShowOptions);options.Name="Options";rows.AddChild(options);
