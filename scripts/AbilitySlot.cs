@@ -17,6 +17,10 @@ public partial class AbilitySlot : Control
 	public Ability Ability { get; init; }
 	public float Diameter { get; init; } = 88f;
 
+	/// <summary>How far down the slot the button label's letters end.</summary>
+	public float LabelBottom => keyLabel == null ? Diameter
+		: keyLabel.Position.Y + keyLabel.GetThemeFont("font").GetAscent(keyLabel.GetThemeFontSize("font_size")) + 2f;
+
 	private TextureRect icon;
 	private Label keyLabel;
 	private Label countLabel;

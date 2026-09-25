@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Globalization;
 using Godot;
 
 /// <summary>
@@ -28,10 +27,9 @@ public partial class UpgradeTree : Control
 	};
 
 	private VBoxContainer rows;
-	private Label status;
 	private SkillBranches canvas;
 	private TextureRect infoIcon;
-	private Label infoName, infoLine, infoState;
+	private Label infoName, infoLine;
 	private Button close;
 	private readonly List<SkillNode> nodes = new();
 	private bool closing;
@@ -65,8 +63,6 @@ public partial class UpgradeTree : Control
 			return;
 
 		rows = ArcadeSkin.Modal(this, "UPGRADES", 1560);
-		status = ArcadeSkin.Label("", 24, ArcadeSkin.Muted);
-		rows.AddChild(status);
 
 		canvas = new SkillBranches { CustomMinimumSize = CanvasSize, Root = RootAt };
 		rows.AddChild(canvas);
@@ -134,9 +130,7 @@ public partial class UpgradeTree : Control
 		title.AddChild(infoName);
 
 		infoLine = ArcadeSkin.Label("", 24);
-		infoState = ArcadeSkin.Label("", 20, ArcadeSkin.Muted);
 		readout.AddChild(infoLine);
-		readout.AddChild(infoState);
 	}
 
 	private void Refresh(RunState run)
@@ -148,11 +142,6 @@ public partial class UpgradeTree : Control
 		canvas.IsFull = run.CoreReady;
 		canvas.Complete = run.BuildComplete;
 		canvas.QueueRedraw();
-
-		status.Text = run.BuildComplete ? "Every upgrade is maxed. Nice!"
-			: run.CoreReady ? "Pick one upgrade"
-			: "Fill the CORE bar to pick an upgrade";
-		status.AddThemeColorOverride("font_color", run.CoreReady ? ArcadeSkin.Orange : ArcadeSkin.Muted);
 	}
 
 	private static SkillNode.State StateOf(RunState run, RunUpgrades.Profile profile)
@@ -166,34 +155,15 @@ public partial class UpgradeTree : Control
 		return run.CoreReady ? SkillNode.State.Buyable : SkillNode.State.Open;
 	}
 
+	/// <summary>Just the upgrade's name and what it does. The node itself shows its rank and whether it can be bought.</summary>
 	private void ShowInfo(SkillNode node)
 	{
-		RunState run = GameManager.Of(this)?.Run;
-		if (run == null)
-			return;
-
 		RunUpgrades.Profile profile = node.Profile;
 		infoIcon.Texture = GD.Load<Texture2D>($"res://art/cosmic/icon_{profile.Icon}.svg");
 		infoName.Text = profile.Name;
 		infoName.AddThemeColorOverride("font_color", profile.Colour);
 		infoLine.Text = profile.Short;
-
-		string rankOnly = $"Rank {node.Level} of {profile.MaxLevel}";
-		string rank = $"{rankOnly}  •  ";
-		(string words, Color colour) = node.Current switch
-		{
-			SkillNode.State.Locked => ($"Unlocks at {ScoreManager.FormatTime(RunState.UnlockTime(RunUpgrades.AbilityFor(profile.Branch).Value))}", ArcadeSkin.Muted),
-			SkillNode.State.Maxed => ($"{rank}Maxed", profile.Colour),
-			SkillNode.State.Closed => ($"Needs {Title(RunUpgrades.Get(profile.Requires.Value).Name)} first", ArcadeSkin.Muted),
-			SkillNode.State.Buyable => ($"{rank}Press to buy", ArcadeSkin.Orange),
-			_ => (rankOnly, ArcadeSkin.Muted)
-		};
-		infoState.Text = words;
-		infoState.AddThemeColorOverride("font_color", colour);
 	}
-
-	/// <summary>"FASTER SHOTS" → "Faster Shots", for use inside a sentence.</summary>
-	private static string Title(string name) => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(name.ToLowerInvariant());
 
 	private void Buy(SkillNode node)
 	{
@@ -206,9 +176,6 @@ public partial class UpgradeTree : Control
 		closing = true;
 		Refresh(manager.Run);
 		node.Pop();
-		ShowInfo(node);
-		status.Text = "Upgraded!";
-		status.AddThemeColorOverride("font_color", ArcadeSkin.Orange);
 		ReturnSoon();
 	}
 

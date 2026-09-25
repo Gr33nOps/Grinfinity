@@ -208,15 +208,15 @@ public partial class UIManager : Node
 
 	/// <summary>
 	/// Sets the CORE bar from where the rings actually are once the column has
-	/// laid itself out: top of the first ring to bottom of the last, whatever
-	/// the HUD scale. The prompt goes just under the last button label, from
+	/// laid itself out: top of the first ring to the foot of the last ring's
+	/// button label, whatever the HUD scale. The prompt goes just under the last button label, from
 	/// the bar's left edge to the rings' right edge.
 	/// </summary>
 	private void LineUpKit()
 	{
 		AbilitySlot first = slots[Ability.Dash], last = slots[Ability.Nova];
 		float top = column.Position.Y + first.Position.Y;
-		float bottom = column.Position.Y + last.Position.Y + last.Diameter;
+		float bottom = column.Position.Y + last.Position.Y + last.LabelBottom;
 		coreBar.Position = new Vector2(34, top);
 		coreBar.Size = new Vector2(barWidth, bottom - top);
 		float ringRight = column.Position.X + first.Position.X + (first.Size.X + first.Diameter) * 0.5f;
