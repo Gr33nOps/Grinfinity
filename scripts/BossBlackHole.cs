@@ -44,8 +44,12 @@ public partial class BossBlackHole : Boss
 	private Vector2 driftTarget;
 	private float flingTimer;
 
+	protected override float Size => 1.6f;
+
 	protected override void OnBossReady()
 	{
+		// The core that swallows grows with the art; the pull's reach does not.
+		CoreRadius *= Size;
 		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
 		world = World;
 		flingTimer = 1.6f;

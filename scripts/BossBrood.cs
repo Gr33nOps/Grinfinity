@@ -32,8 +32,12 @@ public partial class BossBrood : Boss
 	private int liveBroodlings;
 	private Player world;
 
+	protected override float Size => 1.3f;
+
 	protected override void OnBossReady()
 	{
+		// Shards are born just outside the bigger body, not inside it.
+		SpawnRadius *= Size;
 		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 		world = World;
 		spawnTimer = 1.0f;

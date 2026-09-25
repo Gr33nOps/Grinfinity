@@ -51,7 +51,7 @@ public partial class CoreBar : Control
 	{
 		var area = new Rect2(Vector2.Zero, Size);
 		float radius = Size.X * 0.5f;
-		DrawStyleBox(Box(Track, Rim, radius, 2), area);
+		DrawStyleBox(Box(Track, ready && !complete ? Full : Rim, radius, 2), area);
 
 		if (complete)
 		{
@@ -66,9 +66,6 @@ public partial class CoreBar : Control
 			fill = fill.Lightened(tick * 0.35f);
 			DrawStyleBox(Box(fill, fill, Mathf.Min(radius - 3f, height * 0.5f), 0), new Rect2(3f, Size.Y - 3f - height, Size.X - 6f, height));
 		}
-
-		if (ready)
-			DrawStyleBox(Box(new Color(0, 0, 0, 0), new Color(Full, 0.5f + 0.4f * Mathf.Sin(time * 6f)), radius + 4f, 3), area.Grow(4f));
 
 		Caption("CORE", ready ? ArcadeSkin.Ink : ArcadeSkin.Cream);
 	}

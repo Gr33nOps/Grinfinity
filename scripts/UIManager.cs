@@ -17,6 +17,7 @@ public partial class UIManager : Node
 	private TextureRect shieldChip;
 	private CoreBar coreBar;
 	private Button upgradePrompt;
+	private Label promptKey;
 	private Player player;
 	private RunState run;
 	private Sprite2D crosshair;
@@ -103,13 +104,30 @@ public partial class UIManager : Node
 		coreBar = new CoreBar { Name = "CoreBar", TextSize = Size(16) };
 		hud.AddChild(coreBar);
 
+		// The prompt is a small tag exactly as wide as the bar and rings above
+		// it: the word, then the button to press. Flat, so it sits with the kit
+		// rather than floating over the game like a dialog.
 		upgradePrompt = ArcadeSkin.Button("", () => GameManager.Of(this)?.OpenUpgradeTree(), true);
 		upgradePrompt.Name = "UpgradePrompt";
 		upgradePrompt.FocusMode = Control.FocusModeEnum.None;
-		upgradePrompt.AddThemeFontSizeOverride("font_size", Size(20));
-		upgradePrompt.CustomMinimumSize = new Vector2(Size(210), Size(64));
+		upgradePrompt.CustomMinimumSize = Vector2.Zero;
+		var tag = ArcadeSkin.Box(ArcadeSkin.Orange, new Color("ffcd85"), 12, 2);
+		tag.ShadowSize = 0;
+		tag.ContentMarginLeft = tag.ContentMarginRight = tag.ContentMarginTop = tag.ContentMarginBottom = 4;
+		upgradePrompt.AddThemeStyleboxOverride("normal", tag);
+		var tagHover = (StyleBoxFlat)tag.Duplicate();
+		tagHover.BgColor = new Color("ffc27a");
+		upgradePrompt.AddThemeStyleboxOverride("hover", tagHover);
+		upgradePrompt.AddThemeStyleboxOverride("pressed", tagHover);
 		upgradePrompt.Visible = false;
 		hud.AddChild(upgradePrompt);
+		var words = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+		words.AddThemeConstantOverride("separation", -4);
+		upgradePrompt.AddChild(words);
+		ArcadeSkin.Fill(words);
+		words.AddChild(ArcadeSkin.Label("UPGRADE", Size(20), ArcadeSkin.Ink));
+		promptKey = ArcadeSkin.Label($"PRESS {UpgradeHint()}", Size(15), new Color(ArcadeSkin.Ink, 0.75f));
+		words.AddChild(promptKey);
 
 		shieldChip = ArcadeSkin.Icon("shield", Size(64));
 		shieldChip.AnchorTop = 1; shieldChip.AnchorBottom = 1;
@@ -160,12 +178,12 @@ public partial class UIManager : Node
 		{
 			padHints = InputDevice.Pad;
 			hint.Text = HowTo();
-			upgradePrompt.Text = $"UPGRADE READY\n{UpgradeHint()}";
+			promptKey.Text = $"PRESS {UpgradeHint()}";
 		}
 		bool ready = run.CoreReady;
 		if (ready && !upgradePrompt.Visible)
 		{
-			upgradePrompt.Text = $"UPGRADE READY\n{UpgradeHint()}";
+			promptKey.Text = $"PRESS {UpgradeHint()}";
 			upgradePrompt.PivotOffset = upgradePrompt.Size * 0.5f;
 			upgradePrompt.Scale = Vector2.One * 1.2f;
 			upgradePrompt.CreateTween().TweenProperty(upgradePrompt, "scale", Vector2.One, 0.25f)
@@ -196,7 +214,8 @@ public partial class UIManager : Node
 	/// <summary>
 	/// Sets the CORE bar from where the rings actually are once the column has
 	/// laid itself out: top of the first ring to bottom of the last, whatever
-	/// the HUD scale. The prompt goes just under the last button label.
+	/// the HUD scale. The prompt goes just under the last button label, from
+	/// the bar's left edge to the rings' right edge.
 	/// </summary>
 	private void LineUpKit()
 	{
@@ -205,7 +224,9 @@ public partial class UIManager : Node
 		float bottom = column.Position.Y + last.Position.Y + last.Diameter;
 		coreBar.Position = new Vector2(34, top);
 		coreBar.Size = new Vector2(barWidth, bottom - top);
-		upgradePrompt.Position = new Vector2(30, column.Position.Y + last.Position.Y + last.Size.Y + 10);
+		float ringRight = column.Position.X + first.Position.X + (first.Size.X + first.Diameter) * 0.5f;
+		upgradePrompt.Position = new Vector2(34, column.Position.Y + last.Position.Y + last.Size.Y + 8);
+		upgradePrompt.Size = new Vector2(ringRight - 34, 50 * (GameSettings.Instance?.UiScale ?? 1f));
 	}
 
 	private void UpdateLabels()

@@ -112,4 +112,4 @@ Hints only show the controls you are using. Touch the keyboard or mouse and they
 
 ## Faces
 
-Only your planet is happy. Every enemy has its own bad mood: Drifters are sad (three different sad faces), Shards angry (two), Planetoids grumpy, Fractures worried and their Splinters scared, Satellites suspicious, Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares.
+Only your planet is happy. Every enemy has its own bad mood: Drifters are sad (three different sad faces), Shards angry (two), Planetoids grumpy (two), Fractures worried and their Splinters scared, Satellites suspicious, Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.

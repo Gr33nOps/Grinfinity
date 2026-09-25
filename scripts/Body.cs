@@ -60,7 +60,7 @@ public partial class Body : CharacterBody2D, IShootable
 	{
 		[BodyKind.Drifter] = new[] { "body_drifter", "body_drifter_2", "body_drifter_3" },
 		[BodyKind.Shard] = new[] { "body_shard", "body_shard_2" },
-		[BodyKind.Planetoid] = new[] { "body_planetoid" },
+		[BodyKind.Planetoid] = new[] { "body_planetoid", "body_planetoid_2" },
 		[BodyKind.Fracture] = new[] { "body_fracture" },
 		[BodyKind.Splinter] = new[] { "body_fracture_mini" },
 		[BodyKind.Satellite] = new[] { "body_satellite" },

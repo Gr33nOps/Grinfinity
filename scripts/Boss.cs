@@ -49,7 +49,15 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 		AddToGroup("bosses");
 		foreach (Node child in GetChildren()) if (child is Polygon2D polygon) polygon.Hide();
 		string asset = this is BossCoil ? "coil" : this is BossBrood ? "brood" : "black_hole";
-		Art = new Sprite2D { Texture = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"), Scale = Vector2.One * .88f }; AddChild(Art);
+		Art = new Sprite2D { Texture = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"), Scale = Vector2.One * ArtScale }; AddChild(Art);
+		// The hit circle grows with the art, so dashes, shots and Novas land
+		// where the boss looks to be. The shape is copied first: the scene's
+		// own resource is shared by every instance.
+		foreach (Node child in GetChildren())
+		{
+			if (child is CollisionShape2D { Shape: CircleShape2D circle } shape)
+				shape.Shape = new CircleShape2D { Radius = circle.Radius * Size };
+		}
 		Modulate = Colors.White;
 		World = GameManager.Of(this)?.GetNodeOrNull<Player>("player");
 
@@ -60,6 +68,13 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 
 		OnBossReady();
 	}
+
+	/// <summary>
+	/// How big this boss is next to the Coil. Each boss is bigger than the one
+	/// before it, so the Black Hole is the largest thing in the arena.
+	/// </summary>
+	protected virtual float Size => 1f;
+	private float ArtScale => 0.88f * Size;
 
 	/// <summary>Subclass setup — scenes to preload, initial state. Health and groups are already set.</summary>
 	protected virtual void OnBossReady() { }
@@ -120,7 +135,7 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	{
 		visualTime += (float)delta;
 		float pulse = 1 + .035f * Mathf.Sin(visualTime * 3) + Windup * .1f;
-		Art.Scale = new Vector2(.88f / pulse, .88f * pulse);
+		Art.Scale = new Vector2(ArtScale / pulse, ArtScale * pulse);
 		Art.Rotation = -Rotation + Mathf.Sin(visualTime * 1.5f) * .08f;
 		Art.SelfModulate = Colors.White.Lerp(new Color("ffc47c"), Windup);
 	}

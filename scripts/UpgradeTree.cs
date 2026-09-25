@@ -10,7 +10,7 @@ using Godot;
 /// Opened whenever the player likes; buying needs a full CORE bar and takes one
 /// rank. The whole game is paused behind it (see
 /// <see cref="GameManager.OpenUpgradeTree"/>). A node's words are shown in the
-/// readout at the top right when it is pointed at, so the tree itself stays
+/// readout at the top centre when it is pointed at, so the tree itself stays
 /// just icons, names and rank pips.
 /// </summary>
 public partial class UpgradeTree : Control
@@ -21,10 +21,10 @@ public partial class UpgradeTree : Control
 
 	private static float ColumnOf(Branch branch) => branch switch
 	{
-		Branch.Gun => 240,
+		Branch.Gun => 300,
 		Branch.Dash => 620,
-		Branch.Overdrive => 930,
-		_ => 1240
+		Branch.Overdrive => 860,
+		_ => 1180
 	};
 
 	private VBoxContainer rows;
@@ -79,7 +79,9 @@ public partial class UpgradeTree : Control
 			{
 				if (profile.Branch != branch)
 					continue;
-				SkillNode node = Place(profile, new Vector2(ColumnOf(branch), Tiers[tier++]), false);
+				// Mirrored about the root: the left two branches read to the left.
+				bool left = branch is Branch.Gun or Branch.Dash;
+				SkillNode node = Place(profile, new Vector2(ColumnOf(branch), Tiers[tier++]), left);
 				canvas.Link(below, node);
 				below = node;
 			}
@@ -112,29 +114,29 @@ public partial class UpgradeTree : Control
 		return node;
 	}
 
-	/// <summary>Top right, over the short branches: what the pointed-at node does.</summary>
+	/// <summary>
+	/// Top centre, above the root and between the branches: what the
+	/// pointed-at node does. Centred, so the tree stays mirrored.
+	/// </summary>
 	private void BuildReadout()
 	{
-		var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(620, 6), Size = new Vector2(740, 200) };
-		readout.AddThemeConstantOverride("separation", 20);
+		var readout = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(CanvasSize.X * 0.5f - 300, 4), Size = new Vector2(600, 150) };
+		readout.AddThemeConstantOverride("separation", 2);
 		canvas.AddChild(readout);
 
-		infoIcon = ArcadeSkin.Icon("firerate", 88);
-		infoIcon.SizeFlagsVertical = SizeFlags.ShrinkBegin;
-		readout.AddChild(infoIcon);
-
-		var words = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, SizeFlagsHorizontal = SizeFlags.ExpandFill };
-		words.AddThemeConstantOverride("separation", 4);
-		readout.AddChild(words);
+		var title = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+		title.AddThemeConstantOverride("separation", 12);
+		readout.AddChild(title);
+		infoIcon = ArcadeSkin.Icon("firerate", 56);
+		title.AddChild(infoIcon);
 		infoName = ArcadeSkin.Label("", 34);
+		infoName.VerticalAlignment = VerticalAlignment.Center;
+		title.AddChild(infoName);
+
 		infoLine = ArcadeSkin.Label("", 24);
 		infoState = ArcadeSkin.Label("", 20, ArcadeSkin.Muted);
-		foreach (Label label in new[] { infoName, infoLine, infoState })
-		{
-			label.HorizontalAlignment = HorizontalAlignment.Left;
-			label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-			words.AddChild(label);
-		}
+		readout.AddChild(infoLine);
+		readout.AddChild(infoState);
 	}
 
 	private void Refresh(RunState run)

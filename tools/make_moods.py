@@ -6,9 +6,9 @@ them never looks cloned:
 
   Drifter    sad        (three versions: glum, teary, sulking)
   Shard      angry      (two versions: gritted teeth, snarl)
-  Planetoid  grumpy     half-shut eyes, flat mouth
-  Fracture   worried    raised brows, wobbly mouths, a sweat drop
-  Splinter   scared     wide eyes, tiny pupils, little "o" mouths
+  Planetoid  grumpy     (two versions: half-shut eyes, eye-roll)
+  Fracture   worried    raised brows, a wobbly mouth, a sweat drop
+  Splinter   scared     wide eyes, tiny pupils, a little "o" mouth
   Satellite  suspicious one eye narrowed, looking sideways
   Flare      furious    shouting, with a cross-vein
   Bulwark    stubborn   heavy flat brows and a pout
@@ -162,21 +162,25 @@ def pout(mx, my, w):
 DRIFT = '#BC7F83'
 drifter = path('M 37 88 L 72 42 L 145 28 L 207 59 L 229 126 L 203 192 L 139 222 L 64 204 L 26 147 Z', DRIFT)
 drifter += path('M 47 158 Q 111 220 213 150 L 202 191 L 139 215 L 64 196 Z', '#945768', 'stroke="none"')
-drifter += circle(69, 99, 18, '#945768') + circle(190, 76, 12, '#945768')
+
+
+def craters(spots, colour):
+    return ''.join(circle(x, y, r, colour) for x, y, r in spots)
+
 
 # Glum: eyes drooping at the outer corners, looking down, a plain frown.
-svg('body_drifter', drifter
+svg('body_drifter', drifter + craters([(69, 99, 18), (190, 76, 12)], '#945768')
     + eye(113, 118, 13, (0, 6)) + lid(113, 118, 13, 2, -8, DRIFT)
     + eye(159, 114, 13, (0, 6)) + lid(159, 114, 13, -8, 2, DRIFT)
     + brow(98, 90, 122, 84, -2) + brow(150, 80, 174, 86, -2)
     + frown(136, 160, 34, 12))
 # Teary: big wet eyes, a tear rolling, wobbly mouth.
-svg('body_drifter_2', drifter
+svg('body_drifter_2', drifter + craters([(194, 84, 14), (62, 146, 11)], '#945768')
     + eye(113, 116, 14, (1, 5), 0.6) + eye(159, 112, 14, (1, 5), 0.6)
     + brow(97, 88, 121, 80, -3) + brow(151, 76, 175, 84, -3)
     + tear(101, 136) + wobble(136, 160, 34, 4))
 # Sulking: half-shut eyes turned away, mouth pushed to one side.
-svg('body_drifter_3', drifter
+svg('body_drifter_3', drifter + craters([(92, 60, 11), (200, 132, 16), (58, 124, 9)], '#945768')
     + eye(113, 116, 13, (-5, 5)) + lid(113, 116, 13, -1, -1, DRIFT)
     + eye(159, 112, 13, (-5, 5)) + lid(159, 112, 13, -1, -1, DRIFT)
     + path('M 120 162 Q 138 154 156 164', 'none', 'stroke-width="7"'))
@@ -193,28 +197,33 @@ svg('body_shard_2', shard + angry_eyes + snarl(131, 166, 40))
 PLAN = '#958BBC'
 plan = circle(128, 130, 108, PLAN)
 plan += path('M 27 148 Q 135 222 228 138 Q 218 228 127 237 Q 45 220 27 148', '#71668F', 'stroke="none"')
-plan += circle(64, 84, 20, '#71668F') + circle(188, 184, 22, '#71668F')
 # Grumpy: heavy lids half down, a long flat mouth that dips at one end.
-svg('body_planetoid', plan
+svg('body_planetoid', plan + craters([(64, 84, 20), (188, 184, 22)], '#71668F')
     + eye(104, 121, 16, (1, 7)) + lid(104, 121, 16, 1, 3, PLAN, 7)
     + eye(161, 121, 16, (-1, 7)) + lid(161, 121, 16, 3, 1, PLAN, 7)
     + brow(92, 94, 122, 99, 0, 7) + brow(143, 99, 173, 94, 0, 7)
     + path('M 102 170 L 144 169 Q 151 169 154 176', 'none', 'stroke-width="7"'))
+# Fed up: rolling its eyes, one brow cocked, a short tight "hmph" of a mouth.
+svg('body_planetoid_2', plan + craters([(192, 74, 16), (56, 150, 17), (150, 208, 10)], '#71668F')
+    + eye(104, 121, 16, (5, -9)) + eye(161, 121, 16, (5, -9))
+    + brow(88, 94, 120, 92, 0, 7) + brow(145, 88, 177, 80, 6, 7)
+    + path('M 112 172 L 146 170', 'none', 'stroke-width="7"')
+    + path('M 150 164 Q 158 170 150 176', 'none', 'stroke-width="5"'))
 
 FRACT = '#88BFB7'
 fract = path('M 32 85 L 91 30 L 173 36 L 228 99 L 220 170 L 163 225 L 75 214 L 25 153 Z', FRACT)
-fract += path('M 127 35 L 111 87 L 143 111 L 115 153 L 143 182 L 129 220', 'none', 'stroke-width="12"')
-# Worried: brows up in the middle, wobbly mouths either side of the crack, sweating.
+fract += path('M 168 36 L 160 74 L 186 96 L 172 126 L 204 146 L 223 156', 'none', 'stroke-width="12"')
+# Worried: brows up in the middle, one wobbly mouth, sweating.
 svg('body_fracture', fract
-    + eye(79, 118, 13, (2, 2), 0.5) + eye(177, 118, 13, (-2, 2), 0.5)
-    + brow(62, 90, 92, 82, 4) + brow(164, 82, 194, 90, 4)
-    + wobble(80, 160, 28, 3) + wobble(177, 160, 28, 3)
-    + sweat(203, 72))
-# Scared (the Splinters): wide eyes, pin-prick pupils, little "o" mouths.
+    + eye(88, 114, 14, (1, 2), 0.5) + eye(136, 114, 14, (-1, 2), 0.5)
+    + brow(72, 86, 100, 78, 4) + brow(124, 78, 152, 86, 4)
+    + wobble(112, 160, 36, 4)
+    + sweat(56, 84))
+# Scared (the Splinters): wide eyes, pin-prick pupils, a little "o" mouth.
 svg('body_fracture_mini', fract
-    + eye(79, 116, 15, (0, 0), 0.3) + eye(177, 116, 15, (0, 0), 0.3)
-    + brow(63, 84, 93, 78, 6) + brow(163, 78, 193, 84, 6)
-    + o_mouth(80, 162, 9) + o_mouth(177, 162, 9))
+    + eye(88, 112, 16, (0, 0), 0.3) + eye(136, 112, 16, (0, 0), 0.3)
+    + brow(72, 80, 102, 72, 6) + brow(122, 72, 152, 80, 6)
+    + o_mouth(112, 162, 12))
 
 SAT = '#D3ADBD'
 sat = path('M 15 88 L 57 88 L 57 158 L 15 158 Z M 199 88 L 240 88 L 240 158 L 199 158 Z', '#7AAAB9')
@@ -316,4 +325,4 @@ p_big += path('M 108 174 Q 127 162 146 174 Q 138 184 127 184 Q 116 184 108 174 Z
 p_big += path('M 100 146 Q 127 152 154 146', 'none', f'stroke="{CREAM}" stroke-width="4"')
 svg('face_happy', p_cheeks + p_joy + p_big)
 
-print('Wrote 3 planet faces, 11 enemy faces and 3 boss faces')
+print('Wrote 3 planet faces, 12 enemy faces and 3 boss faces')
