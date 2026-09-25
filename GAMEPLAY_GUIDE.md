@@ -14,7 +14,7 @@ Enemies enter just outside the screen and never closer than 760 units to the pla
 
 There is no health bar. One hit ends the run.
 
-A **shield** blocks exactly one hit. You never start with one; it drops like an upgrade. You can hold one at a time. When it breaks, the planet blinks for 1 second and cannot be hit.
+A **shield** blocks exactly one hit. You never start with one; it drops as a pickup. You can hold one at a time. An enemy that runs into it is destroyed along with the shield, and counts as a kill (bosses are too big to pop). When it breaks, the planet blinks for 1 second and cannot be hit.
 
 ## Abilities
 

@@ -6,7 +6,9 @@ public enum KillSource
 {
 	Shot,
 	Dash,
-	Nova
+	Nova,
+	/// <summary>Ran into the planet's shield and broke it, and itself with it.</summary>
+	Shield
 }
 
 /// <summary>

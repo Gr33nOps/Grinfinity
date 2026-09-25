@@ -288,8 +288,22 @@ public partial class Player : CharacterBody2D
 
 	private void OnHitBoxBodyEntered(Node2D hit)
 	{
+		// Something already popped can still be listed as touching for a frame
+		// or two. It is gone as far as the player is concerned.
+		if (hit is Body { IsDestroyed: true })
+			return;
+
 		if (hit is Body body)
-			Die($"a {body.Kind}");
+		{
+			// A shield that takes the hit takes the enemy with it: it pops like a
+			// dash kill and pays its CORE. A boss is too big to pop; it just breaks the shield.
+			if (Die($"a {body.Kind}") && IsInstanceValid(body) && !body.IsDestroyed)
+			{
+				Body.Remains remains = body.GetRemains();
+				if (body.TakeDamage(9999, (body.GlobalPosition - GlobalPosition).Normalized(), ignoreArmour: true))
+					GameManager.Of(this)?.RegisterKill(remains, body.GlobalPosition, KillSource.Shield);
+			}
+		}
 		else if (hit is Boss boss)
 			Die(boss.BossName);
 		else if (hit.IsInGroup("hazards"))
@@ -302,10 +316,11 @@ public partial class Player : CharacterBody2D
 		Die(cause);
 	}
 
-	private void Die(string cause = "")
+	/// <returns>True if a shield took the hit instead.</returns>
+	private bool Die(string cause = "")
 	{
 		if (isDead || Invulnerable || IsProtected)
-			return;
+			return false;
 
 		EmitSignal(SignalName.HitTaken);
 
@@ -320,7 +335,7 @@ public partial class Player : CharacterBody2D
 			manager?.SpawnBlast(GlobalPosition, 240f, Pickups.ShieldColour);
 			manager?.Flash(Pickups.ShieldColour, 0.18f, 0.25f);
 			manager?.Toast("SHIELD BROKEN", Pickups.ShieldColour);
-			return;
+			return true;
 		}
 
 		isDead = true;
@@ -328,6 +343,7 @@ public partial class Player : CharacterBody2D
 		SpawnDeathEffect();
 
 		GameManager.Of(this)?.OnPlayerKilled(cause);
+		return false;
 	}
 
 	private void SpawnDeathEffect()

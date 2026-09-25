@@ -236,7 +236,9 @@ public partial class ReleaseQa : Node
 
     private async Task Dash(GameManager game, Player player)
     {
-        player.Invulnerable = false;
+        // Enemies are placed touching the planet; it stays safe until the dash
+        // itself starts, rather than relying on whatever grace an earlier test left.
+        player.Invulnerable = true;
         player.SetPhysicsProcess(false);
         game.Run.Unlock(Ability.Dash);
         player.GlobalPosition = Arena.Centre;
@@ -245,6 +247,7 @@ public partial class ReleaseQa : Node
         for (int i = 1; i <= 5; i++) line.Add(Drifter(game, player.GlobalPosition + Vector2.Right * 62f * i));
         await PhysicsFrames(2);
 
+        player.Invulnerable = false;
         Input.ActionPress("right");
         Invoke(player.Abilities, "StartDash");
         Input.ActionRelease("right");
@@ -260,8 +263,10 @@ public partial class ReleaseQa : Node
         player.GlobalPosition = Arena.Centre + new Vector2(0, 400);
         for (int i = 0; i < 200; i++) player.Abilities.Update(0.05);
         line.Clear();
+        player.Invulnerable = true;
         for (int i = 1; i <= 5; i++) line.Add(Drifter(game, player.GlobalPosition + Vector2.Right * 62f * i));
         await PhysicsFrames(2);
+        player.Invulnerable = false;
         Input.ActionPress("right");
         Invoke(player.Abilities, "StartDash");
         Input.ActionRelease("right");
@@ -397,6 +402,17 @@ public partial class ReleaseQa : Node
             player.Invulnerable = false;
             player.KillByBlast("QA"); player.KillByBlast("QA");
             Check(!IsDead(player) && !game.Run.HasShield, "a shield blocks one lethal hit and breaks");
+            for (int i = 0; i < 40; i++) player._PhysicsProcess(0.05);
+            game.Run.GrantShield();
+            int killsBefore = game.Run.Kills;
+            var rammer = Drifter(game, player.GlobalPosition + Vector2.Right * 30f);
+            await PhysicsFrames(1);
+            Invoke(player, "OnHitBoxBodyEntered", rammer);
+            Check(!IsDead(player) && !game.Run.HasShield && (!IsInstanceValid(rammer) || rammer.IsDestroyed) && game.Run.Kills == killsBefore + 1,
+                "an enemy that breaks the shield is destroyed with it, and counts as a kill");
+            // The shield break's freeze-frame runs in real time; let it finish before the dash tests.
+            await Wait(0.25);
+            for (int i = 0; i < 40; i++) player._PhysicsProcess(0.05);
 
             await Dash(game, player);
 
