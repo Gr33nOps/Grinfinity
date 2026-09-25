@@ -367,9 +367,10 @@ public partial class Body : CharacterBody2D, IShootable
 
 		// Splits happen inside a collision callback, and inserting a physics body
 		// while the server is flushing queries is an error. The add waits for idle.
+		// By then this body may already be freed, so nothing below may touch it.
 		Callable.From(() =>
 		{
-			if (IsInstanceValid(manager) && IsInstanceValid(child) && GetTree().GetNodeCountInGroup("bodies") < HardCap)
+			if (IsInstanceValid(manager) && IsInstanceValid(child) && manager.GetTree().GetNodeCountInGroup("bodies") < HardCap)
 				manager.AddEntity(child);
 			else
 				child.QueueFree();
@@ -391,24 +392,33 @@ public partial class Body : CharacterBody2D, IShootable
 	}
 
 	/// <summary>
-	/// Blows up everything nearby, including the world. Chained bodies do not
-	/// count as kills, so two Flares side by side cannot cascade into free CORE.
+	/// Blows up everything nearby, including the world, after a short fuse: the
+	/// flash goes off at once so the danger is seen, and the damage lands a
+	/// moment later so a quick step or a dash can still get clear. Chained
+	/// bodies do not count as kills, so two Flares side by side cannot cascade
+	/// into free CORE.
 	/// </summary>
 	public void Detonate(float radius)
 	{
 		GameManager.Of(this)?.SpawnBlast(GlobalPosition, radius, BurstColor);
 
-		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
+		Vector2 centre = GlobalPosition;
+		SceneTree tree = GetTree();
+		Player player = HasWorld ? world as Player : null;
+		tree.CreateTimer(FlareBehaviour.Fuse, processAlways: false).Timeout += () =>
 		{
-			if (node is not Body other || other == this || !IsInstanceValid(other))
-				continue;
+			foreach (Node node in tree.GetNodesInGroup("bodies"))
+			{
+				if (node is not Body other || other == this || !IsInstanceValid(other))
+					continue;
 
-			if (GlobalPosition.DistanceTo(other.GlobalPosition) <= radius)
-				other.TakeDamage(9999, (other.GlobalPosition - GlobalPosition).Normalized());
-		}
+				if (centre.DistanceTo(other.GlobalPosition) <= radius)
+					other.TakeDamage(9999, (other.GlobalPosition - centre).Normalized());
+			}
 
-		if (HasWorld && GlobalPosition.DistanceTo(world.GlobalPosition) <= radius)
-			(world as Player)?.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_FlareBlast"));
+			if (player != null && IsInstanceValid(player) && centre.DistanceTo(player.GlobalPosition) <= radius)
+				player.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_FlareBlast"));
+		};
 	}
 
 	// Bodies are falling, so they should point where they are going. Below a

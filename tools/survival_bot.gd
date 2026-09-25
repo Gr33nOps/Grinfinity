@@ -23,6 +23,9 @@ var skill := 0.7
 var next_log := 30.0
 var boss_active := false
 var boss_since := 0.0
+# Each boss on the field, by instance id, with when it arrived.
+var boss_seen := {}
+var most_bosses := 0
 var levels := 0
 var shield := false
 var drops_seen := 0
@@ -55,6 +58,8 @@ func _start_run() -> void:
 	run_number += 1
 	next_log = 30.0
 	boss_active = false
+	boss_seen.clear()
+	most_bosses = 0
 	levels = 0
 	shield = false
 	drops_seen = 0
@@ -93,9 +98,9 @@ func _physics_process(_delta: float) -> void:
 
 func _finish(reason: String) -> void:
 	var t := _now()
-	var summary := "RUN %d END %s at %02d:%02d  kills=%d levels=%d bosses=%d" % [
+	var summary := "RUN %d END %s at %02d:%02d  kills=%d levels=%d bosses=%d most_at_once=%d" % [
 		run_number, reason, int(t / 60.0), int(fmod(t, 60.0)), run_state.get("Kills"), run_state.get("TotalLevels"),
-		game.get("NextBossIndex") - (1 if game.get("BossActive") else 0)]
+		game.get("NextBossIndex") - int(game.get("ActiveBossCount")), most_bosses]
 	print(summary)
 	results.append(summary)
 	for action in ["left", "right", "up", "down", "aim_left", "aim_right", "aim_up", "aim_down", "shoot", "dash", "rapid_fire", "nova"]:
@@ -114,14 +119,19 @@ func _finish(reason: String) -> void:
 		get_tree().quit()
 
 func _watch(t: float) -> void:
-	var active: bool = game.get("BossActive")
-	if active and not boss_active:
-		boss_since = t
-		var boss = get_tree().get_first_node_in_group("bosses")
-		_log("BOSS %s arrives (cycle %d, %d hp), %d enemies alive" % [boss.get("BossName"), boss.get("Cycle"), boss.get("ScaledMaxHealth"), get_tree().get_nodes_in_group("bodies").size()])
-	elif not active and boss_active:
-		_log("BOSS defeated after %.1fs" % (t - boss_since))
-	boss_active = active
+	var live := {}
+	for b in get_tree().get_nodes_in_group("bosses"):
+		var id: int = b.get_instance_id()
+		live[id] = true
+		if not boss_seen.has(id):
+			boss_seen[id] = [t, str(b.get("BossName"))]
+			_log("BOSS %s arrives (cycle %d, %d hp), %d enemies alive, %d bosses up" % [b.get("BossName"), b.get("Cycle"), b.get("ScaledMaxHealth"), get_tree().get_nodes_in_group("bodies").size(), live.size()])
+	for id in boss_seen.keys():
+		if not live.has(id):
+			_log("BOSS %s defeated after %.1fs" % [boss_seen[id][1], t - boss_seen[id][0]])
+			boss_seen.erase(id)
+	most_bosses = max(most_bosses, live.size())
+	boss_active = live.size() > 0
 
 	for pickup in get_tree().get_nodes_in_group("pickups"):
 		var id := pickup.get_instance_id()
@@ -197,7 +207,8 @@ func _drive() -> void:
 			push += side * pow((360.0 - d) / 360.0, 2.0) * 1.6
 	var boss: Node2D = null
 	for b in bosses:
-		boss = b
+		if boss == null or here.distance_to(b.global_position) < here.distance_to(boss.global_position):
+			boss = b
 		var offset: Vector2 = here - b.global_position
 		var d := offset.length()
 		var keep := 520.0

@@ -196,21 +196,39 @@ public partial class RunState : Node
 	// be spent is always obvious.
 
 	[Signal] public delegate void CoreChangedEventHandler(float fraction, bool ready);
+	/// <summary>The build is finished and a full bar of CORE has come in: every ability recharges.</summary>
+	[Signal] public delegate void OverchargedEventHandler();
 
 	public float Core { get; private set; }
 	/// <summary>Upgrades bought with CORE so far. Each makes the next bar a little longer.</summary>
 	public int UpgradesBought { get; private set; }
 	public float CoreNeeded => Balance.CoreFirstBar * Mathf.Pow(Balance.CoreBarGrowth, UpgradesBought);
 	public bool CoreReady => Core >= CoreNeeded && !BuildComplete;
-	public float CoreFraction => Mathf.Clamp(Core / CoreNeeded, 0f, 1f);
+	/// <summary>How full the bar on the HUD is: CORE toward the next upgrade, or Overcharge once there are none left.</summary>
+	public float CoreFraction => BuildComplete ? Mathf.Clamp(Overcharge / Balance.OverchargeBar, 0f, 1f) : Mathf.Clamp(Core / CoreNeeded, 0f, 1f);
+	/// <summary>CORE gathered after the build is complete, toward the next ability recharge.</summary>
+	public float Overcharge { get; private set; }
 
 	/// <summary>Nothing left in the tree to buy.</summary>
 	public bool BuildComplete => TotalLevels >= RunUpgrades.MaxTotalLevels;
 
 	public void AddCore(float amount)
 	{
-		if (!float.IsFinite(amount) || amount <= 0f || BuildComplete)
+		if (!float.IsFinite(amount) || amount <= 0f)
 			return;
+
+		// Nothing left to buy: kills still count, toward a full recharge.
+		if (BuildComplete)
+		{
+			Overcharge += amount;
+			if (Overcharge >= Balance.OverchargeBar)
+			{
+				Overcharge = 0f;
+				EmitSignal(SignalName.Overcharged);
+			}
+			EmitSignal(SignalName.CoreChanged, CoreFraction, false);
+			return;
+		}
 
 		bool wasReady = CoreReady;
 		Core = Mathf.Min(Core + amount, CoreNeeded);
@@ -221,6 +239,11 @@ public partial class RunState : Node
 	/// <summary>A CORE Burst: the bar is full at once.</summary>
 	public void FillCore()
 	{
+		if (BuildComplete)
+		{
+			AddCore(Balance.OverchargeBar);
+			return;
+		}
 		Core = CoreNeeded;
 		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
 	}

@@ -17,10 +17,10 @@ public enum KillSource
 /// <see cref="BodySpawner"/>; the run's numbers in <see cref="RunState"/>.
 ///
 /// Bosses come on a clock, not a kill count: Coil, Brood, Black Hole, then round
-/// again, forever. The first time round each is fought alone. After that the
-/// ordinary enemies keep coming during the fight, more of them each cycle —
-/// the bosses get only a little tougher themselves. Beating one scatters three
-/// strong upgrades from the wreck.
+/// again, forever. Ordinary enemies never stop for them. The first time round
+/// each boss waits for the last to die; once the first Black Hole is beaten
+/// they keep to the clock regardless, so a run that cannot keep up ends up
+/// fighting several at once. Beating one scatters three strong upgrades.
 /// </summary>
 public partial class GameManager : Node2D
 {
@@ -81,10 +81,17 @@ public partial class GameManager : Node2D
 	private bool hitstopActive = false;
 	private ulong hitstopEndMsec = 0;
 
-	private Boss boss;
-	private Control bossBar;
-	private ProgressBar bossHealth;
-	private Label bossNameLabel;
+	/// <summary>Every boss on the field, oldest first. Several can be once the Black Hole has fallen.</summary>
+	private readonly List<Boss> bosses = new();
+	private readonly Dictionary<Boss, Control> bossBars = new();
+	/// <summary>The scene's boss bar, kept hidden and copied once per boss.</summary>
+	private Control bossBarTemplate;
+	/// <summary>
+	/// Set when the first Black Hole is beaten. From then on bosses keep to
+	/// their timetable whether or not the last one is dead, so a player who
+	/// cannot keep up ends up fighting two, three or more at once.
+	/// </summary>
+	[Export] public bool BossesOverlap { get; set; }
 	private Announcer announcer;
 	private float warningLeft = -1f;
 	private Vector2 incomingAt;
@@ -98,14 +105,19 @@ public partial class GameManager : Node2D
 	/// <summary>What ended this run, once it has ended.</summary>
 	public string DeathCause { get; private set; } = "";
 
-	/// <summary>True while a boss is on the field.</summary>
-	public bool BossActive => boss != null && IsInstanceValid(boss);
+	/// <summary>True while any boss is on the field.</summary>
+	public bool BossActive => bosses.Count > 0;
+	public int ActiveBossCount => bosses.Count;
 
-	/// <summary>True from the warning until the boss is beaten.</summary>
-	public bool BossBusy => BossActive || warningLeft > 0f;
+	/// <summary>
+	/// True while hazards and arena events should hold off: during a boss's
+	/// warning, and while a first-round boss is being learned. Later rounds
+	/// get no such courtesy, or with overlapping bosses nothing would ever run.
+	/// </summary>
+	public bool BossBusy => warningLeft > 0f || bosses.Exists(b => IsInstanceValid(b) && b.Cycle == 1);
 
-	/// <summary>Which time round the bosses the current or next one belongs to, from 1.</summary>
-	public int BossCycle => (BossActive ? NextBossIndex - 1 : NextBossIndex) / 3 + 1;
+	/// <summary>Which time round the next boss to arrive belongs to, from 1.</summary>
+	public int BossCycle => NextBossIndex / 3 + 1;
 
 	public RunState Run => run;
 
@@ -177,11 +189,9 @@ public partial class GameManager : Node2D
 		PowerUpScene ??= GD.Load<PackedScene>("res://scenes/power_up.tscn");
 
 		announcer = GetNodeOrNull<Announcer>("UI/Announcer");
-		bossBar = GetNodeOrNull<Control>("UI/BossBar");
-		bossHealth = GetNodeOrNull<ProgressBar>("UI/BossBar/Health");
-		bossNameLabel = GetNodeOrNull<Label>("UI/BossBar/Name");
-		if (bossBar != null)
-			bossBar.Visible = false;
+		bossBarTemplate = GetNodeOrNull<Control>("UI/BossBar");
+		if (bossBarTemplate != null)
+			bossBarTemplate.Visible = false;
 
 		// Under the HUD, over the world: the one layer a Nova or a broken shield
 		// is allowed to wash.
@@ -223,6 +233,7 @@ public partial class GameManager : Node2D
 		run.StreakChanged += OnStreakChanged;
 		run.AbilityUnlocked += OnAbilityUnlocked;
 		run.CoreChanged += OnCoreChanged;
+		run.Overcharged += () => RechargeAbilities("OVERCHARGE  •  ABILITIES READY");
 	}
 
 	/// <summary>Shouts something at the top of the screen. See <see cref="Announcer"/>.</summary>
@@ -376,6 +387,17 @@ public partial class GameManager : Node2D
 
 	private bool coreWasReady;
 
+	/// <summary>Every ability ready at once — a Power Cell, or a full Overcharge bar.</summary>
+	private void RechargeAbilities(string message)
+	{
+		player.Abilities.ResetCooldowns();
+		Toast(message, Pickups.PowerCellColour);
+		PlayCue("unlock");
+		uiManager?.PulseAbility(Ability.Dash);
+		uiManager?.PulseAbility(Ability.Overdrive);
+		uiManager?.PulseAbility(Ability.Nova);
+	}
+
 	public override void _Notification(int what)
 	{
 		if (what == NotificationApplicationFocusOut && IsNodeReady() && !isPaused && !isDying && !isGameOver && !UpgradeTreeOpen)
@@ -398,37 +420,42 @@ public partial class GameManager : Node2D
 
 	// --- Bosses ---------------------------------------------------------------
 
-	/// <summary>Scheduled arrival of the nth boss, before any breather pushes it back.</summary>
+	/// <summary>
+	/// Scheduled arrival of the nth boss, before any breather pushes it back.
+	/// After the first round each gap is a little shorter than the last, down
+	/// to a floor, so sooner or later the bosses arrive faster than they die.
+	/// </summary>
 	public static float ScheduledBossTime(int index)
 	{
 		if (index < 3)
 			return Balance.FirstBossAt + index * Balance.BossGapFirstCycle;
-		return Balance.FirstBossAt + 2 * Balance.BossGapFirstCycle + (index - 2) * Balance.BossGapLaterCycles;
+		float at = Balance.FirstBossAt + 2 * Balance.BossGapFirstCycle;
+		for (int i = 3; i <= index; i++)
+			at += Mathf.Max(Balance.BossGapLaterCycles - Balance.BossGapShrink * (i - 3), Balance.BossMinGap);
+		return at;
 	}
 
 	private void UpdateBosses(float delta)
 	{
-		int cycle = BossCycle;
-
-		if (BossActive)
-		{
-			bodySpawner.Support = Balance.BossSupport(cycle);
-			return;
-		}
+		// Bosses are fought with the arena still busy: ordinary enemies keep
+		// coming the whole time, exactly as they would without one.
+		bodySpawner.Support = 1f;
+		bosses.RemoveAll(b => !IsInstanceValid(b));
 
 		if (warningLeft > 0f)
 		{
-			// First time round, the arena is left to thin out before the boss.
-			bodySpawner.Support = Balance.BossSupport(cycle);
 			warningLeft -= delta;
 			if (warningLeft <= 0f)
 				SpawnBoss();
 			return;
 		}
 
-		bodySpawner.Support = 1f;
-		if (run.SurvivalTime >= NextBossAt)
-			BeginBossWarning();
+		if (run.SurvivalTime < NextBossAt)
+			return;
+		// The first time round, one at a time. After that only a hard ceiling.
+		if (BossActive && (!BossesOverlap || bosses.Count >= Balance.MaxBossesAtOnce))
+			return;
+		BeginBossWarning();
 	}
 
 	private (PackedScene scene, string name, Color colour) NextBoss() => (NextBossIndex % 3) switch
@@ -516,21 +543,39 @@ public partial class GameManager : Node2D
 		if (at.DistanceTo(player.GlobalPosition) < 400f)
 			at = PickBossArrival();
 
-		boss = scene.Instantiate<Boss>();
+		var boss = scene.Instantiate<Boss>();
 		boss.Cycle = NextBossIndex / 3 + 1;
 		boss.GlobalPosition = at;
 		NextBossIndex++;
 
-		boss.HealthChanged += OnBossHealthChanged;
-		boss.Defeated += OnBossDefeated;
+		boss.HealthChanged += fraction => ShowBossHealth(boss, fraction);
+		boss.Defeated += () => OnBossDefeated(boss);
 		AddEntity(boss);
+		bosses.Add(boss);
+		AddBossBar(boss, boss.Cycle > 1 ? $"{name}  •  ROUND {boss.Cycle}" : name);
 
-		if (bossNameLabel != null)
-			bossNameLabel.Text = boss.Cycle > 1 ? $"{name}  •  ROUND {boss.Cycle}" : name;
-		if (bossHealth != null)
+		// Once they overlap, the timetable runs on from each arrival.
+		if (BossesOverlap)
+			NextBossAt = Mathf.Max(ScheduledBossTime(NextBossIndex), run.SurvivalTime + Balance.BossMinGap);
+
+		SpawnBlast(at, 360f, boss.BossColor);
+		Shake(0.55f);
+		PlayStreakSting(0.6f);
+	}
+
+	/// <summary>One bar per boss, stacked under each other in arrival order, each in its boss's colour.</summary>
+	private void AddBossBar(Boss boss, string title)
+	{
+		if (bossBarTemplate == null)
+			return;
+
+		var bar = (Control)bossBarTemplate.Duplicate();
+		bossBarTemplate.GetParent().AddChild(bar);
+		if (bar.FindChild("Name", true, false) is Label label)
+			label.Text = title;
+		if (bar.FindChild("Health", true, false) is ProgressBar health)
 		{
-			// A fresh stylebox per encounter, so each boss reads in its own colour.
-			bossHealth.AddThemeStyleboxOverride("fill", new StyleBoxFlat
+			health.AddThemeStyleboxOverride("fill", new StyleBoxFlat
 			{
 				BgColor = boss.BossColor,
 				CornerRadiusTopLeft = 6,
@@ -538,34 +583,54 @@ public partial class GameManager : Node2D
 				CornerRadiusBottomRight = 6,
 				CornerRadiusBottomLeft = 6
 			});
+			health.Value = 100.0;
 		}
-		OnBossHealthChanged(1.0f);
-		if (bossBar != null)
-			bossBar.Visible = true;
-
-		SpawnBlast(at, 360f, boss.BossColor);
-		Shake(0.55f);
-		PlayStreakSting(0.6f);
+		bar.Visible = true;
+		bossBars[boss] = bar;
+		StackBossBars();
 	}
 
-	private void OnBossHealthChanged(float fraction)
+	private void StackBossBars()
 	{
-		if (bossHealth != null)
-			bossHealth.Value = fraction * 100.0;
+		if (bossBarTemplate == null)
+			return;
+		float height = bossBarTemplate.OffsetBottom - bossBarTemplate.OffsetTop;
+		int row = 0;
+		foreach (Boss boss in bosses)
+		{
+			if (!bossBars.TryGetValue(boss, out Control bar))
+				continue;
+			bar.OffsetTop = bossBarTemplate.OffsetTop + row * (height + 6f);
+			bar.OffsetBottom = bar.OffsetTop + height;
+			row++;
+		}
 	}
 
-	private void OnBossDefeated()
+	private void ShowBossHealth(Boss boss, float fraction)
 	{
-		if (bossBar != null)
-			bossBar.Visible = false;
+		if (bossBars.TryGetValue(boss, out Control bar) && bar.FindChild("Health", true, false) is ProgressBar health)
+			health.Value = fraction * 100.0;
+	}
 
+	private void OnBossDefeated(Boss boss)
+	{
 		Vector2 at = IsInstanceValid(boss) ? boss.GlobalPosition : player.GlobalPosition;
 		Color colour = IsInstanceValid(boss) ? boss.BossColor : new Color(0.86f, 0.72f, 1.0f);
-		int cycle = IsInstanceValid(boss) ? boss.Cycle : 1;
-		int kind = (NextBossIndex - 1) % 3;
-		boss = null;
+		int kind = boss is BossCoil ? 0 : boss is BossBrood ? 1 : 2;
 
-		NextBossAt = Mathf.Max(ScheduledBossTime(NextBossIndex), run.SurvivalTime + Balance.BossBreather);
+		bosses.Remove(boss);
+		if (bossBars.Remove(boss, out Control bar))
+			bar.QueueFree();
+		StackBossBars();
+
+		// Until the first Black Hole falls, each boss earns a breather before the
+		// next. Beating it is what lets them start to pile up.
+		if (!BossesOverlap)
+		{
+			NextBossAt = Mathf.Max(ScheduledBossTime(NextBossIndex), run.SurvivalTime + Balance.BossBreather);
+			if (kind == 2)
+				BossesOverlap = true;
+		}
 
 		// Slow motion rather than a freeze: the payoff is watching it come apart.
 		Hitstop(BossKillSlowMoTime, BossKillSlowMo);
@@ -964,12 +1029,7 @@ public partial class GameManager : Node2D
 		}
 		else if (reward.Kind == RewardKind.PowerCell)
 		{
-			player.Abilities.ResetCooldowns();
-			Toast("POWER CELL  •  ABILITIES READY", Pickups.PowerCellColour);
-			PlayCue("unlock");
-			uiManager?.PulseAbility(Ability.Dash);
-			uiManager?.PulseAbility(Ability.Overdrive);
-			uiManager?.PulseAbility(Ability.Nova);
+			RechargeAbilities("POWER CELL  •  ABILITIES READY");
 		}
 		else if (run.TryGrant(reward.Upgrade))
 		{

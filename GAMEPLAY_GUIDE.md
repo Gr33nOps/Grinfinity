@@ -30,7 +30,7 @@ The Accessibility menu can switch Overdrive to hold-to-use.
 
 ## CORE and upgrades
 
-Every kill fills the **CORE** bar, the tall bar in the top-left corner beside your three abilities, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, **UPGRADE READY** appears under the abilities. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the prompt, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it.
+Every kill fills the **CORE** bar, the tall bar in the top-left corner beside your three abilities, and tougher enemies fill it faster (a Drifter gives 1, a Planetoid 3). When it is full, **UPGRADE READY** appears under the abilities. Open the upgrade screen whenever you like with **Tab** (Back/View on a controller) or by clicking the prompt, and spend the full bar on one rank. The bar stops at full rather than saving a second one, so do not sit on it. Once every upgrade is bought, the bar turns purple and becomes **OVERCHARGE**: kills keep filling it, and each full bar recharges all three abilities at once.
 
 The first bar needs 35 CORE and each one after needs 32% more, so upgrades come quickly early and slow down as the build gets strong.
 
@@ -48,7 +48,7 @@ The whole game is paused while the upgrade screen is open: enemies, shots, coold
 | Nova | Bigger Nova | 3 | +15% Nova radius per rank |
 | Nova | Nova Power | 2 | +3% boss damage and 15% shorter cooldown per rank |
 
-The upgrade screen is drawn as a tree growing out of the CORE: each branch runs bottom to top in the order above, and every node needs one rank in the node below it before it opens. The Dash, Overdrive and Nova branches stay locked until their ability is online. Rings appear around the planet at 5, 11 and 17 ranks, out of 22.
+The upgrade screen is drawn as a tree growing out of the CORE: each branch runs bottom to top in the order above, and every node needs one rank in the node below it before it opens. The Dash, Overdrive and Nova branches stay locked until their ability is online. A yellow ring appears around the planet at 5 ranks, out of 22, and grows a little at 11 and 17. It is only a badge for how built-up you are; it does nothing in play.
 
 ## Pickups
 
@@ -74,7 +74,7 @@ Bosses still drop three upgrade ranks each, on top of what CORE buys. They only 
 | Fracture | 1:20 | 2 | Splits into three Splinters when destroyed. |
 | Satellite | 2:30 | 2 | Circles at range and shoots at you. |
 | Bulwark | 4:00 | 3 | Armoured front: most shots from the front bounce off, though every fifth chips through. Hit it from the side or back, or Dash or Nova through the armour. |
-| Flare | 5:30 | 2 | Explodes when destroyed. The dashed ring around it shows the blast. |
+| Flare | 5:30 | 2 | Explodes when destroyed. The dashed ring around it shows the blast, which lands 0.3 s after the flash, so there is just time to step or dash out. |
 
 Spawn rate, the number alive at once and enemy speed all ramp with time (see the tables in `Balance.cs`). Speed keeps creeping up after 20 minutes. By 13 minutes the mix is mostly the dangerous kinds.
 
@@ -86,19 +86,19 @@ From 0:45, about every 20 seconds, a **rush** arrives in one of five shapes, nev
 - **Wall:** a line of Shards sweeping in across one side.
 - **Escort** (from 1:30): a Planetoid (later sometimes a Bulwark) with a guard of Shards.
 
-Comets (from 2:50) cross the screen along a dashed red line that shows for 1.35 s first. Gravity wells (from 5:30) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 6:20. None of these run during a boss.
+Comets (from 2:50) cross the screen along a dashed red line that shows for 1.35 s first. Gravity wells (from 5:30) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 6:20. None of these run during a first-round boss fight or a boss warning; from round two they carry on regardless.
 
 ## Bosses
 
-Bosses arrive on a clock, with a warning banner and a marker where they will land. When one dies its shots vanish, and three strong upgrades fly out of the wreck.
+Bosses arrive on a clock, with a warning banner and a marker where they will land. Ordinary enemies never stop for them: a boss is fought with the arena as busy as ever. When one dies all enemy shots vanish, and three strong upgrades fly out of the wreck. Each boss is bigger than the last.
 
 | Round 1 | Arrives | HP | Fight |
 |---|---|---|---|
-| The Coil | 2:05 | 400 | Rings of shots with a gap. Slip through the gap or dash. |
-| The Brood | 4:25 | 660 | Keeps spawning Shards. Keep shooting the big one. |
+| The Coil | 2:05 | 340 | Rings of shots with a gap. Slip through the gap or dash. |
+| The Brood | 4:25 | 1100 | Chases you, throws out Shards two or three at a time, and every few seconds stops, glows and lunges at where you are. Sidestep or dash the lunge. |
 | The Black Hole | 6:45 | 1100 | Pulls you, enemies and your shots toward its core, and throws shots back. |
 
-After the Black Hole the run carries on, and the bosses come round again every 2 minutes 10 seconds: The Coil at 8:55, The Brood at 11:05, The Black Hole at 13:15, and so on forever. Each round the bosses get 70% more health (so a full late-game build still has a fight on its hands) and attack a little faster. More of the difficulty comes from company, though: the first time round each boss fights alone, and from round two ordinary enemies keep arriving during the fight (35% of the normal rate in round 2, 55% in round 3, up to 95%). There is always at least 45 seconds between one boss dying and the next arriving.
+The first time round, each boss waits for the one before to die, with at least 45 seconds of breathing room after it. Beating the first Black Hole changes that: from then on bosses keep to the clock whether or not the last one is dead, so a boss you cannot finish in time is still there when the next arrives. The gaps also shrink each time, from 2 minutes 10 seconds by 10 seconds a boss down to 1 minute: The Coil at 8:55, The Brood at 10:55, The Black Hole at 12:45, then 14:25, 15:55, 17:15, 18:25 and every minute after 19:25. Each round the bosses get 70% more health and attack a little faster. Up to five can be on the field at once, each with its own health bar at the top of the screen. Far enough in, they will outpace anyone.
 
 ## Records
 

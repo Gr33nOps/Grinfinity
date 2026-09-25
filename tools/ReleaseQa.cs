@@ -150,6 +150,20 @@ public partial class ReleaseQa : Node
         Check(core.CoreReady, "a CORE Burst fills the bar");
         core.Free();
 
+        // A finished build: CORE turns into Overcharge, and a full bar recharges everything.
+        var full = FreshRun(this);
+        full.Unlock(Ability.Dash); full.Unlock(Ability.Overdrive); full.Unlock(Ability.Nova);
+        for (int pass = 0; pass < 4; pass++)
+            foreach (RunUpgrades.Profile profile in RunUpgrades.All)
+                while (full.TryGrant(profile.Id)) { }
+        bool overcharged = false;
+        full.Overcharged += () => overcharged = true;
+        full.AddCore(Balance.OverchargeBar * 0.5f);
+        Check(full.BuildComplete && !overcharged && Mathf.IsEqualApprox(full.CoreFraction, 0.5f), "after the last upgrade, CORE fills the Overcharge bar");
+        full.AddCore(Balance.OverchargeBar * 0.5f);
+        Check(overcharged && full.CoreFraction < 0.01f, "a full Overcharge bar recharges the abilities and starts again");
+        full.Free();
+
         // Enemy pickups: only Shield, CORE Burst and Power Cell, and only when each would do something.
         var drops = FreshRun(this);
         bool onlyThree = true, useful = true;
@@ -346,7 +360,7 @@ public partial class ReleaseQa : Node
             for (int i = 0; i < 80 && !game.BossActive; i++) game._Process(0.05);
             var boss = GetTree().GetFirstNodeInGroup("bosses") as Boss;
             Check(boss != null && boss.GlobalPosition.DistanceTo(player.GlobalPosition) >= 400f, "boss arrives well away from the planet");
-            Check(game.GetNode<BodySpawner>("BodySpawner").Support == 0f, "the first Coil is fought alone");
+            Check(game.GetNode<BodySpawner>("BodySpawner").Support >= 1f, "ordinary enemies keep coming during a boss fight");
             if (boss != null)
             {
                 boss.SetPhysicsProcess(false);
@@ -373,8 +387,8 @@ public partial class ReleaseQa : Node
             foreach (Node node in GetTree().GetNodesInGroup("pickups")) node.QueueFree();
 
             game.NextBossIndex = 3;
-            Check(game.BossCycle == 2 && Balance.BossSupport(2) > 0f, "the second time round, enemies join the boss fight");
-            Check(Balance.BossSupport(4) > Balance.BossSupport(2), "boss support keeps growing each cycle");
+            Check(game.BossCycle == 2, "after three bosses, the next is round two");
+            Check(Balance.MaxBossesAtOnce >= 3 && Balance.BossMinGap > 0f, "later bosses can pile up, but never arrive back to back");
             Check(BodySpawner.SpeedAt(3600f) > BodySpawner.SpeedAt(1800f) || BodySpawner.SpeedAt(3600f) >= Balance.EnemySpeedCeiling, "pressure keeps rising after half an hour");
             Check(GameManager.ScheduledBossTime(9) > GameManager.ScheduledBossTime(8), "bosses keep coming after the Black Hole");
             game.Run.SetProcess(false);

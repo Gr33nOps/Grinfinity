@@ -131,6 +131,11 @@ public static class Balance
 	/// <summary>Each later bar needs this much more than the one before.</summary>
 	public const float CoreBarGrowth = 1.32f;
 	/// <summary>Blinking safety after buying an upgrade, so returning to the fight is never an instant death.</summary>
+	/// <summary>
+	/// Once every upgrade is bought, CORE keeps filling this bar instead, and
+	/// each full bar recharges every ability at once.
+	/// </summary>
+	public const float OverchargeBar = 400f;
 	public const float UpgradeGrace = 1.4f;
 
 	// --- Random pickups ----------------------------------------------------------
@@ -172,6 +177,8 @@ public static class Balance
 	public const float BossGapFirstCycle = 140f;
 	/// <summary>Scheduled gap once the bosses start coming round again.</summary>
 	public const float BossGapLaterCycles = 130f;
+	/// <summary>Each later gap is this much shorter than the one before, down to <see cref="BossMinGap"/>.</summary>
+	public const float BossGapShrink = 10f;
 	/// <summary>Never less than this between one boss dying and the next arriving.</summary>
 	public const float BossBreather = 45f;
 	/// <summary>Warning shown before a boss arrives.</summary>
@@ -181,10 +188,12 @@ public static class Balance
 	/// <summary>Boss health grows by this share with each full cycle.</summary>
 	public const float BossHealthPerCycle = 0.7f;
 	/// <summary>
-	/// Share of the normal spawn rate that keeps running during a boss fight,
-	/// per cycle. The first time round a boss is fought alone.
+	/// After the first Black Hole, bosses arrive on the clock even while others
+	/// live, but never closer together than this.
 	/// </summary>
-	public static float BossSupport(int cycle) => cycle <= 1 ? 0f : Mathf.Min(0.35f + 0.2f * (cycle - 2), 0.95f);
+	public const float BossMinGap = 60f;
+	/// <summary>The most bosses on the field at once. Past this the clock waits.</summary>
+	public const int MaxBossesAtOnce = 5;
 
 
 	// --- Hazards and events -----------------------------------------------------

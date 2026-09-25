@@ -1,6 +1,9 @@
 using Godot;
 
 // Two illustrated halves let the near band pass in front of the planet.
+// The ring is a badge for how built-up the planet is: it appears at 5 upgrade
+// ranks and grows a little at 11 and 17. It is the same yellow band the menu
+// planet wears, so the planet looks like itself in both places.
 public partial class WorldRings : Node2D
 {
     [Export] public bool NearHalf {get;set;}
@@ -20,9 +23,9 @@ public partial class WorldRings : Node2D
         GlobalPosition=world.GlobalPosition;Scale=world.Scale;
         int tier=run.RingTier;
         if(tier>0&&tier!=shownTier)
-        {shownTier=tier;band.Texture=GD.Load<Texture2D>($"res://art/cosmic/ring_{Mathf.Min(tier,3)}_{(NearHalf?"front":"back")}.svg");}
+        {shownTier=tier;band.Texture=GD.Load<Texture2D>($"res://art/cosmic/ring_2_{(NearHalf?"front":"back")}.svg");}
         presence=Mathf.MoveToward(presence,tier>0?1:0,(float)delta*3);
         band.Visible=presence>.01f;band.Modulate=new Color(1,1,1,presence);
-        band.Scale=Vector2.One*.25f*(1+.055f*Mathf.Max(tier-1,0))*Mathf.Lerp(.85f,1,presence);
+        band.Scale=Vector2.One*.25f*(1+.08f*Mathf.Max(tier-1,0))*Mathf.Lerp(.85f,1,presence);
     }
 }

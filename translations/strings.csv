@@ -65,7 +65,7 @@ WORLD_12_NAME,STARFORGED
 WORLD_12_FLAVOUR,Made from every planet that came before it.
 WORLD_12_HINT,"Play {0} runs, and survive 10 minutes in one."
 BOSS_Coil_ARRIVAL,Its rings have a gap. Slip through it or dash.
-BOSS_Brood_ARRIVAL,It keeps making Shards. Keep shooting the big one.
+BOSS_Brood_ARRIVAL,"When it glows, it lunges. Sidestep, and keep shooting."
 BOSS_BlackHole_ARRIVAL,It pulls you in. Stay away from the middle.
 DEATH_CAUSE_GravityWell,a gravity well
 DEATH_CAUSE_Comet,a comet

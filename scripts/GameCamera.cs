@@ -66,8 +66,15 @@ public partial class GameCamera : Camera2D
 			Vector2 aim = player.AimPosition - player.GlobalPosition;
 			Vector2 target = player.GlobalPosition + aim.LimitLength(400f) / 400f * Balance.CameraAimLead;
 
-			// In a boss fight, lean toward the boss so both stay in frame.
-			if (GetTree().GetFirstNodeInGroup("bosses") is Node2D boss)
+			// In a boss fight, lean toward the nearest boss so both stay in frame.
+			Node2D boss = null;
+			foreach (Node node in GetTree().GetNodesInGroup("bosses"))
+			{
+				if (node is Node2D candidate && (boss == null
+					|| candidate.GlobalPosition.DistanceSquaredTo(player.GlobalPosition) < boss.GlobalPosition.DistanceSquaredTo(player.GlobalPosition)))
+					boss = candidate;
+			}
+			if (boss != null)
 			{
 				// Half as much vertically: the screen is shorter that way, and the
 				// planet must never slide up under the boss bar.

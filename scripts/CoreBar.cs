@@ -12,6 +12,7 @@ public partial class CoreBar : Control
 	private static readonly Color Rim = new("986077");
 	private static readonly Color Filling = new("c66e80");
 	private static readonly Color Full = new("f5a451");
+	private static readonly Color Overcharge = new("b58cff");
 
 	/// <summary>Size of the word written up the bar.</summary>
 	public int TextSize { get; init; } = 16;
@@ -53,21 +54,17 @@ public partial class CoreBar : Control
 		float radius = Size.X * 0.5f;
 		DrawStyleBox(Box(Track, ready && !complete ? Full : Rim, radius, 2), area);
 
-		if (complete)
-		{
-			Caption("MAXED", ArcadeSkin.Muted);
-			return;
-		}
-
 		float height = Mathf.Max((Size.Y - 6f) * shown, 0f);
 		if (height > 1f)
 		{
-			Color fill = ready ? Full.Lerp(new Color("ffd66b"), 0.5f + 0.5f * Mathf.Sin(time * 6f)) : Filling.Lerp(Full, shown * 0.6f);
+			Color fill = complete ? Overcharge
+				: ready ? Full.Lerp(new Color("ffd66b"), 0.5f + 0.5f * Mathf.Sin(time * 6f))
+				: Filling.Lerp(Full, shown * 0.6f);
 			fill = fill.Lightened(tick * 0.35f);
 			DrawStyleBox(Box(fill, fill, Mathf.Min(radius - 3f, height * 0.5f), 0), new Rect2(3f, Size.Y - 3f - height, Size.X - 6f, height));
 		}
 
-		Caption("CORE", ready ? ArcadeSkin.Ink : ArcadeSkin.Cream);
+		Caption(complete ? "OVERCHARGE" : "CORE", ready ? ArcadeSkin.Ink : ArcadeSkin.Cream);
 	}
 
 	/// <summary>The bar's name, reading bottom to top from its foot, outlined so it reads over any fill.</summary>

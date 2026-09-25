@@ -13,7 +13,7 @@ public partial class BossCoil : Boss
 	public BossCoil()
 	{
 		BossName = "THE COIL";
-		MaxHealth = 400;
+		MaxHealth = 340;
 		ArrivalLine = TranslationServer.Translate("BOSS_Coil_ARRIVAL");
 	}
 
