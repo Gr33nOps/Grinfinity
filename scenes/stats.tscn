@@ -179,20 +179,9 @@ theme_override_fonts/font = ExtResource("2_font")
 text = "0%"
 horizontal_alignment = 2
 
-[node name="Achievements" type="HBoxContainer" parent="Layout/Columns/Rows"]
+[node name="Gap" type="Control" parent="Layout/Columns/Rows"]
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
-
-[node name="Label" type="Label" parent="Layout/Columns/Rows/Achievements"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_fonts/font = ExtResource("2_font")
-text = "ACHIEVEMENTS"
-
-[node name="Value" type="Label" parent="Layout/Columns/Rows/Achievements"]
-layout_mode = 2
-theme_override_fonts/font = ExtResource("2_font")
-text = "0 / 9"
-horizontal_alignment = 2
 
 [node name="AchievementList" type="Control" parent="Layout/Columns/Rows"]
 layout_mode = 2

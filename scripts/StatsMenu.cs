@@ -2,7 +2,7 @@ using Godot;
 
 /// <summary>
 /// My Planet: the planet you wear, every planet there is to earn, your lifetime
-/// numbers and every achievement. Purely a display screen — every number here
+/// numbers and, on a card of their own, every achievement. Purely a display screen — every number here
 /// already lives on <see cref="PlayerProfile"/>, tracked across every run; this
 /// is the one place a player can actually see it.
 /// </summary>
@@ -29,7 +29,6 @@ public partial class StatsMenu : Control
 		SetRow("Kills", $"{PlayerProfile.TotalKills:N0}");
 		SetRow("Timeplayed", FormatDuration(PlayerProfile.TotalTimePlayed));
 		SetRow("Heaviestmass", $"{Mathf.RoundToInt(PlayerProfile.HeaviestMassEver * 100)}%");
-		SetRow("Achievements", $"{CountUnlockedAchievements()} / {Achievements.All.Length}");
 
 		var backButton = GetNode<Button>("Layout/BackButton");
 		backButton.Pressed += OnBackPressed;
@@ -64,8 +63,9 @@ public partial class StatsMenu : Control
 
 	/// <summary>
 	/// Every planet can be browsed, so a player can see what is still out there
-	/// and what it takes. Landing on an unlocked one wears it on the spot;
-	/// a locked one shows as a dark shape with its unlock rule underneath.
+	/// and what it takes. Landing on an unlocked one wears it on the spot and
+	/// shows only its name; a locked one shows as a dark shape with its unlock
+	/// rule underneath.
 	/// </summary>
 	private void BuildWorldPicker()
 	{
@@ -97,8 +97,8 @@ public partial class StatsMenu : Control
 		bool unlocked = PlayerProfile.IsWorldUnlocked(world.Id);
 		planet.Present(world.Id, !unlocked);
 		planetName.Text = unlocked ? world.Name : $"{world.Name}  (LOCKED)";
-		planetNote.Text = unlocked ? world.Flavour : $"To unlock: {world.UnlockHint}";
-		planetNote.AddThemeColorOverride("font_color", unlocked ? ArcadeSkin.Cream : Faded);
+		planetNote.Text = unlocked ? "" : $"To unlock: {world.UnlockHint}";
+		planetNote.AddThemeColorOverride("font_color", Faded);
 		planetCount.Text = $"{world.Id} OF {Worlds.All.Length}  •  {CountUnlockedWorlds()} UNLOCKED";
 	}
 
@@ -138,17 +138,6 @@ public partial class StatsMenu : Control
 		foreach (Worlds.Profile world in Worlds.All)
 		{
 			if (PlayerProfile.IsWorldUnlocked(world.Id))
-				count++;
-		}
-		return count;
-	}
-
-	private static int CountUnlockedAchievements()
-	{
-		int count = 0;
-		foreach (Achievements.Profile achievement in Achievements.All)
-		{
-			if (PlayerProfile.IsAchievementUnlocked(achievement.Id))
 				count++;
 		}
 		return count;

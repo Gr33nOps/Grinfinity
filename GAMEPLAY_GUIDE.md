@@ -108,7 +108,7 @@ The combo counter under the time counts kills in a row, and breaks after 2.5 sec
 
 ## My Planet
 
-The **My Planet** screen shows the planet you wear, big, with the ring if you have earned it. The arrows browse all twelve planets: landing on an unlocked one wears it straight away, and a locked one shows as a dark shape with its unlock rule underneath. Planets are only looks and never change how you play.
+The **My Planet** screen shows the planet you wear, big, with the ring if you have earned it. The arrows browse all twelve planets: landing on an unlocked one wears it straight away and shows its name, and a locked one shows as a dark shape with its unlock rule underneath. Planets are only looks and never change how you play.
 
 | Planet | Unlocked by |
 |---|---|
@@ -125,7 +125,7 @@ The **My Planet** screen shows the planet you wear, big, with the ring if you ha
 | Voidkin | Play for 1 hour in total |
 | Starforged | Play 20 runs, and survive 10 minutes in one |
 
-The same screen lists your lifetime numbers and all nine achievements, with the earned ones lit:
+The same screen lists your lifetime numbers, and below them a card with all nine achievements, the earned ones ticked:
 
 | Achievement | How |
 |---|---|
@@ -145,4 +145,4 @@ Hints only show the controls you are using. Touch the keyboard or mouse and they
 
 ## Faces
 
-Only your planet is happy. Every enemy has its own bad mood: Drifters are sad (three different sad faces), Shards angry (two), Planetoids grumpy (two), Fractures worried and their Splinters scared, Satellites suspicious, Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.
+Only your planet is happy, and each of the twelve planets has its own happy face: Embertide grins, Driftlight is calm, Palefrost is shy, Cinderbloom shows its teeth, Hollowmere looks sly, Duskwarden looks confident, Verdant Halo is starry-eyed, Ashen Coil wears sunglasses, Glasswake is delighted, Moltencrown winks, Voidkin sticks its tongue out and Starforged beams. Every enemy has its own bad mood: Drifters are sad (three different sad faces), Shards angry (two), Planetoids grumpy (two), Fractures worried and their Splinters scared, Satellites suspicious, Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.

@@ -42,7 +42,7 @@ public partial class PlanetVisual : Node2D
 		body = player.GetNode<Sprite2D>("Sprite2D");
 		body.Texture = GD.Load<Texture2D>($"res://art/cosmic/planet_{GameSettings.Instance?.World ?? 1}.svg");
 		body.Position = Vector2.Zero; body.Scale = Vector2.One * .32f; body.FlipH = body.FlipV = false;
-		normal = GD.Load<Texture2D>("res://art/cosmic/face.svg"); blink = GD.Load<Texture2D>("res://art/cosmic/face_blink.svg"); happy = GD.Load<Texture2D>("res://art/cosmic/face_happy.svg");
+		int world = GameSettings.Instance?.World ?? 1; normal = Worlds.Face(world); blink = Worlds.Face(world, true); happy = GD.Load<Texture2D>("res://art/cosmic/face_happy.svg");
 		face = new Sprite2D { Texture = normal, ZIndex = 2 }; body.AddChild(face);
 		gun = new Sprite2D { Texture = GD.Load<Texture2D>("res://art/cosmic/blaster.svg"), Position = new Vector2(49, 12), Scale = Vector2.One * .27f, ZIndex = 3 }; AddChild(gun);
 		muzzle = player.GetNode<Node2D>("shootyPart");

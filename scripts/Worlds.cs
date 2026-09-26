@@ -136,6 +136,17 @@ public static class Worlds
 	public static Profile Get(int id) => All[Mathf.Clamp(id, 1, All.Length) - 1];
 
 	/// <summary>
+	/// Each planet's own happy face, and the same face mid-blink. Embertide keeps
+	/// the original; the rest each have their own mood.
+	/// </summary>
+	public static Texture2D Face(int id, bool blinking = false)
+	{
+		id = Mathf.Clamp(id, 1, All.Length);
+		string name = id == 1 ? "face" : $"face_{id}";
+		return GD.Load<Texture2D>($"res://art/cosmic/{name}{(blinking ? "_blink" : "")}.svg");
+	}
+
+	/// <summary>
 	/// Checks every locked world against the profile's current stats and
 	/// unlocks any that are now earned. Called once an orbit's stats are final,
 	/// so a world can be earned by the very orbit that satisfies it.

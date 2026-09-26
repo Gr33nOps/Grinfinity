@@ -1,6 +1,7 @@
 """Faces for everything in the arena. Original vector artwork, no external assets.
 
-Only the planet is happy. Every enemy wears its own bad mood, chosen to suit
+Only the planet is happy, and each of the twelve planets has its own happy
+face. Every enemy wears its own bad mood, chosen to suit
 how it behaves, and the most common kinds come in a few versions so a crowd of
 them never looks cloned:
 
@@ -325,4 +326,125 @@ p_big += path('M 108 174 Q 127 162 146 174 Q 138 184 127 184 Q 116 184 108 174 Z
 p_big += path('M 100 146 Q 127 152 154 146', 'none', f'stroke="{CREAM}" stroke-width="4"')
 svg('face_happy', p_cheeks + p_joy + p_big)
 
-print('Wrote 3 planet faces, 12 enemy faces and 3 boss faces')
+
+# --- One happy face per planet ------------------------------------------------
+# Embertide wears the face above. Every other planet has its own good mood,
+# picked to suit it, each with a blink (eyes shut, everything else the same).
+
+GOLD = '#FFD76A'; TONGUE = '#E0677F'
+EYES = (99, 155)
+
+
+def p_eye(x, y=112, look=(4, 3), size=1.0, glints=1):
+    """The planet's eye: big cream oval, big ink pupil, bright glints."""
+    px, py = x + look[0] * size, y + look[1] * size
+    e = f'<ellipse cx="{x}" cy="{y}" rx="{18 * size:.1f}" ry="{23 * size:.1f}" fill="{CREAM}" stroke-width="5"/>'
+    e += f'<ellipse cx="{px:.1f}" cy="{py:.1f}" rx="{9.5 * size:.1f}" ry="{12.5 * size:.1f}" fill="{INK}" stroke="none"/>'
+    e += circle(round(px + 4 * size, 1), round(py - 7 * size, 1), round(4 * size, 1), 'white', 'none')
+    if glints > 1:
+        e += circle(round(px - 3 * size, 1), round(py + 5 * size, 1), round(2.2 * size, 1), 'white', 'none')
+    return e
+
+
+def half_eye(x, y=114, look=0):
+    """A relaxed, half-shut eye: only the lower half shows, under a flat lid line."""
+    e = path(f'M {x - 18} {y} A 18 21 0 0 0 {x + 18} {y} Q {x} {y - 5} {x - 18} {y} Z', CREAM, 'stroke-width="5"')
+    e += circle(x + look, y + 8, 8, INK, 'none') + circle(x + look + 3, y + 5, 2.6, 'white', 'none')
+    e += path(f'M {x - 21} {y} Q {x} {y - 6} {x + 21} {y}', 'none', 'stroke-width="6"')
+    return e
+
+
+def star(cx, cy, outer, inner, points=5, fill=GOLD, extra='stroke-width="5"'):
+    import math
+    pts = []
+    for i in range(points * 2):
+        r = outer if i % 2 == 0 else inner
+        a = -math.pi / 2 + i * math.pi / points
+        pts.append(f'{cx + r * math.cos(a):.1f} {cy + r * math.sin(a):.1f}')
+    return path('M ' + ' L '.join(pts) + ' Z', fill, extra)
+
+
+shut = p_closed                                   # content, eyes closed
+arcs = p_joy                                      # ^ ^
+brows_up = path('M 82 74 Q 98 64 114 72', 'none', 'stroke-width="5"') + path('M 140 72 Q 156 64 172 74', 'none', 'stroke-width="5"')
+open_smile = p_smile
+small_smile = path('M 108 152 Q 127 166 146 152', 'none', 'stroke-width="6"')
+
+faces = {}
+
+# 2 Driftlight: calm and content, eyes closed, a small soft smile.
+faces[2] = (p_cheeks + shut + p_brows + small_smile, None)
+
+# 3 Palefrost: shy, glancing away, cheeks glowing.
+shy_cheeks = ''
+for cx in (70, 184):
+    shy_cheeks += f'<ellipse cx="{cx}" cy="146" rx="20" ry="11" fill="{BLUSH}" stroke="none" opacity=".75"/>'
+    for dx in (-8, 0, 8):
+        shy_cheeks += path(f'M {cx + dx + 3} {140} L {cx + dx - 3} {151}', 'none', f'stroke="{BERRY}" stroke-width="2.5" opacity=".7"')
+shy_mouth = path('M 108 155 Q 121 164 136 154', 'none', 'stroke-width="5"')
+shy_brows = path('M 86 82 Q 98 76 111 80', 'none', 'stroke-width="5"') + path('M 143 80 Q 156 76 168 82', 'none', 'stroke-width="5"')
+faces[3] = (shy_cheeks + p_eye(99, look=(-6, 5)) + p_eye(155, look=(-6, 5)) + shy_brows + shy_mouth,
+            shy_cheeks + shut + shy_brows + shy_mouth)
+
+# 4 Cinderbloom: proud, a wide toothy grin.
+grin = path('M 88 144 Q 127 156 166 144 Q 160 180 127 182 Q 94 180 88 144 Z', INK, 'stroke-width="5"')
+grin += path('M 95 149 Q 127 159 159 149 L 156 162 Q 127 170 98 162 Z', CREAM, 'stroke="none"')
+grin += path('M 112 155 L 112 166 M 127 157 L 127 169 M 142 155 L 142 166', 'none', 'stroke-width="3"')
+faces[4] = (p_cheeks + p_eye(99) + p_eye(155) + brows_up + grin, p_cheeks + shut + brows_up + grin)
+
+# 5 Hollowmere: mischievous, eyes half shut and sliding sideways, a sly grin.
+sly_brows = path('M 84 90 L 113 87', 'none', 'stroke-width="5"') + path('M 141 80 Q 156 68 171 77', 'none', 'stroke-width="5"')
+sly = path('M 96 148 Q 132 160 164 140 Q 152 178 120 174 Q 102 168 96 148 Z', INK, 'stroke-width="5"')
+sly += path('M 104 152 Q 132 160 156 147', 'none', f'stroke="{CREAM}" stroke-width="4"')
+sly_shut = path('M 80 116 Q 99 124 118 116', 'none', 'stroke-width="6"') + path('M 136 116 Q 155 124 174 116', 'none', 'stroke-width="6"')
+faces[5] = (p_cheeks + half_eye(99, look=7) + half_eye(155, look=7) + sly_brows + sly, p_cheeks + sly_shut + sly_brows + sly)
+
+# 6 Duskwarden: confident and ready, firm brows and a broad closed smile.
+firm_brows = path('M 83 80 L 113 80', 'none', 'stroke-width="7"') + path('M 141 80 L 171 80', 'none', 'stroke-width="7"')
+broad = path('M 90 148 Q 127 176 164 148', 'none', 'stroke-width="7"')
+broad += path('M 85 143 Q 87 149 93 152 M 169 143 Q 167 149 161 152', 'none', 'stroke-width="4"')
+faces[6] = (p_cheeks + p_eye(99, look=(0, 3)) + p_eye(155, look=(0, 3)) + firm_brows + broad, p_cheeks + shut + firm_brows + broad)
+
+# 7 Verdant Halo: starry-eyed.
+starry = star(99, 113, 24, 11) + star(155, 113, 24, 11)
+faces[7] = (p_cheeks + starry + brows_up + open_smile, p_cheeks + shut + brows_up + open_smile)
+
+# 8 Ashen Coil: cool, in sunglasses, with a smirk.
+shades = path('M 74 100 L 124 100 Q 124 132 100 132 Q 76 132 74 100 Z', '#1B1026', 'stroke-width="5"')
+shades += path('M 130 100 L 180 100 Q 178 132 154 132 Q 130 132 130 100 Z', '#1B1026', 'stroke-width="5"')
+shades += path('M 124 104 Q 127 100 130 104', 'none', 'stroke-width="5"')
+shades += path('M 86 108 L 96 108 M 142 108 L 152 108', 'none', f'stroke="{CREAM}" stroke-width="4" opacity=".8"')
+smirk = path('M 104 156 Q 132 166 156 146', 'none', 'stroke-width="6"') + path('M 152 142 Q 158 146 158 152', 'none', 'stroke-width="4"')
+faces[8] = (p_cheeks + shades + smirk, None)
+
+# 9 Glasswake: delighted, huge shining eyes and a small open smile.
+ooh = path('M 110 150 Q 127 157 144 150 Q 142 174 127 174 Q 112 174 110 150 Z', INK, 'stroke-width="5"')
+ooh += path('M 119 168 Q 127 162 135 168 Q 131 172 127 172 Q 123 172 119 168 Z', BERRY, 'stroke="none"')
+faces[9] = (p_cheeks + p_eye(99, y=110, look=(1, 2), size=1.15, glints=2) + p_eye(155, y=110, look=(1, 2), size=1.15, glints=2) + brows_up + ooh,
+            p_cheeks + shut + brows_up + ooh)
+
+# 10 Moltencrown: a wink and a big grin.
+wink = path('M 139 116 Q 155 102 171 116', 'none', 'stroke-width="7"')
+wink_brows = path('M 84 80 Q 98 72 112 79', 'none', 'stroke-width="5"') + path('M 142 86 Q 156 80 170 86', 'none', 'stroke-width="5"')
+faces[10] = (p_cheeks + p_eye(99) + wink + wink_brows + p_big, p_cheeks + shut + wink_brows + p_big)
+
+# 11 Voidkin: playful, eyes squeezed shut, tongue out.
+squint = path('M 84 104 L 112 114 L 84 124', 'none', 'stroke-width="7"') + path('M 170 104 L 142 114 L 170 124', 'none', 'stroke-width="7"')
+tongue = path('M 98 148 Q 127 162 156 148', 'none', 'stroke-width="6"')
+tongue += path('M 114 155 Q 114 182 128 182 Q 142 182 142 155 Q 128 161 114 155 Z', TONGUE, 'stroke-width="5"')
+tongue += path('M 128 162 L 128 173', 'none', 'stroke-width="3"')
+faces[11] = (p_cheeks + squint + tongue, None)
+
+# 12 Starforged: beaming, shining eyes, a huge grin and a few sparkles.
+sparkles = star(56, 88, 13, 4, 4, CREAM, 'stroke-width="3"') + star(204, 80, 10, 3, 4, CREAM, 'stroke-width="3"') + star(208, 180, 11, 3.5, 4, CREAM, 'stroke-width="3"')
+beam = path('M 86 140 Q 127 154 168 140 Q 164 190 127 191 Q 90 190 86 140 Z', INK, 'stroke-width="5"')
+beam += path('M 93 145 Q 127 157 161 145 L 159 155 Q 127 165 95 155 Z', CREAM, 'stroke="none"')
+beam += path('M 106 178 Q 127 164 148 178 Q 138 188 127 188 Q 116 188 106 178 Z', BERRY, 'stroke="none"')
+faces[12] = (p_cheeks + sparkles + p_eye(99, look=(2, 2), size=1.08, glints=2) + p_eye(155, look=(2, 2), size=1.08, glints=2) + brows_up + beam,
+             p_cheeks + sparkles + shut + brows_up + beam)
+
+for n, (look, blink) in faces.items():
+    svg(f'face_{n}', look)
+    svg(f'face_{n}_blink', blink or look)
+
+print('Wrote 14 planet faces, 12 enemy faces and 3 boss faces')

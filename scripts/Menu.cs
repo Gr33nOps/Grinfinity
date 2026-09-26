@@ -35,7 +35,7 @@ public partial class Menu : Node
         bool ringed=WorldRings.Earned;
         if(ringed)hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_back.svg"),Scale=Vector2.One*.78f});
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>($"res://art/cosmic/planet_{GameSettings.Instance.World}.svg")});
-        expression=new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/face.svg")};hero.AddChild(expression);
+        expression=new Sprite2D {Texture=Worlds.Face(GameSettings.Instance.World)};hero.AddChild(expression);
         if(ringed)hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/ring_2_front.svg"),Scale=Vector2.One*.78f});
         hero.AddChild(new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/blaster.svg"),Position=new Vector2(153,52),Scale=Vector2.One*.65f,Rotation=.12f});
         hero.Scale=Vector2.One*2;
@@ -54,7 +54,7 @@ public partial class Menu : Node
         time+=(float)delta;var size=GetViewport().GetVisibleRect().Size;
         hero.Position=size*new Vector2(.73f,.53f)+new Vector2(0,Mathf.Sin(time*1.4f)*10);
         hero.Rotation=Mathf.Sin(time*.8f)*.055f;
-        expression.Texture=GD.Load<Texture2D>(time%4.5f>4.35f?"res://art/cosmic/face_blink.svg":"res://art/cosmic/face.svg");
+        expression.Texture=Worlds.Face(GameSettings.Instance.World,time%4.5f>4.35f);
     }
     private void GoTo(string name)=>SceneTransition.Instance.ChangeScene($"res://scenes/{name}.tscn");
 }

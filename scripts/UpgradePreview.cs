@@ -24,7 +24,7 @@ public partial class UpgradePreview : Control
 		MouseFilter = MouseFilterEnum.Ignore;
 		ClipContents = true;
 		planet = GD.Load<Texture2D>($"res://art/cosmic/planet_{GameSettings.Instance?.World ?? 1}.svg");
-		face = GD.Load<Texture2D>("res://art/cosmic/face.svg");
+		face = Worlds.Face(GameSettings.Instance?.World ?? 1);
 		gun = GD.Load<Texture2D>("res://art/cosmic/blaster.svg");
 		shot = GD.Load<Texture2D>("res://art/cosmic/shot.svg");
 		drifter = GD.Load<Texture2D>("res://art/cosmic/body_drifter.svg");

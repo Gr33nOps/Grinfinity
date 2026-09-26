@@ -20,8 +20,6 @@ public partial class PlanetShowcase : Control
 	public override void _Ready()
 	{
 		MouseFilter = MouseFilterEnum.Ignore;
-		face = GD.Load<Texture2D>("res://art/cosmic/face.svg");
-		blink = GD.Load<Texture2D>("res://art/cosmic/face_blink.svg");
 		ringBack = GD.Load<Texture2D>("res://art/cosmic/ring_2_back.svg");
 		ringFront = GD.Load<Texture2D>("res://art/cosmic/ring_2_front.svg");
 		ringed = WorldRings.Earned;
@@ -31,6 +29,8 @@ public partial class PlanetShowcase : Control
 	public void Present(int id, bool isLocked)
 	{
 		planet = GD.Load<Texture2D>($"res://art/cosmic/planet_{id}.svg");
+		face = Worlds.Face(id);
+		blink = Worlds.Face(id, true);
 		locked = isLocked;
 		QueueRedraw();
 	}
