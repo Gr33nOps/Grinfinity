@@ -582,13 +582,6 @@ for rock, (base, _) in ROCKS.items():
 high_worry = brow(96, 84, 122, 76, -3) + brow(150, 74, 176, 82, -3)
 
 
-def exclaim(x, y):
-    """A cartoon "!" floating by the head, ink-rimmed so it reads on any rock."""
-    bar = f'M {x + 3} {y} L {x} {y + 26}'
-    return (path(bar, 'none', 'stroke-width="13"') + path(bar, 'none', f'stroke="{CREAM}" stroke-width="6"')
-            + circle(x - 1, y + 40, 6.5, CREAM, None, 'stroke-width="4"'))
-
-
 def jolt(lines):
     """Short strokes flying off the head: the flinch of a sudden fright."""
     return ''.join(path(d, 'none', 'stroke-width="5"') for d in lines)
@@ -656,10 +649,10 @@ shocked_faces = {
                  + brow(98, 76, 124, 70, 8) + brow(148, 68, 174, 74, 8)
                  + f'<ellipse cx="136" cy="168" rx="11" ry="20" fill="{INK}" stroke-width="5"/>'
                  + f'<ellipse cx="136" cy="178" rx="6" ry="6" fill="{BERRY}" stroke="none"/>',
-    # "!": one eye popping, a small gasp, an exclamation mark by the head.
+    # Double take: one eye popping, a small gasp, a bead of sweat.
     'shocked_3': eye(113, 116, 17, (0, -2), 0.3) + eye(159, 113, 11, (0, -2), 0.35)
                  + brow(94, 82, 124, 70, 6) + brow(150, 88, 172, 86, 0)
-                 + o_mouth(130, 164, 9) + exclaim(204, 26),
+                 + o_mouth(130, 164, 9) + sweat(190, 84),
     # Flinch: eyes clamped shut and drooping, brows pinched up, a wobbling frown, jolt lines.
     'shocked_4': path('M 100 122 L 126 113', 'none', 'stroke-width="7"') + path('M 146 109 L 172 118', 'none', 'stroke-width="7"')
                  + high_worry + wobble(136, 166, 38, 5)
