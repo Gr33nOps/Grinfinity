@@ -1,8 +1,8 @@
 using Godot;
 
 /// <summary>
-/// The boss test picker, opened from the main menu in debug builds: two
-/// switches (start fully upgraded, can't die) and one button per boss. See
+/// The boss test picker, opened from the main menu in debug builds: three
+/// switches (start fully upgraded, can't die, with enemies) and one button per boss. See
 /// <see cref="BossTest"/>.
 /// </summary>
 public partial class BossTestPanel : Control
@@ -12,10 +12,11 @@ public partial class BossTestPanel : Control
 	public override void _Ready()
 	{
 		VBoxContainer rows = ArcadeSkin.Modal(this, "BOSS TEST", 640);
-		rows.AddChild(ArcadeSkin.Label("Just you and a boss. Test runs are never saved.", 22, ArcadeSkin.Muted));
+		rows.AddChild(ArcadeSkin.Label("You and a boss. Test runs are never saved.", 22, ArcadeSkin.Muted));
 
 		rows.AddChild(Toggle("START FULLY UPGRADED", BossTest.Upgraded, on => BossTest.Upgraded = on));
 		rows.AddChild(Toggle("CAN'T DIE", BossTest.Invincible, on => BossTest.Invincible = on));
+		rows.AddChild(Toggle("WITH ENEMIES", BossTest.WithEnemies, on => BossTest.WithEnemies = on));
 
 		first = Fight(rows, "THE COIL", 0);
 		Fight(rows, "THE BROOD", 1);

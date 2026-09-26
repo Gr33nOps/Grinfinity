@@ -1,15 +1,19 @@
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
-/// The Black Hole — third boss, and the thematic centrepiece. A rival gravity
-/// well with health: while it lives, bodies fall toward *it*, your shots bend
-/// toward it, and the motes you need for mass get dragged into it before you
-/// can reach them. Everything <see cref="GravityWell"/> does to the arena, this
-/// does to you specifically — it is the hazard made personal.
+/// The Black Hole — third boss, and the thematic centrepiece. A fight about
+/// whose gravity wins, in two moves:
 ///
-/// It is not a pattern check like The Coil, and not a DPS-under-pressure check
-/// like The Brood. It is a fight about whose gravity wins, which is the one
-/// question the rest of the game never has to ask.
+/// The event horizon. A ring forms around it and fills up over a couple of
+/// seconds: walk out before it closes. Anyone still inside is dragged in harder
+/// than they can walk, and only a dash breaks free; reaching the core is death.
+///
+/// The throw. It grabs the enemies on screen, holds them spinning round itself
+/// for a moment, then hurls them at the planet one after another. With nothing
+/// nearby to grab, it pulls a couple of Drifters out of its own dark.
+///
+/// Both get quicker as it gets hurt.
 /// </summary>
 public partial class BossBlackHole : Boss
 {
@@ -21,149 +25,139 @@ public partial class BossBlackHole : Boss
 		MaxHealth = 1100;
 	}
 
-	[ExportGroup("Pull")]
+	private enum Horizon { Idle, Forming, Pulling }
+
+	[ExportGroup("Event horizon")]
 	[Export] public float CoreRadius { get; set; } = 46.0f;
-	[Export] public float PullRadius { get; set; } = 620.0f;
-	[Export] public float BasePullStrength { get; set; } = 900.0f;
-	/// <summary>How much fiercer the pull gets as health drops — it grasps harder while dying.</summary>
-	[Export] public float WoundedPullMultiplier { get; set; } = 1.8f;
-	[Export] public float PlayerPullFactor { get; set; } = 0.22f;
+	/// <summary>How far the ring reaches from its centre.</summary>
+	[Export] public float HorizonRadius { get; set; } = 430.0f;
+	/// <summary>Seconds between one horizon ending and the next forming, shrinking as it gets hurt.</summary>
+	[Export] public float HorizonInterval { get; set; } = 7.5f;
+	[Export] public float MinHorizonInterval { get; set; } = 5.0f;
+	/// <summary>Seconds to get out while the ring fills. Always long enough to walk clear.</summary>
+	[Export] public float FormTime { get; set; } = 2.2f;
+	[Export] public float MinFormTime { get; set; } = 1.7f;
+	[Export] public float PullTime { get; set; } = 2.6f;
+	/// <summary>Inward pull at the ring's edge and at the core. Walking is 250: only a dash beats it.</summary>
+	[Export] public float EdgePull { get; set; } = 330.0f;
+	[Export] public float CorePull { get; set; } = 520.0f;
+
+	[ExportGroup("Throw")]
+	[Export] public float ThrowInterval { get; set; } = 4.2f;
+	[Export] public float MinThrowInterval { get; set; } = 2.4f;
+	/// <summary>How far away it can reach to grab something: about the screen.</summary>
+	[Export] public float GrabReach { get; set; } = 1000.0f;
+	[Export] public int MaxThrown { get; set; } = 3;
+	/// <summary>With fewer than this to grab, it pulls Drifters out of itself to make up the number.</summary>
+	[Export] public int ConjureUpTo { get; set; } = 2;
+	[Export] public float HoldTime { get; set; } = 0.8f;
+	[Export] public float ThrowSpeed { get; set; } = 760.0f;
+	[Export] public float ThrowFlight { get; set; } = 1.3f;
+	[Export] public float ThrowGap { get; set; } = 0.22f;
+	[Export] public PackedScene BodyScene { get; set; }
 
 	[ExportGroup("Movement")]
 	[Export] public float DriftSpeed { get; set; } = 26.0f;
 	[Export] public float SpinSpeed { get; set; } = 0.35f;
 
-	[ExportGroup("Reprisal")]
-	/// <summary>What it flings back at you from everything it has pulled in. Seconds between flings.</summary>
-	[Export] public float FlingInterval { get; set; } = 2.6f;
-	[Export] public float MinFlingInterval { get; set; } = 1.1f;
-	[Export] public float FlingSpeed { get; set; } = 480.0f;
-	[Export] public PackedScene BulletScene { get; set; }
+	private static readonly Color Danger = new("ff5a7a");
 
 	private Player world;
 	private Vector2 driftTarget;
-	private float flingTimer;
+	private Horizon horizon = Horizon.Idle;
+	private float horizonLeft, time;
+	private float throwTimer, holdLeft, nextThrowIn;
+	private readonly List<Body> held = new();
 
 	protected override float Size => 1.6f;
 
 	protected override void OnBossReady()
 	{
-		// The core that swallows grows with the art; the pull's reach does not.
+		// The core that swallows grows with the art; the horizon's reach does not.
 		CoreRadius *= Size;
-		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
+		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 		world = World;
-		flingTimer = 1.6f;
+		horizonLeft = 3.0f;
+		throwTimer = 1.8f;
 		PickDriftTarget();
-		QueueRedraw();
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
 		float step = (float)delta;
+		time += step;
 
-		// The swirl is the node's own Rotation, not a redraw — the drawn shapes
-		// are static and Godot re-transforms them every frame for free.
+		// The swirl is the node's own Rotation; the art counter-rotates in Boss.
 		Rotation += SpinSpeed * step;
 
 		if (GlobalPosition.DistanceTo(driftTarget) < 50f)
 			PickDriftTarget();
-		Velocity = (driftTarget - GlobalPosition).Normalized() * DriftSpeed;
+		// It holds still while its horizon is up, so the ring stays where it was drawn.
+		Velocity = horizon == Horizon.Idle ? (driftTarget - GlobalPosition).Normalized() * DriftSpeed : Vector2.Zero;
 		MoveAndSlide();
 
-		// Wounded means hungrier, not weaker — the opposite of backing off.
-		float pull = BasePullStrength * Mathf.Lerp(1.0f, WoundedPullMultiplier, 1.0f - HealthFraction);
-
-		PullBodies(step, pull);
-		PullDebris(step, pull);
-		PullBullets(step, pull);
-		PullPlayer(step, pull);
-
-		flingTimer -= step;
-        Windup=Mathf.Clamp(1-flingTimer/.45f,0,1);
-		if (flingTimer <= 0f)
-		{
-			flingTimer = Mathf.Lerp(MinFlingInterval, FlingInterval, HealthFraction) * CycleTempo;
-			FlingAtPlayer();
-		}
+		UpdateHorizon(step);
+		UpdateThrow(step);
+		QueueRedraw();
 	}
 
 	private void PickDriftTarget()
 	{
-		// Slow, and always somewhere near: the anchor the fight orbits, never
-		// something that can simply be walked away from.
+		// Slow, and always somewhere near: the anchor the fight orbits.
 		driftTarget = PointNearPlayer(260f, 520f);
 	}
 
-	private float PullAt(float distance, float strength) => strength * (PullRadius * 0.35f) / (distance + PullRadius * 0.35f);
+	private bool HasWorld => world != null && IsInstanceValid(world);
 
-	/// <summary>Bodies stop falling toward you and start falling toward it — your pull, stolen outright.</summary>
-	private void PullBodies(float delta, float strength)
+	// --- Event horizon ------------------------------------------------------------
+
+	private void UpdateHorizon(float step)
 	{
-		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
+		horizonLeft -= step;
+		switch (horizon)
 		{
-			if (node is not Body body || !IsInstanceValid(body))
-				continue;
+			case Horizon.Idle:
+				Windup = 0f;
+				if (horizonLeft <= 0f)
+				{
+					horizon = Horizon.Forming;
+					horizonLeft = CurrentFormTime;
+				}
+				break;
 
-			Vector2 toCore = GlobalPosition - body.GlobalPosition;
-			float distance = toCore.Length();
-			if (distance > PullRadius)
-				continue;
+			case Horizon.Forming:
+				// It glows brighter as the ring fills: the tell.
+				Windup = 1f - horizonLeft / CurrentFormTime;
+				if (horizonLeft <= 0f)
+				{
+					horizon = Horizon.Pulling;
+					horizonLeft = PullTime;
+				}
+				break;
 
-			if (distance <= CoreRadius)
-			{
-				body.TakeDamage(9999, -toCore.Normalized());
-				continue;
-			}
-
-			body.Drift += toCore.Normalized() * PullAt(distance, strength) * delta;
+			case Horizon.Pulling:
+				Windup = 1f;
+				PullPlayer();
+				if (horizonLeft <= 0f)
+				{
+					horizon = Horizon.Idle;
+					horizonLeft = Mathf.Lerp(MinHorizonInterval, HorizonInterval, HealthFraction) * CycleTempo;
+				}
+				break;
 		}
 	}
 
-	/// <summary>Motes you need for mass, dragged into it before you can reach them.</summary>
-	private void PullDebris(float delta, float strength)
+	private float CurrentFormTime => Mathf.Lerp(MinFormTime, FormTime, HealthFraction);
+
+	/// <summary>Inside the closed ring, the planet is dragged in harder than it can walk; a dash ignores it.</summary>
+	private void PullPlayer()
 	{
-		foreach (Node node in GetTree().GetNodesInGroup("debris"))
-		{
-			if (node is not Debris mote || !IsInstanceValid(mote))
-				continue;
-
-			float distance = GlobalPosition.DistanceTo(mote.GlobalPosition);
-			if (distance > PullRadius || distance <= CoreRadius)
-				continue;
-
-			mote.Nudge((GlobalPosition - mote.GlobalPosition).Normalized() * PullAt(distance, strength) * delta);
-		}
-	}
-
-	/// <summary>Your own shots, bent toward it — the same theft <see cref="GravityWell"/> commits, aimed at you specifically.</summary>
-	private void PullBullets(float delta, float strength)
-	{
-		foreach (Node node in GetTree().GetNodesInGroup("player_bullets"))
-		{
-			if (node is not Bullet bullet || !IsInstanceValid(bullet))
-				continue;
-
-			float distance = GlobalPosition.DistanceTo(bullet.GlobalPosition);
-			if (distance > PullRadius)
-				continue;
-
-			bullet.Attract((GlobalPosition - bullet.GlobalPosition).Normalized() * PullAt(distance, strength) * 3.0f, delta);
-		}
-	}
-
-	/// <summary>
-	/// The pull on the world itself. Weak and escapable by a single dash — the
-	/// same asymmetry the plain gravity well hazard uses, so the lesson it
-	/// taught earlier in the run pays off here.
-	/// </summary>
-	private void PullPlayer(float delta, float strength)
-	{
-		if (world == null || !IsInstanceValid(world))
+		if (!HasWorld)
 			return;
 
 		Vector2 toCore = GlobalPosition - world.GlobalPosition;
 		float distance = toCore.Length();
-		if (distance > PullRadius)
+		if (distance > HorizonRadius)
 			return;
 
 		if (distance <= CoreRadius)
@@ -172,26 +166,125 @@ public partial class BossBlackHole : Boss
 			return;
 		}
 
-		world.ApplyExternalPush(toCore.Normalized() * PullAt(distance, strength) * PlayerPullFactor * delta);
+		float closeness = 1f - Mathf.Clamp((distance - CoreRadius) / (HorizonRadius - CoreRadius), 0f, 1f);
+		world.ApplyExternalPush(toCore / distance * Mathf.Lerp(EdgePull, CorePull, closeness));
 	}
 
-	/// <summary>Throws back a piece of what it has pulled in. Everything it steals, it can spend on you.</summary>
-	private void FlingAtPlayer()
+	// --- Throw ------------------------------------------------------------------------
+
+	private void UpdateThrow(float step)
 	{
-		if (BulletScene == null || world == null || !IsInstanceValid(world))
+		held.RemoveAll(body => !IsInstanceValid(body) || body.IsDestroyed);
+
+		if (held.Count > 0)
+		{
+			// Holding them in a ring round itself, turning with it.
+			for (int i = 0; i < held.Count; i++)
+			{
+				float angle = time * 2.4f + Mathf.Tau * i / held.Count;
+				held[i].Hold(GlobalPosition + Vector2.FromAngle(angle) * (CoreRadius + 70f));
+			}
+
+			if ((holdLeft -= step) > 0f)
+				return;
+			if ((nextThrowIn -= step) > 0f)
+				return;
+
+			Body thrown = held[0];
+			held.RemoveAt(0);
+			if (HasWorld)
+				thrown.Throw((world.GlobalPosition - thrown.GlobalPosition).Normalized() * ThrowSpeed, ThrowFlight);
+			else
+				thrown.Release();
+			nextThrowIn = ThrowGap;
+			return;
+		}
+
+		// No new grab while its horizon is dragging: one danger at a time.
+		if (horizon == Horizon.Pulling || (throwTimer -= step) > 0f)
 			return;
 
-		var shot = BulletScene.Instantiate<Bullet>();
-		shot.GlobalPosition = GlobalPosition + Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * 90f;
-		shot.Direction = (world.GlobalPosition - shot.GlobalPosition).Normalized();
-		shot.Speed = FlingSpeed;
-		shot.Range = 5.0f;
-		shot.MakeHostile();
-		GameManager.Spawn(this, shot);
+		throwTimer = Mathf.Lerp(MinThrowInterval, ThrowInterval, HealthFraction) * CycleTempo;
+		Grab();
 	}
 
-    public override void _Draw()
-    {
-        for(int i=0;i<16;i++)DrawArc(Vector2.Zero,PullRadius,i*Mathf.Tau/16,i*Mathf.Tau/16+.12f,6,new Color(.8f,.5f,.6f,.15f),2,true);
-    }
+	/// <summary>Takes the nearest enemies within reach, making up the numbers from its own dark if there are too few.</summary>
+	private void Grab()
+	{
+		var nearby = new List<Body>();
+		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
+		{
+			if (node is Body body && IsInstanceValid(body) && !body.IsDestroyed && !body.IsHeld && !body.IsThrown
+				&& body.GlobalPosition.DistanceTo(GlobalPosition) <= GrabReach)
+				nearby.Add(body);
+		}
+		nearby.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(GlobalPosition).CompareTo(b.GlobalPosition.DistanceSquaredTo(GlobalPosition)));
+
+		for (int i = 0; i < nearby.Count && held.Count < MaxThrown; i++)
+			held.Add(nearby[i]);
+
+		while (held.Count < ConjureUpTo && Conjure() is Body made)
+			held.Add(made);
+
+		holdLeft = HoldTime;
+		nextThrowIn = 0f;
+	}
+
+	/// <summary>A Drifter pulled out of the dark at its rim, to be thrown.</summary>
+	private Body Conjure()
+	{
+		if (BodyScene == null || GetTree().GetNodeCountInGroup("bodies") >= Body.HardCap)
+			return null;
+		if (BodyScene.Instantiate() is not Body body)
+			return null;
+
+		body.Configure(BodyKind.Drifter);
+		body.GlobalPosition = GlobalPosition + Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * (CoreRadius + 40f);
+		body.Hold(body.GlobalPosition);
+		GameManager.Spawn(this, body);
+		return body;
+	}
+
+	/// <summary>Whatever it is still holding goes free when it falls.</summary>
+	protected override void OnBossDefeated()
+	{
+		foreach (Body body in held)
+		{
+			if (IsInstanceValid(body))
+				body.Release();
+		}
+		held.Clear();
+	}
+
+	// --- Drawing ----------------------------------------------------------------------
+
+	public override void _Draw()
+	{
+		if (horizon == Horizon.Forming)
+		{
+			// The ring filling up: a clock for getting out.
+			float filled = 1f - horizonLeft / CurrentFormTime;
+			float pulse = 0.5f + 0.5f * Mathf.Sin(time * (8f + 10f * filled));
+			DrawCircle(Vector2.Zero, HorizonRadius, new Color(Danger, 0.04f + 0.1f * filled));
+			for (int i = 0; i < 36; i++)
+			{
+				float a = i * Mathf.Tau / 36f;
+				DrawArc(Vector2.Zero, HorizonRadius, a, a + 0.1f, 4, new Color(Danger, 0.45f + 0.35f * pulse), 4f, true);
+			}
+			DrawArc(Vector2.Zero, HorizonRadius + 12f, -Mathf.Pi * 0.5f, -Mathf.Pi * 0.5f + Mathf.Tau * filled, 96, Danger, 6f, true);
+		}
+		else if (horizon == Horizon.Pulling)
+		{
+			// Closed: a solid ring, and streaks racing inward.
+			DrawCircle(Vector2.Zero, HorizonRadius, new Color(Danger, 0.16f));
+			DrawArc(Vector2.Zero, HorizonRadius, 0f, Mathf.Tau, 96, new Color(Danger, 0.9f), 6f, true);
+			for (int i = 0; i < 14; i++)
+			{
+				float along = Mathf.PosMod(time * 1.3f + i / 14f, 1f);
+				float r = Mathf.Lerp(HorizonRadius, CoreRadius + 20f, along);
+				Vector2 dir = Vector2.FromAngle(i * Mathf.Tau / 14f);
+				DrawLine(dir * r, dir * Mathf.Max(r - 34f, CoreRadius), new Color(Danger, 0.7f * (1f - along)), 4f, true);
+			}
+		}
+	}
 }

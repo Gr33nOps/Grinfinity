@@ -32,10 +32,12 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	protected bool defeated;
 	private Tween hitFlash;
 	protected Sprite2D Art;
-	/// <summary>Its second face, harsher than the first, worn once it is below half health.</summary>
-	private Texture2D harsher;
-	/// <summary>Whichever face it wears now, and that face mid-blink.</summary>
-	private Texture2D face, blinking;
+	/// <summary>Its first face and its second, harsher one, each with a blink.</summary>
+	private Texture2D calmFace, calmBlink, harshFace, harshBlink;
+	/// <summary>True once it wears the harsher face for good (below half health, for most bosses).</summary>
+	private bool deepened;
+	/// <summary>Seconds left showing the harsher face for a moment, see <see cref="ShowHarsherFace"/>.</summary>
+	private float harsherLeft;
 	private float blinkIn = 2f, blinkLeft;
 	private string asset;
 	private float visualTime;
@@ -56,9 +58,10 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 		foreach (Node child in GetChildren()) if (child is Polygon2D polygon) polygon.Hide();
 		asset = this is BossCoil ? "coil" : this is BossBrood ? "brood" : "black_hole";
 		Art = new Sprite2D { Texture = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"), Scale = Vector2.One * ArtScale }; AddChild(Art);
-		harsher = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_2.svg");
-		face = Art.Texture;
-		blinking = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_blink.svg");
+		calmFace = Art.Texture;
+		calmBlink = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_blink.svg");
+		harshFace = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_2.svg");
+		harshBlink = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_2_blink.svg");
 		// The hit circle grows with the art, so dashes, shots and Novas land
 		// where the boss looks to be. The shape is copied first: the scene's
 		// own resource is shared by every instance.
@@ -83,6 +86,15 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	/// before it, so the Black Hole is the largest thing in the arena.
 	/// </summary>
 	protected virtual float Size => 1f;
+
+	/// <summary>
+	/// Whether it keeps its harsher face once below half health. The Brood does
+	/// not: its cry is saved for the moment it releases its brood.
+	/// </summary>
+	protected virtual bool DeepensBelowHalf => true;
+
+	/// <summary>Shows the harsher face for a moment, as the tell for an attack.</summary>
+	protected void ShowHarsherFace(float seconds) => harsherLeft = Mathf.Max(harsherLeft, seconds);
 	private float ArtScale => 0.88f * Size;
 
 	/// <summary>Subclass setup — scenes to preload, initial state. Health and groups are already set.</summary>
@@ -98,14 +110,10 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 
 		if (health > 0)
 		{
-			// Hurt, its emotion deepens: disgust to revulsion, mourning to wailing,
-			// emptiness to despair.
-			if (HealthFraction < 0.5f && face != harsher)
-			{
-				face = Art.Texture = harsher;
-				blinking = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_2_blink.svg");
-				blinkLeft = 0f;
-			}
+			// Hurt, its emotion deepens: disgust to revulsion, emptiness to despair.
+			// (The Brood saves its wail for each time it releases its brood.)
+			if (DeepensBelowHalf && HealthFraction < 0.5f)
+				deepened = true;
 			FlashHit();
 			OnDamaged();
 			return false;
@@ -165,7 +173,9 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 			blinkLeft = 0.14f;
 			blinkIn = (float)GD.RandRange(2.5, 5.5);
 		}
-		Art.Texture = blinkLeft > 0f ? blinking : face;
+		harsherLeft = Mathf.Max(0f, harsherLeft - step);
+		bool harsh = deepened || harsherLeft > 0f;
+		Art.Texture = blinkLeft > 0f ? (harsh ? harshBlink : calmBlink) : (harsh ? harshFace : calmFace);
 	}
 
 	private void FlashHit()

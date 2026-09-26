@@ -4,10 +4,12 @@ using Godot;
 /// The Brood — second boss. A DPS and movement check, not a pattern check —
 /// see <see cref="BossCoil"/> for the other half.
 ///
-/// It floods the arena with Shards in bursts that grow as it gets hurt, and
-/// every few seconds it stops, glows, and lunges at where the planet was. The
-/// lunge is the part that has to be read: sidestep or dash through it. The
-/// Shards are the part that punishes standing still to do so.
+/// It floods the arena with its brood in bursts that grow as it gets hurt:
+/// mostly Shards and Drifters, some Splinters, and Planetoids once it is below
+/// half health. It bursts into tears as each brood is born, so its wail is the
+/// tell. Every few seconds it stops, glows, and lunges a long way at where the
+/// planet was. The lunge is the part that has to be read: sidestep or dash
+/// through it. The brood is the part that punishes standing still to do so.
 /// </summary>
 public partial class BossBrood : Boss
 {
@@ -22,11 +24,11 @@ public partial class BossBrood : Boss
 	}
 
 	[Export] public float ChaseSpeed { get; set; } = 90.0f;
-	/// <summary>Seconds between bursts of Shards. Falls toward the floor as health drops.</summary>
+	/// <summary>Seconds between bursts of its brood. Falls toward the floor as health drops.</summary>
 	[Export] public float SpawnInterval { get; set; } = 2.2f;
 	[Export] public float MinSpawnInterval { get; set; } = 1.1f;
 	[Export] public float SpawnRadius { get; set; } = 90.0f;
-	/// <summary>Local cap on live Shards from this boss, on top of the arena's own spawn cap.</summary>
+	/// <summary>Local cap on its live brood, on top of the arena's own spawn cap.</summary>
 	[Export] public int MaxBroodlings { get; set; } = 18;
 
 	/// <summary>Seconds between lunges, shrinking toward the floor as health drops.</summary>
@@ -34,8 +36,11 @@ public partial class BossBrood : Boss
 	[Export] public float MinLungeInterval { get; set; } = 4.2f;
 	/// <summary>How long it stops and glows before a lunge. Long enough to see and react to.</summary>
 	[Export] public float LungeWindup { get; set; } = 0.95f;
-	[Export] public float LungeSpeed { get; set; } = 600.0f;
-	[Export] public float LungeTime { get; set; } = 0.55f;
+	[Export] public float LungeSpeed { get; set; } = 660.0f;
+	[Export] public float LungeTime { get; set; } = 0.75f;
+	/// <summary>How long before a brood is born its face breaks into its wail, and how long the wail lasts.</summary>
+	[Export] public float CryLead { get; set; } = 0.35f;
+	[Export] public float CryTime { get; set; } = 1.1f;
 	[Export] public float LungeRecovery { get; set; } = 0.7f;
 	[Export] public PackedScene BodyScene { get; set; }
 
@@ -48,6 +53,8 @@ public partial class BossBrood : Boss
 	private Player world;
 
 	protected override float Size => 1.3f;
+
+	protected override bool DeepensBelowHalf => false;
 
 	protected override void OnBossReady()
 	{
@@ -120,6 +127,10 @@ public partial class BossBrood : Boss
 		GlobalPosition = Arena.ClampToPlayable(GlobalPosition, Arena.RadiusOf(this));
 
 		spawnTimer -= step;
+		// Its face breaks into a wail just before the brood comes, and holds it
+		// while they pour out.
+		if (spawnTimer <= CryLead && spawnTimer + step > CryLead)
+			ShowHarsherFace(CryTime);
 		if (spawnTimer <= 0f)
 		{
 			spawnTimer = Mathf.Lerp(MinSpawnInterval, SpawnInterval, HealthFraction) * CycleTempo;
@@ -139,15 +150,28 @@ public partial class BossBrood : Boss
 		if (GetTree().GetNodeCountInGroup("bodies") >= Body.HardCap)
 			return;
 
-		if (BodyScene.Instantiate() is not Body shard)
+		if (BodyScene.Instantiate() is not Body child)
 			return;
 
-		shard.Configure(BodyKind.Shard);
-		shard.GlobalPosition = GlobalPosition + Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * SpawnRadius;
+		child.Configure(BroodKind());
+		child.GlobalPosition = GlobalPosition + Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * SpawnRadius;
 
 		liveBroodlings++;
-		shard.TreeExited += () => liveBroodlings--;
+		child.TreeExited += () => liveBroodlings--;
 
-		GameManager.Spawn(this, shard);
+		GameManager.Spawn(this, child);
+	}
+
+	/// <summary>What it gives birth to: mostly Shards and Drifters, some Splinters, and Planetoids once it is badly hurt.</summary>
+	private BodyKind BroodKind()
+	{
+		float roll = RunState.Rng.Randf();
+		if (HealthFraction < 0.5f && roll < 0.12f)
+			return BodyKind.Planetoid;
+		if (roll < 0.30f)
+			return BodyKind.Splinter;
+		if (roll < 0.62f)
+			return BodyKind.Drifter;
+		return BodyKind.Shard;
 	}
 }

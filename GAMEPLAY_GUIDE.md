@@ -91,15 +91,15 @@ Comets (from 2:50) cross the screen in a straight line: a bright blue teardrop h
 
 ## Bosses
 
-Your shots are cream, and hot gold during Overdrive. Every enemy shot (the Coil's rings, the Black Hole's throws) looks the same: a round hot-pink orb with a dark rim and a pale centre, drawn exactly the size of what it hits with, trailing a short fading tail. It swells in when fired and shrinks away at the end of its range, harmless from the moment it starts to shrink.
+Your shots are cream, and hot gold during Overdrive. Every enemy shot (the Coil's rings) looks the same: a round hot-pink orb with a dark rim and a pale centre, drawn exactly the size of what it hits with, trailing a short fading tail. It swells in when fired and shrinks away at the end of its range, harmless from the moment it starts to shrink.
 
 Bosses arrive on a clock, with a warning banner and a marker where they will land. Ordinary enemies never stop for them: a boss is fought with the arena as busy as ever. When one dies all enemy shots vanish, and three strong upgrades fly out of the wreck. Each boss is bigger than the last.
 
 | Round 1 | Arrives | HP | Fight |
 |---|---|---|---|
 | The Coil | 2:05 | 340 | Rings of shots with a gap. Slip through the gap or dash. |
-| The Brood | 4:25 | 1100 | Chases you, throws out Shards two or three at a time, and every few seconds stops, glows and lunges at where you are. Sidestep or dash the lunge. |
-| The Black Hole | 6:45 | 1100 | Pulls you, enemies and your shots toward its core, and throws shots back. |
+| The Brood | 4:25 | 1100 | Chases you and releases its brood two or three at a time (mostly Shards and Drifters, some Splinters, Planetoids once it is below half health); it bursts into tears just before each release. Every few seconds it stops, glows and lunges a long way at where you are. Sidestep or dash the lunge. |
+| The Black Hole | 6:45 | 1100 | Every few seconds a ring forms round it and fills up over about two seconds: walk out before it closes. Inside a closed ring you are dragged in harder than you can walk, only a dash breaks free, and reaching the core ends the run. Between rings it grabs up to three enemies on screen, spins them round itself, and hurls them at you one after another; with none nearby it pulls a couple of Drifters out of itself to throw. |
 
 The first time round, each boss waits for the one before to die, with at least 45 seconds of breathing room after it. Beating the first Black Hole changes that: from then on bosses keep to the clock whether or not the last one is dead, so a boss you cannot finish in time is still there when the next arrives. The gaps also shrink each time, from 2 minutes 10 seconds by 10 seconds a boss down to 1 minute: The Coil at 8:55, The Brood at 10:55, The Black Hole at 12:45, then 14:25, 15:55, 17:15, 18:25 and every minute after 19:25. Each round the bosses get 70% more health and attack a little faster. Up to five can be on the field at once, each with its own health bar at the top of the screen. Far enough in, they will outpace anyone.
 
@@ -160,7 +160,7 @@ Only your planet is happy. Each of the eight planets wears one positive emotion,
 | Planetoid | Resentment | grudging, bitter, brooding |
 | Flare | Anger | furious, seething, roaring |
 | The Coil | Disgust | disgusted, then revolted below half health |
-| The Brood | Grief | mourning, then wailing below half health |
+| The Brood | Grief | mourning, wailing each time it releases its brood |
 | The Black Hole | Hopelessness | empty, then despairing below half health |
 
 Drifters come on three rock shapes in three colours mixed at random, and the colour gives the emotion. Splinters are smooth; only the Fracture they break from is cracked. They blink, look scared while they are close to your planet, and look shocked for a moment when one next to them pops. Each panics in its own way (a forlorn one dreads, a teary one bawls, a sniffly one screams, a moping one grimaces; a longing one pleads, a wistful one trembles, a weary one jolts awake, a forsaken one breaks down; a jittery one gets spiral eyes, a fretting one panics, an uneasy one bolts, a tense one freezes), at its own distance from you, and about one in five never panics at all. When a neighbour pops it shows one of four shocked faces (gasping, jaw-dropped, a double take with one eye popping, flinching). That is all looks: every enemy of a kind has the same size, speed and toughness. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.

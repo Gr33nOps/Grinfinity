@@ -1,9 +1,9 @@
 using Godot;
 
 /// <summary>
-/// A cheat mode for tuning the bosses: just the planet and one boss, with no
-/// ordinary enemies and no arena events, and each boss beaten brings on the
-/// next. Only offered when the game runs from the editor, never in a release
+/// A cheat mode for tuning the bosses: the planet and one boss, with no arena
+/// events and, unless asked for, no ordinary enemies, and each boss beaten
+/// brings on the next. Only offered when the game runs from the editor, never in a release
 /// build, and a test run is never recorded: no best time, leaderboard entry,
 /// lifetime stats, achievements or planet unlocks.
 /// </summary>
@@ -23,6 +23,12 @@ public static class BossTest
 
 	/// <summary>The planet cannot be hurt, for watching a boss's patterns.</summary>
 	public static bool Invincible { get; set; }
+
+	/// <summary>
+	/// Ordinary enemies keep coming too, as they would in a real run when that
+	/// boss arrives: the clock starts at the boss's usual arrival time.
+	/// </summary>
+	public static bool WithEnemies { get; set; }
 
 	/// <summary>Seconds after the start before the first boss is announced.</summary>
 	public const float FirstBossAfter = 1.5f;

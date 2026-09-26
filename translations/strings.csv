@@ -54,7 +54,7 @@ WORLD_8_FLAVOUR,"Has been through everything, and knows it can do it all again."
 WORLD_8_HINT,"Play {0} runs, and survive 10 minutes in one."
 BOSS_Coil_ARRIVAL,Its rings have a gap. Slip through it or dash.
 BOSS_Brood_ARRIVAL,"When it glows, it lunges. Sidestep, and keep shooting."
-BOSS_BlackHole_ARRIVAL,It pulls you in. Stay away from the middle.
+BOSS_BlackHole_ARRIVAL,"When its ring fills, get out. It throws what it grabs."
 DEATH_CAUSE_GravityWell,a gravity well
 DEATH_CAUSE_Comet,a comet
 DEATH_CAUSE_FlareBlast,a Flare explosion

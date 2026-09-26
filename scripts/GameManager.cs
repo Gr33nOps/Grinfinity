@@ -145,16 +145,22 @@ public partial class GameManager : Node2D
 	}
 
 	/// <summary>
-	/// Cheat mode (see <see cref="BossTest"/>): no ordinary enemies and no arena
-	/// events, the chosen boss almost at once, then each next boss a few seconds
-	/// after the last falls.
+	/// Cheat mode (see <see cref="BossTest"/>): no arena events, ordinary
+	/// enemies only if asked for (in the mix they would have when that boss
+	/// arrives), the chosen boss almost at once, then each next boss a few
+	/// seconds after the last falls.
 	/// </summary>
 	private void StartBossTest()
 	{
-		bodySpawner.ProcessMode = ProcessModeEnum.Disabled;
+		// No arena events (Solar Wind, Inversion...) and no hazards: nothing but the boss.
+		eventDirector.ProcessMode = ProcessModeEnum.Disabled;
 		hazardDirector.ProcessMode = ProcessModeEnum.Disabled;
 		NextBossIndex = BossTest.FirstBoss;
-		NextBossAt = BossTest.FirstBossAfter;
+		if (BossTest.WithEnemies)
+			run.SkipTo(ScheduledBossTime(BossTest.FirstBoss));
+		else
+			bodySpawner.ProcessMode = ProcessModeEnum.Disabled;
+		NextBossAt = run.SurvivalTime + BossTest.FirstBossAfter;
 		player.Invulnerable = BossTest.Invincible;
 		Toast("BOSS TEST", new Color(1.0f, 0.72f, 0.32f));
 		if (BossTest.Upgraded)

@@ -42,6 +42,16 @@ public partial class RunState : Node
 
 
 	public float SurvivalTime { get; private set; }
+
+	/// <summary>
+	/// Starts the clock at <paramref name="seconds"/>, for the boss test: the
+	/// ordinary enemies then come in the mix they would by that point in a run.
+	/// </summary>
+	public void SkipTo(float seconds)
+	{
+		SurvivalTime = seconds;
+		ElapsedSeconds = seconds;
+	}
 	public int Kills { get; private set; }
 	public int Streak { get; private set; }
 	public int BestStreak { get; private set; }

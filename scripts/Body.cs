@@ -336,6 +336,29 @@ public partial class Body : CharacterBody2D, IShootable
 		}
 	}
 
+	/// <summary>Where something holding this body (the Black Hole) is drawing it to, or null.</summary>
+	private Vector2? heldAt;
+	/// <summary>Seconds left flying straight after being thrown, its own steering ignored.</summary>
+	private float thrownLeft;
+
+	public bool IsHeld => heldAt != null;
+	public bool IsThrown => thrownLeft > 0f;
+
+	/// <summary>Draws the body to <paramref name="point"/> and holds it there, its own steering set aside.</summary>
+	public void Hold(Vector2 point) => heldAt = point;
+
+	/// <summary>Lets go: it steers for itself again.</summary>
+	public void Release() => heldAt = null;
+
+	/// <summary>Flings the body in a straight line for <paramref name="seconds"/>, then lets it steer again.</summary>
+	public void Throw(Vector2 velocity, float seconds)
+	{
+		heldAt = null;
+		knockback = Vector2.Zero;
+		Drift = velocity;
+		thrownLeft = seconds;
+	}
+
 	public override void _PhysicsProcess(double delta)
 	{
 		if (!HasWorld)
@@ -343,7 +366,12 @@ public partial class Body : CharacterBody2D, IShootable
 
 		float step = (float)delta;
 
-		behaviour.Steer(this, step);
+		if (heldAt is Vector2 hold)
+			Drift = ((hold - GlobalPosition) * 9f).LimitLength(1100f);
+		else if (thrownLeft > 0f)
+			thrownLeft -= step;
+		else
+			behaviour.Steer(this, step);
 
 		// Personal space rides on top of the steering, so a crowd spreads out without
 		// any body steering differently or arriving any slower.
