@@ -15,12 +15,11 @@ public partial class Bullet : Area2D
 	/// <summary>Fired under Overdrive. Only changes the look; the numbers are set by the shooter.</summary>
 	public bool Overdriven { get; set; }
 
-	/// <summary>Danger telegraph from the style guide — reserved for "about to hurt you".</summary>
-	private static readonly Color HostileTint = new Color(1.0f, 0.30f, 0.30f);
 	private static readonly Color ChipTint = new Color(1.0f, 0.95f, 0.8f);
 
 	private Line2D trail;
     private Sprite2D art;
+	private HostileOrb orb;
 	private bool hasHit = false;
 	private bool hostile = false;
 
@@ -33,13 +32,13 @@ public partial class Bullet : Area2D
 		hostile = true;
 		// Layer 1 is the player, layer 2 the bodies.
 		CollisionMask = 1;
-		Modulate = HostileTint;
 	}
 
 	public override void _Ready()
 	{
         foreach(Node child in GetChildren()) if(child is Polygon2D polygon)polygon.Hide();
-        art=new Sprite2D {Texture=GD.Load<Texture2D>(hostile?"res://art/cosmic/hostile.svg":"res://art/cosmic/shot.svg"),Scale=Vector2.One*(hostile?.065f:.29f)};AddChild(art);
+        if(hostile){orb=new HostileOrb();AddChild(orb);}
+        else{art=new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/shot.svg"),Scale=Vector2.One*.29f};AddChild(art);}
         Modulate=Colors.White;
 		BodyEntered += OnBodyEntered;
 
@@ -51,8 +50,16 @@ public partial class Bullet : Area2D
 
 		trail = GetNodeOrNull<Line2D>("Trail");
 		trail?.ClearPoints();
-        if(trail!=null){trail.Width=hostile?5:6;trail.DefaultColor=hostile?new Color(1,.4f,.4f,.5f):new Color(1,.75f,.4f,.5f);}
+        if(trail!=null){trail.Width=6;trail.DefaultColor=new Color(1,.75f,.4f,.5f);}
         TrailLength=3;
+        if(hostile&&trail!=null)
+        {
+            // A short soft tail the orb's width, fading out behind it: enough to
+            // show which way it is going, never a streak across the screen.
+            trail.Width=28;
+            trail.Gradient=new Gradient {Colors=new[]{new Color(HostileOrb.Hot,0f),new Color(HostileOrb.Hot,.45f)},Offsets=new[]{0f,1f}};
+            TrailLength=7;
+        }
         if(Overdriven)
         {
             art.Modulate=new Color(1.5f,.85f,1.1f);
@@ -67,8 +74,24 @@ public partial class Bullet : Area2D
 			// down at the end of its range, it simply stops existing.
 			if (Range > 0f)
 				lifetime.WaitTime = Range;
-			lifetime.Timeout += QueueFree;
+			lifetime.Timeout += Expire;
 		}
+	}
+
+	/// <summary>
+	/// The end of a shot's range. An enemy orb shrinks away rather than blinking
+	/// out, and is harmless from the moment it starts to.
+	/// </summary>
+	private void Expire()
+	{
+		if (orb == null)
+		{
+			QueueFree();
+			return;
+		}
+		hasHit = true;
+		SetDeferred(Area2D.PropertyName.Monitoring, false);
+		orb.FadeOut();
 	}
 
 	/// <summary>Seconds this shot lives for. Zero keeps the scene's own setting.</summary>
@@ -87,7 +110,13 @@ public partial class Bullet : Area2D
 
 	public override void _PhysicsProcess(double delta)
 	{
-		art.Rotation=Direction.Angle();
+		if (orb != null && orb.Gone)
+		{
+			QueueFree();
+			return;
+		}
+		if (art != null)
+			art.Rotation = Direction.Angle();
 		GlobalPosition += Direction * Speed * (float)delta;
 		if (!Arena.World.HasPoint(GlobalPosition))
 		{
@@ -138,7 +167,7 @@ public partial class Bullet : Area2D
 			hasHit = true;
 			SetDeferred(Area2D.PropertyName.Monitoring, false);
 			world.KillByBlast(TranslationServer.Translate("DEATH_CAUSE_EnemyShot"));
-			PopEffect.Spawn(this, GlobalPosition, 30f, HostileTint, 3, 0.3f);
+			PopEffect.Spawn(this, GlobalPosition, 30f, HostileOrb.Hot, 3, 0.3f);
 			QueueFree();
 			return;
 		}

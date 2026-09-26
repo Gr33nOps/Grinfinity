@@ -384,12 +384,15 @@ public partial class Body : CharacterBody2D, IShootable
 			return;
 
 		var shot = BulletScene.Instantiate<Bullet>();
-		shot.GlobalPosition = GlobalPosition;
+		shot.GlobalPosition = MuzzleToward(target);
 		shot.Direction = (target - GlobalPosition).Normalized();
 		shot.Speed = BulletSpeed;
 		shot.MakeHostile();
 		GameManager.Spawn(this, shot);
 	}
+
+	/// <summary>Where this body's shot leaves from: its rim, on the side facing <paramref name="target"/>.</summary>
+	public Vector2 MuzzleToward(Vector2 target) => GlobalPosition + (target - GlobalPosition).Normalized() * 34f;
 
 	/// <summary>
 	/// Blows up everything nearby, including the world, after a short fuse: the

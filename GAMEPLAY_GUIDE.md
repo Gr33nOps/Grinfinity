@@ -72,7 +72,7 @@ Bosses still drop three upgrade ranks each, on top of what CORE buys. They only 
 | Shard | 0:15 | 1 | Fast, in packs. |
 | Planetoid | 0:45 | 4 | Big and slow. |
 | Fracture | 1:20 | 2 | Splits into three Splinters when destroyed. |
-| Satellite | 2:30 | 2 | Circles at range and shoots at you. |
+| Satellite | 2:30 | 2 | Circles at range and shoots at you. Half a second before each shot, an orb swells at its rim on the side facing you, and the shot leaves from there. |
 | Bulwark | 4:00 | 3 | Armoured front: most shots from the front bounce off, though every fifth chips through. Hit it from the side or back, or Dash or Nova through the armour. |
 | Flare | 5:30 | 2 | Explodes when destroyed. The dashed ring around it shows the blast, which lands 0.3 s after the flash, so there is just time to step or dash out. |
 
@@ -89,6 +89,8 @@ From 0:45, about every 20 seconds, a **rush** arrives in one of five shapes, nev
 Comets (from 2:50) cross the screen along a dashed red line that shows for 1.35 s first. Gravity wells (from 5:30) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 6:20. None of these run during a first-round boss fight or a boss warning; from round two they carry on regardless.
 
 ## Bosses
+
+Every enemy shot looks the same: a round hot-pink orb with a dark rim and a pale centre, drawn exactly the size of what it hits with, trailing a short fading tail. It swells in when fired and shrinks away at the end of its range, harmless from the moment it starts to shrink.
 
 Bosses arrive on a clock, with a warning banner and a marker where they will land. Ordinary enemies never stop for them: a boss is fought with the arena as busy as ever. When one dies all enemy shots vanish, and three strong upgrades fly out of the wreck. Each boss is bigger than the last.
 

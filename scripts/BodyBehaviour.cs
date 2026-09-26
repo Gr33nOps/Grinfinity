@@ -184,6 +184,9 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 		body.Drift = body.Drift.Lerp(target, 1f - Mathf.Exp(-3.0f * delta));
 
 		body.BehaviourTimer -= delta;
+		// A moment's warning first: the orb swells at its rim before it leaves.
+		if (body.BehaviourTimer <= ShotCharge.ChargeTime)
+			ShotCharge.Begin(body);
 		if (body.BehaviourTimer <= 0f)
 		{
 			body.BehaviourTimer = FireInterval;
