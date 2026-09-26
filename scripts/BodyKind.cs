@@ -22,9 +22,6 @@ public enum BodyKind
 	/// <summary>What a Fracture leaves behind.</summary>
 	Splinter,
 
-	/// <summary>Holds a fixed orbit radius and fires inward. Punishes lazy aim.</summary>
-	Satellite,
-
 	/// <summary>Detonates in a radius on death. Teaches spacing.</summary>
 	Flare,
 

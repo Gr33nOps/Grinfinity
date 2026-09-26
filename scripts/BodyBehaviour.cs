@@ -41,7 +41,6 @@ public static class BodyBehaviours
 		[BodyKind.Planetoid] = new PlanetoidBehaviour(),
 		[BodyKind.Fracture] = new FractureBehaviour(),
 		[BodyKind.Splinter] = new SplinterBehaviour(),
-		[BodyKind.Satellite] = new SatelliteBehaviour(),
 		[BodyKind.Flare] = new FlareBehaviour(),
 		[BodyKind.Bulwark] = new BulwarkBehaviour()
 	};
@@ -141,57 +140,6 @@ public sealed class SplinterBehaviour : BodyBehaviour
 		body.KnockbackStrength = 380.0f;
 		body.DebrisCount = 1;
 		body.SetBurst(22, 0.6f, new Color("88bfb7"));
-	}
-}
-
-/// <summary>
-/// Refuses to fall. It settles into a ring at a fixed radius and shoots inward,
-/// so standing still — or letting it sit behind you — is punished.
-/// </summary>
-public sealed class SatelliteBehaviour : BodyBehaviour
-{
-	private const float OrbitRadius = 430.0f;
-	private const float RadialCorrection = 2.4f;
-	private const float FireInterval = 2.1f;
-
-	public override void Apply(Body body)
-	{
-		body.SpeedMultiplier = 1.05f;
-		body.AccelMultiplier = 1.0f;
-		body.SetHealth(2);
-		body.BaseScale = new Vector2(1.8f, 1.8f);
-		body.BaseTint = new Color(1.0f, 0.86f, 0.55f);
-		body.KnockbackStrength = 300.0f;
-		body.DebrisCount = 3;
-		body.SetBurst(60, 1.0f, new Color("d3adbd"));
-		body.BehaviourTimer = RunState.Rng.RandfRange(0.4f, FireInterval);
-	}
-
-	public override void Steer(Body body, float delta)
-	{
-		Vector2 toWorld = body.WorldOffset;
-		float distance = Mathf.Max(toWorld.Length(), 1.0f);
-		Vector2 inward = toWorld / distance;
-
-		// Push out when too close, pull in when too far, and always keep going
-		// round. The result is a body that circles at a readable, stable range.
-		float error = distance - OrbitRadius;
-		float speed = BodySpawner.CurrentSpeed * body.SpeedMultiplier;
-
-		Vector2 tangent = inward.Orthogonal() * body.OrbitDirection;
-		Vector2 target = tangent * speed + inward * Mathf.Clamp(error * RadialCorrection, -speed, speed);
-
-		body.Drift = body.Drift.Lerp(target, 1f - Mathf.Exp(-3.0f * delta));
-
-		body.BehaviourTimer -= delta;
-		// A moment's warning first: the orb swells at its rim before it leaves.
-		if (body.BehaviourTimer <= ShotCharge.ChargeTime)
-			ShotCharge.Begin(body);
-		if (body.BehaviourTimer <= 0f)
-		{
-			body.BehaviourTimer = FireInterval;
-			body.FireAt(body.WorldPosition);
-		}
 	}
 }
 

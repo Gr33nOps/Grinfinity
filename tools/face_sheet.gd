@@ -6,7 +6,7 @@ extends Node2D
 
 const NAMES := ["face", "face_blink", "face_happy",
 	"body_drifter", "body_drifter_2", "body_drifter_3", "body_shard", "body_shard_2",
-	"body_planetoid", "body_planetoid_2", "body_fracture", "body_fracture_mini", "body_satellite",
+	"body_planetoid", "body_planetoid_2", "body_fracture", "body_fracture_mini",
 	"body_flare", "body_bulwark", "boss_coil", "boss_brood", "boss_black_hole"]
 const CELL := 300.0
 

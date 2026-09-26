@@ -22,16 +22,14 @@ public partial class Bullet : Area2D
 	private HostileOrb orb;
 	private bool hasHit = false;
 	private bool hostile = false;
-	private bool dart;
 
 	/// <summary>
 	/// Turns this into a body's shot: it looks for the world instead of for
 	/// bodies, and is tinted the one colour the palette reserves for threats.
 	/// </summary>
-	public void MakeHostile(bool dart = false)
+	public void MakeHostile()
 	{
 		hostile = true;
-		this.dart = dart;
 		// Layer 1 is the player, layer 2 the bodies.
 		CollisionMask = 1;
 	}
@@ -39,9 +37,7 @@ public partial class Bullet : Area2D
 	public override void _Ready()
 	{
         foreach(Node child in GetChildren()) if(child is Polygon2D polygon)polygon.Hide();
-        if(hostile){orb=new HostileOrb {Dart=dart,Radius=dart?3.5f:8f,Heading=Direction.Angle()};AddChild(orb);}
-        // A dart is narrower than an orb, so its hitbox is too. Its own shape: the scene's is shared.
-        if(dart&&GetNodeOrNull<CollisionShape2D>("CollisionShape2D") is CollisionShape2D hitbox)hitbox.Shape=new CircleShape2D {Radius=6f};
+        if(hostile){orb=new HostileOrb();AddChild(orb);}
         else{art=new Sprite2D {Texture=GD.Load<Texture2D>("res://art/cosmic/shot.svg"),Scale=Vector2.One*.29f};AddChild(art);}
         Modulate=Colors.White;
 		BodyEntered += OnBodyEntered;
@@ -60,10 +56,9 @@ public partial class Bullet : Area2D
         {
             // A short soft tail the orb's width, fading out behind it: enough to
             // show which way it is going, never a streak across the screen.
-            Color tint=dart?HostileOrb.Violet:HostileOrb.Hot;
-            trail.Width=dart?9:28;
-            trail.Gradient=new Gradient {Colors=new[]{new Color(tint,0f),new Color(tint,.45f)},Offsets=new[]{0f,1f}};
-            TrailLength=dart?5:7;
+            trail.Width=28;
+            trail.Gradient=new Gradient {Colors=new[]{new Color(HostileOrb.Hot,0f),new Color(HostileOrb.Hot,.45f)},Offsets=new[]{0f,1f}};
+            TrailLength=7;
         }
         if(Overdriven)
         {
@@ -123,8 +118,6 @@ public partial class Bullet : Area2D
 		}
 		if (art != null)
 			art.Rotation = Direction.Angle();
-		if (orb != null)
-			orb.Heading = Direction.Angle();
 		GlobalPosition += Direction * Speed * (float)delta;
 		if (!Arena.World.HasPoint(GlobalPosition))
 		{

@@ -36,10 +36,6 @@ public partial class Body : CharacterBody2D, IShootable
 	[Export] public float GiantScale { get; set; } = 1.55f;
 	[Export] public float GiantSlowdown { get; set; } = 0.55f;
 
-	[ExportGroup("Armed bodies")]
-	[Export] public PackedScene BulletScene { get; set; }
-	[Export] public float BulletSpeed { get; set; } = 420.0f;
-
 	/// <summary>This same scene, for kinds that break apart into more of themselves.</summary>
 	[Export] public PackedScene BodyScene { get; set; }
 
@@ -63,7 +59,6 @@ public partial class Body : CharacterBody2D, IShootable
 		[BodyKind.Planetoid] = new[] { "body_planetoid", "body_planetoid_2" },
 		[BodyKind.Fracture] = new[] { "body_fracture" },
 		[BodyKind.Splinter] = new[] { "body_fracture_mini" },
-		[BodyKind.Satellite] = new[] { "body_satellite" },
 		[BodyKind.Flare] = new[] { "body_flare" },
 		[BodyKind.Bulwark] = new[] { "body_bulwark" }
 	};
@@ -177,7 +172,6 @@ public partial class Body : CharacterBody2D, IShootable
 		var gameManager = GameManager.Of(this);
 		world = gameManager?.GetNodeOrNull<Node2D>("player");
 		run = gameManager?.Run;
-		BulletScene ??= GD.Load<PackedScene>("res://scenes/bullet.tscn");
 
 		sprite = GetNodeOrNull<Sprite2D>("Sprite2D");
 		if (sprite != null)
@@ -400,29 +394,6 @@ public partial class Body : CharacterBody2D, IShootable
 				child.QueueFree();
 		}).CallDeferred();
 	}
-
-	/// <summary>Fires this body's own projectile at a point.</summary>
-	public void FireAt(Vector2 target)
-	{
-		if (BulletScene == null)
-			return;
-
-		var shot = BulletScene.Instantiate<Bullet>();
-		shot.GlobalPosition = MuzzleToward(target);
-		shot.Direction = (target - GlobalPosition).Normalized();
-		shot.Speed = BulletSpeed;
-		// A dart, not an orb, and it fades soon after passing where you were, so a
-		// ring of Satellites never leaves stray shots crossing the whole arena.
-		shot.Range = SatelliteShotRange;
-		shot.MakeHostile(dart: true);
-		GameManager.Spawn(this, shot);
-	}
-
-	/// <summary>Seconds a Satellite's dart flies: past its orbit radius and the planet, then gone.</summary>
-	private const float SatelliteShotRange = 1.6f;
-
-	/// <summary>Where this body's shot leaves from: its rim, on the side facing <paramref name="target"/>.</summary>
-	public Vector2 MuzzleToward(Vector2 target) => GlobalPosition + (target - GlobalPosition).Normalized() * 34f;
 
 	/// <summary>
 	/// Blows up everything nearby, including the world, after a short fuse: the

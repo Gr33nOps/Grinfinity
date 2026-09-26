@@ -190,7 +190,7 @@ func _drive() -> void:
 		if d < 650.0:
 			crowd += 1
 		if d < sense and d > 1.0:
-			var w := pow((sense - d) / sense, 2.0) * (2.2 if body.get("Kind") == 6 else 1.0)
+			var w := pow((sense - d) / sense, 2.0) * (2.2 if body.get("Kind") == 5 else 1.0)
 			push += offset / d * w
 	var shot_close := false
 	for shot in get_tree().get_nodes_in_group("hostile_bullets"):

@@ -11,7 +11,6 @@ them never looks cloned:
   Planetoid  grumpy     (two versions: half-shut eyes, eye-roll)
   Fracture   worried    raised brows, a wobbly mouth, a sweat drop
   Splinter   scared     wide eyes, tiny pupils, a little "o" mouth
-  Satellite  suspicious one eye narrowed, looking sideways
   Flare      furious    shouting, with a cross-vein
   Bulwark    stubborn   heavy flat brows and a pout
 
@@ -226,17 +225,6 @@ svg('body_fracture_mini', fract
     + eye(88, 112, 16, (0, 0), 0.3) + eye(136, 112, 16, (0, 0), 0.3)
     + brow(72, 80, 102, 72, 6) + brow(122, 72, 152, 80, 6)
     + o_mouth(112, 162, 12))
-
-SAT = '#D3ADBD'
-sat = path('M 15 88 L 57 88 L 57 158 L 15 158 Z M 199 88 L 240 88 L 240 158 L 199 158 Z', '#7AAAB9')
-sat += path('M 28 100 L 44 100 M 28 119 L 44 119 M 28 139 L 44 139 M 213 100 L 230 100 M 213 120 L 230 120 M 213 140 L 230 140', 'none', 'stroke-width="4"')
-sat += circle(128, 126, 74, SAT) + path('M 116 51 L 105 21 M 145 51 L 155 21') + circle(103, 19, 9, ORANGE) + circle(157, 19, 9, ORANGE)
-# Suspicious: one eye narrowed to a slit, both looking sideways, mouth pulled aside.
-svg('body_satellite', sat
-    + eye(106, 118, 13, (6, 2)) + lid(106, 118, 13, 2, 2, SAT)
-    + eye(150, 116, 14, (6, 1))
-    + brow(92, 98, 118, 101, 0) + brow(137, 90, 163, 86, 5)
-    + path('M 110 166 Q 130 160 150 158', 'none', 'stroke-width="7"'))
 
 pts = []
 import math

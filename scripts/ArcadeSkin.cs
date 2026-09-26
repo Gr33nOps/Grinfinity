@@ -13,12 +13,12 @@ public static class ArcadeSkin
     {
         var theme = new Theme { DefaultFont = Font, DefaultFontSize = 28 };
         theme.SetColor("font_color", "Label", Cream);
-        // Buttons: chunky ink-outlined slabs on a darker lip (see ArcadeButtonStyle).
-        theme.SetStylebox("normal", "Button", ArcadeButtonStyle.Make(Plum, PlumRim, PlumLip, .1f));
-        theme.SetStylebox("hover", "Button", ArcadeButtonStyle.Make(PlumLit, PlumRimLit, PlumLip, .16f, 8f));
-        theme.SetStylebox("pressed", "Button", ArcadeButtonStyle.Make(PlumDim, PlumRim, PlumLip, .05f, 7f, 5f));
-        theme.SetStylebox("hover_pressed", "Button", ArcadeButtonStyle.Make(PlumDim, PlumRim, PlumLip, .05f, 7f, 5f));
-        theme.SetStylebox("disabled", "Button", ArcadeButtonStyle.Make(new Color("46303f"), new Color("5d4456"), new Color("23161f"), .03f));
+        // Buttons: a plain rounded face on a slightly darker base (see ArcadeButtonStyle).
+        theme.SetStylebox("normal", "Button", ArcadeButtonStyle.Make(Plum, PlumRim, PlumLip));
+        theme.SetStylebox("hover", "Button", ArcadeButtonStyle.Make(PlumLit, PlumRimLit, PlumLip));
+        theme.SetStylebox("pressed", "Button", ArcadeButtonStyle.Make(PlumDim, PlumRim, PlumLip, 4f, 3f));
+        theme.SetStylebox("hover_pressed", "Button", ArcadeButtonStyle.Make(PlumDim, PlumRim, PlumLip, 4f, 3f));
+        theme.SetStylebox("disabled", "Button", ArcadeButtonStyle.Make(new Color("46303f"), new Color("5d4456"), new Color("23161f")));
         // Keyboard and pad focus: a cream ring just outside the button.
         var focus = new StyleBoxFlat { DrawCenter = false, BorderColor = Cream, AntiAliasing = true };
         focus.SetBorderWidthAll(3); focus.SetCornerRadiusAll(20); focus.SetExpandMarginAll(5);
@@ -79,10 +79,10 @@ public static class ArcadeSkin
         button.Theme = Theme();
         if (primary)
         {
-            button.AddThemeStyleboxOverride("normal", ArcadeButtonStyle.Make(Orange, OrangeRim, OrangeLip, .28f));
-            button.AddThemeStyleboxOverride("hover", ArcadeButtonStyle.Make(OrangeLit, new Color("ffe8bf"), OrangeLip, .32f, 8f));
-            button.AddThemeStyleboxOverride("pressed", ArcadeButtonStyle.Make(OrangeDim, OrangeRim, OrangeLip, .12f, 7f, 5f));
-            button.AddThemeStyleboxOverride("hover_pressed", ArcadeButtonStyle.Make(OrangeDim, OrangeRim, OrangeLip, .12f, 7f, 5f));
+            button.AddThemeStyleboxOverride("normal", ArcadeButtonStyle.Make(Orange, OrangeRim, OrangeLip));
+            button.AddThemeStyleboxOverride("hover", ArcadeButtonStyle.Make(OrangeLit, new Color("ffe8bf"), OrangeLip));
+            button.AddThemeStyleboxOverride("pressed", ArcadeButtonStyle.Make(OrangeDim, OrangeRim, OrangeLip, 4f, 3f));
+            button.AddThemeStyleboxOverride("hover_pressed", ArcadeButtonStyle.Make(OrangeDim, OrangeRim, OrangeLip, 4f, 3f));
             // Ink in every state: cream on orange is too faint to read, and the
             // primary button is usually the focused one.
             foreach (string state in new[] { "font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color",
@@ -94,21 +94,10 @@ public static class ArcadeSkin
         button.Pressed += action;
         return button;
     }
-    /// <summary>A key on a keyboard: a pale keycap with an ink letter, deeper than a button, so a bind reads as the key itself.</summary>
-    public static void Keycap(Button key)
-    {
-        Color face = new("efdcbd"), rim = new("fff6e2"), lip = new("7a5663");
-        key.AddThemeStyleboxOverride("normal", ArcadeButtonStyle.Make(face, rim, lip, .3f, 9f));
-        key.AddThemeStyleboxOverride("hover", ArcadeButtonStyle.Make(new Color("fff0ce"), Colors.White, lip, .4f, 10f));
-        key.AddThemeStyleboxOverride("pressed", ArcadeButtonStyle.Make(new Color("dcc4a2"), rim, lip, .1f, 9f, 6f));
-        key.AddThemeStyleboxOverride("hover_pressed", ArcadeButtonStyle.Make(new Color("dcc4a2"), rim, lip, .1f, 9f, 6f));
-        foreach (string state in new[] { "font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color" })
-            key.AddThemeColorOverride(state, Ink);
-    }
     /// <summary>
     /// Gathers the buttons at the foot of a screen into one centred row, Back
     /// first, so they read as the screen's controls rather than bars across it.
-    /// A lone button sits centred at a comfortable width.
+    /// Each is sized to its icon and text, so the row stays compact.
     /// </summary>
     public static void ActionBar(VBoxContainer layout)
     {
@@ -117,12 +106,13 @@ public static class ArcadeSkin
             buttons.Insert(0, button);
         if (buttons.Count == 0)
             return;
-        if (buttons.Count == 1)
+        foreach (Button button in buttons)
         {
-            buttons[0].SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
-            buttons[0].CustomMinimumSize = new Vector2(Mathf.Max(buttons[0].CustomMinimumSize.X, 420), buttons[0].CustomMinimumSize.Y);
-            return;
+            button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter;
+            button.CustomMinimumSize = new Vector2(Mathf.Max(button.CustomMinimumSize.X, 280), button.CustomMinimumSize.Y);
         }
+        if (buttons.Count == 1)
+            return;
         if (buttons.Find(b => b.Name == "BackButton") is Button back)
         {
             buttons.Remove(back);
@@ -135,7 +125,6 @@ public static class ArcadeSkin
         {
             layout.RemoveChild(button);
             bar.AddChild(button);
-            button.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
         }
         layout.AddChild(bar);
         focused?.GrabFocus();
@@ -188,8 +177,7 @@ public static class ArcadeSkin
                 button.Flat=false;button.Theme=Theme();button.AddThemeFontSizeOverride("font_size",26);
                 foreach(string key in new[]{"font_color","font_hover_color","font_focus_color","font_pressed_color"})button.RemoveThemeColorOverride(key);
                 button.CustomMinimumSize=new Vector2(button.CustomMinimumSize.X,52);
-                if(button.HasMeta("keycap"))Keycap(button);
-                else if(button.ToggleMode&&button.Name=="Check")UiIcons.Switch(button);
+                if(button.ToggleMode&&button.Name=="Check")UiIcons.Switch(button);
                 else if(button is not OptionButton&&UiIcons.For(button.Name) is string icon)UiIcons.On(button,icon);
             }
             if(node is LineEdit field){field.AddThemeFontSizeOverride("font_size",28);field.RightIcon=UiIcons.Get("pencil_field");}

@@ -4,7 +4,7 @@ using Godot;
 public partial class ControlsMenu : Control
 {
 	private const int LabelWidth = 420;
-	private const int KeyWidth = 240;
+	private const int KeyWidth = 300;
 
 	private VBoxContainer rows;
 	private Label hint;
@@ -55,8 +55,6 @@ public partial class ControlsMenu : Control
 				ClipText = true
 			};
 			StyleButton(keyButton, 38);
-			// Drawn as a keyboard key when the screen is skinned (ArcadeSkin.Keycap).
-			keyButton.SetMeta("keycap", true);
 			// Captured so each button knows which action it edits.
 			keyButton.Pressed += () => StartListening(action, keyButton);
 			row.AddChild(keyButton);

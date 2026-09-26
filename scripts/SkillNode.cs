@@ -1,11 +1,10 @@
 using Godot;
 
 /// <summary>
-/// One upgrade on the star chart: a little planet with its icon, lit from the
-/// upper left, and its name and rank stars beside it. One you can buy right now
-/// has a pulsing orange halo; a bought one takes on its branch's colour. Drawn
-/// by hand so it reads as a world on the chart rather than a button in a list,
-/// but it is still a Button, so mouse, keys and pad all work the usual way.
+/// One upgrade on the skill tree: a round badge with its icon, and its name
+/// and rank pips beside it. Drawn by hand so it reads as a node on a branch
+/// rather than a button in a list, but it is still a Button, so mouse, keys
+/// and pad all work the usual way.
 /// </summary>
 public partial class SkillNode : Button
 {
@@ -28,7 +27,7 @@ public partial class SkillNode : Button
 	private const int NameSize = 20;
 	private const float Pip = 11f;
 
-	private static readonly Color Empty = new("221633");
+	private static readonly Color Empty = new("2a1a33");
 	private static readonly Color Rim = new("986077");
 	private static readonly Color DimRim = new("5a3a55");
 
@@ -39,7 +38,7 @@ public partial class SkillNode : Button
 	public int Level { get; private set; }
 
 	private Texture2D icon;
-	private float pop, time;
+	private float pop;
 
 	public static Vector2 Footprint => new(Radius * 2f + Gap + LabelWidth, Radius * 2f + 8f);
 
@@ -75,11 +74,10 @@ public partial class SkillNode : Button
 
 	public override void _Process(double delta)
 	{
-		time += (float)delta;
+		if (pop <= 0f)
+			return;
 		pop = Mathf.Max(0f, pop - (float)delta * 3f);
-		// Only a buyable node or one mid-swell is moving; the rest stay still.
-		if (pop > 0f || Current == State.Buyable)
-			QueueRedraw();
+		QueueRedraw();
 	}
 
 	public override void _Draw()
@@ -89,19 +87,11 @@ public partial class SkillNode : Button
 		Color tint = Profile.Colour;
 		float r = Radius * (1f + 0.2f * Mathf.Sin(pop * Mathf.Pi));
 
-		// Buyable now: a pulsing orange halo, the one thing on the chart that moves.
-		if (Current == State.Buyable)
-		{
-			float beat = 0.5f + 0.5f * Mathf.Sin(time * 5f);
-			DrawCircle(c, r + 12f + 4f * beat, new Color(ArcadeSkin.Orange, 0.12f + 0.1f * beat));
-		}
 		// Pointed at: a cream ring, the same language as a focused menu button.
 		if (HasFocus() || IsHovered())
 			DrawArc(c, r + 8f, 0f, Mathf.Tau, 56, ArcadeSkin.Cream, 3f, true);
 
-		// The planet: its body, then a soft light on its upper left.
-		DrawCircle(c, r, Level > 0 ? tint.Darkened(0.55f) : Empty);
-		DrawCircle(c + new Vector2(-r * 0.2f, -r * 0.22f), r * 0.72f, new Color(1f, 0.95f, 0.9f, dim ? 0.03f : 0.07f));
+		DrawCircle(c, r, Level > 0 ? tint.Darkened(0.66f) : Empty);
 		Color rim = Current switch
 		{
 			State.Maxed => tint,
@@ -125,25 +115,12 @@ public partial class SkillNode : Button
 
 		Color text = dim ? new Color(ArcadeSkin.Muted, 0.55f) : ArcadeSkin.Cream;
 		DrawString(font, new Vector2(nameX, c.Y - 4f), Profile.Name, HorizontalAlignment.Left, -1, NameSize, text);
-		// One little star per rank: lit in the branch's colour once earned.
 		for (int i = 0; i < Profile.MaxLevel; i++)
 		{
 			var at = new Vector2(pipsX + Pip * 0.5f + i * (Pip + 6f), c.Y + 14f);
-			Vector2[] star = Star(at, Pip * 0.7f);
 			if (i < Level)
-				DrawColoredPolygon(star, tint);
-			var outline = new Vector2[star.Length + 1];
-			star.CopyTo(outline, 0);
-			outline[^1] = star[0];
-			DrawPolyline(outline, i < Level ? tint.Lightened(0.35f) : new Color(ArcadeSkin.Muted, dim ? 0.4f : 0.9f), 1.6f, true);
+				DrawCircle(at, Pip * 0.5f, tint);
+			DrawArc(at, Pip * 0.5f, 0f, Mathf.Tau, 20, i < Level ? tint.Lightened(0.3f) : new Color(ArcadeSkin.Muted, dim ? 0.4f : 0.9f), 2f, true);
 		}
-	}
-
-	private static Vector2[] Star(Vector2 at, float size)
-	{
-		var points = new Vector2[8];
-		for (int i = 0; i < 8; i++)
-			points[i] = at + Vector2.FromAngle(-Mathf.Pi * 0.5f + Mathf.Tau * i / 8f) * (i % 2 == 0 ? size : size * 0.45f);
-		return points;
 	}
 }

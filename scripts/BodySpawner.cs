@@ -279,15 +279,13 @@ public partial class BodySpawner : Node
 		float roll = RunState.Rng.Randf();
 		float band = 0f;
 
-		if (time >= Balance.FlareAt && roll < (band += 0.10f * widen))
+		if (time >= Balance.FlareAt && roll < (band += 0.12f * widen))
 			return BodyKind.Flare;
-		if (time >= Balance.SatelliteAt && roll < (band += 0.10f * widen))
-			return BodyKind.Satellite;
-		if (time >= Balance.BulwarkAt && roll < (band += 0.12f * widen))
+		if (time >= Balance.BulwarkAt && roll < (band += 0.14f * widen))
 			return BodyKind.Bulwark;
-		if (time >= Balance.FractureAt && roll < (band += 0.13f * widen))
+		if (time >= Balance.FractureAt && roll < (band += 0.16f * widen))
 			return BodyKind.Fracture;
-		if (time >= Balance.PlanetoidAt && roll < (band += 0.13f * widen))
+		if (time >= Balance.PlanetoidAt && roll < (band += 0.16f * widen))
 			return BodyKind.Planetoid;
 		if (roll < band + shardShare)
 			return BodyKind.Shard;
@@ -300,12 +298,11 @@ public partial class BodySpawner : Node
 		(BodyKind.Shard, Balance.ShardAt),
 		(BodyKind.Planetoid, Balance.PlanetoidAt),
 		(BodyKind.Fracture, Balance.FractureAt),
-		(BodyKind.Satellite, Balance.SatelliteAt),
 		(BodyKind.Bulwark, Balance.BulwarkAt),
 		(BodyKind.Flare, Balance.FlareAt)
 	};
 
-	// The five dangerous bands sum to this before any escalation, and to the
+	// The four dangerous bands sum to this before any escalation, and to the
 	// peak share once composition has shifted as far as it goes. Peak plus the
 	// peak shard share comes to exactly 1.0, so drifters run out precisely when
 	// the mix is meant to have stopped being forgiving.

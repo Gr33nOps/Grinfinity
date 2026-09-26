@@ -75,7 +75,6 @@ public static class Pickups
 		BodyKind.Splinter => 0.4f,
 		BodyKind.Planetoid => 3.0f,
 		BodyKind.Fracture => 1.5f,
-		BodyKind.Satellite => 2.0f,
 		BodyKind.Bulwark => 2.5f,
 		BodyKind.Flare => 2.0f,
 		_ => 1.0f

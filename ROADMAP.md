@@ -237,7 +237,7 @@ a **distinct silhouette**, since they are all tinted variations of one sprite to
 | **Shard** ✅ | Fast, arrives in packs | Crowd control |
 | **Planetoid** ✅ | Slow, four hits | Target priority |
 | **Fracture** ✅ | Dies into three Splinters | Don't kill it point-blank |
-| **Satellite** ✅ | Holds a fixed orbit radius, fires inward | Punishes lazy aim |
+| ~~**Satellite**~~ removed | Held a fixed orbit radius and fired inward | Taken out of the game: its shots cluttered the fight |
 | **Flare** ✅ | Detonates in a radius on death | Spacing |
 | **Bulwark** ✅ | Armoured front arc | Flanking |
 | **Pulsar** | Telegraphed beam from off-screen | Never stand still |

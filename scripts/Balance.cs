@@ -69,7 +69,6 @@ public static class Balance
 	public const float ShardAt = 15f;
 	public const float PlanetoidAt = 45f;
 	public const float FractureAt = 80f;
-	public const float SatelliteAt = 150f;
 	public const float BulwarkAt = 240f;
 	public const float FlareAt = 330f;
 	/// <summary>By this time the mix has shifted as far toward the dangerous kinds as it goes.</summary>
