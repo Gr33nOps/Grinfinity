@@ -149,6 +149,9 @@ public partial class Body : CharacterBody2D, IShootable
 	/// <summary>True from the killing blow on, even before the node is freed.</summary>
 	public bool IsDestroyed => destroyed;
 
+	/// <summary>A Drifter's living face (see <see cref="DrifterFace"/>); null on every other kind.</summary>
+	public DrifterFace Face { get; private set; }
+
 	public void SetHealth(int value)
 	{
 		health = Mathf.Max(value, 1);
@@ -212,10 +215,18 @@ public partial class Body : CharacterBody2D, IShootable
 		if (sprite == null)
 			return;
 
-		EnsureFacesLoaded();
 		// Looks only, so it stays off the run's seeded generator.
-		Texture2D[] faces = faceTextures[Kind];
-		sprite.Texture = faces[(int)(GD.Randi() % (uint)faces.Length)];
+		if (Kind == BodyKind.Drifter)
+		{
+			// The crowd enemy is built from parts, so a crowd of them is not one rock repeated.
+			Face = DrifterFace.Dress(this, sprite);
+		}
+		else
+		{
+			EnsureFacesLoaded();
+			Texture2D[] faces = faceTextures[Kind];
+			sprite.Texture = faces[(int)(GD.Randi() % (uint)faces.Length)];
+		}
 
 		// Bodies arriving from the right are mirrored, purely for variety —
 		// otherwise every arrival looks identical.
@@ -459,6 +470,7 @@ public partial class Body : CharacterBody2D, IShootable
 
 		destroyed = true;
 		behaviour.OnDestroyed(this);
+		DrifterFace.StartleAround(this);
 		QueueFree();
 		return true;
 	}

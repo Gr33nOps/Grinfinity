@@ -5,7 +5,8 @@ face. Every enemy wears its own bad mood, chosen to suit
 how it behaves, and the most common kinds come in a few versions so a crowd of
 them never looks cloned:
 
-  Drifter    sad        (three versions: glum, teary, sulking)
+  Drifter    sad        (built from parts: three rock shapes, three colours,
+                         eight unhappy moods, plus scared and shocked reactions)
   Shard      angry      (two versions: gritted teeth, snarl)
   Planetoid  grumpy     (two versions: half-shut eyes, eye-roll)
   Fracture   worried    raised brows, a wobbly mouth, a sweat drop
@@ -447,4 +448,79 @@ for n, (look, blink) in faces.items():
     svg(f'face_{n}', look)
     svg(f'face_{n}_blink', blink or look)
 
-print('Wrote 14 planet faces, 12 enemy faces and 3 boss faces')
+
+# --- Drifters, built from parts ----------------------------------------------------
+# The most common enemy by far, so a crowd of them must not look stamped out. In
+# play a Drifter is a body (three shapes, three rock colours) with a face laid on
+# top (eight unhappy moods, each with a blink), plus two reactions: scared when it
+# gets close to the planet, and shocked when a neighbour pops. The parts mix
+# freely, so no two Drifters in a crowd need to match. The eyelids are drawn in
+# the rock's own colour, so each colour has its own set of faces.
+
+ROCKS = {'rose': ('#BC7F83', '#945768'), 'stone': ('#A6979B', '#7A6A70'), 'clay': ('#C9A07E', '#9C7458')}
+SHAPES = {
+    'jagged': ('M 37 88 L 72 42 L 145 28 L 207 59 L 229 126 L 203 192 L 139 222 L 64 204 L 26 147 Z',
+               [(69, 99, 18), (190, 76, 12)]),
+    'pebble': ('M 24 128 Q 22 70 84 48 Q 140 30 196 52 Q 238 74 236 130 Q 234 186 178 208 Q 124 226 70 206 Q 26 186 24 128 Z',
+               [(58, 112, 14), (204, 150, 11), (182, 66, 8)]),
+    'lumpy': ('M 46 82 Q 44 48 80 44 Q 102 22 136 34 Q 170 22 194 48 Q 232 58 226 100 Q 244 136 222 166 Q 216 208 176 212 '
+              'Q 144 234 108 220 Q 66 222 50 190 Q 20 164 32 128 Q 24 100 46 82 Z',
+              [(72, 178, 12), (198, 86, 13), (56, 112, 8)]),
+}
+for shape, (outline, spots) in SHAPES.items():
+    for rock, (base, shade) in ROCKS.items():
+        clip = f'<clipPath id="c"><path d="{outline}"/></clipPath>'
+        body = clip + path(outline, base)
+        # The lower part of the rock in shadow, clipped to its outline.
+        body += f'<g clip-path="url(#c)"><ellipse cx="140" cy="240" rx="150" ry="78" fill="{shade}" stroke="none"/></g>'
+        body += path(outline, 'none')
+        body += craters(spots, shade)
+        svg(f'drifter_body_{shape}_{rock}', body)
+
+worried = brow(98, 90, 122, 81, -2) + brow(150, 78, 174, 87, -2)
+shut_sad = path('M 101 121 Q 113 127 125 121', 'none', 'stroke-width="6"') + path('M 147 117 Q 159 123 171 117', 'none', 'stroke-width="6"')
+
+
+def moods(skin):
+    """Each mood as (eyes, everything else), so the blink can swap just the eyes."""
+    return {
+        'glum': (eye(113, 118, 13, (0, 6)) + lid(113, 118, 13, 2, -8, skin) + eye(159, 114, 13, (0, 6)) + lid(159, 114, 13, -8, 2, skin),
+                 brow(98, 90, 122, 84, -2) + brow(150, 80, 174, 86, -2) + frown(136, 160, 34, 12)),
+        'teary': (eye(113, 116, 14, (1, 5), 0.6) + eye(159, 112, 14, (1, 5), 0.6),
+                  brow(97, 88, 121, 80, -3) + brow(151, 76, 175, 84, -3) + tear(101, 136) + wobble(136, 160, 34, 4)),
+        'sulking': (eye(113, 116, 13, (-5, 5)) + lid(113, 116, 13, -1, -1, skin) + eye(159, 112, 13, (-5, 5)) + lid(159, 112, 13, -1, -1, skin),
+                    path('M 120 162 Q 138 154 156 164', 'none', 'stroke-width="7"')),
+        # Fed up and tired: heavy lids, bags under the eyes, a flat line of a mouth.
+        'sleepy': (eye(113, 118, 13, (0, 7)) + lid(113, 118, 13, 4, 4, skin) + eye(159, 114, 13, (0, 7)) + lid(159, 114, 13, 4, 4, skin),
+                   path('M 101 141 Q 113 147 125 141', 'none', 'stroke-width="3"') + path('M 147 137 Q 159 143 171 137', 'none', 'stroke-width="3"')
+                   + path('M 124 165 L 150 163', 'none', 'stroke-width="6"')),
+        # Nervous: eyes darting sideways, brows up, a sweat drop, a shaky mouth.
+        'nervous': (eye(113, 116, 13, (6, 2), 0.5) + eye(159, 112, 13, (6, 2), 0.5),
+                    worried + sweat(188, 86) + wobble(136, 162, 28, 3)),
+        # Pouting: big pleading eyes looking up, bottom lip pushed out.
+        'pouty': (eye(113, 116, 14, (0, -3), 0.62) + eye(159, 112, 14, (0, -3), 0.62),
+                  worried + pout(136, 158, 30)),
+        # Sniffly: droopy eyes, a pink nose and a drip.
+        'sniffly': (eye(113, 118, 13, (0, 5)) + lid(113, 118, 13, 0, -6, skin) + eye(159, 114, 13, (0, 5)) + lid(159, 114, 13, -6, 0, skin),
+                    f'<ellipse cx="136" cy="140" rx="10" ry="7" fill="{BLUSH}" stroke="none"/>'
+                    + tear(143, 145, 0.55) + frown(134, 168, 24, 8, 6)),
+        # Grumbling: flat heavy brows, half-shut eyes, a wavy muttering mouth.
+        'grumbling': (eye(113, 118, 13, (0, 4)) + lid(113, 118, 13, -3, -3, skin) + eye(159, 114, 13, (0, 4)) + lid(159, 114, 13, -3, -3, skin),
+                      path('M 97 96 L 126 97', 'none', 'stroke-width="8"') + path('M 146 93 L 175 92', 'none', 'stroke-width="8"')
+                      + wobble(136, 163, 42, 5)),
+    }
+
+
+for rock, (base, _) in ROCKS.items():
+    for mood, (eyes, rest) in moods(base).items():
+        svg(f'drifter_face_{rock}_{mood}', eyes + rest)
+        svg(f'drifter_face_{rock}_{mood}_blink', shut_sad + rest)
+
+# Scared, close to the planet: huge eyes with tiny pupils, teeth clenched, sweating.
+svg('drifter_face_scared', eye(113, 114, 15, (0, 0), 0.32) + eye(159, 110, 15, (0, 0), 0.32)
+    + brow(96, 84, 122, 76, -3) + brow(150, 74, 176, 82, -3) + gritted(136, 162, 40, 18) + sweat(190, 84))
+# Shocked, a neighbour just popped: brows flying up, round eyes, mouth a big O.
+svg('drifter_face_shocked', eye(113, 116, 15, (0, 0), 0.34) + eye(159, 112, 15, (0, 0), 0.34)
+    + brow(98, 80, 124, 74, 6) + brow(148, 72, 174, 78, 6) + o_mouth(136, 164, 13))
+
+print('Wrote 14 planet faces, 12 enemy faces, 3 boss faces, 9 Drifter bodies and 50 Drifter faces')

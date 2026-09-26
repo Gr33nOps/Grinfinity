@@ -62,9 +62,10 @@ public partial class Bullet : Area2D
         }
         if(Overdriven)
         {
-            art.Modulate=new Color(1.5f,.85f,1.1f);
+            // Hot gold, not pink: pink is how enemy shots look, and your own must never be mistaken for one.
+            art.Modulate=new Color(1.35f,1.1f,.65f);
             TrailLength=5;
-            if(trail!=null){trail.Width=10;trail.Gradient=null;trail.DefaultColor=new Color(PlanetVisual.OverdriveColour,.6f);}
+            if(trail!=null){trail.Width=10;trail.Gradient=null;trail.DefaultColor=new Color(1f,.78f,.3f,.6f);}
         }
 
 		var lifetime = GetNodeOrNull<Timer>("Timer");
