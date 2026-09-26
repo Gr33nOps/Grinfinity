@@ -1,6 +1,6 @@
 """Faces for everything in the arena. Original vector artwork, no external assets.
 
-Only the planet is happy: each of the twelve planets wears one positive emotion,
+Only the planet is happy: each of the eight planets wears one positive emotion,
 from calmness on the first to love on the last (see below). Every enemy kind wears one negative emotion, and the more dangerous the
 enemy, the more intense its emotion, so the arena grows darker in feeling as a
 run brings in tougher kinds. Each emotion comes in a few expressions, picked at
@@ -511,12 +511,10 @@ enemy('boss_black_hole_2', hole, despair_eyes, hole_shut, despair_rest + '</g>')
 # Each planet wears one positive emotion, from the gentlest on the planet you
 # start with to the strongest on the hardest to earn:
 #
-#    1 Stillwater   calmness       7 Wishfall     hope
-#    2 Easewind     relief         8 Boldcrest    confidence
-#    3 Hearthglow   contentment    9 Laurelcrown  pride
-#    4 Hushmere     peacefulness  10 Sunburst     joy
-#    5 Anchorlight  trust         11 Sparkrush    excitement
-#    6 Gracebloom   gratitude     12 Heartsong    love
+#    1 Stillwater   calmness       5 Boldcrest    confidence
+#    2 Easewind     relief         6 Laurelcrown  pride
+#    3 Hearthglow   contentment    7 Sparkrush    excitement
+#    4 Wishfall     hope           8 Heartsong    love
 #
 # Just faces: the expression carries the emotion, with nothing floating round
 # it. Each has a blink: open eyes shut for a moment, and eyes that are already
@@ -600,36 +598,15 @@ faces[1] = (p_cheeks + half_eye(99) + half_eye(155) + soft_brows + calm_smile,
 
 # 3 Hearthglow, contentment: eyes curved shut in a smile, rosy, a snug closed smile.
 snug = path('M 104 150 Q 127 170 150 150', 'none', 'stroke-width="6"')
-# Its blink, and Sunburst's: the smiling eyes squeeze a little tighter.
+# Its blink: the smiling eyes squeeze a little tighter.
 squeeze = path('M 84 116 Q 99 102 114 116', 'none', 'stroke-width="7"') + path('M 140 116 Q 155 102 170 116', 'none', 'stroke-width="7"')
 faces[3] = (warm_cheeks + arcs + p_brows + snug, warm_cheeks + squeeze + p_brows + snug)
 
-# 4 Hushmere, peacefulness: long closed lashes, soft brows, the smallest smile.
-serene = (path('M 81 116 Q 99 126 117 116', 'none', 'stroke-width="6"') + path('M 137 116 Q 155 126 173 116', 'none', 'stroke-width="6"')
-          + path('M 83 118 L 77 124 M 90 122 L 86 129', 'none', 'stroke-width="4"')
-          + path('M 171 118 L 177 124 M 164 122 L 168 129', 'none', 'stroke-width="4"'))
-serene_mouth = path('M 117 156 Q 127 163 137 156', 'none', 'stroke-width="5"')
-# Its blink: the closed eyes settle a touch lower, like a slow breath.
-faces[4] = (p_cheeks + serene + soft_brows + serene_mouth,
-            p_cheeks + f'<g transform="translate(0 3)">{serene}</g>' + soft_brows + serene_mouth)
-
-# 5 Anchorlight, trust: warm open eyes looking right at you, a gentle smile.
-gentle = path('M 102 150 Q 127 168 152 150', 'none', 'stroke-width="6"')
-faces[5] = (p_cheeks + p_eye(99, look=(0, 3)) + p_eye(155, look=(0, 3)) + p_brows + gentle,
-            p_cheeks + shut + p_brows + gentle)
-
-# 6 Gracebloom, gratitude: shining eyes welling with happy tears, a trembling smile.
-welling = (f'<ellipse cx="99" cy="134" rx="13" ry="4" fill="{TEAR}" stroke="none"/>'
-           f'<ellipse cx="155" cy="134" rx="13" ry="4" fill="{TEAR}" stroke="none"/>')
-touched = path('M 102 150 Q 114 162 127 155 Q 140 162 152 150', 'none', 'stroke-width="6"')
-faces[6] = (warm_cheeks + p_eye(99, look=(0, 1), size=1.05, glints=2) + p_eye(155, look=(0, 1), size=1.05, glints=2) + welling + brows_up + touched,
-            warm_cheeks + shut + brows_up + touched)
-
-# 7 Wishfall, hope: eyes turned up to the stars and shining, brows lifted, a little "oh".
-faces[7] = (p_cheeks + p_eye(99, look=(2, -7), glints=2) + p_eye(155, look=(2, -7), glints=2) + brows_up + ooh,
+# 4 Wishfall, hope: eyes turned up to the stars and shining, brows lifted, a little "oh".
+faces[4] = (p_cheeks + p_eye(99, look=(2, -7), glints=2) + p_eye(155, look=(2, -7), glints=2) + brows_up + ooh,
             p_cheeks + shut + brows_up + ooh)
 
-# 8 Boldcrest, confidence: cool in sunglasses, with a smirk.
+# 5 Boldcrest, confidence: cool in sunglasses, with a smirk.
 shades = path('M 74 100 L 124 100 Q 124 132 100 132 Q 76 132 74 100 Z', '#1B1026', 'stroke-width="5"')
 shades += path('M 130 100 L 180 100 Q 178 132 154 132 Q 130 132 130 100 Z', '#1B1026', 'stroke-width="5"')
 shades += path('M 124 104 Q 127 100 130 104', 'none', 'stroke-width="5"')
@@ -637,9 +614,9 @@ shades += path('M 86 108 L 96 108 M 142 108 L 152 108', 'none', f'stroke="{CREAM
 smirk = path('M 104 156 Q 132 166 156 146', 'none', 'stroke-width="6"') + path('M 152 142 Q 158 146 158 152', 'none', 'stroke-width="4"')
 # Its blink: a glint slides across the lenses.
 glint_shades = shades.replace('M 86 108 L 96 108 M 142 108 L 152 108', 'M 98 118 L 110 106 M 154 118 L 166 106')
-faces[8] = (p_cheeks + shades + smirk, p_cheeks + glint_shades + smirk)
+faces[5] = (p_cheeks + shades + smirk, p_cheeks + glint_shades + smirk)
 
-# 9 Laurelcrown, pride: eyes shut in satisfaction, brows arched high, a big toothy grin.
+# 6 Laurelcrown, pride: eyes shut in satisfaction, brows arched high, a big toothy grin.
 grin = path('M 88 144 Q 127 156 166 144 Q 160 180 127 182 Q 94 180 88 144 Z', INK, 'stroke-width="5"')
 grin += path('M 95 149 Q 127 159 159 149 L 156 162 Q 127 170 98 162 Z', CREAM, 'stroke="none"')
 grin += path('M 112 155 L 112 166 M 127 157 L 127 169 M 142 155 L 142 166', 'none', 'stroke-width="3"')
@@ -647,22 +624,19 @@ proud = path('M 83 114 Q 99 100 115 114', 'none', 'stroke-width="7"') + path('M 
 arched = path('M 80 80 Q 98 62 116 74', 'none', 'stroke-width="6"') + path('M 138 74 Q 156 62 174 80', 'none', 'stroke-width="6"')
 # Its blink: the satisfied eyes squeeze a little tighter.
 proud_squeeze = path('M 84 113 Q 99 103 114 113', 'none', 'stroke-width="7"') + path('M 140 113 Q 155 103 170 113', 'none', 'stroke-width="7"')
-faces[9] = (p_cheeks + proud + arched + grin, p_cheeks + proud_squeeze + arched + grin)
+faces[6] = (p_cheeks + proud + arched + grin, p_cheeks + proud_squeeze + arched + grin)
 
-# 10 Sunburst, joy: eyes squeezed up in delight, rosy, laughing wide open.
-faces[10] = (warm_cheeks + arcs + brows_up + p_big, warm_cheeks + squeeze + brows_up + p_big)
-
-# 11 Sparkrush, excitement: star eyes and a huge beaming grin.
+# 7 Sparkrush, excitement: star eyes and a huge beaming grin.
 starry = star(99, 113, 24, 11) + star(155, 113, 24, 11)
 beam = path('M 86 140 Q 127 154 168 140 Q 164 190 127 191 Q 90 190 86 140 Z', INK, 'stroke-width="5"')
 beam += path('M 93 145 Q 127 157 161 145 L 159 155 Q 127 165 95 155 Z', CREAM, 'stroke="none"')
 beam += path('M 106 178 Q 127 164 148 178 Q 138 188 127 188 Q 116 188 106 178 Z', BERRY, 'stroke="none"')
-faces[11] = (p_cheeks + starry + brows_up + beam, p_cheeks + shut + brows_up + beam)
+faces[7] = (p_cheeks + starry + brows_up + beam, p_cheeks + shut + brows_up + beam)
 
-# 12 Heartsong, love: heart eyes, glowing cheeks, a big warm smile.
+# 8 Heartsong, love: heart eyes, glowing cheeks, a big warm smile.
 hearts = heart(99, 114, 22) + heart(155, 114, 22)
 hearts += path('M 88 106 Q 92 101 98 101', 'none', f'stroke="{CREAM}" stroke-width="4"') + path('M 144 106 Q 148 101 154 101', 'none', f'stroke="{CREAM}" stroke-width="4"')
-faces[12] = (warm_cheeks + hearts + brows_up + p_smile, warm_cheeks + shut + brows_up + p_smile)
+faces[8] = (warm_cheeks + hearts + brows_up + p_smile, warm_cheeks + shut + brows_up + p_smile)
 
 for n, (look, blink) in faces.items():
     name = 'face' if n == 1 else f'face_{n}'

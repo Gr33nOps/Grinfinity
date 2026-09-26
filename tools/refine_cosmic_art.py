@@ -29,18 +29,14 @@ print('Rebuilt rings, the moon, armour, round shot and the power icons')
 # emotion, from calmness on the first to love on the last; its body is plain,
 # in colours that suit the emotion, and the face alone does the rest.
 planets = [
-    ('#A9CFE8', '#6F97BF'),  # 1 Stillwater, calmness: pale sky blue
+    ('#B3D8EE', '#7AA3C9'),  # 1 Stillwater, calmness: pale sky blue
     ('#A8DCC4', '#6FA79A'),  # 2 Easewind, relief: soft mint
-    ('#F4B58A', '#C9805F'),  # 3 Hearthglow, contentment: warm peach
-    ('#C8B6E6', '#9280BD'),  # 4 Hushmere, peacefulness: lavender
-    ('#82C4BD', '#4E8E93'),  # 5 Anchorlight, trust: deep teal
-    ('#F2A7B8', '#C06F87'),  # 6 Gracebloom, gratitude: rose pink
-    ('#F7D08A', '#D99A6C'),  # 7 Wishfall, hope: dawn gold
-    ('#6FA8E0', '#4471AE'),  # 8 Boldcrest, confidence: strong blue
-    ('#B08BDB', '#7D5EAE'),  # 9 Laurelcrown, pride: royal purple
-    ('#FFD86B', '#E3A443'),  # 10 Sunburst, joy: sunny yellow
-    ('#F7967A', '#CF5F52'),  # 11 Sparkrush, excitement: bright coral
-    ('#F28599', '#C24F6C'),  # 12 Heartsong, love: warm rose
+    ('#F2A97E', '#C77A58'),  # 3 Hearthglow, contentment: warm peach
+    ('#FFDA66', '#DDA843'),  # 4 Wishfall, hope: sunny yellow
+    ('#5E97E0', '#3D66A8'),  # 5 Boldcrest, confidence: strong blue
+    ('#B08BDB', '#7D5EAE'),  # 6 Laurelcrown, pride: royal purple
+    ('#F47563', '#C24C47'),  # 7 Sparkrush, excitement: hot coral red
+    ('#F28AB0', '#C25884'),  # 8 Heartsong, love: rose pink
 ]
 for i, (base, shade) in enumerate(planets, 1):
     body = f'<circle cx="128" cy="134" r="99" fill="{ink}"/><circle cx="125" cy="123" r="98" fill="{base}" stroke="{ink}" stroke-width="7"/>'
@@ -50,4 +46,4 @@ for i, (base, shade) in enumerate(planets, 1):
         body += (f'<circle cx="{x}" cy="{y}" r="{r}" fill="{shade}"/><path d="M{x-r+3} {y+3}Q{x} {y+r+4} {x+r-2} {y+3}" fill="none"'
                  f' stroke="{cream}" stroke-width="3" opacity=".3" stroke-linecap="round"/>')
     asset(f'planet_{i}', body)
-print('Refined all twelve planet bodies')
+print('Refined all eight planet bodies')

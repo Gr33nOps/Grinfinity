@@ -111,22 +111,20 @@ The combo counter under the time counts kills in a row, and breaks after 2.5 sec
 
 ## My Planet
 
-The **My Planet** screen shows the planet you wear, big, with the ring if you have earned it. The arrows browse all twelve planets: landing on an unlocked one wears it straight away and shows its name, and a locked one shows as a dark shape with its unlock rule underneath. Planets are only looks and never change how you play.
+The **My Planet** screen shows the planet you wear, big, with the ring if you have earned it. The arrows browse all eight planets: landing on an unlocked one wears it straight away and shows its name, and a locked one shows as a dark shape with its unlock rule underneath. Planets are only looks and never change how you play.
 
-| Planet | Unlocked by |
-|---|---|
-| Stillwater | Yours from the start |
-| Easewind | Play 3 runs |
-| Hearthglow | Play 6 runs |
-| Hushmere | Pop 100 enemies in total |
-| Anchorlight | Pop 300 enemies in total |
-| Gracebloom | Survive 2 minutes in one run |
-| Wishfall | Survive 3 minutes in one run |
-| Boldcrest | Survive 4 minutes in one run |
-| Laurelcrown | Survive 5 minutes in one run |
-| Sunburst | Max out every upgrade in one run |
-| Sparkrush | Play for 1 hour in total |
-| Heartsong | Play 20 runs, and survive 10 minutes in one |
+| Planet | Emotion | Unlocked by |
+|---|---|---|
+| Stillwater | Calmness | Yours from the start |
+| Easewind | Relief | Play 3 runs |
+| Hearthglow | Contentment | Pop 300 enemies in total |
+| Wishfall | Hope | Survive 3 minutes in one run |
+| Boldcrest | Confidence | Survive 5 minutes in one run |
+| Laurelcrown | Pride | Max out every upgrade in one run |
+| Sparkrush | Excitement | Play for 1 hour in total |
+| Heartsong | Love | Play 20 runs, and survive 10 minutes in one |
+
+Unlocks are checked at the end of every run against your lifetime numbers, so a planet unlocks the moment you have earned it and the Game Over screen tells you which. Saves from when there were twelve planets carry over: each kept planet stays unlocked, and a removed one you were wearing falls back to Stillwater.
 
 The same screen lists your lifetime numbers, and below them a card with all nine achievements, the earned ones ticked:
 
@@ -148,7 +146,7 @@ Hints only show the controls you are using. Touch the keyboard or mouse and they
 
 ## Faces
 
-Only your planet is happy. Each of the twelve planets wears one positive emotion, the gentlest on the planet you start with and the strongest on the hardest to earn, shown by its face alone on a plain planet in colours to match: Stillwater is calm (pale blue), Easewind relieved (mint), Hearthglow content (warm peach), Hushmere peaceful (lavender), Anchorlight trusting (teal), Gracebloom grateful, with happy tears (pink), Wishfall hopeful (dawn gold), Boldcrest confident, in sunglasses (strong blue), Laurelcrown proud (purple), Sunburst joyful (sunny yellow), Sparkrush excited, with star eyes (coral) and Heartsong loving, with heart eyes (rose). Every enemy wears one negative emotion, and the more dangerous the enemy, the more intense its emotion: Drifters are sad, lonely or anxious (their rock colour tells you which), Splinters doubt themselves, Shards are irritable, Fractures are frustrated, Bulwarks are ashamed, Planetoids are resentful and Flares are angry. The bosses carry the heaviest: the Coil is disgusted, the Brood grieves and the Black Hole is hopeless. Each emotion comes in a few expressions picked at random, so a crowd never looks cloned, and no enemy ever looks happy.
+Only your planet is happy. Each of the eight planets wears one positive emotion, the gentlest on the planet you start with and the strongest on the hardest to earn, shown by its face alone on a plain planet in its own colour: Stillwater is calm (pale blue), Easewind relieved (mint), Hearthglow content (warm peach), Wishfall hopeful (sunny yellow), Boldcrest confident, in sunglasses (strong blue), Laurelcrown proud (purple), Sparkrush excited, with star eyes (coral red) and Heartsong loving, with heart eyes (rose pink). Every planet blinks, and those whose eyes are already closed squeeze or settle a little instead. Every enemy wears one negative emotion, and the more dangerous the enemy, the more intense its emotion: Drifters are sad, lonely or anxious (their rock colour tells you which), Splinters doubt themselves, Shards are irritable, Fractures are frustrated, Bulwarks are ashamed, Planetoids are resentful and Flares are angry. The bosses carry the heaviest: the Coil is disgusted, the Brood grieves and the Black Hole is hopeless. Each emotion comes in a few expressions picked at random, so a crowd never looks cloned, and no enemy ever looks happy.
 
 | Enemy | Emotion | Expressions |
 |---|---|---|

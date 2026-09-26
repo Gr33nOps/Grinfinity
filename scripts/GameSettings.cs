@@ -372,6 +372,7 @@ public partial class GameSettings : Node
 		config.SetValue(Section, "shake_intensity", ShakeIntensity);
 		config.SetValue(Section, "weapon", (int)Weapon);
 		config.SetValue(Section, "world", World);
+		config.SetValue(Section, "world_layout", Worlds.Layout);
 		config.SetValue(Section, "resolution_index", ResolutionIndex);
 		config.SetValue(Section, "vsync", VSyncEnabled);
 		config.SetValue(Section, "fps_cap_index", FpsCapIndex);
@@ -411,7 +412,11 @@ public partial class GameSettings : Node
 		}
 
 		int storedWorld = SaveStore.Value(config, Section, "world", 1).AsInt32();
-		if (storedWorld is >= 1 and <= 12)
+		// Saved before the planets were cut from twelve to eight: carry it over,
+		// or back to the first planet if the one chosen is gone.
+		if (SaveStore.Value(config, Section, "world_layout", 12).AsInt32() != Worlds.Layout)
+			storedWorld = Worlds.FromTwelve(storedWorld);
+		if (storedWorld >= 1 && storedWorld <= Worlds.All.Length)
 			World = storedWorld;
 
 		// "mode" and "difficulty" may still be sitting in an older settings

@@ -36,34 +36,22 @@ WORLD_2_FLAVOUR,"Lets out a long, happy sigh. Everything is going to be fine."
 WORLD_2_HINT,Play 3 runs.
 WORLD_3_NAME,HEARTHGLOW
 WORLD_3_FLAVOUR,"Warm, snug and happy right where it is."
-WORLD_3_HINT,Play 6 runs.
-WORLD_4_NAME,HUSHMERE
-WORLD_4_FLAVOUR,"Soft clouds, quiet skies, slow easy breaths."
-WORLD_4_HINT,Pop 100 enemies in total.
-WORLD_5_NAME,ANCHORLIGHT
-WORLD_5_FLAVOUR,Steady and true. You can always count on it.
-WORLD_5_HINT,Pop 300 enemies in total.
-WORLD_6_NAME,GRACEBLOOM
-WORLD_6_FLAVOUR,Grows a little flower for every run it is thankful for.
-WORLD_6_HINT,Survive for 2 minutes in one run.
-WORLD_7_NAME,WISHFALL
-WORLD_7_FLAVOUR,Catches falling stars and keeps every wish.
-WORLD_7_HINT,Survive for 3 minutes in one run.
-WORLD_8_NAME,BOLDCREST
-WORLD_8_FLAVOUR,Knows it can do this. So do you.
-WORLD_8_HINT,Survive for 4 minutes in one run.
-WORLD_9_NAME,LAURELCROWN
-WORLD_9_FLAVOUR,Wears its wreath for every minute it has survived.
-WORLD_9_HINT,Survive for 5 minutes in one run.
-WORLD_10_NAME,SUNBURST
-WORLD_10_FLAVOUR,So full of joy it can hardly hold it in.
-WORLD_10_HINT,Max out every upgrade in one run.
-WORLD_11_NAME,SPARKRUSH
-WORLD_11_FLAVOUR,Can't sit still. Won't sit still. Doesn't want to.
-WORLD_11_HINT,Play for 1 hour in total.
-WORLD_12_NAME,HEARTSONG
-WORLD_12_FLAVOUR,Made from the love of every planet that came before it.
-WORLD_12_HINT,"Play {0} runs, and survive 10 minutes in one."
+WORLD_3_HINT,Pop 300 enemies in total.
+WORLD_4_NAME,WISHFALL
+WORLD_4_FLAVOUR,Catches falling stars and keeps every wish.
+WORLD_4_HINT,Survive for 3 minutes in one run.
+WORLD_5_NAME,BOLDCREST
+WORLD_5_FLAVOUR,Knows it can do this. So do you.
+WORLD_5_HINT,Survive for 5 minutes in one run.
+WORLD_6_NAME,LAURELCROWN
+WORLD_6_FLAVOUR,Wears its pride for every upgrade it has carried.
+WORLD_6_HINT,Max out every upgrade in one run.
+WORLD_7_NAME,SPARKRUSH
+WORLD_7_FLAVOUR,"Can't sit still. Won't sit still. Doesn't want to."
+WORLD_7_HINT,Play for 1 hour in total.
+WORLD_8_NAME,HEARTSONG
+WORLD_8_FLAVOUR,Made from the love of every planet that came before it.
+WORLD_8_HINT,"Play {0} runs, and survive 10 minutes in one."
 BOSS_Coil_ARRIVAL,Its rings have a gap. Slip through it or dash.
 BOSS_Brood_ARRIVAL,"When it glows, it lunges. Sidestep, and keep shooting."
 BOSS_BlackHole_ARRIVAL,It pulls you in. Stay away from the middle.
