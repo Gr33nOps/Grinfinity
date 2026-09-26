@@ -147,6 +147,23 @@ def wail(mx, my, w, h):
     return s
 
 
+def grimace(mx, my, w, h):
+    """Teeth bared in a frown: a band of teeth that turns down at both corners,
+    so it can never be mistaken for a grin."""
+    def quad(t, a, c):
+        return (1 - t) ** 2 * a + 2 * t * (1 - t) * c + t ** 2 * a
+    corner = my + h * 0.45
+    top, bottom, middle = my - h * 0.95, my + h * 0.35, my - h * 0.3
+    x0, x1 = mx - w / 2, mx + w / 2
+    s = path(f'M {x0} {corner} Q {mx} {top} {x1} {corner} Q {mx} {bottom} {x0} {corner} Z', CREAM, 'stroke-width="6"')
+    s += path(f'M {x0 + 4} {corner - 1} Q {mx} {middle} {x1 - 4} {corner - 1}', 'none', 'stroke-width="3.5"')
+    for dx in (-0.2, 0, 0.2):
+        t = 0.5 + dx
+        tx = mx + dx * w
+        s += path(f'M {tx:.1f} {quad(t, corner, top) + 2:.1f} L {tx:.1f} {quad(t, corner, bottom) - 2:.1f}', 'none', 'stroke-width="3.5"')
+    return s
+
+
 def o_mouth(mx, my, r):
     return f'<ellipse cx="{mx}" cy="{my}" rx="{r * 0.8}" ry="{r}" fill="{INK}" stroke-width="5"/>' + \
         f'<ellipse cx="{mx}" cy="{my + r * 0.35}" rx="{r * 0.45}" ry="{r * 0.35}" fill="{BERRY}" stroke="none"/>'
@@ -235,7 +252,7 @@ svg('body_fracture_mini_2', fract
 svg('body_fracture_mini_3', fract
     + eye(88, 110, 16, (7, 0), 0.4) + eye(136, 110, 16, (7, 0), 0.4)
     + brow(72, 82, 102, 75, 5) + brow(122, 75, 152, 82, 5)
-    + gritted(112, 162, 50, 20)
+    + grimace(112, 162, 50, 22)
     + sweat(60, 70))
 
 pts = []
@@ -563,9 +580,10 @@ scared_faces = {
     # Teary bawls: eyes screwed shut, a huge wail, tears everywhere.
     'fear_teary': squeezed(113, 116, 14, 1) + squeezed(159, 112, 14, -1) + high_worry
                   + wail(136, 168, 50, 34) + tear(92, 128, 1.2) + tear(182, 124, 1.2) + tear(86, 156, 0.8),
-    # Sulking grimaces: one eye shut, one staring, teeth bared to one side.
-    'fear_sulking': squeezed(113, 116, 13, 1) + eye(160, 111, 16, (0, 0), 0.28)
-                    + brow(98, 92, 124, 88, 0) + brow(146, 72, 176, 80, -3) + gritted(142, 165, 46, 17),
+    # Sulking grimaces: eyes narrowed under low brows, teeth bared in a frown, sweating.
+    'fear_sulking': eye(113, 118, 12, (0, 1), 0.42) + eye(159, 114, 12, (0, 1), 0.42)
+                    + brow(97, 100, 126, 93, -2) + brow(146, 91, 175, 97, -2)
+                    + grimace(140, 164, 50, 22) + sweat(190, 90),
     # Sleepy is jolted wide awake: enormous eyes, a tiny o, shock lines.
     'fear_sleepy': eye(113, 112, 18, (0, 0), 0.2) + eye(159, 108, 18, (0, 0), 0.2)
                    + brow(96, 78, 124, 70, 6) + brow(146, 68, 174, 74, 6) + o_mouth(136, 170, 7)
@@ -576,13 +594,14 @@ scared_faces = {
     # Pouty begs: huge shiny eyes, a trembling lip, one tear.
     'fear_pouty': shiny(113, 114, 17) + shiny(159, 110, 17) + high_worry + pout(136, 162, 30)
                   + tear(98, 136, 0.8) + jolt(['M 112 186 L 116 182', 'M 160 186 L 156 182']),
-    # Sniffly screams: eyes shut tight, mouth wide open.
-    'fear_sniffly': squeezed(113, 116, 13, 1) + squeezed(159, 112, 13, -1)
-                    + brow(98, 86, 124, 80, 4) + brow(148, 78, 174, 84, 4) + shout(136, 164, 42, 36),
-    # Grumbling clenches: brows down hard, eyes wide, a big row of gritted teeth.
+    # Sniffly screams: wide eyes with pin-prick pupils, a howling mouth, a runny tear.
+    'fear_sniffly': eye(113, 114, 15, (0, 0), 0.22) + eye(159, 110, 15, (0, 0), 0.22) + high_worry
+                    + wail(136, 170, 46, 40) + tear(94, 132, 0.9)
+                    + jolt(['M 118 38 L 122 54', 'M 154 34 L 152 50']),
+    # Grumbling clenches: brows down hard, eyes wide, teeth bared in a frown, fuming.
     'fear_grumbling': eye(113, 116, 14, (0, 0), 0.35) + eye(159, 112, 14, (0, 0), 0.35)
                       + path('M 96 94 L 126 100', 'none', 'stroke-width="8"') + path('M 146 98 L 176 90', 'none', 'stroke-width="8"')
-                      + gritted(136, 166, 58, 24),
+                      + grimace(136, 166, 58, 26) + vein(190, 70, 0.8),
 }
 shocked_faces = {
     # Gasp: brows flying up, round eyes, mouth a big O.
@@ -597,9 +616,9 @@ shocked_faces = {
     'shocked_3': eye(113, 116, 17, (0, -2), 0.3) + eye(159, 113, 11, (0, -2), 0.35)
                  + brow(94, 82, 124, 70, 6) + brow(150, 88, 172, 86, 0)
                  + o_mouth(130, 164, 9) + exclaim(204, 26),
-    # Flinch: eyes screwed shut, a tight little o, jolt lines off the head.
-    'shocked_4': squeezed(113, 116, 13, 1) + squeezed(159, 112, 13, -1)
-                 + brow(98, 84, 124, 78, 4) + brow(148, 76, 174, 82, 4) + o_mouth(136, 164, 8)
+    # Flinch: eyes clamped shut and drooping, brows pinched up, a wobbling frown, jolt lines.
+    'shocked_4': path('M 100 122 L 126 113', 'none', 'stroke-width="7"') + path('M 146 109 L 172 118', 'none', 'stroke-width="7"')
+                 + high_worry + wobble(136, 166, 38, 5)
                  + jolt(['M 62 58 L 72 72', 'M 46 84 L 62 90', 'M 86 38 L 90 54']),
 }
 for name, face in {**scared_faces, **shocked_faces}.items():
