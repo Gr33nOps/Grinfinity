@@ -107,7 +107,7 @@ public static class UiIcons
 		toggle.AddThemeStyleboxOverride("pressed", toggle.GetThemeStylebox("normal"));
 		toggle.AddThemeStyleboxOverride("hover_pressed", toggle.GetThemeStylebox("hover"));
 		toggle.AddThemeColorOverride("font_pressed_color", ArcadeSkin.Cream);
-		toggle.AddThemeColorOverride("font_hover_pressed_color", ArcadeSkin.Ink);
+		toggle.AddThemeColorOverride("font_hover_pressed_color", ArcadeSkin.Cream);
 		toggle.IconAlignment = HorizontalAlignment.Right;
 		toggle.Alignment = HorizontalAlignment.Left;
 		toggle.AddThemeConstantOverride("icon_max_width", 64);

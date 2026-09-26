@@ -4,26 +4,44 @@ using Godot;
 public static class ArcadeSkin
 {
     public static readonly Color Ink = new("321e3d"), Cream = new("fff0ce"), Orange = new("f5a451"), Berry = new("ab4564"), Muted = new("c5a9bf");
+    // Button faces and the lip beneath them: plum for most, orange for the one to press.
+    private static readonly Color Plum = new("763c61"), PlumLit = new("8f4a75"), PlumDim = new("62304f"), PlumLip = new("2a1024");
+    private static readonly Color PlumRim = new("b8628c"), PlumRimLit = new("d98aa9");
+    private static readonly Color OrangeLit = new("ffb866"), OrangeDim = new("e38b3a"), OrangeLip = new("a4521f"), OrangeRim = new("ffdca0");
     public static Font Font => GD.Load<Font>("res://fonts/LilitaOne.ttf");
     public static Theme Theme()
     {
         var theme = new Theme { DefaultFont = Font, DefaultFontSize = 28 };
         theme.SetColor("font_color", "Label", Cream);
-        theme.SetColor("font_color", "Button", Cream);
-        theme.SetColor("font_hover_color", "Button", Ink);
-        theme.SetColor("font_focus_color", "Button", Cream);
-        theme.SetStylebox("normal", "Button", Box(new Color("67364f"), new Color("c66e80"), 18, 3));
-        theme.SetStylebox("hover", "Button", Box(Orange, Cream, 18, 3));
-        theme.SetStylebox("pressed", "Button", Box(Berry, Cream, 18, 3));
-        var focus=Box(new Color(0,0,0,0), Cream,18,3);focus.ShadowSize=0;focus.ShadowColor=Colors.Transparent;theme.SetStylebox("focus","Button",focus);
+        // Buttons: chunky ink-outlined slabs on a darker lip (see ArcadeButtonStyle).
+        theme.SetStylebox("normal", "Button", ArcadeButtonStyle.Make(Plum, PlumRim, PlumLip, .1f));
+        theme.SetStylebox("hover", "Button", ArcadeButtonStyle.Make(PlumLit, PlumRimLit, PlumLip, .16f, 8f));
+        theme.SetStylebox("pressed", "Button", ArcadeButtonStyle.Make(PlumDim, PlumRim, PlumLip, .05f, 7f, 5f));
+        theme.SetStylebox("hover_pressed", "Button", ArcadeButtonStyle.Make(PlumDim, PlumRim, PlumLip, .05f, 7f, 5f));
+        theme.SetStylebox("disabled", "Button", ArcadeButtonStyle.Make(new Color("46303f"), new Color("5d4456"), new Color("23161f"), .03f));
+        // Keyboard and pad focus: a cream ring just outside the button.
+        var focus = new StyleBoxFlat { DrawCenter = false, BorderColor = Cream, AntiAliasing = true };
+        focus.SetBorderWidthAll(3); focus.SetCornerRadiusAll(20); focus.SetExpandMarginAll(5);
+        theme.SetStylebox("focus", "Button", focus);
+        foreach (string state in new[] { "font_color", "font_hover_color", "font_focus_color", "font_pressed_color", "font_hover_pressed_color" })
+            theme.SetColor(state, "Button", Cream);
+        theme.SetColor("font_disabled_color", "Button", new Color(Muted, .6f));
+        // The dropdown's list, in the panels' own colours rather than the engine's grey.
+        var list = Box(new Color("392339"), new Color("986077"), 14, 3);
+        list.ContentMarginTop = list.ContentMarginBottom = 8; list.ContentMarginLeft = list.ContentMarginRight = 8; list.ShadowSize = 6;
+        theme.SetStylebox("panel", "PopupMenu", list);
+        var picked = new StyleBoxFlat { BgColor = PlumLit, AntiAliasing = true };
+        picked.SetCornerRadiusAll(10);
+        theme.SetStylebox("hover", "PopupMenu", picked);
+        theme.SetColor("font_color", "PopupMenu", Cream);
+        theme.SetColor("font_hover_color", "PopupMenu", Cream);
+        theme.SetFontSize("font_size", "PopupMenu", 26);
+        theme.SetConstant("v_separation", "PopupMenu", 10);
         theme.SetStylebox("normal", "LineEdit", Box(new Color("281b36"), Muted, 12, 2));
         theme.SetColor("font_color", "LineEdit", Cream);
         // Icons follow the text: cream, ink on the orange hover.
-        theme.SetColor("icon_normal_color", "Button", Cream);
-        theme.SetColor("icon_focus_color", "Button", Cream);
-        theme.SetColor("icon_hover_color", "Button", Ink);
-        theme.SetColor("icon_pressed_color", "Button", Cream);
-        theme.SetColor("icon_hover_pressed_color", "Button", Cream);
+        foreach (string state in new[] { "icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color" })
+            theme.SetColor(state, "Button", Cream);
         theme.SetIcon("arrow", "OptionButton", UiIcons.Get("dropdown"));
         theme.SetConstant("modulate_arrow", "OptionButton", 1);
         // Sliders: a dark groove, filled orange up to a little planet for a knob.
@@ -61,7 +79,10 @@ public static class ArcadeSkin
         button.Theme = Theme();
         if (primary)
         {
-            button.AddThemeStyleboxOverride("normal", Box(Orange, new Color("ffcd85"),18,3));
+            button.AddThemeStyleboxOverride("normal", ArcadeButtonStyle.Make(Orange, OrangeRim, OrangeLip, .28f));
+            button.AddThemeStyleboxOverride("hover", ArcadeButtonStyle.Make(OrangeLit, new Color("ffe8bf"), OrangeLip, .32f, 8f));
+            button.AddThemeStyleboxOverride("pressed", ArcadeButtonStyle.Make(OrangeDim, OrangeRim, OrangeLip, .12f, 7f, 5f));
+            button.AddThemeStyleboxOverride("hover_pressed", ArcadeButtonStyle.Make(OrangeDim, OrangeRim, OrangeLip, .12f, 7f, 5f));
             // Ink in every state: cream on orange is too faint to read, and the
             // primary button is usually the focused one.
             foreach (string state in new[] { "font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color",

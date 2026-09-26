@@ -14,7 +14,8 @@ using Godot;
 /// </summary>
 public partial class PlanetVisual : Node2D
 {
-	public static readonly Color OverdriveColour = new("ff7b8e");
+	/// <summary>Overdrive's colour: the same hot gold as its shots, on the glow, the burst and the HUD ring.</summary>
+	public static readonly Color OverdriveColour = new("ffc34d");
 	private static readonly Color DashGhost = new(1f, 0.93f, 0.8f, 0.38f);
 
 	private Player player;
@@ -103,8 +104,8 @@ public partial class PlanetVisual : Node2D
 		{
 			float beat = .5f + .5f * Mathf.Sin(time * 14f);
 			aura.Scale = Vector2.One * (1f + .12f * beat);
-			body.SelfModulate = new Color(1f, 1f, 1f).Lerp(new Color(1.35f, .9f, 1f), .35f + .25f * beat);
-			gun.SelfModulate = new Color(1.5f, .9f, 1.1f);
+			body.SelfModulate = new Color(1f, 1f, 1f).Lerp(new Color(1.3f, 1.12f, .78f), .35f + .25f * beat);
+			gun.SelfModulate = new Color(1.4f, 1.15f, .7f);
 		}
 		else
 		{
