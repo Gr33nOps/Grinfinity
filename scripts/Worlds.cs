@@ -2,7 +2,11 @@ using Godot;
 
 /// <summary>
 /// Twelve illustrated cosmetic planets, earned through lifetime play milestones.
-/// Cosmetics never change power.
+/// Each wears one positive emotion, gentlest first: Easewind (relief),
+/// Stillwater (calmness), Hearthglow (contentment), Hushmere (peacefulness),
+/// Anchorlight (trust), Gracebloom (gratitude), Wishfall (hope), Boldcrest
+/// (confidence), Laurelcrown (pride), Sunburst (joy), Sparkrush (excitement)
+/// and Heartsong (love). Cosmetics never change power.
 /// </summary>
 public static class Worlds
 {
@@ -136,8 +140,9 @@ public static class Worlds
 	public static Profile Get(int id) => All[Mathf.Clamp(id, 1, All.Length) - 1];
 
 	/// <summary>
-	/// Each planet's own happy face, and the same face mid-blink. Embertide keeps
-	/// the original; the rest each have their own mood.
+	/// Each planet's own happy face, and the same face mid-blink. Each planet
+	/// wears one positive emotion, from relief on the first to love on the last
+	/// (see tools/make_moods.py).
 	/// </summary>
 	public static Texture2D Face(int id, bool blinking = false)
 	{

@@ -11,14 +11,7 @@ def circle(x,y,r,fill,stroke=None):
     return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}"'+(f' stroke="{stroke}"' if stroke else '')+'/>'
 def path(d,fill='none',extra=''):
     return f'<path d="{d}" fill="{fill}" {extra}/>'
-# Twelve cosmetic planet palettes, with separate animated face and gun.
-palettes=[('#F5A451','#CB704B'),('#A8D7BF','#558F8F'),('#D9AEDE','#A173A8'),('#F3C76B','#C58B4D'),('#93C6DF','#5E8EB6'),('#E78992','#B95A72'),('#B6C982','#879755'),('#B7ACE1','#8376B7'),('#E5AF87','#BC7E68'),('#AED4D7','#699FA6'),('#EAC8D7','#B287AD'),('#F4DB9B','#CFB76D')]
-for i,(base,shade) in enumerate(palettes,1):
-    body=circle(129,135,98,INK,'none')+circle(125,122,98,base)
-    body+=path('M 42 154 Q 112 222 211 147 Q 189 219 121 219 Q 65 212 42 154',shade,'stroke="none"')
-    body+=path('M 49 99 Q 63 48 116 40','none',f'stroke="{CREAM}" stroke-width="12" opacity=".6"')
-    body+=circle(76,134,16,shade,'none')+circle(174,74,11,shade,'none')+circle(174,171,20,shade,'none')
-    svg(f'planet_{i}',body)
+# The planet bodies live in tools/refine_cosmic_art.py.
 # The planet's faces live in tools/make_moods.py.
 # Blaster faces right. Broad orange barrel, berry casing, cream muzzle.
 gun=path('M 40 100 L 57 83 L 174 83 Q 184 84 185 100 L 223 100 L 223 149 L 178 149 L 162 159 L 86 159 L 65 177 L 43 161 L 53 140 L 35 137 Z',BERRY)

@@ -115,18 +115,18 @@ The **My Planet** screen shows the planet you wear, big, with the ring if you ha
 
 | Planet | Unlocked by |
 |---|---|
-| Embertide | Yours from the start |
-| Driftlight | Play 3 runs |
-| Palefrost | Play 6 runs |
-| Cinderbloom | Pop 100 enemies in total |
-| Hollowmere | Pop 300 enemies in total |
-| Duskwarden | Survive 2 minutes in one run |
-| Verdant Halo | Survive 3 minutes in one run |
-| Ashen Coil | Survive 4 minutes in one run |
-| Glasswake | Survive 5 minutes in one run |
-| Moltencrown | Max out every upgrade in one run |
-| Voidkin | Play for 1 hour in total |
-| Starforged | Play 20 runs, and survive 10 minutes in one |
+| Easewind | Yours from the start |
+| Stillwater | Play 3 runs |
+| Hearthglow | Play 6 runs |
+| Hushmere | Pop 100 enemies in total |
+| Anchorlight | Pop 300 enemies in total |
+| Gracebloom | Survive 2 minutes in one run |
+| Wishfall | Survive 3 minutes in one run |
+| Boldcrest | Survive 4 minutes in one run |
+| Laurelcrown | Survive 5 minutes in one run |
+| Sunburst | Max out every upgrade in one run |
+| Sparkrush | Play for 1 hour in total |
+| Heartsong | Play 20 runs, and survive 10 minutes in one |
 
 The same screen lists your lifetime numbers, and below them a card with all nine achievements, the earned ones ticked:
 
@@ -148,7 +148,7 @@ Hints only show the controls you are using. Touch the keyboard or mouse and they
 
 ## Faces
 
-Only your planet is happy, and each of the twelve planets has its own happy face: Embertide grins, Driftlight is calm, Palefrost is shy, Cinderbloom shows its teeth, Hollowmere looks sly, Duskwarden looks confident, Verdant Halo is starry-eyed, Ashen Coil wears sunglasses, Glasswake is delighted, Moltencrown winks, Voidkin sticks its tongue out and Starforged beams. Every enemy wears one negative emotion, and the more dangerous the enemy, the more intense its emotion: Drifters are sad, lonely or anxious (their rock colour tells you which), Splinters doubt themselves, Shards are irritable, Fractures are frustrated, Bulwarks are ashamed, Planetoids are resentful and Flares are angry. The bosses carry the heaviest: the Coil is disgusted, the Brood grieves and the Black Hole is hopeless. Each emotion comes in a few expressions picked at random, so a crowd never looks cloned, and no enemy ever looks happy.
+Only your planet is happy. Each of the twelve planets wears one positive emotion, the gentlest on the planet you start with and the strongest on the hardest to earn, with a face, colours and markings to match: Easewind is relieved (mint, with a breeze), Stillwater calm (pale blue, still ripples), Hearthglow content (warm peach bands), Hushmere peaceful (lavender, soft clouds), Anchorlight trusting (teal, a sturdy band), Gracebloom grateful (pink, little blossoms), Wishfall hopeful (dawn gold, a shooting star), Boldcrest confident (strong blue, a bold sash), Laurelcrown proud (purple, a golden laurel wreath), Sunburst joyful (sunny yellow, confetti), Sparkrush excited (coral, lightning and sparkles) and Heartsong loving (rose, little hearts). Every enemy wears one negative emotion, and the more dangerous the enemy, the more intense its emotion: Drifters are sad, lonely or anxious (their rock colour tells you which), Splinters doubt themselves, Shards are irritable, Fractures are frustrated, Bulwarks are ashamed, Planetoids are resentful and Flares are angry. The bosses carry the heaviest: the Coil is disgusted, the Brood grieves and the Black Hole is hopeless. Each emotion comes in a few expressions picked at random, so a crowd never looks cloned, and no enemy ever looks happy.
 
 | Enemy | Emotion | Expressions |
 |---|---|---|
