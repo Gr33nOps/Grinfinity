@@ -28,6 +28,9 @@ public partial class HazardDirector : Node
 			return;
 
 		float now = run.SurvivalTime;
+		// No gravity well while a Black Hole is out: the only gravity there is its own.
+		if (IsInstanceValid(blackHole) || FindBlackHole())
+			nextWellAt = Mathf.Max(nextWellAt, now + 12f);
 		if (manager.BossBusy)
 		{
 			// Hold the clocks rather than firing the moment the fight ends.
@@ -43,6 +46,21 @@ public partial class HazardDirector : Node
 			SpawnWell(now);
 		else if (now >= nextCometAt)
 			SpawnComet(now);
+	}
+
+	private BossBlackHole blackHole;
+
+	private bool FindBlackHole()
+	{
+		foreach (Node node in GetTree().GetNodesInGroup("bosses"))
+		{
+			if (node is BossBlackHole hole && IsInstanceValid(hole))
+			{
+				blackHole = hole;
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void SpawnWell(float now)

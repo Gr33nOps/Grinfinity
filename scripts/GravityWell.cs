@@ -24,6 +24,18 @@ public partial class GravityWell : Node2D
 	[Export] public float PlayerPullFactor { get; set; } = 0.16f;
 
 	private float age;
+	/// <summary>Fading out early and pulling nothing, see <see cref="Dissipate"/>.</summary>
+	private bool dissipating;
+
+	/// <summary>
+	/// Fades out within a second and stops pulling. A Black Hole's arrival does
+	/// this, so the only gravity in that fight is its own.
+	/// </summary>
+	public void Dissipate()
+	{
+		dissipating = true;
+		age = Mathf.Max(age, Lifetime - 1f);
+	}
 	private Player world;
 	private GameManager manager;
 
@@ -49,7 +61,7 @@ public partial class GravityWell : Node2D
 		}
 
 		// A visible warning before the core becomes dangerous.
-		if (age >= 1.2f)
+		if (age >= 1.2f && !dissipating)
 		{
 			PullBodies(step);
 			PullDebris(step);

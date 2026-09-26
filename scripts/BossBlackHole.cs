@@ -9,9 +9,12 @@ using Godot;
 /// seconds: walk out before it closes. Anyone still inside is dragged in harder
 /// than they can walk, and only a dash breaks free; reaching the core is death.
 ///
-/// The throw. It grabs the enemies on screen, holds them spinning round itself
-/// for a moment, then hurls them at the planet one after another. With nothing
-/// nearby to grab, it pulls a couple of Drifters out of its own dark.
+/// The throw. It grabs enemies on screen, holds them spinning round itself for
+/// a moment, then hurls them at the planet one after another. With nothing on
+/// screen, it has nothing to throw.
+///
+/// Nothing else: it does not pull shots or enemies about, and any gravity well
+/// on the field fades away when it arrives.
 ///
 /// Both get quicker as it gets hurt.
 /// </summary>
@@ -30,13 +33,13 @@ public partial class BossBlackHole : Boss
 	[ExportGroup("Event horizon")]
 	[Export] public float CoreRadius { get; set; } = 46.0f;
 	/// <summary>How far the ring reaches from its centre.</summary>
-	[Export] public float HorizonRadius { get; set; } = 430.0f;
+	[Export] public float HorizonRadius { get; set; } = 540.0f;
 	/// <summary>Seconds between one horizon ending and the next forming, shrinking as it gets hurt.</summary>
 	[Export] public float HorizonInterval { get; set; } = 7.5f;
 	[Export] public float MinHorizonInterval { get; set; } = 5.0f;
 	/// <summary>Seconds to get out while the ring fills. Always long enough to walk clear.</summary>
-	[Export] public float FormTime { get; set; } = 2.2f;
-	[Export] public float MinFormTime { get; set; } = 1.7f;
+	[Export] public float FormTime { get; set; } = 2.5f;
+	[Export] public float MinFormTime { get; set; } = 2.0f;
 	[Export] public float PullTime { get; set; } = 2.6f;
 	/// <summary>Inward pull at the ring's edge and at the core. Walking is 250: only a dash beats it.</summary>
 	[Export] public float EdgePull { get; set; } = 330.0f;
@@ -45,16 +48,13 @@ public partial class BossBlackHole : Boss
 	[ExportGroup("Throw")]
 	[Export] public float ThrowInterval { get; set; } = 4.2f;
 	[Export] public float MinThrowInterval { get; set; } = 2.4f;
-	/// <summary>How far away it can reach to grab something: about the screen.</summary>
-	[Export] public float GrabReach { get; set; } = 1000.0f;
 	[Export] public int MaxThrown { get; set; } = 3;
-	/// <summary>With fewer than this to grab, it pulls Drifters out of itself to make up the number.</summary>
-	[Export] public int ConjureUpTo { get; set; } = 2;
+	/// <summary>Seconds before trying again when there was nothing on screen to grab.</summary>
+	[Export] public float RetryGrab { get; set; } = 1.0f;
 	[Export] public float HoldTime { get; set; } = 0.8f;
 	[Export] public float ThrowSpeed { get; set; } = 760.0f;
 	[Export] public float ThrowFlight { get; set; } = 1.3f;
 	[Export] public float ThrowGap { get; set; } = 0.22f;
-	[Export] public PackedScene BodyScene { get; set; }
 
 	[ExportGroup("Movement")]
 	[Export] public float DriftSpeed { get; set; } = 26.0f;
@@ -75,8 +75,14 @@ public partial class BossBlackHole : Boss
 	{
 		// The core that swallows grows with the art; the horizon's reach does not.
 		CoreRadius *= Size;
-		BodyScene ??= GD.Load<PackedScene>("res://scenes/body.tscn");
 		world = World;
+
+		// Its gravity is the only gravity in this fight.
+		foreach (Node node in GetTree().GetNodesInGroup("hazards"))
+		{
+			if (node is GravityWell well && IsInstanceValid(well))
+				well.Dissipate();
+		}
 		horizonLeft = 3.0f;
 		throwTimer = 1.8f;
 		PickDriftTarget();
@@ -204,45 +210,29 @@ public partial class BossBlackHole : Boss
 		if (horizon == Horizon.Pulling || (throwTimer -= step) > 0f)
 			return;
 
-		throwTimer = Mathf.Lerp(MinThrowInterval, ThrowInterval, HealthFraction) * CycleTempo;
-		Grab();
+		// Nothing on screen: nothing to throw, so look again shortly.
+		throwTimer = Grab() ? Mathf.Lerp(MinThrowInterval, ThrowInterval, HealthFraction) * CycleTempo : RetryGrab;
 	}
 
-	/// <summary>Takes the nearest enemies within reach, making up the numbers from its own dark if there are too few.</summary>
-	private void Grab()
+	/// <summary>Takes up to <see cref="MaxThrown"/> of the enemies on screen, nearest it first. False if there were none.</summary>
+	private bool Grab()
 	{
-		var nearby = new List<Body>();
+		Rect2 screen = Arena.View;
+		var onScreen = new List<Body>();
 		foreach (Node node in GetTree().GetNodesInGroup("bodies"))
 		{
 			if (node is Body body && IsInstanceValid(body) && !body.IsDestroyed && !body.IsHeld && !body.IsThrown
-				&& body.GlobalPosition.DistanceTo(GlobalPosition) <= GrabReach)
-				nearby.Add(body);
+				&& screen.HasPoint(body.GlobalPosition))
+				onScreen.Add(body);
 		}
-		nearby.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(GlobalPosition).CompareTo(b.GlobalPosition.DistanceSquaredTo(GlobalPosition)));
+		onScreen.Sort((a, b) => a.GlobalPosition.DistanceSquaredTo(GlobalPosition).CompareTo(b.GlobalPosition.DistanceSquaredTo(GlobalPosition)));
 
-		for (int i = 0; i < nearby.Count && held.Count < MaxThrown; i++)
-			held.Add(nearby[i]);
-
-		while (held.Count < ConjureUpTo && Conjure() is Body made)
-			held.Add(made);
+		for (int i = 0; i < onScreen.Count && held.Count < MaxThrown; i++)
+			held.Add(onScreen[i]);
 
 		holdLeft = HoldTime;
 		nextThrowIn = 0f;
-	}
-
-	/// <summary>A Drifter pulled out of the dark at its rim, to be thrown.</summary>
-	private Body Conjure()
-	{
-		if (BodyScene == null || GetTree().GetNodeCountInGroup("bodies") >= Body.HardCap)
-			return null;
-		if (BodyScene.Instantiate() is not Body body)
-			return null;
-
-		body.Configure(BodyKind.Drifter);
-		body.GlobalPosition = GlobalPosition + Vector2.FromAngle(RunState.Rng.Randf() * Mathf.Tau) * (CoreRadius + 40f);
-		body.Hold(body.GlobalPosition);
-		GameManager.Spawn(this, body);
-		return body;
+		return held.Count > 0;
 	}
 
 	/// <summary>Whatever it is still holding goes free when it falls.</summary>
