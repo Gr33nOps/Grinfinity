@@ -8,6 +8,8 @@ public partial class Menu : Node
     private float time;
     public override void _Ready()
     {
+        // Back on the menu, any boss test is over.
+        BossTest.Active=false;
         AddChild(new CosmicBackdrop());
         buttonSound=new AudioStreamPlayer {Stream=GD.Load<AudioStream>("res://sounds/button_tap.wav"),Bus="SFX"};AddChild(buttonSound);
         hoverSound=new AudioStreamPlayer {Stream=GD.Load<AudioStream>("res://sounds/button_tick.wav"),Bus="SFX"};AddChild(hoverSound);
@@ -27,6 +29,12 @@ public partial class Menu : Node
         var footer=new HBoxContainer();footer.AddThemeConstantOverride("separation",16);buttons.AddChild(footer);
         AddButton(footer,"CreditsButton","CREDITS","star",()=>GoTo("credits"));
         AddButton(footer,"QuitButton","QUIT","power",()=>GameSettings.Instance.QuitGame());
+        // Cheat mode for tuning the bosses, only when running from the editor.
+        if(BossTest.Available)
+        {
+            var test=AddButton(buttons,"BossTestButton","BOSS TEST","crosshair",()=>layer.AddChild(new BossTestPanel()));
+            test.CustomMinimumSize=new Vector2(0,56);
+        }
         var best=ArcadeSkin.Label($"BEST TIME   {ScoreManager.FormatTime(ScoreManager.BestTime)}",28,ArcadeSkin.Orange);
         Place(best,layer,.56f,.77f,.9f,.83f);
         best.Visible=ScoreManager.BestTime>0f;

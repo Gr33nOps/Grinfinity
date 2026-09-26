@@ -111,6 +111,9 @@ public static class PlayerProfile
 	/// <summary>Unlocks an achievement. Returns true if it was newly unlocked.</summary>
 	public static bool UnlockAchievement(AchievementId id)
 	{
+		// Nothing earned in a boss test counts.
+		if (BossTest.Active)
+			return false;
 		EnsureLoaded();
 		if (!unlockedAchievements.Add(id))
 			return false;

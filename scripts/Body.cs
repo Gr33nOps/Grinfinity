@@ -90,7 +90,9 @@ public partial class Body : CharacterBody2D, IShootable
 		foreach (var (kind, files) in FaceFiles)
 		{
 			faceTextures[kind] = System.Array.ConvertAll(files, file => GD.Load<Texture2D>($"res://art/cosmic/{file}.svg"));
-			blinkTextures[kind] = System.Array.ConvertAll(files, file => GD.Load<Texture2D>($"res://art/cosmic/{file}_blink.svg"));
+			// Drifters blink through their own DrifterFace, so their base picture has no blink.
+			blinkTextures[kind] = System.Array.ConvertAll(files, file =>
+				ResourceLoader.Exists($"res://art/cosmic/{file}_blink.svg") ? GD.Load<Texture2D>($"res://art/cosmic/{file}_blink.svg") : null);
 		}
 	}
 

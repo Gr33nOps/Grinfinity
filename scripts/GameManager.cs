@@ -140,6 +140,38 @@ public partial class GameManager : Node2D
 		SetupComponents();
 		ConnectSignals();
 		AddChild(new ArenaBackdrop());
+		if (BossTest.Active)
+			StartBossTest();
+	}
+
+	/// <summary>
+	/// Cheat mode (see <see cref="BossTest"/>): no ordinary enemies and no arena
+	/// events, the chosen boss almost at once, then each next boss a few seconds
+	/// after the last falls.
+	/// </summary>
+	private void StartBossTest()
+	{
+		bodySpawner.ProcessMode = ProcessModeEnum.Disabled;
+		hazardDirector.ProcessMode = ProcessModeEnum.Disabled;
+		NextBossIndex = BossTest.FirstBoss;
+		NextBossAt = BossTest.FirstBossAfter;
+		player.Invulnerable = BossTest.Invincible;
+		Toast("BOSS TEST", new Color(1.0f, 0.72f, 0.32f));
+		if (BossTest.Upgraded)
+		{
+			// A moment in, once the run has its abilities: every rank of every
+			// upgrade, as far as the build allows.
+			GetTree().CreateTimer(0.3f).Timeout += () =>
+			{
+				bool granted = true;
+				while (granted && !run.BuildComplete)
+				{
+					granted = false;
+					foreach (RunUpgrades.Profile profile in RunUpgrades.All)
+						granted |= run.TryGrant(profile.Id);
+				}
+			};
+		}
 	}
 
 	/// <summary>The game manager for the current scene, or null outside gameplay.</summary>
@@ -630,6 +662,12 @@ public partial class GameManager : Node2D
 			if (kind == 2)
 				BossesOverlap = true;
 		}
+		// Testing: one boss at a time, the next along a few seconds later.
+		if (BossTest.Active)
+		{
+			BossesOverlap = false;
+			NextBossAt = run.SurvivalTime + BossTest.NextBossAfter;
+		}
 
 		// Slow motion rather than a freeze: the payoff is watching it come apart.
 		Hitstop(BossKillSlowMoTime, BossKillSlowMo);
@@ -855,6 +893,16 @@ public partial class GameManager : Node2D
 		EndHitstop();
 
 		GameOver.SurvivalTimeToShow = run.SurvivalTime;
+
+		// A boss test is never recorded: no best time, stats, leaderboard or unlocks.
+		if (BossTest.Active)
+		{
+			GameOver.IsNewBestTime = false;
+			GameOver.LeaderboardRank = -1;
+			GameOver.NewlyUnlockedWorlds = new();
+			SceneTransition.Instance.ChangeScene("res://scenes/gameOver.tscn");
+			return;
+		}
 
 		GameOver.IsNewBestTime = ScoreManager.SaveRun(run.SurvivalTime, run.Kills, run.BestStreak);
 
