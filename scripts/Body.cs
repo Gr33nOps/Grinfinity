@@ -50,6 +50,8 @@ public partial class Body : CharacterBody2D, IShootable
 	/// body, so a crowd of them does not look like one face copied.
 	/// </summary>
 	private static Dictionary<BodyKind, Texture2D[]> faceTextures;
+	/// <summary>Each face with its eyes closed, same order as <see cref="faceTextures"/>.</summary>
+	private static Dictionary<BodyKind, Texture2D[]> blinkTextures;
 
 	/// <summary>Splinter is drawn at half the family canvas — see ASSETS.md.</summary>
 	private static readonly Dictionary<BodyKind, string[]> FaceFiles = new()
@@ -84,8 +86,12 @@ public partial class Body : CharacterBody2D, IShootable
 			return;
 
 		faceTextures = new Dictionary<BodyKind, Texture2D[]>();
+		blinkTextures = new Dictionary<BodyKind, Texture2D[]>();
 		foreach (var (kind, files) in FaceFiles)
+		{
 			faceTextures[kind] = System.Array.ConvertAll(files, file => GD.Load<Texture2D>($"res://art/cosmic/{file}.svg"));
+			blinkTextures[kind] = System.Array.ConvertAll(files, file => GD.Load<Texture2D>($"res://art/cosmic/{file}_blink.svg"));
+		}
 	}
 
 	private Node2D world;
@@ -245,7 +251,10 @@ public partial class Body : CharacterBody2D, IShootable
 		{
 			EnsureFacesLoaded();
 			Texture2D[] faces = faceTextures[Kind];
-			sprite.Texture = faces[(int)(GD.Randi() % (uint)faces.Length)];
+			int pick = (int)(GD.Randi() % (uint)faces.Length);
+			sprite.Texture = openFace = faces[pick];
+			closedFace = blinkTextures[Kind][pick];
+			blinkIn = (float)GD.RandRange(1.0, 5.0);
 		}
 
 		// Bodies arriving from the right are mirrored, purely for variety —
@@ -292,9 +301,14 @@ public partial class Body : CharacterBody2D, IShootable
 		Modulate = BaseTint;
 	}
 
+	/// <summary>This body's face and the same face mid-blink. Drifters blink through their own <see cref="DrifterFace"/>.</summary>
+	private Texture2D openFace, closedFace;
+	private float blinkIn, blinkLeft;
+
     public override void _Process(double delta)
     {
         visualTime+=(float)delta;
+        Blink((float)delta);
         if(sprite!=null)
         {
             sprite.Rotation=Kind==BodyKind.Bulwark?0:-Rotation+Mathf.Sin(visualTime*2+GetInstanceId()%19)*.09f;
@@ -302,6 +316,24 @@ public partial class Body : CharacterBody2D, IShootable
             {float squash=1+.025f*Mathf.Sin(visualTime*3+GetInstanceId()%13);sprite.Scale=spriteBaseScale*new Vector2(1/squash,squash);}
         }
     }
+	/// <summary>Closes the eyes for a moment every few seconds, each body on its own clock.</summary>
+	private void Blink(float step)
+	{
+		if (closedFace == null || sprite == null)
+			return;
+		if (blinkLeft > 0f)
+		{
+			if ((blinkLeft -= step) <= 0f)
+				sprite.Texture = openFace;
+		}
+		else if ((blinkIn -= step) <= 0f)
+		{
+			blinkLeft = 0.13f;
+			blinkIn = (float)GD.RandRange(2.5, 6.0);
+			sprite.Texture = closedFace;
+		}
+	}
+
 	public override void _PhysicsProcess(double delta)
 	{
 		if (!HasWorld)

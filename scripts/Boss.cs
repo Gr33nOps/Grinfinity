@@ -34,6 +34,10 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	protected Sprite2D Art;
 	/// <summary>Its second face, harsher than the first, worn once it is below half health.</summary>
 	private Texture2D harsher;
+	/// <summary>Whichever face it wears now, and that face mid-blink.</summary>
+	private Texture2D face, blinking;
+	private float blinkIn = 2f, blinkLeft;
+	private string asset;
 	private float visualTime;
 	protected float Windup;
 	protected Player World;
@@ -50,9 +54,11 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 		AddToGroup("hazards");
 		AddToGroup("bosses");
 		foreach (Node child in GetChildren()) if (child is Polygon2D polygon) polygon.Hide();
-		string asset = this is BossCoil ? "coil" : this is BossBrood ? "brood" : "black_hole";
+		asset = this is BossCoil ? "coil" : this is BossBrood ? "brood" : "black_hole";
 		Art = new Sprite2D { Texture = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"), Scale = Vector2.One * ArtScale }; AddChild(Art);
 		harsher = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_2.svg");
+		face = Art.Texture;
+		blinking = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_blink.svg");
 		// The hit circle grows with the art, so dashes, shots and Novas land
 		// where the boss looks to be. The shape is copied first: the scene's
 		// own resource is shared by every instance.
@@ -94,8 +100,12 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 		{
 			// Hurt, its emotion deepens: disgust to revulsion, mourning to wailing,
 			// emptiness to despair.
-			if (HealthFraction < 0.5f && Art.Texture != harsher)
-				Art.Texture = harsher;
+			if (HealthFraction < 0.5f && face != harsher)
+			{
+				face = Art.Texture = harsher;
+				blinking = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_2_blink.svg");
+				blinkLeft = 0f;
+			}
 			FlashHit();
 			OnDamaged();
 			return false;
@@ -145,6 +155,17 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 		Art.Scale = new Vector2(ArtScale / pulse, ArtScale * pulse);
 		Art.Rotation = -Rotation + Mathf.Sin(visualTime * 1.5f) * .08f;
 		Art.SelfModulate = Colors.White.Lerp(new Color("ffc47c"), Windup);
+
+		// A blink every few seconds, like everything else out here with a face.
+		float step = (float)delta;
+		if (blinkLeft > 0f)
+			blinkLeft -= step;
+		else if ((blinkIn -= step) <= 0f)
+		{
+			blinkLeft = 0.14f;
+			blinkIn = (float)GD.RandRange(2.5, 5.5);
+		}
+		Art.Texture = blinkLeft > 0f ? blinking : face;
 	}
 
 	private void FlashHit()

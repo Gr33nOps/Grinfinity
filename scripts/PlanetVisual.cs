@@ -45,7 +45,8 @@ public partial class PlanetVisual : Node2D
 		body.Position = Vector2.Zero; body.Scale = Vector2.One * .32f; body.FlipH = body.FlipV = false;
 		int world = GameSettings.Instance?.World ?? 1; normal = Worlds.Face(world); blink = Worlds.Face(world, true); happy = GD.Load<Texture2D>("res://art/cosmic/face_happy.svg");
 		face = new Sprite2D { Texture = normal, ZIndex = 2 }; body.AddChild(face);
-		gun = new Sprite2D { Texture = GD.Load<Texture2D>("res://art/cosmic/blaster.svg"), Position = new Vector2(49, 12), Scale = Vector2.One * .27f, ZIndex = 3 }; AddChild(gun);
+		gun = new Sprite2D { Texture = GD.Load<Texture2D>("res://art/cosmic/blaster.svg"), Position = new Vector2(49, 12), Scale = Vector2.One * .27f, ZIndex = 4 }; AddChild(gun);
+		// Above the near half of the leaderboard ring (z 3), so the ring never cuts through the blaster; below the front moons (z 5).
 		muzzle = player.GetNode<Node2D>("shootyPart");
 		muzzle.Position = new Vector2(75, 12);
 		orbit = new Node2D { Name = "Moons" }; AddChild(orbit);

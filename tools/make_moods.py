@@ -248,44 +248,60 @@ def rounded(points, r=14):
     return d + ' Z'
 
 
-# Every Shard has four corners, never three and never square: long, pointed
-# shards of crystal. A tall kite, a leaning blade with one sharp tip, and an
-# arrow lying on its side.
+# Every Shard has four corners, never three and never square: shards of crystal
+# with softly rounded points, filling their canvas. A tall kite, a leaning blade,
+# and an arrow on its side.
 shard_shapes = {
-    'kite': (shard_shape(rounded([(132, 10), (208, 108), (122, 246), (46, 120)], 12),
-                         'M 0 182 L 256 176 L 256 256 L 0 256 Z', 'M 72 100 L 100 64'), (127, 120)),
-    'blade': (shard_shape(rounded([(46, 96), (216, 18), (206, 150), (86, 234)], 12),
-                          'M 0 186 L 256 164 L 256 256 L 0 256 Z', 'M 80 96 L 118 78'), (136, 128)),
-    'arrow': (shard_shape(rounded([(16, 140), (150, 48), (240, 118), (140, 216)], 12),
-                          'M 0 184 L 256 170 L 256 256 L 0 256 Z', 'M 60 126 L 96 100'), (148, 128)),
+    'kite': (shard_shape(rounded([(128, 4), (224, 110), (124, 252), (32, 118)], 24),
+                         'M 0 184 L 256 176 L 256 256 L 0 256 Z', 'M 60 110 L 94 70'), (128, 122)),
+    'blade': (shard_shape(rounded([(26, 96), (230, 12), (224, 156), (66, 242)], 24),
+                          'M 0 190 L 256 170 L 256 256 L 0 256 Z', 'M 62 92 L 110 72'), (132, 126)),
+    'arrow': (shard_shape(rounded([(4, 140), (150, 42), (252, 110), (150, 214)], 24),
+                          'M 0 186 L 256 172 L 256 256 L 0 256 Z', 'M 46 126 L 90 98'), (140, 126)),
 }
 
 
+def shut_pair(left, right, r, mood, width=6):
+    """Both eyes closed: a soft line where each eye was, slanted to keep the mood.
+    'angry' drops the inner corners, 'sad' the outer ones, 'flat' neither."""
+    ends = {'angry': ((-3, 4), (4, -3)), 'sad': ((4, -3), (-3, 4)), 'flat': ((0, 0), (0, 0))}[mood]
+    out = ''
+    for (x, y), (a, b) in ((left, ends[0]), (right, ends[1])):
+        out += path(f'M {x - r - 2} {y + a} Q {x} {y + 5} {x + r + 2} {y + b}', 'none', f'stroke-width="{width}"')
+    return out
+
+
+def enemy(name, body, eyes, closed, rest):
+    """An enemy face and its blink: the same face with `closed` in place of `eyes`."""
+    svg(name, body + eyes + rest)
+    svg(f'{name}_blink', body + closed + rest)
+
+
 def shard_face(mood, fx, fy):
-    """An irritable face with its eyes on the line `fy`, centred on `fx`."""
+    """An irritable face with its eyes on the line `fy`, centred on `fx`: (eyes, closed, rest)."""
     lx, rx = fx - 24, fx + 25
     glare = (eye(lx, fy + 1, 13, (2, 5)) + lid(lx, fy + 1, 13, -9, 1, SHARD)
              + eye(rx, fy - 2, 13, (-2, 5)) + lid(rx, fy - 2, 13, 1, -9, SHARD))
+    closed = shut_pair((lx, fy + 1), (rx, fy - 2), 13, 'angry')
     my = fy + 41
     if mood == 'huffy':  # "hmph": glaring, lips pressed and shoved to one side
-        return (glare + path(f'M {fx - 14} {my + 2} L {fx + 10} {my - 1}', 'none', 'stroke-width="7"')
-                + path(f'M {fx + 14} {my - 7} Q {fx + 22} {my - 1} {fx + 14} {my + 5}', 'none', 'stroke-width="5"'))
+        return glare, closed, (path(f'M {fx - 14} {my + 2} L {fx + 10} {my - 1}', 'none', 'stroke-width="7"')
+                               + path(f'M {fx + 14} {my - 7} Q {fx + 22} {my - 1} {fx + 14} {my + 5}', 'none', 'stroke-width="5"'))
     if mood == 'twitchy':  # one eye glaring, the other screwed down tighter, a tight wavering mouth
         return (eye(lx, fy + 1, 13, (2, 5)) + lid(lx, fy + 1, 13, -9, 1, SHARD)
-                + eye(rx, fy - 2, 11, (-2, 4)) + lid(rx, fy - 2, 11, 6, -2, SHARD)
-                + wobble(fx, my, 30, 3))
+                + eye(rx, fy - 2, 11, (-2, 4)) + lid(rx, fy - 2, 11, 6, -2, SHARD)), closed, wobble(fx, my, 30, 3)
     if mood == 'snappy':  # lip curled, one fang
-        return glare + snarl(fx, my, 40)
+        return glare, closed, snarl(fx, my, 40)
     # scowling: heavy brows pressed down, a tight frown
-    return (glare + path(f'M {lx - 17} {fy - 24} L {lx + 13} {fy - 15}', 'none', 'stroke-width="8"')
-            + path(f'M {rx - 13} {fy - 18} L {rx + 17} {fy - 27}', 'none', 'stroke-width="8"')
-            + frown(fx, my, 34, 10, 7))
+    return glare, closed, (path(f'M {lx - 17} {fy - 24} L {lx + 13} {fy - 15}', 'none', 'stroke-width="8"')
+                           + path(f'M {rx - 13} {fy - 18} L {rx + 17} {fy - 27}', 'none', 'stroke-width="8"')
+                           + frown(fx, my, 34, 10, 7))
 
 
 SHARD_MOODS = ('huffy', 'twitchy', 'snappy', 'scowling')
 for shape, (art, (fx, fy)) in shard_shapes.items():
     for mood in SHARD_MOODS:
-        svg(f'body_shard_{shape}_{mood}', art + shard_face(mood, fx, fy))
+        enemy(f'body_shard_{shape}_{mood}', art, *shard_face(mood, fx, fy))
 
 PLAN = '#958BBC'
 plan = circle(128, 130, 108, PLAN)
@@ -296,25 +312,28 @@ planetoid_faces = {
     # Grudging: side-eye under level lids, a flat mouth that dips at one end.
     'grudging': ([(64, 84, 20), (188, 184, 22)],
                  eye(104, 121, 16, (8, 6)) + lid(104, 121, 16, 1, 3, PLAN, 7)
-                 + eye(161, 121, 16, (8, 6)) + lid(161, 121, 16, 3, 1, PLAN, 7)
-                 + brow(92, 96, 122, 100, 0, 7) + brow(143, 100, 173, 96, 0, 7)
+                 + eye(161, 121, 16, (8, 6)) + lid(161, 121, 16, 3, 1, PLAN, 7),
+                 shut_pair((104, 123), (161, 123), 16, 'flat', 7),
+                 brow(92, 96, 122, 100, 0, 7) + brow(143, 100, 173, 96, 0, 7)
                  + path('M 102 172 L 144 170 Q 151 170 154 177', 'none', 'stroke-width="7"')),
     # Bitter: lids slanted hard, brows down, lips pressed into a long frown.
     'bitter': ([(192, 74, 16), (56, 150, 17), (150, 208, 10)],
                eye(104, 123, 15, (1, 5)) + lid(104, 123, 15, -7, 4, PLAN, 7)
-               + eye(161, 123, 15, (-1, 5)) + lid(161, 123, 15, 4, -7, PLAN, 7)
-               + path('M 84 96 L 120 106', 'none', 'stroke-width="7"') + path('M 145 106 L 181 96', 'none', 'stroke-width="7"')
+               + eye(161, 123, 15, (-1, 5)) + lid(161, 123, 15, 4, -7, PLAN, 7),
+               shut_pair((104, 124), (161, 124), 15, 'angry', 7),
+               path('M 84 96 L 120 106', 'none', 'stroke-width="7"') + path('M 145 106 L 181 96', 'none', 'stroke-width="7"')
                + frown(128, 174, 54, 10, 7)),
     # Brooding: staring at the ground under heavy brows, bags under the eyes, a deep frown.
     'brooding': ([(70, 76, 18), (192, 176, 18)],
                  eye(104, 124, 16, (0, 9)) + lid(104, 124, 16, 2, 2, PLAN, 7)
-                 + eye(161, 124, 16, (0, 9)) + lid(161, 124, 16, 2, 2, PLAN, 7)
-                 + path('M 86 100 L 122 104', 'none', 'stroke-width="9"') + path('M 143 104 L 179 100', 'none', 'stroke-width="9"')
+                 + eye(161, 124, 16, (0, 9)) + lid(161, 124, 16, 2, 2, PLAN, 7),
+                 shut_pair((104, 127), (161, 127), 16, 'flat', 7),
+                 path('M 86 100 L 122 104', 'none', 'stroke-width="9"') + path('M 143 104 L 179 100', 'none', 'stroke-width="9"')
                  + path('M 92 150 Q 104 156 116 150', 'none', 'stroke-width="3"') + path('M 149 150 Q 161 156 173 150', 'none', 'stroke-width="3"')
                  + frown(128, 180, 40, 16, 7)),
 }
-for mood, (spots, face) in planetoid_faces.items():
-    svg(f'body_planetoid_{mood}', plan + craters(spots, PLAN_SHADE) + face)
+for mood, (spots, eyes, closed, rest) in planetoid_faces.items():
+    enemy(f'body_planetoid_{mood}', plan + craters(spots, PLAN_SHADE), eyes, closed, rest)
 
 FRACT = '#88BFB7'
 fract = path('M 32 85 L 91 30 L 173 36 L 228 99 L 220 170 L 163 225 L 75 214 L 25 153 Z', FRACT)
@@ -324,41 +343,45 @@ glassy = (f'<ellipse cx="88" cy="132" rx="10" ry="3.5" fill="{TEAR}" stroke="non
 # Frustration, for the rock that cracks under pressure.
 fracture_faces = {
     # Fed up: level half-shut lids, brows jammed down, teeth bared in a frown.
-    'fed_up': eye(88, 116, 14, (0, 4), 0.5) + lid(88, 116, 14, -1, -1, FRACT)
-              + eye(136, 116, 14, (0, 4), 0.5) + lid(136, 116, 14, -1, -1, FRACT)
-              + path('M 70 92 L 100 100', 'none', 'stroke-width="7"') + path('M 124 100 L 154 92', 'none', 'stroke-width="7"')
-              + grimace(112, 162, 46, 22),
+    'fed_up': (eye(88, 116, 14, (0, 4), 0.5) + lid(88, 116, 14, -1, -1, FRACT)
+               + eye(136, 116, 14, (0, 4), 0.5) + lid(136, 116, 14, -1, -1, FRACT),
+               shut_pair((88, 118), (136, 118), 14, 'flat'),
+               path('M 70 92 L 100 100', 'none', 'stroke-width="7"') + path('M 124 100 L 154 92', 'none', 'stroke-width="7"')
+               + grimace(112, 162, 46, 22)),
     # Exasperated: eyes rolled up, one brow cocked, a flat mouth dipping at one end.
-    'exasperated': eye(88, 114, 14, (1, -8), 0.5) + eye(136, 114, 14, (1, -8), 0.5)
-                   + brow(72, 90, 100, 88, 0) + brow(124, 80, 152, 74, 6)
-                   + path('M 96 164 L 126 162 Q 134 162 136 170', 'none', 'stroke-width="7"') + sweat(56, 80),
+    'exasperated': (eye(88, 114, 14, (1, -8), 0.5) + eye(136, 114, 14, (1, -8), 0.5),
+                    shut_pair((88, 116), (136, 116), 14, 'flat'),
+                    brow(72, 90, 100, 88, 0) + brow(124, 80, 152, 74, 6)
+                    + path('M 96 164 L 126 162 Q 134 162 136 170', 'none', 'stroke-width="7"') + sweat(56, 80)),
     # Strained: eyes clenched into angry slants, teeth gritted in a frown, sweating.
-    'strained': path('M 74 106 L 100 116', 'none', 'stroke-width="7"') + path('M 124 116 L 150 106', 'none', 'stroke-width="7"')
-                + path('M 70 78 L 100 90', 'none', 'stroke-width="7"') + path('M 124 90 L 154 78', 'none', 'stroke-width="7"')
-                + grimace(112, 164, 52, 26) + sweat(56, 84) + jolt(['M 38 60 L 50 70', 'M 28 88 L 44 92']),
+    # Its blink clenches them tighter still.
+    'strained': (path('M 74 106 L 100 116', 'none', 'stroke-width="7"') + path('M 124 116 L 150 106', 'none', 'stroke-width="7"'),
+                 path('M 74 103 L 100 117', 'none', 'stroke-width="8"') + path('M 124 117 L 150 103', 'none', 'stroke-width="8"'),
+                 path('M 70 78 L 100 90', 'none', 'stroke-width="7"') + path('M 124 90 L 154 78', 'none', 'stroke-width="7"')
+                 + grimace(112, 164, 52, 26) + sweat(56, 84) + jolt(['M 38 60 L 50 70', 'M 28 88 L 44 92'])),
 }
-for mood, face in fracture_faces.items():
-    svg(f'body_fracture_{mood}', fract + face)
+for mood, (eyes, closed, rest) in fracture_faces.items():
+    enemy(f'body_fracture_{mood}', fract, eyes, closed, rest)
 
 # Self-doubt, for the small broken-off pieces. Smooth: the crack stays with the Fracture.
 splinter = path('M 32 85 L 91 30 L 173 36 L 228 99 L 220 170 L 163 225 L 75 214 L 25 153 Z', FRACT)
 splinter_faces = {
     # Unsure: glancing sideways, one brow up, a small wavering mouth, sweating.
-    'unsure': eye(88, 114, 15, (-6, 2), 0.45) + eye(136, 114, 15, (-6, 2), 0.45)
-              + brow(72, 88, 102, 86, 0) + brow(122, 80, 152, 72, 5)
-              + wobble(106, 162, 26, 3) + sweat(58, 72),
+    'unsure': (eye(88, 114, 15, (-6, 2), 0.45) + eye(136, 114, 15, (-6, 2), 0.45),
+               shut_pair((88, 116), (136, 116), 15, 'flat'),
+               brow(72, 88, 102, 86, 0) + brow(122, 80, 152, 72, 5) + wobble(106, 162, 26, 3) + sweat(58, 72)),
     # Timid: looking down under sad lids, eyes welling up, a small frown.
-    'timid': eye(88, 116, 14, (-1, 6)) + lid(88, 116, 14, 2, -7, FRACT)
-             + eye(136, 116, 14, (-1, 6)) + lid(136, 116, 14, -7, 2, FRACT)
-             + brow(72, 92, 100, 84, -3) + brow(124, 84, 152, 92, -3)
-             + glassy + frown(112, 166, 22, 8, 6),
+    'timid': (eye(88, 116, 14, (-1, 6)) + lid(88, 116, 14, 2, -7, FRACT)
+              + eye(136, 116, 14, (-1, 6)) + lid(136, 116, 14, -7, 2, FRACT),
+              shut_pair((88, 118), (136, 118), 14, 'sad'),
+              brow(72, 92, 100, 84, -3) + brow(124, 84, 152, 92, -3) + glassy + frown(112, 166, 22, 8, 6)),
     # Shrinking: big wet eyes looking up, brows pinched, biting its lip.
-    'shrinking': eye(88, 112, 16, (0, -4), 0.62) + eye(136, 112, 16, (0, -4), 0.62)
-                 + brow(72, 86, 100, 76, -4) + brow(124, 76, 152, 86, -4)
-                 + grimace(112, 164, 32, 16) + sweat(58, 74),
+    'shrinking': (eye(88, 112, 16, (0, -4), 0.62) + eye(136, 112, 16, (0, -4), 0.62),
+                  shut_pair((88, 114), (136, 114), 16, 'sad'),
+                  brow(72, 86, 100, 76, -4) + brow(124, 76, 152, 86, -4) + grimace(112, 164, 32, 16) + sweat(58, 74)),
 }
-for mood, face in splinter_faces.items():
-    svg(f'body_splinter_{mood}', splinter + face)
+for mood, (eyes, closed, rest) in splinter_faces.items():
+    enemy(f'body_splinter_{mood}', splinter, eyes, closed, rest)
 
 pts = []
 import math
@@ -371,20 +394,23 @@ flare += path('M 65 121 Q 71 85 99 76', 'none', f'stroke="{CREAM}" stroke-width=
 # Anger, for the one that explodes.
 flare_faces = {
     # Furious: glaring down hard, yelling.
-    'furious': eye(105, 118, 13, (3, 5)) + lid(105, 118, 13, -10, 3, ORANGE, 7)
-               + eye(151, 118, 13, (-3, 5)) + lid(151, 118, 13, 3, -10, ORANGE, 7)
-               + shout(128, 163, 42, 26),
+    'furious': (eye(105, 118, 13, (3, 5)) + lid(105, 118, 13, -10, 3, ORANGE, 7)
+                + eye(151, 118, 13, (-3, 5)) + lid(151, 118, 13, 3, -10, ORANGE, 7),
+                shut_pair((105, 119), (151, 119), 13, 'angry', 7),
+                shout(128, 163, 42, 26)),
     # Seething: lids slammed down, teeth bared in a wide frown.
-    'seething': eye(105, 120, 13, (3, 5)) + lid(105, 120, 13, -12, 6, ORANGE, 8)
-                + eye(151, 120, 13, (-3, 5)) + lid(151, 120, 13, 6, -12, ORANGE, 8)
-                + grimace(128, 166, 56, 26),
+    'seething': (eye(105, 120, 13, (3, 5)) + lid(105, 120, 13, -12, 6, ORANGE, 8)
+                 + eye(151, 120, 13, (-3, 5)) + lid(151, 120, 13, 6, -12, ORANGE, 8),
+                 shut_pair((105, 122), (151, 122), 13, 'angry', 7),
+                 grimace(128, 166, 56, 26)),
     # Roaring: eyes blazing wide, brows down hard, mouth open as far as it goes.
-    'roaring': eye(105, 116, 15, (0, 0), 0.26) + eye(151, 116, 15, (0, 0), 0.26)
-               + path('M 84 88 L 120 102', 'none', 'stroke-width="9"') + path('M 136 102 L 172 88', 'none', 'stroke-width="9"')
-               + shout(128, 168, 54, 40),
+    'roaring': (eye(105, 116, 15, (0, 0), 0.26) + eye(151, 116, 15, (0, 0), 0.26),
+                shut_pair((105, 117), (151, 117), 15, 'angry', 7),
+                path('M 84 88 L 120 102', 'none', 'stroke-width="9"') + path('M 136 102 L 172 88', 'none', 'stroke-width="9"')
+                + shout(128, 168, 54, 40)),
 }
-for mood, face in flare_faces.items():
-    svg(f'body_flare_{mood}', flare + face)
+for mood, (eyes, closed, rest) in flare_faces.items():
+    enemy(f'body_flare_{mood}', flare, eyes, closed, rest)
 
 BUL = '#769CB4'; BUL_SHADE = '#52758F'
 bul = path('M 37 61 Q 127 5 222 63 L 215 165 Q 169 224 125 239 Q 77 226 36 165 Z', BUL)
@@ -398,24 +424,26 @@ for cx in (78, 178):
 # Shame, for the one that hides behind its armour.
 bulwark_faces = {
     # Hiding: looking down and away, brows pinched up, cheeks burning, a wavering mouth.
-    'hiding': eye(99, 124, 13, (-6, 6)) + lid(99, 124, 13, 2, -6, BUL)
-              + eye(154, 124, 13, (-6, 6)) + lid(154, 124, 13, -6, 2, BUL_SHADE)
-              + brow(84, 100, 112, 92, -3) + brow(141, 92, 169, 100, -3)
-              + shame_cheeks + wobble(127, 172, 30, 3),
-    # Cringing: eyes shut and drooping, teeth bared in a frown, sweating.
-    'cringing': path('M 86 128 L 112 120', 'none', 'stroke-width="7"') + path('M 141 120 L 167 128', 'none', 'stroke-width="7"')
-                + brow(84, 96, 112, 84, -3) + brow(141, 84, 169, 96, -3)
-                + grimace(127, 172, 44, 22) + sweat(198, 96),
+    'hiding': (eye(99, 124, 13, (-6, 6)) + lid(99, 124, 13, 2, -6, BUL)
+               + eye(154, 124, 13, (-6, 6)) + lid(154, 124, 13, -6, 2, BUL_SHADE),
+               shut_pair((99, 126), (154, 126), 13, 'sad'),
+               brow(84, 100, 112, 92, -3) + brow(141, 92, 169, 100, -3) + shame_cheeks + wobble(127, 172, 30, 3)),
+    # Cringing: eyes shut and drooping, teeth bared in a frown, sweating. Its blink
+    # screws them shut tighter.
+    'cringing': (path('M 86 128 L 112 120', 'none', 'stroke-width="7"') + path('M 141 120 L 167 128', 'none', 'stroke-width="7"'),
+                 path('M 86 131 L 112 119', 'none', 'stroke-width="8"') + path('M 141 119 L 167 131', 'none', 'stroke-width="8"'),
+                 brow(84, 96, 112, 84, -3) + brow(141, 84, 169, 96, -3) + grimace(127, 172, 44, 22) + sweat(198, 96)),
     # Ashamed: staring at the floor, a tear, a small tight frown.
-    'ashamed': eye(99, 126, 13, (0, 7)) + lid(99, 126, 13, 3, -5, BUL)
-               + eye(154, 126, 13, (0, 7)) + lid(154, 126, 13, -5, 3, BUL_SHADE)
-               + brow(84, 102, 112, 94, -3) + brow(141, 94, 169, 102, -3)
-               + tear(88, 142, 0.8) + frown(127, 174, 24, 10, 6),
+    'ashamed': (eye(99, 126, 13, (0, 7)) + lid(99, 126, 13, 3, -5, BUL)
+                + eye(154, 126, 13, (0, 7)) + lid(154, 126, 13, -5, 3, BUL_SHADE),
+                shut_pair((99, 128), (154, 128), 13, 'sad'),
+                brow(84, 102, 112, 94, -3) + brow(141, 94, 169, 102, -3) + tear(88, 142, 0.8) + frown(127, 174, 24, 10, 6)),
 }
-for mood, face in bulwark_faces.items():
-    svg(f'body_bulwark_{mood}', bul + face)
+for mood, (eyes, closed, rest) in bulwark_faces.items():
+    enemy(f'body_bulwark_{mood}', bul, eyes, closed, rest)
 
 # --- Bosses ------------------------------------------------------------------
+# Each has a second, harsher face below half health, and every face blinks.
 
 coil = ''
 for a in (0, 90, 180, 270):
@@ -423,17 +451,18 @@ for a in (0, 90, 180, 270):
 COIL = '#F0CBE0'
 coil += circle(128, 128, 71, '#C69AC9') + circle(128, 128, 51, COIL)
 nose_scrunch = path('M 117 134 Q 123 130 129 134', 'none', 'stroke-width="3"') + path('M 123 140 Q 129 136 135 140', 'none', 'stroke-width="3"')
+coil_shut = shut_pair((109, 119), (149, 117), 12, 'flat', 5)
 # Disgust. Disgusted: one eye narrowed, one brow cocked, nose scrunched, lip curled.
-svg('boss_coil', coil
-    + eye(109, 118, 12, (3, 3)) + lid(109, 118, 12, -2, -2, COIL)
-    + eye(149, 116, 12, (-2, 3)) + brow(137, 94, 161, 92, 8)
-    + nose_scrunch + snarl(129, 156, 34))
+enemy('boss_coil', coil,
+      eye(109, 118, 12, (3, 3)) + lid(109, 118, 12, -2, -2, COIL) + eye(149, 116, 12, (-2, 3)),
+      coil_shut,
+      brow(137, 94, 161, 92, 8) + nose_scrunch + snarl(129, 156, 34))
 # Revolted: both eyes squeezed down to slits, brows twisted, a queasy wavering mouth.
-svg('boss_coil_2', coil
-    + eye(109, 118, 12, (2, 3)) + lid(109, 118, 12, 2, -2, COIL)
-    + eye(149, 116, 12, (-2, 3)) + lid(149, 116, 12, -2, 2, COIL)
-    + path('M 96 100 L 120 106', 'none', 'stroke-width="6"') + path('M 138 104 L 162 94', 'none', 'stroke-width="6"')
-    + nose_scrunch + wobble(129, 158, 40, 5))
+enemy('boss_coil_2', coil,
+      eye(109, 118, 12, (2, 3)) + lid(109, 118, 12, 2, -2, COIL) + eye(149, 116, 12, (-2, 3)) + lid(149, 116, 12, -2, 2, COIL),
+      coil_shut,
+      path('M 96 100 L 120 106', 'none', 'stroke-width="6"') + path('M 138 104 L 162 94', 'none', 'stroke-width="6"')
+      + nose_scrunch + wobble(129, 158, 40, 5))
 
 BROOD = '#A8C596'
 brood = ''.join(circle(x, y, r, '#84B0A0') for x, y, r in [(49, 77, 30), (207, 67, 29), (211, 191, 28), (43, 185, 33)])
@@ -441,18 +470,15 @@ brood += path('M 52 91 Q 50 36 126 29 Q 211 41 212 124 Q 224 207 136 230 Q 45 22
 brood += path('M 48 163 Q 128 218 206 155 Q 193 223 127 226 Q 69 219 48 163', '#769F8C', 'stroke="none"')
 brood += circle(63, 132, 11, '#769F8C', 'none') + circle(189, 134, 14, '#769F8C', 'none')
 # Grief. Mourning: eyes cast down, tears falling, a trembling frown.
-svg('boss_brood', brood
-    + eye(101, 112, 17, (0, 7)) + lid(101, 112, 17, 2, -9, BROOD)
-    + eye(158, 112, 17, (0, 7)) + lid(158, 112, 17, -9, 2, BROOD)
-    + brow(80, 84, 116, 76, -4) + brow(142, 76, 178, 84, -4)
-    + tear(92, 138, 1.1) + tear(168, 138, 1.1)
-    + wobble(129, 178, 52, 5))
-# Wailing: eyes screwed shut, tears pouring, mouth wide open.
-svg('boss_brood_2', brood
-    + squeezed(101, 110, 18, 1) + squeezed(158, 110, 18, -1)
-    + brow(80, 84, 116, 78, 5) + brow(142, 78, 178, 84, 5)
-    + tear(86, 128, 1.2) + tear(173, 128, 1.2)
-    + wail(129, 172, 64, 40))
+enemy('boss_brood', brood,
+      eye(101, 112, 17, (0, 7)) + lid(101, 112, 17, 2, -9, BROOD) + eye(158, 112, 17, (0, 7)) + lid(158, 112, 17, -9, 2, BROOD),
+      shut_pair((101, 115), (158, 115), 17, 'sad', 7),
+      brow(80, 84, 116, 76, -4) + brow(142, 76, 178, 84, -4) + tear(92, 138, 1.1) + tear(168, 138, 1.1) + wobble(129, 178, 52, 5))
+# Wailing: eyes screwed shut, tears pouring, mouth wide open. Its blink screws them tighter.
+enemy('boss_brood_2', brood,
+      squeezed(101, 110, 18, 1) + squeezed(158, 110, 18, -1),
+      squeezed(101, 112, 15, 1) + squeezed(158, 112, 15, -1),
+      brow(80, 84, 116, 78, 5) + brow(142, 78, 178, 84, 5) + tear(86, 128, 1.2) + tear(173, 128, 1.2) + wail(129, 172, 64, 40))
 
 # The Black Hole keeps its eclipse look; its face sits on the dark core.
 hole = f'<g transform="rotate(-18 128 128)">'
@@ -463,20 +489,23 @@ hole += path('M 67 107A63 63 0 0 1 188 96', 'none', f'stroke="{CREAM}" stroke-wi
 hole += path(f'M 16 131Q55 179 128 173Q209 171 240 132Q200 151 127 153Q53 155 16 131Z', ORANGE, 'stroke-width="5"')
 hole += path('M 32 139Q129 181 224 139', 'none', f'stroke="{CREAM}" stroke-width="8"')
 hole += path('M 66 193L92 199M184 49L202 57', 'none', f'stroke="{BERRY}" stroke-width="8"')
+# Its glowing eyes close to thin drooping slits when it blinks.
+hole_shut = (path('M 84 112 Q 103 104 122 104', 'none', f'stroke="{ORANGE}" stroke-width="5"')
+             + path('M 172 112 Q 153 104 134 104', 'none', f'stroke="{ORANGE}" stroke-width="5"'))
 # Hopelessness. Empty: glowing eyes that droop at the outer corners, dim pupils
 # sunk low, and a long thin mouth sagging at both ends.
-empty = path('M 84 112 Q 100 96 122 102 Q 106 116 84 112 Z', ORANGE, 'stroke="none"')
-empty += path('M 172 112 Q 156 96 134 102 Q 150 116 172 112 Z', ORANGE, 'stroke="none"')
-empty += circle(106, 109, 3.5, CREAM, 'none') + circle(150, 109, 3.5, CREAM, 'none')
-empty += path('M 94 152 Q 128 136 162 152', 'none', f'stroke="{CREAM}" stroke-width="6"')
-svg('boss_black_hole', hole + empty + '</g>')
+empty_eyes = path('M 84 112 Q 100 96 122 102 Q 106 116 84 112 Z', ORANGE, 'stroke="none"')
+empty_eyes += path('M 172 112 Q 156 96 134 102 Q 150 116 172 112 Z', ORANGE, 'stroke="none"')
+empty_eyes += circle(106, 109, 3.5, CREAM, 'none') + circle(150, 109, 3.5, CREAM, 'none')
+empty_mouth = path('M 94 152 Q 128 136 162 152', 'none', f'stroke="{CREAM}" stroke-width="6"')
+enemy('boss_black_hole', hole, empty_eyes, hole_shut, empty_mouth + '</g>')
 # Despairing: eyes sagging almost shut, glowing tears, a mouth that has given up.
-despair = path('M 84 114 Q 102 104 122 106 Q 104 114 84 114 Z', ORANGE, 'stroke="none"')
-despair += path('M 172 114 Q 154 104 134 106 Q 152 114 172 114 Z', ORANGE, 'stroke="none"')
-despair += path('M 96 118 Q 100 128 96 134 Q 92 128 96 118 Z', ORANGE, 'stroke="none"')
-despair += path('M 160 118 Q 164 128 160 134 Q 156 128 160 118 Z', ORANGE, 'stroke="none"')
-despair += path('M 98 156 Q 128 132 158 156 Q 128 146 98 156 Z', CREAM, 'stroke="none"')
-svg('boss_black_hole_2', hole + despair + '</g>')
+despair_eyes = path('M 84 114 Q 102 104 122 106 Q 104 114 84 114 Z', ORANGE, 'stroke="none"')
+despair_eyes += path('M 172 114 Q 154 104 134 106 Q 152 114 172 114 Z', ORANGE, 'stroke="none"')
+despair_rest = path('M 96 118 Q 100 128 96 134 Q 92 128 96 118 Z', ORANGE, 'stroke="none"')
+despair_rest += path('M 160 118 Q 164 128 160 134 Q 156 128 160 118 Z', ORANGE, 'stroke="none"')
+despair_rest += path('M 98 156 Q 128 132 158 156 Q 128 146 98 156 Z', CREAM, 'stroke="none"')
+enemy('boss_black_hole_2', hole, despair_eyes, hole_shut, despair_rest + '</g>')
 
 # --- The planets: the only happy faces out here -----------------------------------
 # Each planet wears one positive emotion, from the gentlest on the planet you
@@ -490,8 +519,8 @@ svg('boss_black_hole_2', hole + despair + '</g>')
 #    6 Gracebloom   gratitude     12 Heartsong    love
 #
 # Just faces: the expression carries the emotion, with nothing floating round
-# it. Each has a blink (eyes shut, everything else the same) unless its eyes are
-# already closed. Planet 1's files are face / face_blink; face_happy is the
+# it. Each has a blink: open eyes shut for a moment, and eyes that are already
+# closed squeeze or settle a little instead, so every planet shows a sign of life. Planet 1's files are face / face_blink; face_happy is the
 # shared burst of joy every planet shows in Overdrive and when it scores.
 
 GOLD = '#FFD76A'; TONGUE = '#E0677F'; HEART = '#F0677F'
@@ -560,7 +589,9 @@ faces = {}
 # 2 Easewind, relief: eyes closed, brows lifted, letting out a happy "phew".
 phew = path('M 110 150 Q 127 158 144 150 Q 140 170 127 170 Q 114 170 110 150 Z', INK, 'stroke-width="5"')
 phew += path('M 118 165 Q 127 159 136 165 Q 132 169 127 169 Q 122 169 118 165 Z', BERRY, 'stroke="none"')
-faces[2] = (p_cheeks + shut + brows_up + phew, None)
+# Its blink: a deeper, contented settle of the closed eyes and brows.
+shut_low = path('M 83 118 Q 99 126 115 118', 'none', 'stroke-width="6"') + path('M 139 118 Q 155 126 171 118', 'none', 'stroke-width="6"')
+faces[2] = (p_cheeks + shut + brows_up + phew, p_cheeks + shut_low + p_brows + phew)
 
 # 1 Stillwater, calmness: relaxed half-shut eyes, level brows, a small easy smile.
 calm_smile = path('M 112 154 Q 127 163 142 154', 'none', 'stroke-width="6"')
@@ -569,13 +600,18 @@ faces[1] = (p_cheeks + half_eye(99) + half_eye(155) + soft_brows + calm_smile,
 
 # 3 Hearthglow, contentment: eyes curved shut in a smile, rosy, a snug closed smile.
 snug = path('M 104 150 Q 127 170 150 150', 'none', 'stroke-width="6"')
-faces[3] = (warm_cheeks + arcs + p_brows + snug, None)
+# Its blink, and Sunburst's: the smiling eyes squeeze a little tighter.
+squeeze = path('M 84 116 Q 99 102 114 116', 'none', 'stroke-width="7"') + path('M 140 116 Q 155 102 170 116', 'none', 'stroke-width="7"')
+faces[3] = (warm_cheeks + arcs + p_brows + snug, warm_cheeks + squeeze + p_brows + snug)
 
 # 4 Hushmere, peacefulness: long closed lashes, soft brows, the smallest smile.
 serene = (path('M 81 116 Q 99 126 117 116', 'none', 'stroke-width="6"') + path('M 137 116 Q 155 126 173 116', 'none', 'stroke-width="6"')
           + path('M 83 118 L 77 124 M 90 122 L 86 129', 'none', 'stroke-width="4"')
           + path('M 171 118 L 177 124 M 164 122 L 168 129', 'none', 'stroke-width="4"'))
-faces[4] = (p_cheeks + serene + soft_brows + path('M 117 156 Q 127 163 137 156', 'none', 'stroke-width="5"'), None)
+serene_mouth = path('M 117 156 Q 127 163 137 156', 'none', 'stroke-width="5"')
+# Its blink: the closed eyes settle a touch lower, like a slow breath.
+faces[4] = (p_cheeks + serene + soft_brows + serene_mouth,
+            p_cheeks + f'<g transform="translate(0 3)">{serene}</g>' + soft_brows + serene_mouth)
 
 # 5 Anchorlight, trust: warm open eyes looking right at you, a gentle smile.
 gentle = path('M 102 150 Q 127 168 152 150', 'none', 'stroke-width="6"')
@@ -599,7 +635,9 @@ shades += path('M 130 100 L 180 100 Q 178 132 154 132 Q 130 132 130 100 Z', '#1B
 shades += path('M 124 104 Q 127 100 130 104', 'none', 'stroke-width="5"')
 shades += path('M 86 108 L 96 108 M 142 108 L 152 108', 'none', f'stroke="{CREAM}" stroke-width="4" opacity=".8"')
 smirk = path('M 104 156 Q 132 166 156 146', 'none', 'stroke-width="6"') + path('M 152 142 Q 158 146 158 152', 'none', 'stroke-width="4"')
-faces[8] = (p_cheeks + shades + smirk, None)
+# Its blink: a glint slides across the lenses.
+glint_shades = shades.replace('M 86 108 L 96 108 M 142 108 L 152 108', 'M 98 118 L 110 106 M 154 118 L 166 106')
+faces[8] = (p_cheeks + shades + smirk, p_cheeks + glint_shades + smirk)
 
 # 9 Laurelcrown, pride: eyes shut in satisfaction, brows arched high, a big toothy grin.
 grin = path('M 88 144 Q 127 156 166 144 Q 160 180 127 182 Q 94 180 88 144 Z', INK, 'stroke-width="5"')
@@ -607,10 +645,12 @@ grin += path('M 95 149 Q 127 159 159 149 L 156 162 Q 127 170 98 162 Z', CREAM, '
 grin += path('M 112 155 L 112 166 M 127 157 L 127 169 M 142 155 L 142 166', 'none', 'stroke-width="3"')
 proud = path('M 83 114 Q 99 100 115 114', 'none', 'stroke-width="7"') + path('M 139 114 Q 155 100 171 114', 'none', 'stroke-width="7"')
 arched = path('M 80 80 Q 98 62 116 74', 'none', 'stroke-width="6"') + path('M 138 74 Q 156 62 174 80', 'none', 'stroke-width="6"')
-faces[9] = (p_cheeks + proud + arched + grin, None)
+# Its blink: the satisfied eyes squeeze a little tighter.
+proud_squeeze = path('M 84 113 Q 99 103 114 113', 'none', 'stroke-width="7"') + path('M 140 113 Q 155 103 170 113', 'none', 'stroke-width="7"')
+faces[9] = (p_cheeks + proud + arched + grin, p_cheeks + proud_squeeze + arched + grin)
 
 # 10 Sunburst, joy: eyes squeezed up in delight, rosy, laughing wide open.
-faces[10] = (warm_cheeks + arcs + brows_up + p_big, None)
+faces[10] = (warm_cheeks + arcs + brows_up + p_big, warm_cheeks + squeeze + brows_up + p_big)
 
 # 11 Sparkrush, excitement: star eyes and a huge beaming grin.
 starry = star(99, 113, 24, 11) + star(155, 113, 24, 11)
