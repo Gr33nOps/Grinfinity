@@ -1,9 +1,10 @@
 using Godot;
 
 /// <summary>
-/// A Satellite's warning before it shoots: an orb swells at its rim, on the side
-/// facing you, over the last moment before the shot leaves. The shot is fired
-/// from that same spot, so the orb you saw growing is the one coming at you.
+/// A Satellite's warning before it shoots: a dart grows at its rim, pointing at
+/// you, inside a ring that tightens onto it, over the last moment before the shot
+/// leaves. The shot is fired from that same spot, so the dart you saw growing is
+/// the one coming at you.
 /// </summary>
 public partial class ShotCharge : Node2D
 {
@@ -34,6 +35,8 @@ public partial class ShotCharge : Node2D
 	public override void _Draw()
 	{
 		float progress = 1f - Mathf.Clamp(body.BehaviourTimer / ChargeTime, 0f, 1f);
-		HostileOrb.Draw(this, Vector2.Zero, 16f * progress, time, 0.55f + 0.45f * progress);
+		float heading = (body.WorldPosition - GlobalPosition).Angle();
+		DrawArc(Vector2.Zero, Mathf.Lerp(46f, 14f, progress), 0f, Mathf.Tau, 28, new Color(HostileOrb.Violet, 0.35f + 0.5f * progress), 3f, true);
+		HostileOrb.DrawDart(this, Vector2.Zero, heading, 7f * progress, 0.55f + 0.45f * progress);
 	}
 }

@@ -16,6 +16,7 @@ public partial class DrifterFace : Sprite2D
 {
 	private static readonly string[] Shapes = { "jagged", "pebble", "lumpy" };
 	private static readonly string[] Rocks = { "rose", "stone", "clay" };
+	private static readonly Color[] RockColours = { new("bc7f83"), new("a6979b"), new("c9a07e") };
 	private static readonly string[] Moods = { "glum", "teary", "sulking", "sleepy", "nervous", "pouty", "sniffly", "grumbling" };
 
 	/// <summary>
@@ -42,7 +43,11 @@ public partial class DrifterFace : Sprite2D
 	{
 		shockedFaces ??= Variants("drifter_face_shocked");
 
-		string rock = Rocks[GD.Randi() % (uint)Rocks.Length];
+		int rockIndex = (int)(GD.Randi() % (uint)Rocks.Length);
+		string rock = Rocks[rockIndex];
+		// It pops in its own rock's colour (the colourblind palette keeps its own).
+		if (GameSettings.Instance?.ColourblindMode != true)
+			owner.SetBurstColour(RockColours[rockIndex]);
 		string feeling = Moods[GD.Randi() % (uint)Moods.Length];
 		art.Texture = Load($"drifter_body_{Shapes[GD.Randi() % (uint)Shapes.Length]}_{rock}");
 

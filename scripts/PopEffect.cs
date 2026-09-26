@@ -1,18 +1,18 @@
 using Godot;
 
 /// <summary>
-/// A cartoon pop, the game's one burst effect. A bright core swells and is
-/// gone, a ring in the popped thing's own colour races outward, and a handful
-/// of little cream and gold stars (the menu's sparkle shape) spin away and
-/// shrink. Snappy and clean, so a kill reads as a satisfying pop rather than a
-/// cloud of sparks, and it never hangs around to clutter the fight.
+/// A cartoon pop, the game's one burst effect, entirely in the popped thing's
+/// own colour: a bright flash of it swells and is gone, a ring of it races
+/// outward, and a few little stars in its lighter shades spin away and shrink.
+/// One colour per pop, so a crowd dying at once still reads as clean pops of
+/// the things that died rather than a cloud of confetti, and it never hangs
+/// around to clutter the fight.
 ///
 /// Drawn directly rather than simulated: a few shapes per pop, nothing to pool.
 /// </summary>
 public partial class PopEffect : Node2D
 {
 	private static readonly Color Core = new("fff0ce");
-	private static readonly Color[] StarColours = { new("fff0ce"), new("ffd66b"), new("f5a451") };
 
 	/// <summary>Roughly the radius of what popped. Everything scales from it.</summary>
 	public float Size { get; set; } = 50f;
@@ -56,7 +56,8 @@ public partial class PopEffect : Node2D
 			speeds[i] = rng.RandfRange(1.1f, 1.8f);
 			spins[i] = rng.RandfRange(-7f, 7f);
 			sizes[i] = rng.RandfRange(0.16f, 0.26f);
-			colours[i] = StarColours[rng.RandiRange(0, StarColours.Length - 1)];
+			// Shades of the thing itself, from its own colour to nearly white.
+			colours[i] = Tint.Lightened(rng.RandfRange(0.15f, 0.6f));
 		}
 	}
 
@@ -84,8 +85,8 @@ public partial class PopEffect : Node2D
 		{
 			float grow = coreT < 0.35f ? coreT / 0.35f : 1f - (coreT - 0.35f) / 0.65f;
 			float coreRadius = Size * 0.8f * Mathf.Sin(grow * Mathf.Pi * 0.5f);
-			DrawCircle(Vector2.Zero, coreRadius, Core);
-			DrawCircle(Vector2.Zero, coreRadius * 0.55f, Colors.White);
+			DrawCircle(Vector2.Zero, coreRadius, Tint.Lightened(0.7f));
+			DrawCircle(Vector2.Zero, coreRadius * 0.55f, Tint.Lightened(0.92f));
 		}
 
 		// The ring, in the popped thing's colour, lightened so it reads as light.

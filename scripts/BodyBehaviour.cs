@@ -65,7 +65,7 @@ public sealed class DrifterBehaviour : BodyBehaviour
 		body.BaseTint = Colors.White;
 		body.KnockbackStrength = 240.0f;
 		body.DebrisCount = 2;
-		body.SetBurst(55, 1.0f, new Color(0.91f, 0.35f, 0.45f));
+		body.SetBurst(55, 1.0f, new Color("bc7f83"));
 	}
 }
 
@@ -80,7 +80,7 @@ public sealed class ShardBehaviour : BodyBehaviour
 		body.BaseTint = new Color(0.72f, 1.0f, 0.85f);
 		body.KnockbackStrength = 420.0f;
 		body.DebrisCount = 1;
-		body.SetBurst(26, 0.65f, new Color(0.62f, 1.0f, 0.78f));
+		body.SetBurst(26, 0.65f, new Color("eaa36f"));
 	}
 }
 
@@ -97,7 +97,7 @@ public sealed class PlanetoidBehaviour : BodyBehaviour
 		body.BaseTint = new Color(0.7f, 0.78f, 1.0f);
 		body.KnockbackStrength = 90.0f;
 		body.DebrisCount = 6;
-		body.SetBurst(120, 2.1f, new Color(0.66f, 0.76f, 1.0f));
+		body.SetBurst(120, 2.1f, new Color("958bbc"));
 	}
 }
 
@@ -116,7 +116,7 @@ public sealed class FractureBehaviour : BodyBehaviour
 		body.BaseTint = new Color(0.86f, 0.66f, 1.0f);
 		body.KnockbackStrength = 170.0f;
 		body.DebrisCount = 2;
-		body.SetBurst(70, 1.3f, new Color(0.82f, 0.6f, 1.0f));
+		body.SetBurst(70, 1.3f, new Color("88bfb7"));
 	}
 
 	public override void OnDestroyed(Body body)
@@ -140,7 +140,7 @@ public sealed class SplinterBehaviour : BodyBehaviour
 		body.BaseTint = new Color(0.86f, 0.66f, 1.0f);
 		body.KnockbackStrength = 380.0f;
 		body.DebrisCount = 1;
-		body.SetBurst(22, 0.6f, new Color(0.82f, 0.6f, 1.0f));
+		body.SetBurst(22, 0.6f, new Color("88bfb7"));
 	}
 }
 
@@ -163,7 +163,7 @@ public sealed class SatelliteBehaviour : BodyBehaviour
 		body.BaseTint = new Color(1.0f, 0.86f, 0.55f);
 		body.KnockbackStrength = 300.0f;
 		body.DebrisCount = 3;
-		body.SetBurst(60, 1.0f, new Color(1.0f, 0.82f, 0.5f));
+		body.SetBurst(60, 1.0f, new Color("d3adbd"));
 		body.BehaviourTimer = RunState.Rng.RandfRange(0.4f, FireInterval);
 	}
 
@@ -215,7 +215,7 @@ public sealed class FlareBehaviour : BodyBehaviour
 		body.BaseTint = new Color(1.0f, 0.62f, 0.42f);
 		body.KnockbackStrength = 150.0f;
 		body.DebrisCount = 3;
-		body.SetBurst(150, 2.4f, new Color(1.0f, 0.6f, 0.35f));
+		body.SetBurst(150, 2.4f, new Color("e7876f"));
 	}
 
 	public override void OnDestroyed(Body body)
@@ -242,7 +242,7 @@ public sealed class BulwarkBehaviour : BodyBehaviour
 		body.BaseTint = new Color(0.78f, 0.82f, 0.86f);
 		body.KnockbackStrength = 110.0f;
 		body.DebrisCount = 4;
-		body.SetBurst(90, 1.6f, new Color(0.8f, 0.84f, 0.9f));
+		body.SetBurst(90, 1.6f, new Color("769cb4"));
 	}
 
 	/// <summary>Every this-many shots into the armour, one gets through.</summary>

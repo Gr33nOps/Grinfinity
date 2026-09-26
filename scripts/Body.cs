@@ -122,6 +122,9 @@ public partial class Body : CharacterBody2D, IShootable
 	public float BurstScale { get; private set; } = 1.0f;
 	public Color BurstColor { get; private set; } = new Color(0.91f, 0.35f, 0.45f);
 
+	/// <summary>Pops in this colour instead of its kind's: a Drifter pops in its own rock's colour.</summary>
+	public void SetBurstColour(Color colour) => BurstColor = colour;
+
 	/// <summary>
 	/// What a body leaves behind. Captured before the killing blow, because that
 	/// blow queues the body for deletion.
@@ -148,6 +151,10 @@ public partial class Body : CharacterBody2D, IShootable
 
 	/// <summary>True from the killing blow on, even before the node is freed.</summary>
 	public bool IsDestroyed => destroyed;
+
+	/// <summary>How much room this body takes in a crowd: its drawn size, not the difficulty-scaled hitbox.</summary>
+	public float CrowdRadius => crowdBase * Mathf.Abs(Scale.X);
+	private float crowdBase = 25f;
 
 	/// <summary>A Drifter's living face (see <see cref="DrifterFace"/>); null on every other kind.</summary>
 	public DrifterFace Face { get; private set; }
@@ -185,7 +192,11 @@ public partial class Body : CharacterBody2D, IShootable
 		// exactly like a Normal one but is less forgiving to graze.
 		var collisionShape = GetNodeOrNull<CollisionShape2D>("CollisionShape2D");
 		if (collisionShape != null)
+		{
+			if (collisionShape.Shape is CircleShape2D circle)
+				crowdBase = circle.Radius * collisionShape.Scale.X;
 			collisionShape.Scale *= Loadout.DifficultyProfile.ContactRadiusMultiplier;
+		}
 
 		ApplyFace();
 
@@ -291,7 +302,9 @@ public partial class Body : CharacterBody2D, IShootable
 
 		behaviour.Steer(this, step);
 
-		Velocity = Drift + knockback;
+		// Personal space rides on top of the steering, so a crowd spreads out without
+		// any body steering differently or arriving any slower.
+		Velocity = Drift + knockback + Crowd.Separation(this);
 		FaceTravel();
 		MoveAndSlide();
 		StayInArena();
@@ -398,9 +411,15 @@ public partial class Body : CharacterBody2D, IShootable
 		shot.GlobalPosition = MuzzleToward(target);
 		shot.Direction = (target - GlobalPosition).Normalized();
 		shot.Speed = BulletSpeed;
-		shot.MakeHostile();
+		// A dart, not an orb, and it fades soon after passing where you were, so a
+		// ring of Satellites never leaves stray shots crossing the whole arena.
+		shot.Range = SatelliteShotRange;
+		shot.MakeHostile(dart: true);
 		GameManager.Spawn(this, shot);
 	}
+
+	/// <summary>Seconds a Satellite's dart flies: past its orbit radius and the planet, then gone.</summary>
+	private const float SatelliteShotRange = 1.6f;
 
 	/// <summary>Where this body's shot leaves from: its rim, on the side facing <paramref name="target"/>.</summary>
 	public Vector2 MuzzleToward(Vector2 target) => GlobalPosition + (target - GlobalPosition).Normalized() * 34f;
@@ -439,8 +458,11 @@ public partial class Body : CharacterBody2D, IShootable
 	// crawl there is no meaningful heading, so the last one is kept.
 	private void FaceTravel()
 	{
-		if (Velocity.LengthSquared() > 100.0f)
-			Rotation = Velocity.Angle();
+		// Its own steering, not the crowd's nudges, decides which way it faces:
+		// a Bulwark's armour must not swing about as it jostles.
+		Vector2 heading = Drift + knockback;
+		if (heading.LengthSquared() > 100.0f)
+			Rotation = heading.Angle();
 	}
 
 	/// <param name="impactDirection">Travel direction of whatever hit it, for knockback.</param>

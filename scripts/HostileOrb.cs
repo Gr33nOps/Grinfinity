@@ -7,14 +7,24 @@ using Godot;
 /// and drawn the size of its hitbox, so what you see is exactly what hits you.
 /// It swells in when fired, breathes gently while it flies, and shrinks away at
 /// the end of its range instead of vanishing.
+///
+/// A Satellite's shot is a <see cref="Dart"/> instead: a short violet bolt pointing
+/// the way it flies, so a sniper's aimed shot never looks like a boss's spray.
 /// </summary>
 public partial class HostileOrb : Node2D
 {
 	public static readonly Color Hot = new("ff4a6e");
+	public static readonly Color Violet = new("c25cff");
 	private static readonly Color Glow = new(1f, 0.3f, 0.45f);
 
 	/// <summary>Radius in the parent's space. The bullet scene is scaled up 2x, so 8 is a 16 px orb, matching its hitbox.</summary>
 	[Export] public float Radius { get; set; } = 8f;
+
+	/// <summary>Drawn as a Satellite's dart rather than a round orb.</summary>
+	public bool Dart { get; set; }
+
+	/// <summary>Which way a dart points, in radians. Set by its bullet every frame.</summary>
+	public float Heading { get; set; }
 
 	private float time;
 	private float grow;
@@ -41,7 +51,43 @@ public partial class HostileOrb : Node2D
 	public override void _Draw()
 	{
 		float swell = Mathf.Sin(grow * Mathf.Pi * 0.5f) * (1f + 0.25f * Mathf.Sin(grow * Mathf.Pi));
-		Draw(this, Vector2.Zero, Radius * swell * fade, time, fade);
+		if (Dart)
+			DrawDart(this, Vector2.Zero, Heading, Radius * swell * fade, fade);
+		else
+			Draw(this, Vector2.Zero, Radius * swell * fade, time, fade);
+	}
+
+	/// <summary>
+	/// A dart: a pointed violet bolt with an ink rim and a cream streak down its
+	/// middle, in a soft glow. <paramref name="size"/> is its half-width; it is
+	/// about three times as long as it is wide.
+	/// </summary>
+	public static void DrawDart(CanvasItem canvas, Vector2 at, float heading, float size, float alpha)
+	{
+		// Too small to triangulate cleanly: nothing worth drawing yet.
+		if (size <= 0.5f)
+			return;
+		Vector2 forward = Vector2.FromAngle(heading), side = forward.Orthogonal();
+		// The tip, both shoulders, and a round back between them. Every point is
+		// distinct, or the polygon cannot be triangulated.
+		Vector2[] Shape(float grow)
+		{
+			float half = size * grow, back = size * 2.2f * grow, tip = size * 3.2f * grow;
+			var points = new Vector2[8];
+			points[0] = at + forward * tip;
+			points[1] = at + forward * size * 0.8f + side * half;
+			for (int i = 0; i < 5; i++)
+			{
+				float a = Mathf.Pi * 0.5f + Mathf.Pi * i / 4f;
+				points[2 + i] = at - forward * back * 0.6f + (forward * Mathf.Cos(a) + side * Mathf.Sin(a)) * half;
+			}
+			points[7] = at + forward * size * 0.8f - side * half;
+			return points;
+		}
+		canvas.DrawColoredPolygon(Shape(1.9f), new Color(Violet, 0.16f * alpha));
+		canvas.DrawColoredPolygon(Shape(1.25f), new Color(ArcadeSkin.Ink, alpha));
+		canvas.DrawColoredPolygon(Shape(1f), new Color(Violet, alpha));
+		canvas.DrawLine(at - forward * size * 1.1f, at + forward * size * 1.9f, new Color(ArcadeSkin.Cream, alpha), size * 0.55f, true);
 	}
 
 	/// <summary>Draws an orb; shared with the charge-up a Satellite shows before it fires.</summary>

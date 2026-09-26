@@ -28,7 +28,7 @@ public partial class BossCoil : Boss
 	[Export] public float MinRingInterval { get; set; } = 1.5f;
 	[Export] public int ShotsPerRing { get; set; } = 26;
 	/// <summary>Consecutive shots omitted, making the gap the player dashes through.</summary>
-	[Export] public int GapWidth { get; set; } = 5;
+	[Export] public int GapWidth { get; set; } = 6;
 	[Export] public float ShotSpeed { get; set; } = 250.0f;
 	[Export] public float DriftSpeed { get; set; } = 46.0f;
 	[Export] public PackedScene BulletScene { get; set; }

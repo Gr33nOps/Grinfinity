@@ -7,17 +7,29 @@ using Godot;
 ///
 /// A comet does not score for the player: crediting a kill nobody aimed would
 /// reward standing near the crossing rather than fighting.
+///
+/// It is drawn to be unmistakably a comet and not one more round thing: a bright
+/// teardrop head pointing where it goes, trailing a long icy tail that tapers
+/// away and sheds a few sparkles. Its warning is a soft lane exactly as wide as
+/// what it hits, with arrows running along it the way it will fly.
 /// </summary>
 public partial class CometFlyby : Node2D
 {
 	[Export] public float Speed { get; set; } = 1100.0f;
 	[Export] public float HitRadius { get; set; } = 34.0f;
-	[Export] public Color CometColor { get; set; } = new Color(0.75f, 0.9f, 1.0f);
+	[Export] public Color CometColor { get; set; } = new Color(0.55f, 0.86f, 1.0f);
+
+	private const float TailLength = 330f;
+	private static readonly Color Lane = new(1f, 0.45f, 0.4f);
 
 	private Vector2 start;
 	private Vector2 end;
 	private Vector2 velocity;
-	private readonly Vector2[] tail = new Vector2[10];
+	/// <summary>Sparkles shed from the tail: where each was dropped, and its age in seconds.</summary>
+	private readonly Vector2[] sparkAt = new Vector2[14];
+	private readonly float[] sparkAge = new float[14];
+	private int nextSpark;
+	private float time;
 	private Player world;
 	private float warning = Balance.CometWarning;
 	private float travelled;
@@ -34,7 +46,7 @@ public partial class CometFlyby : Node2D
 		GlobalPosition = from;
 		length = from.DistanceTo(to);
 		velocity = (to - from).Normalized() * Speed;
-		System.Array.Fill(tail, from);
+		System.Array.Fill(sparkAge, 99f);
 	}
 
 	public override void _Ready()
@@ -49,6 +61,7 @@ public partial class CometFlyby : Node2D
 	public override void _PhysicsProcess(double delta)
 	{
 		float step = (float)delta;
+		time += step;
 
 		if (warning > 0f)
 		{
@@ -60,9 +73,16 @@ public partial class CometFlyby : Node2D
 		GlobalPosition += velocity * step;
 		travelled += Speed * step;
 
-		for (int i = tail.Length - 1; i > 0; i--)
-			tail[i] = tail[i - 1];
-		tail[0] = GlobalPosition;
+		for (int i = 0; i < sparkAge.Length; i++)
+			sparkAge[i] += step;
+		if (RunState.Rng.Randf() < 0.55f)
+		{
+			// Dropped somewhere along the first part of the tail, a little off its line.
+			Vector2 back = -velocity.Normalized();
+			sparkAt[nextSpark] = GlobalPosition + back * RunState.Rng.RandfRange(30f, 160f) + back.Orthogonal() * RunState.Rng.RandfRange(-18f, 18f);
+			sparkAge[nextSpark] = 0f;
+			nextSpark = (nextSpark + 1) % sparkAt.Length;
+		}
 
 		CheckHits();
 
@@ -92,25 +112,82 @@ public partial class CometFlyby : Node2D
 
 	public override void _Draw()
 	{
+		Vector2 dir = velocity.Normalized(), side = dir.Orthogonal();
+		if (dir == Vector2.Zero)
+			return;
 		if (warning > 0f)
 		{
-			// Dashes along the path, blinking faster as the comet gets close.
-			float blink = Mathf.Sin((Balance.CometWarning - warning) * 22f) > 0f ? 0.6f : 0.3f;
-			var colour = new Color(1f, 0.45f, 0.4f, blink);
-			Vector2 from = ToLocal(start), to = ToLocal(end);
-			Vector2 dir = (to - from).Normalized();
-			for (float d = 0f; d < length; d += 70f)
-				DrawLine(from + dir * d, from + dir * Mathf.Min(d + 38f, length), colour, 6f, true);
+			DrawLaneWarning(dir, side);
 			return;
 		}
 
-		for (int i = tail.Length - 1; i >= 0; i--)
+		// The tail: a long wedge fading out behind the head, a paler core inside it.
+		float r = HitRadius * 0.7f;
+		DrawTail(dir, side, r * 1.0f, TailLength, new Color(CometColor, 0.6f));
+		DrawTail(dir, side, r * 0.5f, TailLength * 0.7f, new Color(1f, 0.97f, 0.88f, 0.8f));
+
+		for (int i = 0; i < sparkAt.Length; i++)
 		{
-			float t = 1f - (float)i / tail.Length;
-			DrawCircle(ToLocal(tail[i]), HitRadius * 0.55f * t, new Color(CometColor, t * t));
+			float age = sparkAge[i] / 0.45f;
+			if (age >= 1f)
+				continue;
+			Sparkle(ToLocal(sparkAt[i]), 7f * (1f - age), new Color(1f, 0.97f, 0.88f, 1f - age));
 		}
 
-		DrawCircle(Vector2.Zero, HitRadius * 0.65f, Colors.White);
-		DrawArc(Vector2.Zero, HitRadius * 0.65f, 0f, Mathf.Tau, 16, CometColor, 3.0f, true);
+		// The head: a teardrop, round at the front and pulled back into the tail.
+		DrawCircle(Vector2.Zero, r * 1.7f, new Color(0.8f, 0.95f, 1f, 0.1f));
+		DrawColoredPolygon(Teardrop(dir, side, r + 3f), ArcadeSkin.Ink);
+		DrawColoredPolygon(Teardrop(dir, side, r), CometColor);
+		DrawCircle(dir * r * 0.2f, r * 0.62f, new Color(1f, 0.98f, 0.92f));
+		DrawCircle(dir * r * 0.35f + side * r * 0.25f, r * 0.2f, Colors.White);
+	}
+
+	/// <summary>A lane as wide as what the comet hits, with arrows running along it the way it will fly.</summary>
+	private void DrawLaneWarning(Vector2 dir, Vector2 side)
+	{
+		float urgency = 1f - warning / Balance.CometWarning;
+		float pulse = 0.5f + 0.5f * Mathf.Sin(time * (8f + 14f * urgency));
+		Vector2 from = ToLocal(start), to = ToLocal(end);
+		float width = HitRadius;
+		DrawColoredPolygon(new[] { from + side * width, to + side * width, to - side * width, from - side * width },
+			new Color(Lane, 0.07f + 0.08f * pulse));
+		DrawLine(from + side * width, to + side * width, new Color(Lane, 0.35f + 0.25f * pulse), 2f, true);
+		DrawLine(from - side * width, to - side * width, new Color(Lane, 0.35f + 0.25f * pulse), 2f, true);
+
+		// Chevrons stream along the lane, faster as the comet gets close.
+		float gap = 120f;
+		float shift = Mathf.PosMod(time * (260f + 500f * urgency), gap);
+		for (float d = shift; d < length; d += gap)
+		{
+			Vector2 at = from + dir * d;
+			float size = width * 0.55f;
+			DrawPolyline(new[] { at - dir * size * 0.6f + side * size, at + dir * size * 0.4f, at - dir * size * 0.6f - side * size },
+				new Color(Lane, 0.55f + 0.35f * pulse), 5f, true);
+		}
+	}
+
+	private void DrawTail(Vector2 dir, Vector2 side, float width, float reach, Color colour)
+	{
+		var clear = new Color(colour, 0f);
+		DrawPolygon(new[] { side * width, -side * width, -dir * reach },
+			new[] { colour, colour, clear });
+	}
+
+	private static Vector2[] Teardrop(Vector2 dir, Vector2 side, float r)
+	{
+		var points = new Vector2[14];
+		for (int i = 0; i < 13; i++)
+		{
+			float a = -Mathf.Pi * 0.5f + Mathf.Pi * i / 12f;
+			points[i] = dir * Mathf.Cos(a) * r + side * Mathf.Sin(a) * r;
+		}
+		points[13] = -dir * r * 2.1f;
+		return points;
+	}
+
+	private void Sparkle(Vector2 at, float size, Color colour)
+	{
+		DrawLine(at - new Vector2(size, 0f), at + new Vector2(size, 0f), colour, 2f, true);
+		DrawLine(at - new Vector2(0f, size), at + new Vector2(0f, size), colour, 2f, true);
 	}
 }

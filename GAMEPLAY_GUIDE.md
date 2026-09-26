@@ -10,6 +10,8 @@ The playable area is 5220 × 3220, about three screens each way, surrounded by a
 
 Enemies enter just outside the screen and never closer than 760 units to the planet. If you are backed into a corner, they come in from the visible edge of the arena instead, so corners are not safe spots. An enemy left more than 2500 units behind is brought back in near the screen.
 
+Enemies keep a little personal space: any two that overlap are eased apart, the smaller giving way more, so a crowd arrives as a spread-out pack you can read instead of one heap of faces. It never slows them down or changes where they are heading.
+
 ## Life and moons
 
 There is no health bar. One hit ends the run, unless a moon takes it.
@@ -72,7 +74,7 @@ Bosses still drop three upgrade ranks each, on top of what CORE buys. They only 
 | Shard | 0:15 | 1 | Fast, in packs. |
 | Planetoid | 0:45 | 4 | Big and slow. |
 | Fracture | 1:20 | 2 | Splits into three Splinters when destroyed. |
-| Satellite | 2:30 | 2 | Circles at range and shoots at you. Half a second before each shot, an orb swells at its rim on the side facing you, and the shot leaves from there. |
+| Satellite | 2:30 | 2 | Circles at range and shoots violet darts at you. Half a second before each shot a ring tightens onto a dart growing at its rim, pointing at you, and the shot leaves from there. A dart fades out 1.6 s after firing, soon after it passes your planet. |
 | Bulwark | 4:00 | 3 | Armoured front: most shots from the front bounce off, though every fifth chips through. Hit it from the side or back, or Dash or Nova through the armour. |
 | Flare | 5:30 | 2 | Explodes when destroyed. The dashed ring around it shows the blast, which lands 0.3 s after the flash, so there is just time to step or dash out. |
 
@@ -86,11 +88,11 @@ From 0:45, about every 20 seconds, a **rush** arrives in one of five shapes, nev
 - **Wall:** a line of Shards sweeping in across one side.
 - **Escort** (from 1:30): a Planetoid (later sometimes a Bulwark) with a guard of Shards.
 
-Comets (from 2:50) cross the screen along a dashed red line that shows for 1.35 s first. Gravity wells (from 5:30) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 6:20. None of these run during a first-round boss fight or a boss warning; from round two they carry on regardless.
+Comets (from 2:50) cross the screen in a straight line: a bright blue teardrop head with a long icy tail. For 1.35 s before it flies, its lane is shown as a red band exactly as wide as what it hits, with arrows running along it the way it will go. Gravity wells (from 5:30) pull you toward a lethal core; dash out. Solar Wind and Heavy Weather events start around 6:20. None of these run during a first-round boss fight or a boss warning; from round two they carry on regardless.
 
 ## Bosses
 
-Your shots are cream, and hot gold during Overdrive. Every enemy shot looks the same: a round hot-pink orb with a dark rim and a pale centre, drawn exactly the size of what it hits with, trailing a short fading tail. It swells in when fired and shrinks away at the end of its range, harmless from the moment it starts to shrink.
+Your shots are cream, and hot gold during Overdrive. A Satellite shoots violet darts (see above). Every other enemy shot (the Coil's rings, the Black Hole's throws) looks the same: a round hot-pink orb with a dark rim and a pale centre, drawn exactly the size of what it hits with, trailing a short fading tail. It swells in when fired and shrinks away at the end of its range, harmless from the moment it starts to shrink.
 
 Bosses arrive on a clock, with a warning banner and a marker where they will land. Ordinary enemies never stop for them: a boss is fought with the arena as busy as ever. When one dies all enemy shots vanish, and three strong upgrades fly out of the wreck. Each boss is bigger than the last.
 
@@ -147,4 +149,6 @@ Hints only show the controls you are using. Touch the keyboard or mouse and they
 
 ## Faces
 
-Only your planet is happy, and each of the twelve planets has its own happy face: Embertide grins, Driftlight is calm, Palefrost is shy, Cinderbloom shows its teeth, Hollowmere looks sly, Duskwarden looks confident, Verdant Halo is starry-eyed, Ashen Coil wears sunglasses, Glasswake is delighted, Moltencrown winks, Voidkin sticks its tongue out and Starforged beams. Every enemy has its own bad mood: Drifters are unhappy in eight different ways (glum, teary, sulking, sleepy, nervous, pouting, sniffly and grumbling), on three rock shapes in three colours mixed at random, so a crowd of them never looks cloned. They blink, look scared while they are close to your planet, and look shocked for a moment when one next to them pops. Each has its own way of reacting: one of four scared faces (frozen, wailing, panicking, cowering) and one of four shocked ones (gasping, jaw-dropped, "!", flinching). That is all looks: every Drifter has the same size, speed and toughness. Shards angry (two), Planetoids grumpy (two), Fractures worried and their Splinters scared, Satellites suspicious, Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.
+Only your planet is happy, and each of the twelve planets has its own happy face: Embertide grins, Driftlight is calm, Palefrost is shy, Cinderbloom shows its teeth, Hollowmere looks sly, Duskwarden looks confident, Verdant Halo is starry-eyed, Ashen Coil wears sunglasses, Glasswake is delighted, Moltencrown winks, Voidkin sticks its tongue out and Starforged beams. Every enemy has its own bad mood: Drifters are unhappy in eight different ways (glum, teary, sulking, sleepy, nervous, pouting, sniffly and grumbling), on three rock shapes in three colours mixed at random, so a crowd of them never looks cloned. They blink, look scared while they are close to your planet, and look shocked for a moment when one next to them pops. Each panics in its own mood's way (a glum one dreads, a teary one bawls, a sulking one grimaces, a sleepy one jolts awake, a nervous one gets spiral eyes, a pouting one pleads, a sniffly one screams, a grumbling one clenches its teeth), at its own distance from you, and about one in five never panics at all. When a neighbour pops it shows one of four shocked faces (gasping, jaw-dropped, "!", flinching). That is all looks: every Drifter has the same size, speed and toughness. Shards angry (two), Planetoids grumpy (two), Fractures worried and their Splinters scared, Satellites suspicious, Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.
+
+When an enemy is destroyed it pops in its own colour only: a flash, a ring and a few little stars, all shades of the thing that died (a Drifter in its own rock's colour), so a whole crowd popping at once stays clean and easy to read.

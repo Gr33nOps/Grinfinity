@@ -909,8 +909,8 @@ public partial class GameManager : Node2D
 
 		run.AddKill();
 		// The pop, centred on what died and sized to it, plus a few chunks.
-		PopEffect.Spawn(this, at, 30f + 28f * remains.BurstScale, remains.BurstColor, 5 + Mathf.RoundToInt(remains.BurstScale * 2f));
-		ShedChunks(at, Mathf.Min(remains.DebrisCount + 1, 4), remains.BurstColor);
+		PopEffect.Spawn(this, at, 30f + 28f * remains.BurstScale, remains.BurstColor, 3 + Mathf.RoundToInt(remains.BurstScale * 1.5f));
+		ShedChunks(at, Mathf.Min(remains.DebrisCount, 3), remains.BurstColor);
 
 		float core = Pickups.CoreFor(remains.Kind);
 		run.AddCore(core);
