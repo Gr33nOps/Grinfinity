@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://boymigq8ax0to"]
+[gd_scene load_steps=6 format=3 uid="uid://boymigq8ax0to"]
 
 [ext_resource type="Script" path="res://scripts/StatsMenu.cs" id="1_stats"]
 [ext_resource type="FontFile" path="res://fonts/LilitaOne.ttf" id="2_font"]
+[ext_resource type="Script" path="res://scripts/PlanetShowcase.cs" id="3_showcase"]
+[ext_resource type="Script" path="res://scripts/AchievementList.cs" id="4_achievements"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_stats"]
 bg_color = Color(0, 0, 0, 0.686275)
@@ -44,180 +46,160 @@ theme_override_constants/separation = 18
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
 theme_override_font_sizes/font_size = 78
-text = "LIFETIME"
+text = "MY PLANET"
 horizontal_alignment = 1
 
-[node name="Rows" type="VBoxContainer" parent="Layout"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="NameRow" type="HBoxContainer" parent="Layout/Rows"]
+[node name="Columns" type="HBoxContainer" parent="Layout"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Layout/Rows/NameRow"]
+[node name="Showcase" type="VBoxContainer" parent="Layout/Columns"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+alignment = 1
+
+[node name="Planet" type="Control" parent="Layout/Columns/Showcase"]
+custom_minimum_size = Vector2(400, 300)
+layout_mode = 2
+script = ExtResource("3_showcase")
+
+[node name="PlanetName" type="Label" parent="Layout/Columns/Showcase"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+text = "EMBERTIDE"
+horizontal_alignment = 1
+
+[node name="PlanetNote" type="Label" parent="Layout/Columns/Showcase"]
+custom_minimum_size = Vector2(400, 60)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Picker" type="HBoxContainer" parent="Layout/Columns/Showcase"]
+layout_mode = 2
+
+[node name="Prev" type="Button" parent="Layout/Columns/Showcase/Picker"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+text = "<"
+
+[node name="Count" type="Label" parent="Layout/Columns/Showcase/Picker"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
+text = "1 / 12"
+horizontal_alignment = 1
+
+[node name="Next" type="Button" parent="Layout/Columns/Showcase/Picker"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_font")
+text = ">"
+
+[node name="Rows" type="VBoxContainer" parent="Layout/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameRow" type="HBoxContainer" parent="Layout/Columns/Rows"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Layout/Columns/Rows/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_fonts/font = ExtResource("2_font")
 text = "NAME"
 
-[node name="Field" type="LineEdit" parent="Layout/Rows/NameRow"]
-custom_minimum_size = Vector2(340, 56)
+[node name="Field" type="LineEdit" parent="Layout/Columns/Rows/NameRow"]
+custom_minimum_size = Vector2(300, 52)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 36
 alignment = 2
 max_length = 12
 text = "PLAYER"
 
-[node name="WorldRow" type="HBoxContainer" parent="Layout/Rows"]
+[node name="Orbits" type="HBoxContainer" parent="Layout/Columns/Rows"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Layout/Rows/WorldRow"]
+[node name="Label" type="Label" parent="Layout/Columns/Rows/Orbits"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
-text = "WORLD"
-
-[node name="Value" type="Button" parent="Layout/Rows/WorldRow"]
-custom_minimum_size = Vector2(340, 0)
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.72, 0.35, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
-flat = true
-text = "EMBERTIDE"
-alignment = 2
-
-[node name="Orbits" type="HBoxContainer" parent="Layout/Rows"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Layout/Rows/Orbits"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "RUNS PLAYED"
 
-[node name="Value" type="Label" parent="Layout/Rows/Orbits"]
+[node name="Value" type="Label" parent="Layout/Columns/Rows/Orbits"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "0"
 horizontal_alignment = 2
 
-[node name="Kills" type="HBoxContainer" parent="Layout/Rows"]
+[node name="Kills" type="HBoxContainer" parent="Layout/Columns/Rows"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Layout/Rows/Kills"]
+[node name="Label" type="Label" parent="Layout/Columns/Rows/Kills"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
-text = "KILLS"
+text = "ENEMIES POPPED"
 
-[node name="Value" type="Label" parent="Layout/Rows/Kills"]
+[node name="Value" type="Label" parent="Layout/Columns/Rows/Kills"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "0"
 horizontal_alignment = 2
 
-[node name="Timeplayed" type="HBoxContainer" parent="Layout/Rows"]
+[node name="Timeplayed" type="HBoxContainer" parent="Layout/Columns/Rows"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Layout/Rows/Timeplayed"]
+[node name="Label" type="Label" parent="Layout/Columns/Rows/Timeplayed"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "TIME PLAYED"
 
-[node name="Value" type="Label" parent="Layout/Rows/Timeplayed"]
+[node name="Value" type="Label" parent="Layout/Columns/Rows/Timeplayed"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "0 min"
 horizontal_alignment = 2
 
-[node name="Heaviestmass" type="HBoxContainer" parent="Layout/Rows"]
+[node name="Heaviestmass" type="HBoxContainer" parent="Layout/Columns/Rows"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Layout/Rows/Heaviestmass"]
+[node name="Label" type="Label" parent="Layout/Columns/Rows/Heaviestmass"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "FULLEST BUILD"
 
-[node name="Value" type="Label" parent="Layout/Rows/Heaviestmass"]
+[node name="Value" type="Label" parent="Layout/Columns/Rows/Heaviestmass"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "0%"
 horizontal_alignment = 2
 
-[node name="Worldsunlocked" type="HBoxContainer" parent="Layout/Rows"]
+[node name="Achievements" type="HBoxContainer" parent="Layout/Columns/Rows"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Layout/Rows/Worldsunlocked"]
+[node name="Label" type="Label" parent="Layout/Columns/Rows/Achievements"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
-text = "WORLDS UNLOCKED"
-
-[node name="Value" type="Label" parent="Layout/Rows/Worldsunlocked"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
-text = "1 / 12"
-horizontal_alignment = 2
-
-[node name="Achievements" type="HBoxContainer" parent="Layout/Rows"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Layout/Rows/Achievements"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "ACHIEVEMENTS"
 
-[node name="Value" type="Label" parent="Layout/Rows/Achievements"]
+[node name="Value" type="Label" parent="Layout/Columns/Rows/Achievements"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.72, 0.32, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 38
 text = "0 / 9"
 horizontal_alignment = 2
+
+[node name="AchievementList" type="Control" parent="Layout/Columns/Rows"]
+layout_mode = 2
+script = ExtResource("4_achievements")
 
 [node name="BackButton" type="Button" parent="Layout"]
 custom_minimum_size = Vector2(0, 86)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_colors/font_hover_color = Color(1, 0.72, 0.35, 1)
-theme_override_colors/font_focus_color = Color(1, 0.72, 0.35, 1)
-theme_override_colors/font_pressed_color = Color(1, 0.5, 0.2, 1)
 theme_override_fonts/font = ExtResource("2_font")
-theme_override_font_sizes/font_size = 50
-flat = true
 text = "BACK"

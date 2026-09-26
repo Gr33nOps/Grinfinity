@@ -78,7 +78,7 @@ public static class Worlds
 		Name = TranslationServer.Translate("WORLD_7_NAME"),
 		Flavour = TranslationServer.Translate("WORLD_7_FLAVOUR"),
 		UnlockHint = TranslationServer.Translate("WORLD_7_HINT"),
-		IsEarned = () => ScoreManager.BestTime >= 240f
+		IsEarned = () => ScoreManager.BestTime >= 180f
 	};
 
 	public static readonly Profile World8 = new()
@@ -87,7 +87,7 @@ public static class Worlds
 		Name = TranslationServer.Translate("WORLD_8_NAME"),
 		Flavour = TranslationServer.Translate("WORLD_8_FLAVOUR"),
 		UnlockHint = TranslationServer.Translate("WORLD_8_HINT"),
-		IsEarned = () => ScoreManager.BestTime >= 180f
+		IsEarned = () => ScoreManager.BestTime >= 240f
 	};
 
 	public static readonly Profile World9 = new()
