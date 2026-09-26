@@ -584,47 +584,73 @@ ooh += path('M 119 168 Q 127 162 135 168 Q 131 172 127 172 Q 123 172 119 168 Z',
 
 faces = {}
 
-# 2 Easewind, relief: eyes closed, brows lifted, letting out a happy "phew".
-phew = path('M 110 150 Q 127 158 144 150 Q 140 170 127 170 Q 114 170 110 150 Z', INK, 'stroke-width="5"')
-phew += path('M 118 165 Q 127 159 136 165 Q 132 169 127 169 Q 122 169 118 165 Z', BERRY, 'stroke="none"')
-# Its blink: a deeper, contented settle of the closed eyes and brows.
+# 1 Stillwater, calmness: open eyes with the upper lids softly lowered along the
+# curve of the eye, gently arched brows set high, a small easy smile. Soft
+# rather than sleepy or unimpressed.
+STILL = '#B3D8EE'  # Stillwater's own colour (tools/refine_cosmic_art.py), for its lids
+
+
+def calm_eye(x, y=114):
+    e = f'<ellipse cx="{x}" cy="{y}" rx="16" ry="20" fill="{CREAM}" stroke-width="5"/>'
+    e += f'<ellipse cx="{x + 1}" cy="{y + 5}" rx="8" ry="10" fill="{INK}" stroke="none"/>'
+    e += circle(x + 4, y + 1, 3, 'white', 'none')
+    e += path(f'M {x - 20} {y - 26} L {x + 20} {y - 26} L {x + 20} {y - 3} Q {x} {y - 14} {x - 20} {y - 3} Z', STILL, 'stroke="none"')
+    e += path(f'M {x - 18} {y - 3} Q {x} {y - 14} {x + 18} {y - 3}', 'none', 'stroke-width="5"')
+    return e
+
+
+calm_brows = path('M 85 80 Q 99 71 113 77', 'none', 'stroke-width="4.5"') + path('M 141 77 Q 155 71 169 80', 'none', 'stroke-width="4.5"')
+calm_smile = path('M 111 153 Q 127 164 143 153', 'none', 'stroke-width="5.5"')
+faces[1] = (p_cheeks + calm_eye(99) + calm_eye(155) + calm_brows + calm_smile,
+            p_cheeks + shut + calm_brows + calm_smile)
+
+# 2 Easewind, relief: a "phew". Eyes closed, brows lifted at their inner ends as
+# the worry drains away, cheeks full, and a small round mouth blowing out a breath.
+relief_brows = path('M 83 82 Q 98 78 112 73', 'none', 'stroke-width="5"') + path('M 142 73 Q 156 78 171 82', 'none', 'stroke-width="5"')
+puffed = (f'<ellipse cx="72" cy="146" rx="18" ry="11" fill="{BLUSH}" stroke="none" opacity=".6"/>'
+          f'<ellipse cx="182" cy="146" rx="18" ry="11" fill="{BLUSH}" stroke="none" opacity=".6"/>')
+blow = f'<ellipse cx="130" cy="160" rx="9" ry="8" fill="{INK}" stroke-width="5"/>'
+blow += f'<ellipse cx="130" cy="163" rx="4.5" ry="3" fill="{BERRY}" stroke="none"/>'
+# Its blink: the closed eyes and brows settle a little lower as the breath goes out.
 shut_low = path('M 83 118 Q 99 126 115 118', 'none', 'stroke-width="6"') + path('M 139 118 Q 155 126 171 118', 'none', 'stroke-width="6"')
-faces[2] = (p_cheeks + shut + brows_up + phew, p_cheeks + shut_low + p_brows + phew)
+relief_settled = path('M 83 85 Q 98 82 112 77', 'none', 'stroke-width="5"') + path('M 142 77 Q 156 82 171 85', 'none', 'stroke-width="5"')
+faces[2] = (puffed + shut + relief_brows + blow, puffed + shut_low + relief_settled + blow)
 
-# 1 Stillwater, calmness: relaxed half-shut eyes, level brows, a small easy smile.
-calm_smile = path('M 112 154 Q 127 163 142 154', 'none', 'stroke-width="6"')
-faces[1] = (p_cheeks + half_eye(99) + half_eye(155) + soft_brows + calm_smile,
-            p_cheeks + shut + soft_brows + calm_smile)
-
-# 3 Hearthglow, contentment: eyes curved shut in a smile, rosy, a snug closed smile.
-snug = path('M 104 150 Q 127 170 150 150', 'none', 'stroke-width="6"')
+# 3 Hearthglow, contentment: softly smiling closed eyes, rosy, a small gentle smile.
+soft_arcs = path('M 85 117 Q 99 105 113 117', 'none', 'stroke-width="6"') + path('M 141 117 Q 155 105 169 117', 'none', 'stroke-width="6"')
+snug = path('M 115 154 Q 127 163 139 154', 'none', 'stroke-width="5.5"')
 # Its blink: the smiling eyes squeeze a little tighter.
-squeeze = path('M 84 116 Q 99 102 114 116', 'none', 'stroke-width="7"') + path('M 140 116 Q 155 102 170 116', 'none', 'stroke-width="7"')
-faces[3] = (warm_cheeks + arcs + p_brows + snug, warm_cheeks + squeeze + p_brows + snug)
+squeeze = path('M 86 116 Q 99 107 112 116', 'none', 'stroke-width="6"') + path('M 142 116 Q 155 107 168 116', 'none', 'stroke-width="6"')
+faces[3] = (warm_cheeks + soft_arcs + p_brows + snug, warm_cheeks + squeeze + p_brows + snug)
 
-# 4 Wishfall, hope: eyes turned up to the stars and shining, brows lifted, a little "oh".
-faces[4] = (p_cheeks + p_eye(99, look=(2, -7), glints=2) + p_eye(155, look=(2, -7), glints=2) + brows_up + ooh,
-            p_cheeks + shut + brows_up + ooh)
+# 4 Wishfall, hope: eyes lifted gently to the sky, brows softly raised, a small
+# quiet smile. Wistful and warm rather than excited.
+hope_brows = path('M 86 80 Q 100 72 113 75', 'none', 'stroke-width="4.5"') + path('M 141 75 Q 154 72 168 80', 'none', 'stroke-width="4.5"')
+hope_smile = path('M 115 156 Q 127 164 139 156', 'none', 'stroke-width="5.5"')
+faces[4] = (p_cheeks + p_eye(99, look=(1, -5), size=0.9) + p_eye(155, look=(1, -5), size=0.9) + hope_brows + hope_smile,
+            p_cheeks + shut + hope_brows + hope_smile)
 
-# 5 Boldcrest, confidence: cool in sunglasses, with a smirk.
+# 5 Boldcrest, confidence: sunglasses, one brow cocked above them, and a sure,
+# lopsided grin with a few teeth showing.
 shades = path('M 74 100 L 124 100 Q 124 132 100 132 Q 76 132 74 100 Z', '#1B1026', 'stroke-width="5"')
 shades += path('M 130 100 L 180 100 Q 178 132 154 132 Q 130 132 130 100 Z', '#1B1026', 'stroke-width="5"')
 shades += path('M 124 104 Q 127 100 130 104', 'none', 'stroke-width="5"')
 shades += path('M 86 108 L 96 108 M 142 108 L 152 108', 'none', f'stroke="{CREAM}" stroke-width="4" opacity=".8"')
-smirk = path('M 104 156 Q 132 166 156 146', 'none', 'stroke-width="6"') + path('M 152 142 Q 158 146 158 152', 'none', 'stroke-width="4"')
+cocky_brows = path('M 80 90 L 114 88', 'none', 'stroke-width="6"') + path('M 140 84 Q 157 72 174 80', 'none', 'stroke-width="6"')
+sure_grin = path('M 104 150 Q 134 160 162 140 Q 156 170 128 170 Q 110 168 104 150 Z', INK, 'stroke-width="5"')
+sure_grin += path('M 112 153 Q 136 159 156 146 L 154 153 Q 134 164 114 159 Z', CREAM, 'stroke="none"')
 # Its blink: a glint slides across the lenses.
 glint_shades = shades.replace('M 86 108 L 96 108 M 142 108 L 152 108', 'M 98 118 L 110 106 M 154 118 L 166 106')
-faces[5] = (p_cheeks + shades + smirk, p_cheeks + glint_shades + smirk)
+faces[5] = (p_cheeks + shades + cocky_brows + sure_grin, p_cheeks + glint_shades + cocky_brows + sure_grin)
 
-# 6 Laurelcrown, pride: eyes shut in satisfaction, brows arched high, a big toothy grin.
-grin = path('M 88 144 Q 127 156 166 144 Q 160 180 127 182 Q 94 180 88 144 Z', INK, 'stroke-width="5"')
-grin += path('M 95 149 Q 127 159 159 149 L 156 162 Q 127 170 98 162 Z', CREAM, 'stroke="none"')
-grin += path('M 112 155 L 112 166 M 127 157 L 127 169 M 142 155 L 142 166', 'none', 'stroke-width="3"')
-proud = path('M 83 114 Q 99 100 115 114', 'none', 'stroke-width="7"') + path('M 139 114 Q 155 100 171 114', 'none', 'stroke-width="7"')
-arched = path('M 80 80 Q 98 62 116 74', 'none', 'stroke-width="6"') + path('M 138 74 Q 156 62 174 80', 'none', 'stroke-width="6"')
-# Its blink: the satisfied eyes squeeze a little tighter.
-proud_squeeze = path('M 84 113 Q 99 103 114 113', 'none', 'stroke-width="7"') + path('M 140 113 Q 155 103 170 113', 'none', 'stroke-width="7"')
-faces[6] = (p_cheeks + proud + arched + grin, p_cheeks + proud_squeeze + arched + grin)
+# 6 Laurelcrown, pride: chin raised, so the whole face sits a little higher;
+# half-lidded eyes looking down its nose, brows high, and a closed, satisfied
+# smile curling up at one corner.
+proud_brows = path('M 82 78 Q 98 66 114 72', 'none', 'stroke-width="5"') + path('M 140 72 Q 156 66 172 78', 'none', 'stroke-width="5"')
+satisfied = path('M 104 148 Q 124 162 152 144', 'none', 'stroke-width="6"') + path('M 149 139 Q 155 143 154 150', 'none', 'stroke-width="4"')
+chin_up = '<g transform="translate(0 -7)">'
+faces[6] = (p_cheeks + chin_up + half_eye(99) + half_eye(155) + proud_brows + satisfied + '</g>',
+            p_cheeks + chin_up + shut + proud_brows + satisfied + '</g>')
 
 # 7 Sparkrush, excitement: star eyes and a huge beaming grin.
 starry = star(99, 113, 24, 11) + star(155, 113, 24, 11)
