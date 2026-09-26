@@ -65,7 +65,7 @@ script = ExtResource("3_showcase")
 [node name="PlanetName" type="Label" parent="Layout/Columns/Showcase"]
 layout_mode = 2
 theme_override_fonts/font = ExtResource("2_font")
-text = "EASEWIND"
+text = "STILLWATER"
 horizontal_alignment = 1
 
 [node name="PlanetNote" type="Label" parent="Layout/Columns/Showcase"]

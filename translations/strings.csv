@@ -28,11 +28,11 @@ EVENT_GiantSlugs_NAME,HEAVY WEATHER
 EVENT_GiantSlugs_EFFECT,New enemies are huge and slow.
 EVENT_InvertedGravity_NAME,INVERSION
 EVENT_InvertedGravity_EFFECT,Enemies are being pushed away from you.
-WORLD_1_NAME,EASEWIND
-WORLD_1_FLAVOUR,"Lets out a long, happy sigh. Everything is going to be fine."
+WORLD_1_NAME,STILLWATER
+WORLD_1_FLAVOUR,Nothing ripples it for long.
 WORLD_1_HINT,Yours from the start.
-WORLD_2_NAME,STILLWATER
-WORLD_2_FLAVOUR,Nothing ripples it for long.
+WORLD_2_NAME,EASEWIND
+WORLD_2_FLAVOUR,"Lets out a long, happy sigh. Everything is going to be fine."
 WORLD_2_HINT,Play 3 runs.
 WORLD_3_NAME,HEARTHGLOW
 WORLD_3_FLAVOUR,"Warm, snug and happy right where it is."

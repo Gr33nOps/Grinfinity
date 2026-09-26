@@ -1,7 +1,7 @@
 """Faces for everything in the arena. Original vector artwork, no external assets.
 
 Only the planet is happy: each of the twelve planets wears one positive emotion,
-from relief on the first to love on the last (see below). Every enemy kind wears one negative emotion, and the more dangerous the
+from calmness on the first to love on the last (see below). Every enemy kind wears one negative emotion, and the more dangerous the
 enemy, the more intense its emotion, so the arena grows darker in feeling as a
 run brings in tougher kinds. Each emotion comes in a few expressions, picked at
 random per enemy, so a crowd never looks cloned:
@@ -482,14 +482,15 @@ svg('boss_black_hole_2', hole + despair + '</g>')
 # Each planet wears one positive emotion, from the gentlest on the planet you
 # start with to the strongest on the hardest to earn:
 #
-#    1 Easewind     relief         7 Wishfall     hope
-#    2 Stillwater   calmness       8 Boldcrest    confidence
+#    1 Stillwater   calmness       7 Wishfall     hope
+#    2 Easewind     relief         8 Boldcrest    confidence
 #    3 Hearthglow   contentment    9 Laurelcrown  pride
 #    4 Hushmere     peacefulness  10 Sunburst     joy
 #    5 Anchorlight  trust         11 Sparkrush    excitement
 #    6 Gracebloom   gratitude     12 Heartsong    love
 #
-# Each has a blink (eyes shut, everything else the same) unless its eyes are
+# Just faces: the expression carries the emotion, with nothing floating round
+# it. Each has a blink (eyes shut, everything else the same) unless its eyes are
 # already closed. Planet 1's files are face / face_blink; face_happy is the
 # shared burst of joy every planet shows in Overdrive and when it scores.
 
@@ -553,19 +554,17 @@ soft_brows = path('M 86 84 Q 99 80 112 84', 'none', 'stroke-width="5"') + path('
 small_smile = path('M 108 152 Q 127 166 146 152', 'none', 'stroke-width="6"')
 ooh = path('M 110 150 Q 127 157 144 150 Q 142 174 127 174 Q 112 174 110 150 Z', INK, 'stroke-width="5"')
 ooh += path('M 119 168 Q 127 162 135 168 Q 131 172 127 172 Q 123 172 119 168 Z', BERRY, 'stroke="none"')
-sparkles = (star(56, 88, 13, 4, 4, CREAM, 'stroke-width="3"') + star(204, 80, 10, 3, 4, CREAM, 'stroke-width="3"')
-            + star(208, 180, 11, 3.5, 4, CREAM, 'stroke-width="3"'))
 
 faces = {}
 
-# 1 Easewind, relief: eyes closed, brows lifted, letting out a happy "phew".
+# 2 Easewind, relief: eyes closed, brows lifted, letting out a happy "phew".
 phew = path('M 110 150 Q 127 158 144 150 Q 140 170 127 170 Q 114 170 110 150 Z', INK, 'stroke-width="5"')
 phew += path('M 118 165 Q 127 159 136 165 Q 132 169 127 169 Q 122 169 118 165 Z', BERRY, 'stroke="none"')
-faces[1] = (p_cheeks + shut + brows_up + phew + sweat(186, 74), None)
+faces[2] = (p_cheeks + shut + brows_up + phew, None)
 
-# 2 Stillwater, calmness: relaxed half-shut eyes, level brows, a small easy smile.
+# 1 Stillwater, calmness: relaxed half-shut eyes, level brows, a small easy smile.
 calm_smile = path('M 112 154 Q 127 163 142 154', 'none', 'stroke-width="6"')
-faces[2] = (p_cheeks + half_eye(99) + half_eye(155) + soft_brows + calm_smile,
+faces[1] = (p_cheeks + half_eye(99) + half_eye(155) + soft_brows + calm_smile,
             p_cheeks + shut + soft_brows + calm_smile)
 
 # 3 Hearthglow, contentment: eyes curved shut in a smile, rosy, a snug closed smile.
@@ -594,12 +593,13 @@ faces[6] = (warm_cheeks + p_eye(99, look=(0, 1), size=1.05, glints=2) + p_eye(15
 faces[7] = (p_cheeks + p_eye(99, look=(2, -7), glints=2) + p_eye(155, look=(2, -7), glints=2) + brows_up + ooh,
             p_cheeks + shut + brows_up + ooh)
 
-# 8 Boldcrest, confidence: firm brows, a steady look, a broad closed smile.
-firm_brows = path('M 83 80 L 113 80', 'none', 'stroke-width="7"') + path('M 141 80 L 171 80', 'none', 'stroke-width="7"')
-broad = path('M 90 148 Q 127 176 164 148', 'none', 'stroke-width="7"')
-broad += path('M 85 143 Q 87 149 93 152 M 169 143 Q 167 149 161 152', 'none', 'stroke-width="4"')
-faces[8] = (p_cheeks + p_eye(99, look=(0, 3)) + p_eye(155, look=(0, 3)) + firm_brows + broad,
-            p_cheeks + shut + firm_brows + broad)
+# 8 Boldcrest, confidence: cool in sunglasses, with a smirk.
+shades = path('M 74 100 L 124 100 Q 124 132 100 132 Q 76 132 74 100 Z', '#1B1026', 'stroke-width="5"')
+shades += path('M 130 100 L 180 100 Q 178 132 154 132 Q 130 132 130 100 Z', '#1B1026', 'stroke-width="5"')
+shades += path('M 124 104 Q 127 100 130 104', 'none', 'stroke-width="5"')
+shades += path('M 86 108 L 96 108 M 142 108 L 152 108', 'none', f'stroke="{CREAM}" stroke-width="4" opacity=".8"')
+smirk = path('M 104 156 Q 132 166 156 146', 'none', 'stroke-width="6"') + path('M 152 142 Q 158 146 158 152', 'none', 'stroke-width="4"')
+faces[8] = (p_cheeks + shades + smirk, None)
 
 # 9 Laurelcrown, pride: eyes shut in satisfaction, brows arched high, a big toothy grin.
 grin = path('M 88 144 Q 127 156 166 144 Q 160 180 127 182 Q 94 180 88 144 Z', INK, 'stroke-width="5"')
@@ -612,12 +612,12 @@ faces[9] = (p_cheeks + proud + arched + grin, None)
 # 10 Sunburst, joy: eyes squeezed up in delight, rosy, laughing wide open.
 faces[10] = (warm_cheeks + arcs + brows_up + p_big, None)
 
-# 11 Sparkrush, excitement: star eyes, sparkles all round, a huge beaming grin.
+# 11 Sparkrush, excitement: star eyes and a huge beaming grin.
 starry = star(99, 113, 24, 11) + star(155, 113, 24, 11)
 beam = path('M 86 140 Q 127 154 168 140 Q 164 190 127 191 Q 90 190 86 140 Z', INK, 'stroke-width="5"')
 beam += path('M 93 145 Q 127 157 161 145 L 159 155 Q 127 165 95 155 Z', CREAM, 'stroke="none"')
 beam += path('M 106 178 Q 127 164 148 178 Q 138 188 127 188 Q 116 188 106 178 Z', BERRY, 'stroke="none"')
-faces[11] = (p_cheeks + sparkles + starry + brows_up + beam, p_cheeks + sparkles + shut + brows_up + beam)
+faces[11] = (p_cheeks + starry + brows_up + beam, p_cheeks + shut + brows_up + beam)
 
 # 12 Heartsong, love: heart eyes, glowing cheeks, a big warm smile.
 hearts = heart(99, 114, 22) + heart(155, 114, 22)

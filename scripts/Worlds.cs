@@ -2,8 +2,8 @@ using Godot;
 
 /// <summary>
 /// Twelve illustrated cosmetic planets, earned through lifetime play milestones.
-/// Each wears one positive emotion, gentlest first: Easewind (relief),
-/// Stillwater (calmness), Hearthglow (contentment), Hushmere (peacefulness),
+/// Each wears one positive emotion, gentlest first: Stillwater (calmness),
+/// Easewind (relief), Hearthglow (contentment), Hushmere (peacefulness),
 /// Anchorlight (trust), Gracebloom (gratitude), Wishfall (hope), Boldcrest
 /// (confidence), Laurelcrown (pride), Sunburst (joy), Sparkrush (excitement)
 /// and Heartsong (love). Cosmetics never change power.
@@ -141,7 +141,7 @@ public static class Worlds
 
 	/// <summary>
 	/// Each planet's own happy face, and the same face mid-blink. Each planet
-	/// wears one positive emotion, from relief on the first to love on the last
+	/// wears one positive emotion, from calmness on the first to love on the last
 	/// (see tools/make_moods.py).
 	/// </summary>
 	public static Texture2D Face(int id, bool blinking = false)
