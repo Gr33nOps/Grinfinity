@@ -516,7 +516,7 @@ enemy('boss_black_hole_2', hole, despair_eyes, hole_shut, despair_rest + '</g>')
 #    1 Stillwater   calmness       5 Laurelcrown  pride
 #    2 Easewind     relief         6 Sparkrush    excitement
 #    3 Hearthglow   contentment    7 Heartsong    love
-#    4 Wishfall     hope           8 Boldcrest    confidence
+#    4 Gracelight   gratitude      8 Boldcrest    confidence
 #
 # Just faces: the expression carries the emotion, with nothing floating round
 # it. Each has a blink: open eyes shut for a moment, and eyes that are already
@@ -625,12 +625,14 @@ snug = path('M 115 154 Q 127 163 139 154', 'none', 'stroke-width="5.5"')
 squeeze = path('M 86 116 Q 99 107 112 116', 'none', 'stroke-width="6"') + path('M 142 116 Q 155 107 168 116', 'none', 'stroke-width="6"')
 faces[3] = (warm_cheeks + soft_arcs + p_brows + snug, warm_cheeks + squeeze + p_brows + snug)
 
-# 4 Wishfall, hope: eyes lifted gently to the sky, brows softly raised, a small
-# quiet smile. Wistful and warm rather than excited.
-hope_brows = path('M 86 80 Q 100 72 113 75', 'none', 'stroke-width="4.5"') + path('M 141 75 Q 154 72 168 80', 'none', 'stroke-width="4.5"')
-hope_smile = path('M 115 156 Q 127 164 139 156', 'none', 'stroke-width="5.5"')
-faces[4] = (p_cheeks + p_eye(99, look=(1, -5), size=0.9) + p_eye(155, look=(1, -5), size=0.9) + hope_brows + hope_smile,
-            p_cheeks + shut + hope_brows + hope_smile)
+# 4 Gracelight, gratitude: touched. Shining eyes welling with happy tears,
+# brows softly lifted at their inner ends, rosy cheeks, a small trembling smile.
+welling = (f'<ellipse cx="99" cy="134" rx="13" ry="4" fill="{TEAR}" stroke="none"/>'
+           f'<ellipse cx="155" cy="134" rx="13" ry="4" fill="{TEAR}" stroke="none"/>')
+touched_brows = path('M 84 80 Q 99 76 113 70', 'none', 'stroke-width="5"') + path('M 141 70 Q 155 76 170 80', 'none', 'stroke-width="5"')
+touched = path('M 106 152 Q 116 161 127 155 Q 138 161 148 152', 'none', 'stroke-width="5.5"')
+faces[4] = (warm_cheeks + p_eye(99, look=(0, 1), size=1.05, glints=2) + p_eye(155, look=(0, 1), size=1.05, glints=2) + welling + touched_brows + touched,
+            warm_cheeks + shut + touched_brows + touched)
 
 # 8 Boldcrest, confidence: sunglasses, one brow cocked above them, and a sure,
 # lopsided grin with a few teeth showing.

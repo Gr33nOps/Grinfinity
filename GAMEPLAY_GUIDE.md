@@ -118,7 +118,7 @@ The **My Planet** screen shows the planet you wear, big, with the ring if you ha
 | Stillwater | Calmness | Yours from the start |
 | Easewind | Relief | Play 3 runs |
 | Hearthglow | Contentment | Pop 300 enemies in total |
-| Wishfall | Hope | Survive 3 minutes in one run |
+| Gracelight | Gratitude | Survive 3 minutes in one run |
 | Laurelcrown | Pride | Survive 5 minutes in one run |
 | Sparkrush | Excitement | Max out every upgrade in one run |
 | Heartsong | Love | Play for 1 hour in total |
@@ -146,7 +146,7 @@ Hints only show the controls you are using. Touch the keyboard or mouse and they
 
 ## Faces
 
-Only your planet is happy. Each of the eight planets wears one positive emotion, the gentlest on the planet you start with and the strongest on the hardest to earn, shown by its face alone on a plain planet in its own colour: Stillwater is calm (pale blue), Easewind relieved (mint), Hearthglow content (warm peach), Wishfall hopeful (sunny yellow), Laurelcrown proud (purple), Sparkrush excited, with star eyes (coral red), Heartsong loving, with heart eyes (rose pink) and Boldcrest confident, in sunglasses (strong blue). Every planet blinks, and those whose eyes are already closed squeeze or settle a little instead. Every enemy wears one negative emotion, and the more dangerous the enemy, the more intense its emotion: Drifters are sad, lonely or anxious (their rock colour tells you which), Splinters doubt themselves, Shards are irritable, Fractures are frustrated, Bulwarks are ashamed, Planetoids are resentful and Flares are angry. The bosses carry the heaviest: the Coil is disgusted, the Brood grieves and the Black Hole is hopeless. Each emotion comes in a few expressions picked at random, so a crowd never looks cloned, and no enemy ever looks happy.
+Only your planet is happy. Each of the eight planets wears one positive emotion, the gentlest on the planet you start with and the strongest on the hardest to earn, shown by its face alone on a plain planet in its own colour: Stillwater is calm (pale blue), Easewind relieved (mint), Hearthglow content (warm peach), Gracelight grateful, with happy tears (sunny yellow), Laurelcrown proud (purple), Sparkrush excited, with star eyes (coral red), Heartsong loving, with heart eyes (rose pink) and Boldcrest confident, in sunglasses (strong blue). Every planet blinks, and those whose eyes are already closed squeeze or settle a little instead. Every enemy wears one negative emotion, and the more dangerous the enemy, the more intense its emotion: Drifters are sad, lonely or anxious (their rock colour tells you which), Splinters doubt themselves, Shards are irritable, Fractures are frustrated, Bulwarks are ashamed, Planetoids are resentful and Flares are angry. The bosses carry the heaviest: the Coil is disgusted, the Brood grieves and the Black Hole is hopeless. Each emotion comes in a few expressions picked at random, so a crowd never looks cloned, and no enemy ever looks happy.
 
 | Enemy | Emotion | Expressions |
 |---|---|---|

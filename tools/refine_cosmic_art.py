@@ -32,7 +32,7 @@ planets = [
     ('#B3D8EE', '#7AA3C9'),  # 1 Stillwater, calmness: pale sky blue
     ('#A8DCC4', '#6FA79A'),  # 2 Easewind, relief: soft mint
     ('#F2A97E', '#C77A58'),  # 3 Hearthglow, contentment: warm peach
-    ('#FFDA66', '#DDA843'),  # 4 Wishfall, hope: sunny yellow
+    ('#FFDA66', '#DDA843'),  # 4 Gracelight, gratitude: warm sunny yellow
     ('#B08BDB', '#7D5EAE'),  # 5 Laurelcrown, pride: royal purple
     ('#F47563', '#C24C47'),  # 6 Sparkrush, excitement: hot coral red
     ('#F28AB0', '#C25884'),  # 7 Heartsong, love: rose pink

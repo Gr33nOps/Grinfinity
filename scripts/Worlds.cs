@@ -3,7 +3,7 @@ using Godot;
 /// <summary>
 /// Eight illustrated cosmetic planets, earned through lifetime play milestones.
 /// Each wears one positive emotion, gentlest first: Stillwater (calmness),
-/// Easewind (relief), Hearthglow (contentment), Wishfall (hope), Laurelcrown
+/// Easewind (relief), Hearthglow (contentment), Gracelight (gratitude), Laurelcrown
 /// (pride), Sparkrush (excitement), Heartsong (love) and Boldcrest
 /// (confidence). Cosmetics never change power.
 /// </summary>
