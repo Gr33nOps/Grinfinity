@@ -80,7 +80,7 @@ public partial class StatsMenu : Control
 		foreach (var (arrow, icon) in new[] { (prev, "chevron_left"), (next, "chevron_right") })
 		{
 			arrow.Text = "";
-			UiIcons.On(arrow, icon, 28).IconAlignment = HorizontalAlignment.Center;
+			UiIcons.On(arrow, icon, 28, porthole: false).IconAlignment = HorizontalAlignment.Center;
 		}
 
 		browsedWorld = GameSettings.Instance?.World ?? 1;

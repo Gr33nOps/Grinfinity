@@ -15,16 +15,17 @@ using Godot;
 /// </summary>
 public partial class UpgradeTree : Control
 {
-	private static readonly Vector2 CanvasSize = new(1480, 560);
-	private static readonly Vector2 RootAt = new(740, 500);
-	private static readonly float[] Tiers = { 360, 220, 80 };
+	private static readonly Vector2 CanvasSize = new(1480, 600);
+	private static readonly Vector2 RootAt = new(740, 492);
+	private static readonly float[] Tiers = { 370, 238, 106 };
 
+	/// <summary>Mirrored about the root: the outer pair and the inner pair sit the same distance out.</summary>
 	private static float ColumnOf(Branch branch) => branch switch
 	{
-		Branch.Gun => 300,
-		Branch.Dash => 620,
-		Branch.Overdrive => 860,
-		_ => 1180
+		Branch.Gun => 270,
+		Branch.Dash => 590,
+		Branch.Overdrive => 890,
+		_ => 1210
 	};
 
 	private VBoxContainer rows;
@@ -65,8 +66,13 @@ public partial class UpgradeTree : Control
 			return;
 
 		rows = ArcadeSkin.Modal(this, "UPGRADES", 1560);
+		if (rows.GetChild(0) is Label heading)
+		{
+			heading.AddThemeColorOverride("font_color", ArcadeSkin.Orange);
+			UiIcons.Beside(heading, "upgrade", 40, ArcadeSkin.Orange);
+		}
 
-		canvas = new SkillBranches { CustomMinimumSize = CanvasSize, Root = RootAt };
+		canvas = new SkillBranches { CustomMinimumSize = CanvasSize, Root = RootAt, ClipContents = true };
 		rows.AddChild(canvas);
 
 		foreach (Branch branch in System.Enum.GetValues<Branch>())
@@ -118,15 +124,23 @@ public partial class UpgradeTree : Control
 	/// </summary>
 	private void BuildReadout()
 	{
-		// A little loop showing the upgrade at work, then its name and what it does.
-		var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center, Position = new Vector2(CanvasSize.X * 0.5f - 400, 4), Size = new Vector2(800, 136) };
-		readout.AddThemeConstantOverride("separation", 24);
-		canvas.AddChild(readout);
+		// A viewscreen: a little loop showing the upgrade at work, then its name
+		// and what it does, framed together and centred over the root.
+		var screen = new PanelContainer { MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(CanvasSize.X * 0.5f - 390f, 14f), Size = new Vector2(780f, 150f) };
+		var frame = new StyleBoxFlat { BgColor = new Color(0.07f, 0.04f, 0.11f, 0.92f), BorderColor = new Color("4a2d52"), AntiAliasing = true };
+		frame.SetBorderWidthAll(2);
+		frame.SetCornerRadiusAll(16);
+		frame.SetContentMarginAll(10);
+		screen.AddThemeStyleboxOverride("panel", frame);
+		canvas.AddChild(screen);
+		var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+		readout.AddThemeConstantOverride("separation", 22);
+		screen.AddChild(readout);
 
 		preview = new UpgradePreview { CustomMinimumSize = new Vector2(240, 132) };
 		readout.AddChild(preview);
 
-		var words = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+		var words = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center, SizeFlagsHorizontal = SizeFlags.ExpandFill };
 		words.AddThemeConstantOverride("separation", 4);
 		readout.AddChild(words);
 		var title = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
@@ -140,6 +154,7 @@ public partial class UpgradeTree : Control
 
 		infoLine = ArcadeSkin.Label("", 24);
 		infoLine.HorizontalAlignment = HorizontalAlignment.Left;
+		infoLine.AutowrapMode = TextServer.AutowrapMode.WordSmart;
 		words.AddChild(infoLine);
 	}
 

@@ -45,13 +45,37 @@ public static class UiIcons
 	/// <summary>The icon a row, button or screen named <paramref name="node"/> wears, or null.</summary>
 	public static string For(string node) => ByNode.TryGetValue(node, out string icon) ? icon : null;
 
-	/// <summary>Puts <paramref name="name"/> on the button's left, tinted like its text.</summary>
-	public static T On<T>(T button, string name, int size = ButtonIcon) where T : Button
+	/// <summary>
+	/// Puts <paramref name="name"/> on the button's left, tinted like its text,
+	/// inside a round porthole set into the button, with the label lined up
+	/// just after it. <paramref name="porthole"/> false is for an icon-only
+	/// button, where the icon simply sits in the middle.
+	/// </summary>
+	public static T On<T>(T button, string name, int size = ButtonIcon, bool porthole = true) where T : Button
 	{
 		button.Icon = Get(name);
 		button.IconAlignment = HorizontalAlignment.Left;
 		button.AddThemeConstantOverride("icon_max_width", size);
 		button.AddThemeConstantOverride("h_separation", 14);
+		if (!porthole)
+			return button;
+
+		// A button not yet in the tree cannot see its theme, so it gets its
+		// porthole once it is ready.
+		void Porthole()
+		{
+			foreach (string state in new[] { "normal", "hover", "pressed", "hover_pressed", "disabled" })
+				if (button.GetThemeStylebox(state) is ArcadeButtonStyle style)
+					button.AddThemeStyleboxOverride(state, style.WithBadge(size));
+		}
+		if (button.IsNodeReady())
+			Porthole();
+		else
+			button.Ready += Porthole;
+		button.AddThemeConstantOverride("h_separation", ArcadeButtonStyle.LabelGap);
+		button.Alignment = HorizontalAlignment.Left;
+		// Tall enough for the porthole to sit inside the face with room to spare.
+		button.CustomMinimumSize = new Vector2(button.CustomMinimumSize.X, Mathf.Max(button.CustomMinimumSize.Y, size + 34f));
 		return button;
 	}
 

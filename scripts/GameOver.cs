@@ -33,8 +33,10 @@ public partial class GameOver : Control
         nameRow=new HBoxContainer {Alignment=BoxContainer.AlignmentMode.Center};rows.AddChild(nameRow);
         var prompt=ArcadeSkin.Label("YOUR NAME",22);prompt.Name="Prompt";nameRow.AddChild(prompt);
         nameField=new LineEdit {Name="Field",PlaceholderText="PLAYER",MaxLength=12,CustomMinimumSize=new Vector2(260,54),RightIcon=UiIcons.Get("pencil_field")};nameRow.AddChild(nameField);
-        restartButton=ArcadeSkin.Button("PLAY AGAIN",()=>{},true,"restart");restartButton.Name="Retry";rows.AddChild(restartButton);
-        menuButton=ArcadeSkin.Button("MAIN MENU",()=>{},false,"home");menuButton.Name="ReturnToMenu";rows.AddChild(menuButton);
+        // Side by side: the way out on the left, the way back in on the right.
+        var actions=new HBoxContainer {Name="Actions",Alignment=BoxContainer.AlignmentMode.Center};actions.AddThemeConstantOverride("separation",20);rows.AddChild(actions);
+        menuButton=ArcadeSkin.Button("MAIN MENU",()=>{},false,"home");menuButton.Name="ReturnToMenu";menuButton.SizeFlagsHorizontal=SizeFlags.ExpandFill;actions.AddChild(menuButton);
+        restartButton=ArcadeSkin.Button("PLAY AGAIN",()=>{},true,"restart");restartButton.Name="Retry";restartButton.SizeFlagsHorizontal=SizeFlags.ExpandFill;actions.AddChild(restartButton);
 
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNodeOrNull<AudioStreamPlayer>("HoverSound");
