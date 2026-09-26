@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using Godot;
 
 /// <summary>
-/// The ground the skill tree grows on: the CORE at the root, and the branches
-/// joining it to each node. A branch lights up in its colour once the node at
-/// its end has a rank, so the part of the tree already grown is easy to see.
+/// The ground the skill tree grows on: the CORE at the root, faint orbits round
+/// it that each tier of the tree sits on, and the branches joining it to each
+/// node. A branch lights up in its colour once the node at its end has a rank,
+/// so the part of the tree already grown is easy to see.
 /// The nodes themselves are <see cref="SkillNode"/> children, drawn over this.
 /// </summary>
 public partial class SkillBranches : Control
@@ -19,6 +20,10 @@ public partial class SkillBranches : Control
 	private readonly List<(SkillNode from, SkillNode to)> links = new();
 
 	public Vector2 Root { get; set; }
+	/// <summary>Half-width and half-height of each orbit round the root.</summary>
+	public Vector2[] Orbits { get; set; } = System.Array.Empty<Vector2>();
+	/// <summary>Areas the orbits pass behind, such as the readout. Every node is kept clear too.</summary>
+	public List<Rect2> KeepClear { get; } = new();
 	public float Fraction { get; set; }
 	public bool IsFull { get; set; }
 	/// <summary>Full bars saved and waiting to be spent.</summary>
@@ -39,6 +44,7 @@ public partial class SkillBranches : Control
 
 	public override void _Draw()
 	{
+		DrawOrbits();
 		foreach (var (from, to) in links)
 		{
 			bool lit = to.Level > 0;
@@ -80,6 +86,44 @@ public partial class SkillBranches : Control
 		var at = new Vector2(Root.X + RootRadius + 16f, Root.Y - 2f);
 		DrawString(font, at, "CORE", HorizontalAlignment.Left, -1, 18, ArcadeSkin.Muted);
 		DrawString(font, at + new Vector2(0f, 26f), reading, HorizontalAlignment.Left, -1, 26, IsFull ? ArcadeSkin.Orange : ArcadeSkin.Cream);
+	}
+
+	/// <summary>
+	/// The upper half of each orbit, as a thin faint line that fades out toward
+	/// its ends. It passes behind the nodes, their names and the readout instead
+	/// of crossing them.
+	/// </summary>
+	private void DrawOrbits()
+	{
+		var clear = new List<Rect2>(KeepClear);
+		var badges = new List<Vector2>();
+		foreach (Node child in GetChildren())
+		{
+			if (child is not SkillNode node)
+				continue;
+			Rect2 label = node.LabelRect;
+			clear.Add(new Rect2(node.Position + label.Position, label.Size).Grow(6f));
+			badges.Add(CentreOf(node));
+		}
+		var inside = new Rect2(Vector2.One * 4f, Size - Vector2.One * 8f);
+
+		const int Steps = 160;
+		foreach (Vector2 orbit in Orbits)
+		{
+			for (int i = 0; i < Steps; i++)
+			{
+				float a = Mathf.Pi + Mathf.Pi * i / Steps, b = Mathf.Pi + Mathf.Pi * (i + 1) / Steps;
+				Vector2 from = Root + new Vector2(Mathf.Cos(a) * orbit.X, Mathf.Sin(a) * orbit.Y);
+				Vector2 to = Root + new Vector2(Mathf.Cos(b) * orbit.X, Mathf.Sin(b) * orbit.Y);
+				Vector2 middle = (from + to) * 0.5f;
+				if (!inside.HasPoint(middle) || clear.Exists(r => r.HasPoint(middle))
+					|| badges.Exists(c => c.DistanceTo(middle) < SkillNode.Radius + 10f))
+					continue;
+				// Strongest overhead, gone by the time it comes down beside the CORE.
+				float fade = Mathf.Sin(a + Mathf.Pi * 0.5f / Steps - Mathf.Pi);
+				DrawLine(from, to, new Color(Unlit, 0.3f * fade * fade), 2f, true);
+			}
+		}
 	}
 
 	private static Vector2[] Curve(Vector2 a, Vector2 b, Vector2 c, Vector2 d)

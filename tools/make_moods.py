@@ -225,6 +225,18 @@ svg('body_fracture_mini', fract
     + eye(88, 112, 16, (0, 0), 0.3) + eye(136, 112, 16, (0, 0), 0.3)
     + brow(72, 80, 102, 72, 6) + brow(122, 72, 152, 80, 6)
     + o_mouth(112, 162, 12))
+# Bawling (a Splinter): eyes squeezed shut, tears, a big wailing mouth.
+svg('body_fracture_mini_2', fract
+    + squeezed(88, 114, 16, 1) + squeezed(136, 114, 16, -1)
+    + brow(72, 86, 102, 78, 4) + brow(122, 78, 152, 86, 4)
+    + wail(112, 166, 46, 30)
+    + tear(68, 128) + tear(156, 128))
+# Yikes (a Splinter): eyes darting sideways, teeth gritted, sweating.
+svg('body_fracture_mini_3', fract
+    + eye(88, 110, 16, (7, 0), 0.4) + eye(136, 110, 16, (7, 0), 0.4)
+    + brow(72, 82, 102, 75, 5) + brow(122, 75, 152, 82, 5)
+    + gritted(112, 162, 50, 20)
+    + sweat(60, 70))
 
 pts = []
 import math

@@ -42,6 +42,21 @@ public partial class SkillNode : Button
 
 	public static Vector2 Footprint => new(Radius * 2f + Gap + LabelWidth, Radius * 2f + 8f);
 
+	private float NameWidth => ArcadeSkin.Font.GetStringSize(Profile.Name, HorizontalAlignment.Left, -1, NameSize).X;
+	private float PipsWidth => Profile.MaxLevel * Pip + (Profile.MaxLevel - 1) * 6f;
+
+	/// <summary>Where the name and pips are actually drawn, inside this control.</summary>
+	public Rect2 LabelRect
+	{
+		get
+		{
+			Vector2 c = Centre;
+			float width = Mathf.Max(NameWidth, PipsWidth);
+			float x = LabelOnLeft ? c.X - Radius - Gap - width : c.X + Radius + Gap;
+			return new Rect2(x, c.Y - 24f, width, 46f);
+		}
+	}
+
 	/// <summary>Where the badge's centre sits inside this control.</summary>
 	public Vector2 Centre => new(LabelOnLeft ? Footprint.X - Radius : Radius, Footprint.Y * 0.5f);
 
@@ -107,8 +122,8 @@ public partial class SkillNode : Button
 
 		// Name, then one pip per rank underneath it.
 		Font font = ArcadeSkin.Font;
-		float nameWidth = font.GetStringSize(Profile.Name, HorizontalAlignment.Left, -1, NameSize).X;
-		float pipsWidth = Profile.MaxLevel * Pip + (Profile.MaxLevel - 1) * 6f;
+		float nameWidth = NameWidth;
+		float pipsWidth = PipsWidth;
 		float left = LabelOnLeft ? c.X - Radius - Gap : c.X + Radius + Gap;
 		float nameX = LabelOnLeft ? left - nameWidth : left;
 		float pipsX = LabelOnLeft ? left - pipsWidth : left;

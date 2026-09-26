@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using Godot;
 
 /// <summary>
-/// The skill tree. The CORE sits at the root; four branches grow up out of it,
-/// one for the gun and one for each ability. Each node needs one rank in the
-/// node below it.
+/// The skill tree, laid out like a little solar system. The CORE sits at the
+/// root like a sun; four branches grow up and slightly outward from it, one for
+/// the gun and one for each ability, and each rank of the tree sits on its own
+/// orbit round the CORE. Each node needs one rank in the node below it.
 ///
 /// Opened whenever the player likes; buying needs a full CORE bar and takes one
 /// rank. The whole game is paused behind it (see
@@ -15,17 +16,30 @@ using Godot;
 /// </summary>
 public partial class UpgradeTree : Control
 {
-	private static readonly Vector2 CanvasSize = new(1480, 560);
-	private static readonly Vector2 RootAt = new(740, 500);
-	private static readonly float[] Tiers = { 360, 220, 80 };
+	private static readonly Vector2 CanvasSize = new(1480, 580);
+	private static readonly Vector2 RootAt = new(740, 520);
 
-	private static float ColumnOf(Branch branch) => branch switch
+	/// <summary>Each tier's orbit round the CORE: half its width, then half its height.</summary>
+	private static readonly Vector2[] Orbits = { new(520, 200), new(640, 330), new(760, 450) };
+
+	/// <summary>
+	/// Where a node sits: its branch's column, leaning a little further out on
+	/// each tier, raised onto that tier's orbit. The outer branches sit lower,
+	/// so each tier curves round the CORE.
+	/// </summary>
+	private static Vector2 SpotFor(Branch branch, int tier)
 	{
-		Branch.Gun => 300,
-		Branch.Dash => 620,
-		Branch.Overdrive => 860,
-		_ => 1180
-	};
+		float x = branch switch
+		{
+			Branch.Gun => 340 - 40 * tier,
+			Branch.Dash => 630 - 20 * tier,
+			Branch.Overdrive => 850 + 20 * tier,
+			_ => 1140 + 40 * tier
+		};
+		Vector2 orbit = Orbits[tier];
+		float across = (x - RootAt.X) / orbit.X;
+		return new Vector2(x, RootAt.Y - orbit.Y * Mathf.Sqrt(1f - across * across));
+	}
 
 	private VBoxContainer rows;
 	private SkillBranches canvas;
@@ -66,7 +80,7 @@ public partial class UpgradeTree : Control
 
 		rows = ArcadeSkin.Modal(this, "UPGRADES", 1560);
 
-		canvas = new SkillBranches { CustomMinimumSize = CanvasSize, Root = RootAt };
+		canvas = new SkillBranches { CustomMinimumSize = CanvasSize, Root = RootAt, Orbits = Orbits };
 		rows.AddChild(canvas);
 
 		foreach (Branch branch in System.Enum.GetValues<Branch>())
@@ -79,7 +93,7 @@ public partial class UpgradeTree : Control
 					continue;
 				// Mirrored about the root: the left two branches read to the left.
 				bool left = branch is Branch.Gun or Branch.Dash;
-				SkillNode node = Place(profile, new Vector2(ColumnOf(branch), Tiers[tier++]), left);
+				SkillNode node = Place(profile, SpotFor(branch, tier++), left);
 				canvas.Link(below, node);
 				below = node;
 			}
@@ -122,6 +136,8 @@ public partial class UpgradeTree : Control
 		var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center, Position = new Vector2(CanvasSize.X * 0.5f - 400, 4), Size = new Vector2(800, 136) };
 		readout.AddThemeConstantOverride("separation", 24);
 		canvas.AddChild(readout);
+		// The orbits pass behind it rather than through its words.
+		canvas.KeepClear.Add(new Rect2(readout.Position, readout.Size).Grow(8f));
 
 		preview = new UpgradePreview { CustomMinimumSize = new Vector2(240, 132) };
 		readout.AddChild(preview);
