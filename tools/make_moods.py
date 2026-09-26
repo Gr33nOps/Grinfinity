@@ -207,10 +207,54 @@ SHARD = '#EAA36F'
 shard = path('M 19 160 Q 8 119 38 85 L 109 34 Q 139 18 160 52 L 230 174 Q 242 205 204 216 L 67 215 Z', SHARD)
 shard += path('M 21 169 L 67 211 L 203 210 L 160 180 Z', '#C46E68', 'stroke="none"')
 shard += path('M 53 89 L 75 70', 'none', f'stroke="{CREAM}"')
-angry_eyes = (eye(107, 126, 13, (2, 5)) + lid(107, 126, 13, -9, 1, SHARD)
-              + eye(156, 123, 13, (-2, 5)) + lid(156, 123, 13, 1, -9, SHARD))
-svg('body_shard', shard + angry_eyes + gritted(131, 166, 40, 18))
-svg('body_shard_2', shard + angry_eyes + snarl(131, 166, 40))
+
+# Shards come in packs, so each is one of three shapes wearing one of four angry
+# faces, mixed at random: a pack still reads as orange Shards at a glance, but no
+# two look copied. Every face is angry, never a grin.
+SHARD_SHADE = '#C46E68'
+
+
+def shard_shape(outline, band, shine):
+    """An orange shard: `outline`, a darker band along its base clipped to it, a cream glint."""
+    return (f'<defs><clipPath id="c"><path d="{outline}"/></clipPath></defs>'
+            + path(outline, SHARD)
+            + path(band, SHARD_SHADE, 'stroke="none" clip-path="url(#c)"')
+            + path(outline, 'none')
+            + path(shine, 'none', f'stroke="{CREAM}"'))
+
+
+# Wedge: the original, leaning to one side. Sliver: tall and upright. Chipped:
+# a notch knocked out of one side, with a crack running from it.
+shard_shapes = {
+    'wedge': (shard, (131, 125)),
+    'sliver': (shard_shape('M 40 212 Q 30 228 52 228 L 212 228 Q 234 228 222 208 L 150 30 Q 138 6 124 30 Z',
+                           'M 0 196 L 256 190 L 256 256 L 0 256 Z', 'M 96 96 L 112 66'), (133, 142)),
+    'chipped': (shard_shape('M 26 190 Q 14 170 32 150 L 102 44 Q 118 22 136 44 L 168 90 L 150 106 L 186 118 '
+                            'L 232 180 Q 248 212 210 214 L 48 214 Q 20 214 26 190 Z',
+                            'M 0 190 L 256 182 L 256 256 L 0 256 Z', 'M 60 128 L 82 96')
+                + path('M 150 106 L 138 124', 'none', 'stroke-width="6"'), (126, 146)),
+}
+
+
+def shard_face(mood, fx, fy):
+    """An angry face with its eyes on the line `fy`, centred on `fx`."""
+    lx, rx = fx - 24, fx + 25
+    eyes = (eye(lx, fy + 1, 13, (2, 5)) + lid(lx, fy + 1, 13, -9, 1, SHARD)
+            + eye(rx, fy - 2, 13, (-2, 5)) + lid(rx, fy - 2, 13, 1, -9, SHARD))
+    my = fy + 41
+    if mood == 'furious':  # teeth bared in a frown
+        return eyes + grimace(fx, my, 44, 22)
+    if mood == 'snarl':  # lip curled, one fang
+        return eyes + snarl(fx, my, 40)
+    if mood == 'yell':  # mouth open, shouting
+        return eyes + wail(fx, my + 2, 40, 30)
+    # scowl: a tight flat frown and an anger mark
+    return eyes + frown(fx, my, 34, 10, 7) + vein(fx + 70, fy - 58, 0.75)
+
+
+for shape, (art, (fx, fy)) in shard_shapes.items():
+    for mood in ('furious', 'snarl', 'yell', 'scowl'):
+        svg(f'body_shard_{shape}_{mood}', art + shard_face(mood, fx, fy))
 
 PLAN = '#958BBC'
 plan = circle(128, 130, 108, PLAN)
@@ -624,4 +668,4 @@ shocked_faces = {
 for name, face in {**scared_faces, **shocked_faces}.items():
     svg(f'drifter_face_{name}', face)
 
-print('Wrote 14 planet faces, 12 enemy faces, 3 boss faces, 9 Drifter bodies and 60 Drifter faces')
+print('Wrote the planet, enemy, boss and Drifter faces')

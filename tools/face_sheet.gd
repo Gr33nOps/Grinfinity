@@ -5,7 +5,8 @@ extends Node2D
 #   GRIN_SHOT  output path (default user://faces.png)
 
 const NAMES := ["face", "face_blink", "face_happy",
-	"body_drifter", "body_drifter_2", "body_drifter_3", "body_shard", "body_shard_2",
+	"body_drifter", "body_drifter_2", "body_drifter_3", "body_shard_wedge_furious", "body_shard_sliver_snarl", "body_shard_chipped_yell",
+	"body_shard_wedge_scowl", "body_shard_sliver_furious", "body_shard_chipped_scowl",
 	"body_planetoid", "body_planetoid_2", "body_fracture", "body_fracture_mini", "body_fracture_mini_2", "body_fracture_mini_3",
 	"body_flare", "body_bulwark", "boss_coil", "boss_brood", "boss_black_hole"]
 const CELL := 300.0

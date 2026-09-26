@@ -55,13 +55,23 @@ public partial class Body : CharacterBody2D, IShootable
 	private static readonly Dictionary<BodyKind, string[]> FaceFiles = new()
 	{
 		[BodyKind.Drifter] = new[] { "body_drifter", "body_drifter_2", "body_drifter_3" },
-		[BodyKind.Shard] = new[] { "body_shard", "body_shard_2" },
+		[BodyKind.Shard] = Mix("body_shard", new[] { "wedge", "sliver", "chipped" }, new[] { "furious", "snarl", "yell", "scowl" }),
 		[BodyKind.Planetoid] = new[] { "body_planetoid", "body_planetoid_2" },
 		[BodyKind.Fracture] = new[] { "body_fracture" },
 		[BodyKind.Splinter] = new[] { "body_fracture_mini", "body_fracture_mini_2", "body_fracture_mini_3" },
 		[BodyKind.Flare] = new[] { "body_flare" },
 		[BodyKind.Bulwark] = new[] { "body_bulwark" }
 	};
+
+	/// <summary>Every shape wearing every face: <c>{prefix}_{shape}_{mood}</c>.</summary>
+	private static string[] Mix(string prefix, string[] shapes, string[] moods)
+	{
+		var files = new List<string>();
+		foreach (string shape in shapes)
+			foreach (string mood in moods)
+				files.Add($"{prefix}_{shape}_{mood}");
+		return files.ToArray();
+	}
 
 	private static void EnsureFacesLoaded()
 	{

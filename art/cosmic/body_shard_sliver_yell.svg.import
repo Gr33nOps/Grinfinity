@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ba6j1jb385pi7"
-path="res://.godot/imported/body_shard.svg-abf97e2e10195ea4524bda636d556314.ctex"
+uid="uid://bylx4baepp41"
+path="res://.godot/imported/body_shard_sliver_yell.svg-e18a8c68b4325ef48035b8f9ae2c6a66.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/cosmic/body_shard.svg"
-dest_files=["res://.godot/imported/body_shard.svg-abf97e2e10195ea4524bda636d556314.ctex"]
+source_file="res://art/cosmic/body_shard_sliver_yell.svg"
+dest_files=["res://.godot/imported/body_shard_sliver_yell.svg-e18a8c68b4325ef48035b8f9ae2c6a66.ctex"]
 
 [params]
 
