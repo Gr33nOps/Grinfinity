@@ -5,7 +5,8 @@ using Godot;
 /// thirty times. Each one is dressed from parts (one of three rock shapes in one
 /// of three colours, with one of eight unhappy moods) and then its face lives a
 /// little: it blinks now and then, looks scared while it is close to the planet,
-/// and looks shocked for a moment when a Drifter next to it pops.
+/// and looks shocked for a moment when a Drifter next to it pops. Each one has
+/// its own way of being scared and of being shocked, four of each.
 ///
 /// Looks only. The body's size, hitbox, speed and health are untouched, and the
 /// picks stay off the run's seeded generator.
@@ -21,18 +22,19 @@ public partial class DrifterFace : Sprite2D
 	/// <summary>How far a pop reaches to startle its neighbours.</summary>
 	private const float StartleReach = 170f;
 
-	private static Texture2D scared, shocked;
+	/// <summary>Four ways to be scared and four to be shocked; each Drifter is given one of each.</summary>
+	private static Texture2D[] scaredFaces, shockedFaces;
 
 	private Body body;
-	private Texture2D mood, blink;
+	private Texture2D mood, blink, scared, shocked;
 	private float blinkIn, blinkLeft, startledLeft;
 	private bool frightened;
 
 	/// <summary>Gives <paramref name="owner"/> a random rock and face, drawn over and inside <paramref name="art"/>.</summary>
 	public static DrifterFace Dress(Body owner, Sprite2D art)
 	{
-		scared ??= Load("drifter_face_scared");
-		shocked ??= Load("drifter_face_shocked");
+		scaredFaces ??= Variants("drifter_face_scared");
+		shockedFaces ??= Variants("drifter_face_shocked");
 
 		string rock = Rocks[GD.Randi() % (uint)Rocks.Length];
 		string feeling = Moods[GD.Randi() % (uint)Moods.Length];
@@ -44,6 +46,8 @@ public partial class DrifterFace : Sprite2D
 			body = owner,
 			mood = Load($"drifter_face_{rock}_{feeling}"),
 			blink = Load($"drifter_face_{rock}_{feeling}_blink"),
+			scared = scaredFaces[GD.Randi() % (uint)scaredFaces.Length],
+			shocked = shockedFaces[GD.Randi() % (uint)shockedFaces.Length],
 			blinkIn = (float)GD.RandRange(1.0, 5.0)
 		};
 		face.Texture = face.mood;
@@ -84,4 +88,6 @@ public partial class DrifterFace : Sprite2D
 	}
 
 	private static Texture2D Load(string name) => GD.Load<Texture2D>($"res://art/cosmic/{name}.svg");
+
+	private static Texture2D[] Variants(string name) => new[] { Load(name), Load($"{name}_2"), Load($"{name}_3"), Load($"{name}_4") };
 }

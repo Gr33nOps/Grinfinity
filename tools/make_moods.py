@@ -516,11 +516,57 @@ for rock, (base, _) in ROCKS.items():
         svg(f'drifter_face_{rock}_{mood}', eyes + rest)
         svg(f'drifter_face_{rock}_{mood}_blink', shut_sad + rest)
 
-# Scared, close to the planet: huge eyes with tiny pupils, teeth clenched, sweating.
-svg('drifter_face_scared', eye(113, 114, 15, (0, 0), 0.32) + eye(159, 110, 15, (0, 0), 0.32)
-    + brow(96, 84, 122, 76, -3) + brow(150, 74, 176, 82, -3) + gritted(136, 162, 40, 18) + sweat(190, 84))
-# Shocked, a neighbour just popped: brows flying up, round eyes, mouth a big O.
-svg('drifter_face_shocked', eye(113, 116, 15, (0, 0), 0.34) + eye(159, 112, 15, (0, 0), 0.34)
-    + brow(98, 80, 124, 74, 6) + brow(148, 72, 174, 78, 6) + o_mouth(136, 164, 13))
+# Reactions. Each Drifter is given one scared face and one shocked face of its own,
+# so a crowd reacting at once still reacts in different ways.
+high_worry = brow(96, 84, 122, 76, -3) + brow(150, 74, 176, 82, -3)
 
-print('Wrote 14 planet faces, 12 enemy faces, 3 boss faces, 9 Drifter bodies and 50 Drifter faces')
+
+def exclaim(x, y):
+    """A cartoon "!" floating by the head, ink-rimmed so it reads on any rock."""
+    bar = f'M {x + 3} {y} L {x} {y + 26}'
+    return (path(bar, 'none', 'stroke-width="13"') + path(bar, 'none', f'stroke="{CREAM}" stroke-width="6"')
+            + circle(x - 1, y + 40, 6.5, CREAM, None, 'stroke-width="4"'))
+
+
+def jolt(lines):
+    """Short strokes flying off the head: the flinch of a sudden fright."""
+    return ''.join(path(d, 'none', 'stroke-width="5"') for d in lines)
+
+
+scared_faces = {
+    # Frozen: huge eyes with tiny pupils, teeth clenched, sweating.
+    'scared': eye(113, 114, 15, (0, 0), 0.32) + eye(159, 110, 15, (0, 0), 0.32) + high_worry
+              + gritted(136, 162, 40, 18) + sweat(190, 84),
+    # Terrified: eyes screwed shut, wailing, tears flying.
+    'scared_2': squeezed(113, 116, 14, 1) + squeezed(159, 112, 14, -1) + high_worry
+                + wail(136, 166, 42, 30) + tear(96, 130) + tear(178, 126),
+    # Panicking: one eye bigger than the other, a shaking mouth, sweat everywhere.
+    'scared_3': eye(113, 114, 17, (0, 0), 0.25) + eye(160, 112, 12, (0, 0), 0.3)
+                + brow(94, 80, 124, 72, -3) + brow(150, 82, 174, 88, -2)
+                + wobble(136, 164, 44, 6) + sweat(192, 82) + sweat(80, 96),
+    # Cowering: looking away, a tiny "eek", shivering at the sides.
+    'scared_4': eye(113, 116, 14, (-6, -2), 0.45) + eye(159, 112, 14, (-6, -2), 0.45) + high_worry
+                + gritted(136, 164, 26, 14) + jolt(['M 70 102 L 60 110', 'M 70 124 L 58 128', 'M 202 98 L 212 104', 'M 202 120 L 214 122']),
+}
+shocked_faces = {
+    # Gasp: brows flying up, round eyes, mouth a big O.
+    'shocked': eye(113, 116, 15, (0, 0), 0.34) + eye(159, 112, 15, (0, 0), 0.34)
+               + brow(98, 80, 124, 74, 6) + brow(148, 72, 174, 78, 6) + o_mouth(136, 164, 13),
+    # Jaw drop: pin-prick pupils and a long open mouth.
+    'shocked_2': eye(113, 112, 14, (0, 0), 0.2) + eye(159, 108, 14, (0, 0), 0.2)
+                 + brow(98, 76, 124, 70, 8) + brow(148, 68, 174, 74, 8)
+                 + f'<ellipse cx="136" cy="168" rx="11" ry="20" fill="{INK}" stroke-width="5"/>'
+                 + f'<ellipse cx="136" cy="178" rx="6" ry="6" fill="{BERRY}" stroke="none"/>',
+    # "!": one eye popping, a small gasp, an exclamation mark by the head.
+    'shocked_3': eye(113, 116, 17, (0, -2), 0.3) + eye(159, 113, 11, (0, -2), 0.35)
+                 + brow(94, 82, 124, 70, 6) + brow(150, 88, 172, 86, 0)
+                 + o_mouth(130, 164, 9) + exclaim(204, 26),
+    # Flinch: eyes screwed shut, a tight little o, jolt lines off the head.
+    'shocked_4': squeezed(113, 116, 13, 1) + squeezed(159, 112, 13, -1)
+                 + brow(98, 84, 124, 78, 4) + brow(148, 76, 174, 82, 4) + o_mouth(136, 164, 8)
+                 + jolt(['M 62 58 L 72 72', 'M 46 84 L 62 90', 'M 86 38 L 90 54']),
+}
+for name, face in {**scared_faces, **shocked_faces}.items():
+    svg(f'drifter_face_{name}', face)
+
+print('Wrote 14 planet faces, 12 enemy faces, 3 boss faces, 9 Drifter bodies and 56 Drifter faces')
