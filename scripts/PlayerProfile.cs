@@ -152,12 +152,12 @@ public static class PlayerProfile
 		HeaviestMassEver = Mathf.Clamp(SaveStore.Value(config, Section, "heaviest_mass", 0.0f).AsSingle(), 0f, 1f);
 		PlayerName = Leaderboard.Sanitise(SaveStore.Value(config, Section, "name", "PLAYER").AsString());
 
-		// A save from before the planets were cut from twelve to eight numbers them
-		// the old way; carry each over to its planet today, dropping the removed ones.
-		bool oldLayout = SaveStore.Value(config, WorldSection, "layout", 12).AsInt32() != Worlds.Layout;
+		// An older save numbers the planets its own way; carry each over to its
+		// planet today, dropping any since removed.
+		int layout = SaveStore.Value(config, WorldSection, "layout", 12).AsInt32();
 		foreach (int worldId in SaveStore.Value(config, WorldSection, "unlocked", new int[] { 1 }).AsInt32Array())
 		{
-			int id = oldLayout ? Worlds.FromTwelve(worldId) : worldId;
+			int id = Worlds.Migrate(layout, worldId);
 			if (id >= 1 && id <= Worlds.All.Length)
 				unlockedWorlds.Add(id);
 		}

@@ -40,17 +40,17 @@ WORLD_3_HINT,Pop 300 enemies in total.
 WORLD_4_NAME,WISHFALL
 WORLD_4_FLAVOUR,Catches falling stars and keeps every wish.
 WORLD_4_HINT,Survive for 3 minutes in one run.
-WORLD_5_NAME,BOLDCREST
-WORLD_5_FLAVOUR,Knows it can do this. So do you.
+WORLD_5_NAME,LAURELCROWN
+WORLD_5_FLAVOUR,Proud of every minute it has survived.
 WORLD_5_HINT,Survive for 5 minutes in one run.
-WORLD_6_NAME,LAURELCROWN
-WORLD_6_FLAVOUR,Wears its pride for every upgrade it has carried.
+WORLD_6_NAME,SPARKRUSH
+WORLD_6_FLAVOUR,"Can't sit still. Won't sit still. Doesn't want to."
 WORLD_6_HINT,Max out every upgrade in one run.
-WORLD_7_NAME,SPARKRUSH
-WORLD_7_FLAVOUR,"Can't sit still. Won't sit still. Doesn't want to."
+WORLD_7_NAME,HEARTSONG
+WORLD_7_FLAVOUR,Made from the love of every planet that came before it.
 WORLD_7_HINT,Play for 1 hour in total.
-WORLD_8_NAME,HEARTSONG
-WORLD_8_FLAVOUR,Made from the love of every planet that came before it.
+WORLD_8_NAME,BOLDCREST
+WORLD_8_FLAVOUR,"Has been through everything, and knows it can do it all again."
 WORLD_8_HINT,"Play {0} runs, and survive 10 minutes in one."
 BOSS_Coil_ARRIVAL,Its rings have a gap. Slip through it or dash.
 BOSS_Brood_ARRIVAL,"When it glows, it lunges. Sidestep, and keep shooting."

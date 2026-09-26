@@ -26,17 +26,17 @@ asset('muzzle',f'<path d="M128 40L149 90L208 76L176 124L220 168L155 162L132 216L
 print('Rebuilt rings, the moon, armour, round shot and the power icons')
 
 # The planet's faces live in tools/make_moods.py. Each planet wears one positive
-# emotion, from calmness on the first to love on the last; its body is plain,
+# emotion, from calmness on the first to confidence on the last; its body is plain,
 # in colours that suit the emotion, and the face alone does the rest.
 planets = [
     ('#B3D8EE', '#7AA3C9'),  # 1 Stillwater, calmness: pale sky blue
     ('#A8DCC4', '#6FA79A'),  # 2 Easewind, relief: soft mint
     ('#F2A97E', '#C77A58'),  # 3 Hearthglow, contentment: warm peach
     ('#FFDA66', '#DDA843'),  # 4 Wishfall, hope: sunny yellow
-    ('#5E97E0', '#3D66A8'),  # 5 Boldcrest, confidence: strong blue
-    ('#B08BDB', '#7D5EAE'),  # 6 Laurelcrown, pride: royal purple
-    ('#F47563', '#C24C47'),  # 7 Sparkrush, excitement: hot coral red
-    ('#F28AB0', '#C25884'),  # 8 Heartsong, love: rose pink
+    ('#B08BDB', '#7D5EAE'),  # 5 Laurelcrown, pride: royal purple
+    ('#F47563', '#C24C47'),  # 6 Sparkrush, excitement: hot coral red
+    ('#F28AB0', '#C25884'),  # 7 Heartsong, love: rose pink
+    ('#5E97E0', '#3D66A8'),  # 8 Boldcrest, confidence: strong blue
 ]
 for i, (base, shade) in enumerate(planets, 1):
     body = f'<circle cx="128" cy="134" r="99" fill="{ink}"/><circle cx="125" cy="123" r="98" fill="{base}" stroke="{ink}" stroke-width="7"/>'

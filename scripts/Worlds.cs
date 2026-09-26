@@ -3,9 +3,9 @@ using Godot;
 /// <summary>
 /// Eight illustrated cosmetic planets, earned through lifetime play milestones.
 /// Each wears one positive emotion, gentlest first: Stillwater (calmness),
-/// Easewind (relief), Hearthglow (contentment), Wishfall (hope), Boldcrest
-/// (confidence), Laurelcrown (pride), Sparkrush (excitement) and Heartsong
-/// (love). Cosmetics never change power.
+/// Easewind (relief), Hearthglow (contentment), Wishfall (hope), Laurelcrown
+/// (pride), Sparkrush (excitement), Heartsong (love) and Boldcrest
+/// (confidence). Cosmetics never change power.
 /// </summary>
 public static class Worlds
 {
@@ -46,22 +46,25 @@ public static class Worlds
 	public static Profile Get(int id) => All[Mathf.Clamp(id, 1, All.Length) - 1];
 
 	/// <summary>
-	/// There used to be twelve planets. Saves from then store their numbers, so
-	/// this maps one of those to today's planet, or 0 for the four since removed
-	/// (Hushmere, Anchorlight, Gracebloom and Sunburst).
+	/// Saves remember which planet list they were written with, so a planet keeps
+	/// being the same planet when the list changes. Layout 12 was the old twelve;
+	/// 8 the first eight, with Boldcrest fifth; 9 is today's order.
 	/// </summary>
-	public static int FromTwelve(int oldId) => oldId switch
-	{
-		1 => 1, 2 => 2, 3 => 3, 7 => 4, 8 => 5, 9 => 6, 11 => 7, 12 => 8,
-		_ => 0
-	};
+	public const int Layout = 9;
 
-	/// <summary>Saves written since the cut to eight mark themselves with this.</summary>
-	public const int Layout = 8;
+	/// <summary>A planet number from a save written with <paramref name="layout"/>, as today's number, or 0 if it is gone.</summary>
+	public static int Migrate(int layout, int id) => layout switch
+	{
+		Layout => id,
+		// The first eight: Boldcrest was fifth, then Laurelcrown, Sparkrush, Heartsong.
+		8 => id switch { 5 => 8, 6 => 5, 7 => 6, 8 => 7, _ => id },
+		// The old twelve. Hushmere, Anchorlight, Gracebloom and Sunburst are gone.
+		_ => id switch { 1 => 1, 2 => 2, 3 => 3, 7 => 4, 8 => 8, 9 => 5, 11 => 6, 12 => 7, _ => 0 }
+	};
 
 	/// <summary>
 	/// Each planet's own happy face, and the same face mid-blink. Each planet
-	/// wears one positive emotion, from calmness on the first to love on the last
+	/// wears one positive emotion, from calmness on the first to confidence on the last
 	/// (see tools/make_moods.py).
 	/// </summary>
 	public static Texture2D Face(int id, bool blinking = false)

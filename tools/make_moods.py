@@ -1,7 +1,9 @@
 """Faces for everything in the arena. Original vector artwork, no external assets.
 
 Only the planet is happy: each of the eight planets wears one positive emotion,
-from calmness on the first to love on the last (see below). Every enemy kind wears one negative emotion, and the more dangerous the
+from calmness on the first to confidence on the last (see below).
+
+Every enemy kind wears one negative emotion, and the more dangerous the
 enemy, the more intense its emotion, so the arena grows darker in feeling as a
 run brings in tougher kinds. Each emotion comes in a few expressions, picked at
 random per enemy, so a crowd never looks cloned:
@@ -511,10 +513,10 @@ enemy('boss_black_hole_2', hole, despair_eyes, hole_shut, despair_rest + '</g>')
 # Each planet wears one positive emotion, from the gentlest on the planet you
 # start with to the strongest on the hardest to earn:
 #
-#    1 Stillwater   calmness       5 Boldcrest    confidence
-#    2 Easewind     relief         6 Laurelcrown  pride
-#    3 Hearthglow   contentment    7 Sparkrush    excitement
-#    4 Wishfall     hope           8 Heartsong    love
+#    1 Stillwater   calmness       5 Laurelcrown  pride
+#    2 Easewind     relief         6 Sparkrush    excitement
+#    3 Hearthglow   contentment    7 Heartsong    love
+#    4 Wishfall     hope           8 Boldcrest    confidence
 #
 # Just faces: the expression carries the emotion, with nothing floating round
 # it. Each has a blink: open eyes shut for a moment, and eyes that are already
@@ -630,7 +632,7 @@ hope_smile = path('M 115 156 Q 127 164 139 156', 'none', 'stroke-width="5.5"')
 faces[4] = (p_cheeks + p_eye(99, look=(1, -5), size=0.9) + p_eye(155, look=(1, -5), size=0.9) + hope_brows + hope_smile,
             p_cheeks + shut + hope_brows + hope_smile)
 
-# 5 Boldcrest, confidence: sunglasses, one brow cocked above them, and a sure,
+# 8 Boldcrest, confidence: sunglasses, one brow cocked above them, and a sure,
 # lopsided grin with a few teeth showing.
 shades = path('M 74 100 L 124 100 Q 124 132 100 132 Q 76 132 74 100 Z', '#1B1026', 'stroke-width="5"')
 shades += path('M 130 100 L 180 100 Q 178 132 154 132 Q 130 132 130 100 Z', '#1B1026', 'stroke-width="5"')
@@ -641,28 +643,28 @@ sure_grin = path('M 104 150 Q 134 160 162 140 Q 156 170 128 170 Q 110 168 104 15
 sure_grin += path('M 112 153 Q 136 159 156 146 L 154 153 Q 134 164 114 159 Z', CREAM, 'stroke="none"')
 # Its blink: a glint slides across the lenses.
 glint_shades = shades.replace('M 86 108 L 96 108 M 142 108 L 152 108', 'M 98 118 L 110 106 M 154 118 L 166 106')
-faces[5] = (p_cheeks + shades + cocky_brows + sure_grin, p_cheeks + glint_shades + cocky_brows + sure_grin)
+faces[8] = (p_cheeks + shades + cocky_brows + sure_grin, p_cheeks + glint_shades + cocky_brows + sure_grin)
 
-# 6 Laurelcrown, pride: chin raised, so the whole face sits a little higher;
+# 5 Laurelcrown, pride: chin raised, so the whole face sits a little higher;
 # half-lidded eyes looking down its nose, brows high, and a closed, satisfied
 # smile curling up at one corner.
 proud_brows = path('M 82 78 Q 98 66 114 72', 'none', 'stroke-width="5"') + path('M 140 72 Q 156 66 172 78', 'none', 'stroke-width="5"')
 satisfied = path('M 104 148 Q 124 162 152 144', 'none', 'stroke-width="6"') + path('M 149 139 Q 155 143 154 150', 'none', 'stroke-width="4"')
 chin_up = '<g transform="translate(0 -7)">'
-faces[6] = (p_cheeks + chin_up + half_eye(99) + half_eye(155) + proud_brows + satisfied + '</g>',
+faces[5] = (p_cheeks + chin_up + half_eye(99) + half_eye(155) + proud_brows + satisfied + '</g>',
             p_cheeks + chin_up + shut + proud_brows + satisfied + '</g>')
 
-# 7 Sparkrush, excitement: star eyes and a huge beaming grin.
+# 6 Sparkrush, excitement: star eyes and a huge beaming grin.
 starry = star(99, 113, 24, 11) + star(155, 113, 24, 11)
 beam = path('M 86 140 Q 127 154 168 140 Q 164 190 127 191 Q 90 190 86 140 Z', INK, 'stroke-width="5"')
 beam += path('M 93 145 Q 127 157 161 145 L 159 155 Q 127 165 95 155 Z', CREAM, 'stroke="none"')
 beam += path('M 106 178 Q 127 164 148 178 Q 138 188 127 188 Q 116 188 106 178 Z', BERRY, 'stroke="none"')
-faces[7] = (p_cheeks + starry + brows_up + beam, p_cheeks + shut + brows_up + beam)
+faces[6] = (p_cheeks + starry + brows_up + beam, p_cheeks + shut + brows_up + beam)
 
-# 8 Heartsong, love: heart eyes, glowing cheeks, a big warm smile.
+# 7 Heartsong, love: heart eyes, glowing cheeks, a big warm smile.
 hearts = heart(99, 114, 22) + heart(155, 114, 22)
 hearts += path('M 88 106 Q 92 101 98 101', 'none', f'stroke="{CREAM}" stroke-width="4"') + path('M 144 106 Q 148 101 154 101', 'none', f'stroke="{CREAM}" stroke-width="4"')
-faces[8] = (warm_cheeks + hearts + brows_up + p_smile, warm_cheeks + shut + brows_up + p_smile)
+faces[7] = (warm_cheeks + hearts + brows_up + p_smile, warm_cheeks + shut + brows_up + p_smile)
 
 for n, (look, blink) in faces.items():
     name = 'face' if n == 1 else f'face_{n}'

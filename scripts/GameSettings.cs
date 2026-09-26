@@ -412,10 +412,9 @@ public partial class GameSettings : Node
 		}
 
 		int storedWorld = SaveStore.Value(config, Section, "world", 1).AsInt32();
-		// Saved before the planets were cut from twelve to eight: carry it over,
-		// or back to the first planet if the one chosen is gone.
-		if (SaveStore.Value(config, Section, "world_layout", 12).AsInt32() != Worlds.Layout)
-			storedWorld = Worlds.FromTwelve(storedWorld);
+		// Saved with an older planet list: carry it over, or back to the first
+		// planet if the one chosen is gone.
+		storedWorld = Worlds.Migrate(SaveStore.Value(config, Section, "world_layout", 12).AsInt32(), storedWorld);
 		if (storedWorld >= 1 && storedWorld <= Worlds.All.Length)
 			World = storedWorld;
 
