@@ -5,10 +5,14 @@ extends Node2D
 #   GRIN_SHOT  output path (default user://faces.png)
 
 const NAMES := ["face", "face_blink", "face_happy",
-	"body_drifter", "body_drifter_2", "body_drifter_3", "body_shard_wedge_furious", "body_shard_sliver_snarl", "body_shard_chipped_yell",
-	"body_shard_wedge_scowl", "body_shard_sliver_furious", "body_shard_chipped_scowl",
-	"body_planetoid", "body_planetoid_2", "body_fracture", "body_fracture_mini", "body_fracture_mini_2", "body_fracture_mini_3",
-	"body_flare", "body_bulwark", "boss_coil", "boss_brood", "boss_black_hole"]
+	"body_drifter", "body_drifter_2", "body_drifter_3",
+	"body_splinter_unsure", "body_splinter_timid", "body_splinter_shrinking",
+	"body_shard_wedge_huffy", "body_shard_sliver_twitchy", "body_shard_chipped_snappy", "body_shard_wedge_scowling",
+	"body_fracture_fed_up", "body_fracture_exasperated", "body_fracture_strained",
+	"body_bulwark_hiding", "body_bulwark_cringing", "body_bulwark_ashamed",
+	"body_planetoid_grudging", "body_planetoid_bitter", "body_planetoid_brooding",
+	"body_flare_furious", "body_flare_seething", "body_flare_roaring",
+	"boss_coil", "boss_coil_2", "boss_brood", "boss_brood_2", "boss_black_hole", "boss_black_hole_2"]
 const CELL := 300.0
 
 func _ready() -> void:

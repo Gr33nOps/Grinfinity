@@ -1,22 +1,27 @@
 """Faces for everything in the arena. Original vector artwork, no external assets.
 
 Only the planet is happy, and each of the twelve planets has its own happy
-face. Every enemy wears its own bad mood, chosen to suit
-how it behaves, and the most common kinds come in a few versions so a crowd of
-them never looks cloned:
+face. Every enemy kind wears one negative emotion, and the more dangerous the
+enemy, the more intense its emotion, so the arena grows darker in feeling as a
+run brings in tougher kinds. Each emotion comes in a few expressions, picked at
+random per enemy, so a crowd never looks cloned:
 
-  Drifter    sad        (built from parts: three rock shapes, three colours,
-                         eight unhappy moods, plus scared and shocked reactions)
-  Shard      angry      (two versions: gritted teeth, snarl)
-  Planetoid  grumpy     (two versions: half-shut eyes, eye-roll)
-  Fracture   worried    raised brows, a wobbly mouth, a sweat drop
-  Splinter   scared     wide eyes, tiny pupils, a little "o" mouth
-  Flare      furious    shouting, with a cross-vein
-  Bulwark    stubborn   heavy flat brows and a pout
+  Drifter    loneliness     forlorn, teary, moping, weary, lost, longing,
+                            sniffly, wistful (built from parts: three rock
+                            shapes, three colours, plus scared and shocked
+                            reactions)
+  Splinter   self-doubt     unsure, timid, shrinking
+  Shard      irritability   huffy, twitchy, snappy, scowling (three shapes)
+  Fracture   frustration    fed up, exasperated, strained
+  Bulwark    shame          hiding, cringing, ashamed
+  Planetoid  resentment     grudging, bitter, brooding
+  Flare      anger          furious, seething, roaring
 
-  Coil        sneering
-  Brood       wailing
-  Black Hole  menacing
+  Coil        disgust         disgusted, then revolted below half health
+  Brood       grief           mourning, then wailing
+  Black Hole  hopelessness    empty, then despairing
+
+No face may read as happy, and none uses floating symbols.
 
 Run from the project root: python tools/make_moods.py
 """
@@ -164,6 +169,11 @@ def grimace(mx, my, w, h):
     return s
 
 
+def jolt(lines):
+    """Short strokes flying off the head: the flinch of a sudden fright."""
+    return ''.join(path(d, 'none', 'stroke-width="5"') for d in lines)
+
+
 def o_mouth(mx, my, r):
     return f'<ellipse cx="{mx}" cy="{my}" rx="{r * 0.8}" ry="{r}" fill="{INK}" stroke-width="5"/>' + \
         f'<ellipse cx="{mx}" cy="{my + r * 0.35}" rx="{r * 0.45}" ry="{r * 0.35}" fill="{BERRY}" stroke="none"/>'
@@ -208,9 +218,9 @@ shard = path('M 19 160 Q 8 119 38 85 L 109 34 Q 139 18 160 52 L 230 174 Q 242 20
 shard += path('M 21 169 L 67 211 L 203 210 L 160 180 Z', '#C46E68', 'stroke="none"')
 shard += path('M 53 89 L 75 70', 'none', f'stroke="{CREAM}"')
 
-# Shards come in packs, so each is one of three shapes wearing one of four angry
-# faces, mixed at random: a pack still reads as orange Shards at a glance, but no
-# two look copied. Every face is angry, never a grin.
+# Shards come in packs, so each is one of three shapes wearing one of four
+# irritable faces, mixed at random: a pack still reads as orange Shards at a
+# glance, but no two look copied.
 SHARD_SHADE = '#C46E68'
 
 
@@ -237,67 +247,102 @@ shard_shapes = {
 
 
 def shard_face(mood, fx, fy):
-    """An angry face with its eyes on the line `fy`, centred on `fx`."""
+    """An irritable face with its eyes on the line `fy`, centred on `fx`."""
     lx, rx = fx - 24, fx + 25
-    eyes = (eye(lx, fy + 1, 13, (2, 5)) + lid(lx, fy + 1, 13, -9, 1, SHARD)
-            + eye(rx, fy - 2, 13, (-2, 5)) + lid(rx, fy - 2, 13, 1, -9, SHARD))
+    glare = (eye(lx, fy + 1, 13, (2, 5)) + lid(lx, fy + 1, 13, -9, 1, SHARD)
+             + eye(rx, fy - 2, 13, (-2, 5)) + lid(rx, fy - 2, 13, 1, -9, SHARD))
     my = fy + 41
-    if mood == 'furious':  # teeth bared in a frown
-        return eyes + grimace(fx, my, 44, 22)
-    if mood == 'snarl':  # lip curled, one fang
-        return eyes + snarl(fx, my, 40)
-    if mood == 'yell':  # mouth open, shouting
-        return eyes + wail(fx, my + 2, 40, 30)
-    # scowl: a tight flat frown and an anger mark
-    return eyes + frown(fx, my, 34, 10, 7) + vein(fx + 70, fy - 58, 0.75)
+    if mood == 'huffy':  # "hmph": glaring, lips pressed and shoved to one side
+        return (glare + path(f'M {fx - 14} {my + 2} L {fx + 10} {my - 1}', 'none', 'stroke-width="7"')
+                + path(f'M {fx + 14} {my - 7} Q {fx + 22} {my - 1} {fx + 14} {my + 5}', 'none', 'stroke-width="5"'))
+    if mood == 'twitchy':  # one eye glaring, the other screwed down tighter, a tight wavering mouth
+        return (eye(lx, fy + 1, 13, (2, 5)) + lid(lx, fy + 1, 13, -9, 1, SHARD)
+                + eye(rx, fy - 2, 11, (-2, 4)) + lid(rx, fy - 2, 11, 6, -2, SHARD)
+                + wobble(fx, my, 30, 3))
+    if mood == 'snappy':  # lip curled, one fang
+        return glare + snarl(fx, my, 40)
+    # scowling: heavy brows pressed down, a tight frown
+    return (glare + path(f'M {lx - 17} {fy - 24} L {lx + 13} {fy - 15}', 'none', 'stroke-width="8"')
+            + path(f'M {rx - 13} {fy - 18} L {rx + 17} {fy - 27}', 'none', 'stroke-width="8"')
+            + frown(fx, my, 34, 10, 7))
 
 
+SHARD_MOODS = ('huffy', 'twitchy', 'snappy', 'scowling')
 for shape, (art, (fx, fy)) in shard_shapes.items():
-    for mood in ('furious', 'snarl', 'yell', 'scowl'):
+    for mood in SHARD_MOODS:
         svg(f'body_shard_{shape}_{mood}', art + shard_face(mood, fx, fy))
 
 PLAN = '#958BBC'
 plan = circle(128, 130, 108, PLAN)
 plan += path('M 27 148 Q 135 222 228 138 Q 218 228 127 237 Q 45 220 27 148', '#71668F', 'stroke="none"')
-# Grumpy: heavy lids half down, a long flat mouth that dips at one end.
-svg('body_planetoid', plan + craters([(64, 84, 20), (188, 184, 22)], '#71668F')
-    + eye(104, 121, 16, (1, 7)) + lid(104, 121, 16, 1, 3, PLAN, 7)
-    + eye(161, 121, 16, (-1, 7)) + lid(161, 121, 16, 3, 1, PLAN, 7)
-    + brow(92, 94, 122, 99, 0, 7) + brow(143, 99, 173, 94, 0, 7)
-    + path('M 102 170 L 144 169 Q 151 169 154 176', 'none', 'stroke-width="7"'))
-# Fed up: rolling its eyes, one brow cocked, a short tight "hmph" of a mouth.
-svg('body_planetoid_2', plan + craters([(192, 74, 16), (56, 150, 17), (150, 208, 10)], '#71668F')
-    + eye(104, 121, 16, (5, -9)) + eye(161, 121, 16, (5, -9))
-    + brow(88, 94, 120, 92, 0, 7) + brow(145, 88, 177, 80, 6, 7)
-    + path('M 112 172 L 146 170', 'none', 'stroke-width="7"')
-    + path('M 150 164 Q 158 170 150 176', 'none', 'stroke-width="5"'))
+PLAN_SHADE = '#71668F'
+# Resentment: a heavy, lasting grudge, for the heavy, lasting enemy.
+planetoid_faces = {
+    # Grudging: side-eye under level lids, a flat mouth that dips at one end.
+    'grudging': ([(64, 84, 20), (188, 184, 22)],
+                 eye(104, 121, 16, (8, 6)) + lid(104, 121, 16, 1, 3, PLAN, 7)
+                 + eye(161, 121, 16, (8, 6)) + lid(161, 121, 16, 3, 1, PLAN, 7)
+                 + brow(92, 96, 122, 100, 0, 7) + brow(143, 100, 173, 96, 0, 7)
+                 + path('M 102 172 L 144 170 Q 151 170 154 177', 'none', 'stroke-width="7"')),
+    # Bitter: lids slanted hard, brows down, lips pressed into a long frown.
+    'bitter': ([(192, 74, 16), (56, 150, 17), (150, 208, 10)],
+               eye(104, 123, 15, (1, 5)) + lid(104, 123, 15, -7, 4, PLAN, 7)
+               + eye(161, 123, 15, (-1, 5)) + lid(161, 123, 15, 4, -7, PLAN, 7)
+               + path('M 84 96 L 120 106', 'none', 'stroke-width="7"') + path('M 145 106 L 181 96', 'none', 'stroke-width="7"')
+               + frown(128, 174, 54, 10, 7)),
+    # Brooding: staring at the ground under heavy brows, bags under the eyes, a deep frown.
+    'brooding': ([(70, 76, 18), (192, 176, 18)],
+                 eye(104, 124, 16, (0, 9)) + lid(104, 124, 16, 2, 2, PLAN, 7)
+                 + eye(161, 124, 16, (0, 9)) + lid(161, 124, 16, 2, 2, PLAN, 7)
+                 + path('M 86 100 L 122 104', 'none', 'stroke-width="9"') + path('M 143 104 L 179 100', 'none', 'stroke-width="9"')
+                 + path('M 92 150 Q 104 156 116 150', 'none', 'stroke-width="3"') + path('M 149 150 Q 161 156 173 150', 'none', 'stroke-width="3"')
+                 + frown(128, 180, 40, 16, 7)),
+}
+for mood, (spots, face) in planetoid_faces.items():
+    svg(f'body_planetoid_{mood}', plan + craters(spots, PLAN_SHADE) + face)
 
 FRACT = '#88BFB7'
 fract = path('M 32 85 L 91 30 L 173 36 L 228 99 L 220 170 L 163 225 L 75 214 L 25 153 Z', FRACT)
 fract += path('M 168 36 L 160 74 L 186 96 L 172 126 L 204 146 L 223 156', 'none', 'stroke-width="12"')
-# Worried: brows up in the middle, one wobbly mouth, sweating.
-svg('body_fracture', fract
-    + eye(88, 114, 14, (1, 2), 0.5) + eye(136, 114, 14, (-1, 2), 0.5)
-    + brow(72, 86, 100, 78, 4) + brow(124, 78, 152, 86, 4)
-    + wobble(112, 160, 36, 4)
-    + sweat(56, 84))
-# Scared (the Splinters): wide eyes, pin-prick pupils, a little "o" mouth.
-svg('body_fracture_mini', fract
-    + eye(88, 112, 16, (0, 0), 0.3) + eye(136, 112, 16, (0, 0), 0.3)
-    + brow(72, 80, 102, 72, 6) + brow(122, 72, 152, 80, 6)
-    + o_mouth(112, 162, 12))
-# Bawling (a Splinter): eyes squeezed shut, tears, a big wailing mouth.
-svg('body_fracture_mini_2', fract
-    + squeezed(88, 114, 16, 1) + squeezed(136, 114, 16, -1)
-    + brow(72, 86, 102, 78, 4) + brow(122, 78, 152, 86, 4)
-    + wail(112, 166, 46, 30)
-    + tear(68, 128) + tear(156, 128))
-# Yikes (a Splinter): eyes darting sideways, teeth gritted, sweating.
-svg('body_fracture_mini_3', fract
-    + eye(88, 110, 16, (7, 0), 0.4) + eye(136, 110, 16, (7, 0), 0.4)
-    + brow(72, 82, 102, 75, 5) + brow(122, 75, 152, 82, 5)
-    + grimace(112, 162, 50, 22)
-    + sweat(60, 70))
+glassy = (f'<ellipse cx="88" cy="132" rx="10" ry="3.5" fill="{TEAR}" stroke="none"/>'
+          f'<ellipse cx="136" cy="132" rx="10" ry="3.5" fill="{TEAR}" stroke="none"/>')
+# Frustration, for the rock that cracks under pressure.
+fracture_faces = {
+    # Fed up: level half-shut lids, brows jammed down, teeth bared in a frown.
+    'fed_up': eye(88, 116, 14, (0, 4), 0.5) + lid(88, 116, 14, -1, -1, FRACT)
+              + eye(136, 116, 14, (0, 4), 0.5) + lid(136, 116, 14, -1, -1, FRACT)
+              + path('M 70 92 L 100 100', 'none', 'stroke-width="7"') + path('M 124 100 L 154 92', 'none', 'stroke-width="7"')
+              + grimace(112, 162, 46, 22),
+    # Exasperated: eyes rolled up, one brow cocked, a flat mouth dipping at one end.
+    'exasperated': eye(88, 114, 14, (1, -8), 0.5) + eye(136, 114, 14, (1, -8), 0.5)
+                   + brow(72, 90, 100, 88, 0) + brow(124, 80, 152, 74, 6)
+                   + path('M 96 164 L 126 162 Q 134 162 136 170', 'none', 'stroke-width="7"') + sweat(56, 80),
+    # Strained: eyes clenched into angry slants, teeth gritted in a frown, sweating.
+    'strained': path('M 74 106 L 100 116', 'none', 'stroke-width="7"') + path('M 124 116 L 150 106', 'none', 'stroke-width="7"')
+                + path('M 70 78 L 100 90', 'none', 'stroke-width="7"') + path('M 124 90 L 154 78', 'none', 'stroke-width="7"')
+                + grimace(112, 164, 52, 26) + sweat(56, 84) + jolt(['M 38 60 L 50 70', 'M 28 88 L 44 92']),
+}
+for mood, face in fracture_faces.items():
+    svg(f'body_fracture_{mood}', fract + face)
+
+# Self-doubt, for the small broken-off pieces.
+splinter_faces = {
+    # Unsure: glancing sideways, one brow up, a small wavering mouth, sweating.
+    'unsure': eye(88, 114, 15, (-6, 2), 0.45) + eye(136, 114, 15, (-6, 2), 0.45)
+              + brow(72, 88, 102, 86, 0) + brow(122, 80, 152, 72, 5)
+              + wobble(106, 162, 26, 3) + sweat(58, 72),
+    # Timid: looking down under sad lids, eyes welling up, a small frown.
+    'timid': eye(88, 116, 14, (-1, 6)) + lid(88, 116, 14, 2, -7, FRACT)
+             + eye(136, 116, 14, (-1, 6)) + lid(136, 116, 14, -7, 2, FRACT)
+             + brow(72, 92, 100, 84, -3) + brow(124, 84, 152, 92, -3)
+             + glassy + frown(112, 166, 22, 8, 6),
+    # Shrinking: big wet eyes looking up, brows pinched, biting its lip.
+    'shrinking': eye(88, 112, 16, (0, -4), 0.62) + eye(136, 112, 16, (0, -4), 0.62)
+                 + brow(72, 86, 100, 76, -4) + brow(124, 76, 152, 86, -4)
+                 + grimace(112, 164, 32, 16) + sweat(58, 74),
+}
+for mood, face in splinter_faces.items():
+    svg(f'body_splinter_{mood}', fract + face)
 
 pts = []
 import math
@@ -307,21 +352,52 @@ for i in range(24):
     pts.append(f'{128 + math.cos(a) * r:.1f},{128 + math.sin(a) * r:.1f}')
 flare = f'<polygon points="{" ".join(pts)}" fill="#E7876F"/>' + circle(128, 128, 75, ORANGE)
 flare += path('M 65 121 Q 71 85 99 76', 'none', f'stroke="{CREAM}" stroke-width="7"')
-# Furious: glaring down hard, yelling, with an anger mark.
-svg('body_flare', flare
-    + eye(105, 118, 13, (3, 5)) + lid(105, 118, 13, -10, 3, ORANGE, 7)
-    + eye(151, 118, 13, (-3, 5)) + lid(151, 118, 13, 3, -10, ORANGE, 7)
-    + shout(128, 163, 42, 26) + vein(170, 82, 0.9))
+# Anger, for the one that explodes.
+flare_faces = {
+    # Furious: glaring down hard, yelling.
+    'furious': eye(105, 118, 13, (3, 5)) + lid(105, 118, 13, -10, 3, ORANGE, 7)
+               + eye(151, 118, 13, (-3, 5)) + lid(151, 118, 13, 3, -10, ORANGE, 7)
+               + shout(128, 163, 42, 26),
+    # Seething: lids slammed down, teeth bared in a wide frown.
+    'seething': eye(105, 120, 13, (3, 5)) + lid(105, 120, 13, -12, 6, ORANGE, 8)
+                + eye(151, 120, 13, (-3, 5)) + lid(151, 120, 13, 6, -12, ORANGE, 8)
+                + grimace(128, 166, 56, 26),
+    # Roaring: eyes blazing wide, brows down hard, mouth open as far as it goes.
+    'roaring': eye(105, 116, 15, (0, 0), 0.26) + eye(151, 116, 15, (0, 0), 0.26)
+               + path('M 84 88 L 120 102', 'none', 'stroke-width="9"') + path('M 136 102 L 172 88', 'none', 'stroke-width="9"')
+               + shout(128, 168, 54, 40),
+}
+for mood, face in flare_faces.items():
+    svg(f'body_flare_{mood}', flare + face)
 
 BUL = '#769CB4'; BUL_SHADE = '#52758F'
 bul = path('M 37 61 Q 127 5 222 63 L 215 165 Q 169 224 125 239 Q 77 226 36 165 Z', BUL)
 bul += path('M 132 26 L 218 67 L 210 162 Q 173 211 132 231 Z', BUL_SHADE, 'stroke="none"')
 bul += path('M 56 76 Q 130 40 200 78', 'none', f'stroke="{CREAM}" stroke-width="10"')
-# Stubborn: thick flat brows pressed right down, pouting.
-svg('body_bulwark', bul
-    + eye(99, 122, 13, (2, 4)) + lid(99, 122, 13, -3, -3, BUL, 9)
-    + eye(154, 122, 13, (-2, 4)) + lid(154, 122, 13, -3, -3, BUL_SHADE, 9)
-    + pout(127, 170, 40))
+shame_cheeks = ''
+for cx in (78, 178):
+    shame_cheeks += f'<ellipse cx="{cx}" cy="152" rx="17" ry="9" fill="{BLUSH}" stroke="none" opacity=".6"/>'
+    for dx in (-7, 0, 7):
+        shame_cheeks += path(f'M {cx + dx + 3} 147 L {cx + dx - 3} 157', 'none', f'stroke="{BERRY}" stroke-width="2.5" opacity=".7"')
+# Shame, for the one that hides behind its armour.
+bulwark_faces = {
+    # Hiding: looking down and away, brows pinched up, cheeks burning, a wavering mouth.
+    'hiding': eye(99, 124, 13, (-6, 6)) + lid(99, 124, 13, 2, -6, BUL)
+              + eye(154, 124, 13, (-6, 6)) + lid(154, 124, 13, -6, 2, BUL_SHADE)
+              + brow(84, 100, 112, 92, -3) + brow(141, 92, 169, 100, -3)
+              + shame_cheeks + wobble(127, 172, 30, 3),
+    # Cringing: eyes shut and drooping, teeth bared in a frown, sweating.
+    'cringing': path('M 86 128 L 112 120', 'none', 'stroke-width="7"') + path('M 141 120 L 167 128', 'none', 'stroke-width="7"')
+                + brow(84, 96, 112, 84, -3) + brow(141, 84, 169, 96, -3)
+                + grimace(127, 172, 44, 22) + sweat(198, 96),
+    # Ashamed: staring at the floor, a tear, a small tight frown.
+    'ashamed': eye(99, 126, 13, (0, 7)) + lid(99, 126, 13, 3, -5, BUL)
+               + eye(154, 126, 13, (0, 7)) + lid(154, 126, 13, -5, 3, BUL_SHADE)
+               + brow(84, 102, 112, 94, -3) + brow(141, 94, 169, 102, -3)
+               + tear(88, 142, 0.8) + frown(127, 174, 24, 10, 6),
+}
+for mood, face in bulwark_faces.items():
+    svg(f'body_bulwark_{mood}', bul + face)
 
 # --- Bosses ------------------------------------------------------------------
 
@@ -330,25 +406,39 @@ for a in (0, 90, 180, 270):
     coil += f'<g transform="rotate({a} 128 128)">' + path('M 107 76 Q 51 15 34 46 Q 17 77 85 111', BERRY) + circle(42, 53, 12, ORANGE) + '</g>'
 COIL = '#F0CBE0'
 coil += circle(128, 128, 71, '#C69AC9') + circle(128, 128, 51, COIL)
-# Sneering: one eye narrowed, one brow cocked up, lip curled with a fang.
+nose_scrunch = path('M 117 134 Q 123 130 129 134', 'none', 'stroke-width="3"') + path('M 123 140 Q 129 136 135 140', 'none', 'stroke-width="3"')
+# Disgust. Disgusted: one eye narrowed, one brow cocked, nose scrunched, lip curled.
 svg('boss_coil', coil
     + eye(109, 118, 12, (3, 3)) + lid(109, 118, 12, -2, -2, COIL)
     + eye(149, 116, 12, (-2, 3)) + brow(137, 94, 161, 92, 8)
-    + snarl(129, 154, 34))
+    + nose_scrunch + snarl(129, 156, 34))
+# Revolted: both eyes squeezed down to slits, brows twisted, a queasy wavering mouth.
+svg('boss_coil_2', coil
+    + eye(109, 118, 12, (2, 3)) + lid(109, 118, 12, 2, -2, COIL)
+    + eye(149, 116, 12, (-2, 3)) + lid(149, 116, 12, -2, 2, COIL)
+    + path('M 96 100 L 120 106', 'none', 'stroke-width="6"') + path('M 138 104 L 162 94', 'none', 'stroke-width="6"')
+    + nose_scrunch + wobble(129, 158, 40, 5))
 
 BROOD = '#A8C596'
 brood = ''.join(circle(x, y, r, '#84B0A0') for x, y, r in [(49, 77, 30), (207, 67, 29), (211, 191, 28), (43, 185, 33)])
 brood += path('M 52 91 Q 50 36 126 29 Q 211 41 212 124 Q 224 207 136 230 Q 45 227 40 149 Z', BROOD)
 brood += path('M 48 163 Q 128 218 206 155 Q 193 223 127 226 Q 69 219 48 163', '#769F8C', 'stroke="none"')
 brood += circle(63, 132, 11, '#769F8C', 'none') + circle(189, 134, 14, '#769F8C', 'none')
-# Wailing: eyes screwed shut, tears pouring, mouth wide open.
+# Grief. Mourning: eyes cast down, tears falling, a trembling frown.
 svg('boss_brood', brood
+    + eye(101, 112, 17, (0, 7)) + lid(101, 112, 17, 2, -9, BROOD)
+    + eye(158, 112, 17, (0, 7)) + lid(158, 112, 17, -9, 2, BROOD)
+    + brow(80, 84, 116, 76, -4) + brow(142, 76, 178, 84, -4)
+    + tear(92, 138, 1.1) + tear(168, 138, 1.1)
+    + wobble(129, 178, 52, 5))
+# Wailing: eyes screwed shut, tears pouring, mouth wide open.
+svg('boss_brood_2', brood
     + squeezed(101, 110, 18, 1) + squeezed(158, 110, 18, -1)
     + brow(80, 84, 116, 78, 5) + brow(142, 78, 178, 84, 5)
     + tear(86, 128, 1.2) + tear(173, 128, 1.2)
     + wail(129, 172, 64, 40))
 
-# The Black Hole keeps its eclipse look; the face sits on the dark core, glaring.
+# The Black Hole keeps its eclipse look; its face sits on the dark core.
 hole = f'<g transform="rotate(-18 128 128)">'
 hole += f'<ellipse cx="128" cy="134" rx="119" ry="44" fill="{BERRY}" stroke-width="7"/>'
 hole += f'<ellipse cx="128" cy="128" rx="108" ry="32" fill="{ORANGE}" stroke="none"/>'
@@ -357,13 +447,20 @@ hole += path('M 67 107A63 63 0 0 1 188 96', 'none', f'stroke="{CREAM}" stroke-wi
 hole += path(f'M 16 131Q55 179 128 173Q209 171 240 132Q200 151 127 153Q53 155 16 131Z', ORANGE, 'stroke-width="5"')
 hole += path('M 32 139Q129 181 224 139', 'none', f'stroke="{CREAM}" stroke-width="8"')
 hole += path('M 66 193L92 199M184 49L202 57', 'none', f'stroke="{BERRY}" stroke-width="8"')
-# Glowing slit eyes, slanted down toward the middle, and a jagged grimace.
-hole += path('M 86 104 Q 104 94 122 112 Q 102 118 86 104 Z', ORANGE, 'stroke="none"')
-hole += path('M 170 104 Q 152 94 134 112 Q 154 118 170 104 Z', ORANGE, 'stroke="none"')
-hole += circle(108, 108, 4, CREAM, 'none') + circle(148, 108, 4, CREAM, 'none')
-hole += path('M 98 146 L 108 136 L 118 145 L 128 135 L 138 145 L 148 136 L 158 146 Q 128 132 98 146 Z', CREAM, 'stroke="none"')
-hole += '</g>'
-svg('boss_black_hole', hole)
+# Hopelessness. Empty: glowing eyes that droop at the outer corners, dim pupils
+# sunk low, and a long thin mouth sagging at both ends.
+empty = path('M 84 112 Q 100 96 122 102 Q 106 116 84 112 Z', ORANGE, 'stroke="none"')
+empty += path('M 172 112 Q 156 96 134 102 Q 150 116 172 112 Z', ORANGE, 'stroke="none"')
+empty += circle(106, 109, 3.5, CREAM, 'none') + circle(150, 109, 3.5, CREAM, 'none')
+empty += path('M 94 152 Q 128 136 162 152', 'none', f'stroke="{CREAM}" stroke-width="6"')
+svg('boss_black_hole', hole + empty + '</g>')
+# Despairing: eyes sagging almost shut, glowing tears, a mouth that has given up.
+despair = path('M 84 114 Q 102 104 122 106 Q 104 114 84 114 Z', ORANGE, 'stroke="none"')
+despair += path('M 172 114 Q 154 104 134 106 Q 152 114 172 114 Z', ORANGE, 'stroke="none"')
+despair += path('M 96 118 Q 100 128 96 134 Q 92 128 96 118 Z', ORANGE, 'stroke="none"')
+despair += path('M 160 118 Q 164 128 160 134 Q 156 128 160 118 Z', ORANGE, 'stroke="none"')
+despair += path('M 98 156 Q 128 132 158 156 Q 128 146 98 156 Z', CREAM, 'stroke="none"')
+svg('boss_black_hole_2', hole + despair + '</g>')
 
 # --- The planet: the only happy face out here ------------------------------------
 
@@ -545,30 +642,34 @@ shut_sad = path('M 101 121 Q 113 127 125 121', 'none', 'stroke-width="6"') + pat
 def moods(skin):
     """Each mood as (eyes, everything else), so the blink can swap just the eyes."""
     return {
-        'glum': (eye(113, 118, 13, (0, 6)) + lid(113, 118, 13, 2, -8, skin) + eye(159, 114, 13, (0, 6)) + lid(159, 114, 13, -8, 2, skin),
+        # Forlorn: eyes drooping at the outer corners, looking down, a plain frown.
+        'forlorn': (eye(113, 118, 13, (0, 6)) + lid(113, 118, 13, 2, -8, skin) + eye(159, 114, 13, (0, 6)) + lid(159, 114, 13, -8, 2, skin),
                  brow(98, 90, 122, 84, -2) + brow(150, 80, 174, 86, -2) + frown(136, 160, 34, 12)),
         'teary': (eye(113, 116, 14, (1, 5), 0.6) + eye(159, 112, 14, (1, 5), 0.6),
                   brow(97, 88, 121, 80, -3) + brow(151, 76, 175, 84, -3) + tear(101, 136) + wobble(136, 160, 34, 4)),
-        'sulking': (eye(113, 116, 13, (-5, 5)) + lid(113, 116, 13, -1, -1, skin) + eye(159, 112, 13, (-5, 5)) + lid(159, 112, 13, -1, -1, skin),
+        # Moping: half-shut eyes turned away, mouth pushed to one side.
+        'moping': (eye(113, 116, 13, (-5, 5)) + lid(113, 116, 13, -1, -1, skin) + eye(159, 112, 13, (-5, 5)) + lid(159, 112, 13, -1, -1, skin),
                     path('M 120 162 Q 138 154 156 164', 'none', 'stroke-width="7"')),
-        # Fed up and tired: heavy lids, bags under the eyes, a flat line of a mouth.
-        'sleepy': (eye(113, 118, 13, (0, 7)) + lid(113, 118, 13, 4, 4, skin) + eye(159, 114, 13, (0, 7)) + lid(159, 114, 13, 4, 4, skin),
+        # Weary of being alone: heavy lids, bags under the eyes, a flat line of a mouth.
+        'weary': (eye(113, 118, 13, (0, 7)) + lid(113, 118, 13, 4, 4, skin) + eye(159, 114, 13, (0, 7)) + lid(159, 114, 13, 4, 4, skin),
                    path('M 101 141 Q 113 147 125 141', 'none', 'stroke-width="3"') + path('M 147 137 Q 159 143 171 137', 'none', 'stroke-width="3"')
                    + path('M 124 165 L 150 163', 'none', 'stroke-width="6"')),
-        # Nervous: eyes darting sideways, brows up, a sweat drop, a shaky mouth.
-        'nervous': (eye(113, 116, 13, (6, 2), 0.5) + eye(159, 112, 13, (6, 2), 0.5),
+        # Lost: eyes darting sideways, brows up, a sweat drop, a shaky mouth.
+        'lost': (eye(113, 116, 13, (6, 2), 0.5) + eye(159, 112, 13, (6, 2), 0.5),
                     worried + sweat(188, 86) + wobble(136, 162, 28, 3)),
-        # Pouting: big pleading eyes looking up, bottom lip pushed out.
-        'pouty': (eye(113, 116, 14, (0, -3), 0.62) + eye(159, 112, 14, (0, -3), 0.62),
+        # Longing: big pleading eyes looking up, bottom lip pushed out.
+        'longing': (eye(113, 116, 14, (0, -3), 0.62) + eye(159, 112, 14, (0, -3), 0.62),
                   worried + pout(136, 158, 30)),
         # Sniffly: droopy eyes, a pink nose and a drip.
         'sniffly': (eye(113, 118, 13, (0, 5)) + lid(113, 118, 13, 0, -6, skin) + eye(159, 114, 13, (0, 5)) + lid(159, 114, 13, -6, 0, skin),
                     f'<ellipse cx="136" cy="140" rx="10" ry="7" fill="{BLUSH}" stroke="none"/>'
                     + tear(143, 145, 0.55) + frown(134, 168, 24, 8, 6)),
-        # Grumbling: flat heavy brows, half-shut eyes, a wavy muttering mouth.
-        'grumbling': (eye(113, 118, 13, (0, 4)) + lid(113, 118, 13, -3, -3, skin) + eye(159, 114, 13, (0, 4)) + lid(159, 114, 13, -3, -3, skin),
-                      path('M 97 96 L 126 97', 'none', 'stroke-width="8"') + path('M 146 93 L 175 92', 'none', 'stroke-width="8"')
-                      + wobble(136, 163, 42, 5)),
+        # Wistful: gazing up and away, brows gently pinched, eyes welling, a small frown.
+        'wistful': (eye(113, 116, 13, (-5, -4), 0.5) + eye(159, 112, 13, (-5, -4), 0.5),
+                    brow(98, 88, 122, 82, -2) + brow(150, 78, 174, 84, -2)
+                    + f'<ellipse cx="113" cy="132" rx="9" ry="3" fill="{TEAR}" stroke="none"/>'
+                    + f'<ellipse cx="159" cy="128" rx="9" ry="3" fill="{TEAR}" stroke="none"/>'
+                    + frown(134, 164, 22, 8, 6)),
     }
 
 
@@ -580,11 +681,6 @@ for rock, (base, _) in ROCKS.items():
 # Reactions. Each Drifter has its own fear face (its mood's) and one shocked face of
 # four, so a crowd reacting at once still reacts in different ways.
 high_worry = brow(96, 84, 122, 76, -3) + brow(150, 74, 176, 82, -3)
-
-
-def jolt(lines):
-    """Short strokes flying off the head: the flinch of a sudden fright."""
-    return ''.join(path(d, 'none', 'stroke-width="5"') for d in lines)
 
 
 def spiral(x, y, r):
@@ -609,36 +705,36 @@ def shiny(x, y, r):
 # around you never wears one face. Drawn to differ in outline at play size, not
 # just in small details.
 scared_faces = {
-    # Glum dreads it: wide wet eyes, a big wavering frown.
-    'fear_glum': eye(113, 114, 15, (0, 3), 0.3) + eye(159, 110, 15, (0, 3), 0.3) + high_worry
+    # Forlorn dreads it: wide wet eyes, a big wavering frown.
+    'fear_forlorn': eye(113, 114, 15, (0, 3), 0.3) + eye(159, 110, 15, (0, 3), 0.3) + high_worry
                  + f'<ellipse cx="113" cy="131" rx="11" ry="3.5" fill="{TEAR}" stroke="none"/>'
                  + f'<ellipse cx="159" cy="127" rx="11" ry="3.5" fill="{TEAR}" stroke="none"/>'
                  + path('M 108 174 Q 136 142 164 174 Q 150 164 136 166 Q 122 164 108 174 Z', INK, 'stroke-width="5"'),
     # Teary bawls: eyes screwed shut, a huge wail, tears everywhere.
     'fear_teary': squeezed(113, 116, 14, 1) + squeezed(159, 112, 14, -1) + high_worry
                   + wail(136, 168, 50, 34) + tear(92, 128, 1.2) + tear(182, 124, 1.2) + tear(86, 156, 0.8),
-    # Sulking grimaces: eyes narrowed under low brows, teeth bared in a frown, sweating.
-    'fear_sulking': eye(113, 118, 12, (0, 1), 0.42) + eye(159, 114, 12, (0, 1), 0.42)
+    # Moping grimaces: eyes narrowed under low brows, teeth bared in a frown, sweating.
+    'fear_moping': eye(113, 118, 12, (0, 1), 0.42) + eye(159, 114, 12, (0, 1), 0.42)
                     + brow(97, 100, 126, 93, -2) + brow(146, 91, 175, 97, -2)
                     + grimace(140, 164, 50, 22) + sweat(190, 90),
-    # Sleepy is jolted wide awake: enormous eyes, a tiny o, shock lines.
-    'fear_sleepy': eye(113, 112, 18, (0, 0), 0.2) + eye(159, 108, 18, (0, 0), 0.2)
+    # Weary is jolted wide awake: enormous eyes, a tiny o, shock lines.
+    'fear_weary': eye(113, 112, 18, (0, 0), 0.2) + eye(159, 108, 18, (0, 0), 0.2)
                    + brow(96, 78, 124, 70, 6) + brow(146, 68, 174, 74, 6) + o_mouth(136, 170, 7)
                    + jolt(['M 118 36 L 122 52', 'M 142 32 L 142 48', 'M 166 36 L 162 52']),
-    # Nervous goes to pieces: spiral eyes, a wobbling mouth, sweat both sides.
-    'fear_nervous': spiral(113, 114, 15) + spiral(159, 110, 15)
+    # Lost goes to pieces: spiral eyes, a wobbling mouth, sweat both sides.
+    'fear_lost': spiral(113, 114, 15) + spiral(159, 110, 15)
                     + wobble(136, 164, 46, 6) + sweat(192, 84) + sweat(78, 96),
-    # Pouty begs: huge shiny eyes, a trembling lip, one tear.
-    'fear_pouty': shiny(113, 114, 17) + shiny(159, 110, 17) + high_worry + pout(136, 162, 30)
+    # Longing begs: huge shiny eyes, a trembling lip, one tear.
+    'fear_longing': shiny(113, 114, 17) + shiny(159, 110, 17) + high_worry + pout(136, 162, 30)
                   + tear(98, 136, 0.8) + jolt(['M 112 186 L 116 182', 'M 160 186 L 156 182']),
     # Sniffly screams: wide eyes with pin-prick pupils, a howling mouth, a runny tear.
     'fear_sniffly': eye(113, 114, 15, (0, 0), 0.22) + eye(159, 110, 15, (0, 0), 0.22) + high_worry
                     + wail(136, 170, 46, 40) + tear(94, 132, 0.9)
                     + jolt(['M 118 38 L 122 54', 'M 154 34 L 152 50']),
-    # Grumbling clenches: brows down hard, eyes wide, teeth bared in a frown, fuming.
-    'fear_grumbling': eye(113, 116, 14, (0, 0), 0.35) + eye(159, 112, 14, (0, 0), 0.35)
-                      + path('M 96 94 L 126 100', 'none', 'stroke-width="8"') + path('M 146 98 L 176 90', 'none', 'stroke-width="8"')
-                      + grimace(136, 166, 58, 26) + vein(190, 70, 0.8),
+    # Wistful trembles: eyes wide and staring up, tears spilling, a shaking mouth.
+    'fear_wistful': eye(113, 112, 15, (0, -2), 0.25) + eye(159, 108, 15, (0, -2), 0.25) + high_worry
+                    + wobble(136, 166, 36, 5) + tear(92, 128) + tear(180, 124)
+                    + jolt(['M 118 38 L 122 54', 'M 154 34 L 152 50']),
 }
 shocked_faces = {
     # Gasp: brows flying up, round eyes, mouth a big O.

@@ -45,9 +45,9 @@ public partial class Body : CharacterBody2D, IShootable
 	/// a body — the spawner, a Fracture's splinters, a boss's broodlings — gets
 	/// the same correct face instead of only the spawner's own spawns being dressed.
 	///
-	/// Each kind has its own bad mood (see tools/make_moods.py). The kinds seen
-	/// most often have a few versions of it, picked at random per body, so a
-	/// crowd of them does not look like one face copied.
+	/// Each kind wears one negative emotion, more intense the more dangerous the
+	/// kind (see tools/make_moods.py), in a few expressions picked at random per
+	/// body, so a crowd of them does not look like one face copied.
 	/// </summary>
 	private static Dictionary<BodyKind, Texture2D[]> faceTextures;
 
@@ -55,13 +55,18 @@ public partial class Body : CharacterBody2D, IShootable
 	private static readonly Dictionary<BodyKind, string[]> FaceFiles = new()
 	{
 		[BodyKind.Drifter] = new[] { "body_drifter", "body_drifter_2", "body_drifter_3" },
-		[BodyKind.Shard] = Mix("body_shard", new[] { "wedge", "sliver", "chipped" }, new[] { "furious", "snarl", "yell", "scowl" }),
-		[BodyKind.Planetoid] = new[] { "body_planetoid", "body_planetoid_2" },
-		[BodyKind.Fracture] = new[] { "body_fracture" },
-		[BodyKind.Splinter] = new[] { "body_fracture_mini", "body_fracture_mini_2", "body_fracture_mini_3" },
-		[BodyKind.Flare] = new[] { "body_flare" },
-		[BodyKind.Bulwark] = new[] { "body_bulwark" }
+		// Irritability, in three shapes.
+		[BodyKind.Shard] = Mix("body_shard", new[] { "wedge", "sliver", "chipped" }, new[] { "huffy", "twitchy", "snappy", "scowling" }),
+		// Self-doubt, frustration, shame, resentment and anger.
+		[BodyKind.Splinter] = Faces("body_splinter", "unsure", "timid", "shrinking"),
+		[BodyKind.Fracture] = Faces("body_fracture", "fed_up", "exasperated", "strained"),
+		[BodyKind.Bulwark] = Faces("body_bulwark", "hiding", "cringing", "ashamed"),
+		[BodyKind.Planetoid] = Faces("body_planetoid", "grudging", "bitter", "brooding"),
+		[BodyKind.Flare] = Faces("body_flare", "furious", "seething", "roaring")
 	};
+
+	/// <summary>One file per expression: <c>{prefix}_{mood}</c>.</summary>
+	private static string[] Faces(string prefix, params string[] moods) => System.Array.ConvertAll(moods, mood => $"{prefix}_{mood}");
 
 	/// <summary>Every shape wearing every face: <c>{prefix}_{shape}_{mood}</c>.</summary>
 	private static string[] Mix(string prefix, string[] shapes, string[] moods)

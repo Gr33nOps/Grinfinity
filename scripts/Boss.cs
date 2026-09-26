@@ -32,6 +32,8 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 	protected bool defeated;
 	private Tween hitFlash;
 	protected Sprite2D Art;
+	/// <summary>Its second face, harsher than the first, worn once it is below half health.</summary>
+	private Texture2D harsher;
 	private float visualTime;
 	protected float Windup;
 	protected Player World;
@@ -50,6 +52,7 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 		foreach (Node child in GetChildren()) if (child is Polygon2D polygon) polygon.Hide();
 		string asset = this is BossCoil ? "coil" : this is BossBrood ? "brood" : "black_hole";
 		Art = new Sprite2D { Texture = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}.svg"), Scale = Vector2.One * ArtScale }; AddChild(Art);
+		harsher = GD.Load<Texture2D>($"res://art/cosmic/boss_{asset}_2.svg");
 		// The hit circle grows with the art, so dashes, shots and Novas land
 		// where the boss looks to be. The shape is copied first: the scene's
 		// own resource is shared by every instance.
@@ -89,6 +92,10 @@ public abstract partial class Boss : CharacterBody2D, IShootable
 
 		if (health > 0)
 		{
+			// Hurt, its emotion deepens: disgust to revulsion, mourning to wailing,
+			// emptiness to despair.
+			if (HealthFraction < 0.5f && Art.Texture != harsher)
+				Art.Texture = harsher;
 			FlashHit();
 			OnDamaged();
 			return false;

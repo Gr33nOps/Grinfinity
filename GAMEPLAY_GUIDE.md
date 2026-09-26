@@ -148,6 +148,21 @@ Hints only show the controls you are using. Touch the keyboard or mouse and they
 
 ## Faces
 
-Only your planet is happy, and each of the twelve planets has its own happy face: Embertide grins, Driftlight is calm, Palefrost is shy, Cinderbloom shows its teeth, Hollowmere looks sly, Duskwarden looks confident, Verdant Halo is starry-eyed, Ashen Coil wears sunglasses, Glasswake is delighted, Moltencrown winks, Voidkin sticks its tongue out and Starforged beams. Every enemy has its own bad mood: Drifters are unhappy in eight different ways (glum, teary, sulking, sleepy, nervous, pouting, sniffly and grumbling), on three rock shapes in three colours mixed at random, so a crowd of them never looks cloned. They blink, look scared while they are close to your planet, and look shocked for a moment when one next to them pops. Each panics in its own mood's way (a glum one dreads, a teary one bawls, a sulking one grimaces, a sleepy one jolts awake, a nervous one gets spiral eyes, a pouting one pleads, a sniffly one screams, a grumbling one clenches its teeth), at its own distance from you, and about one in five never panics at all. When a neighbour pops it shows one of four shocked faces (gasping, jaw-dropped, a double take with one eye popping, flinching). That is all looks: every Drifter has the same size, speed and toughness. Shards angry (three shapes, a leaning wedge, a tall sliver and a chipped one, each with one of four angry faces at random, all the same orange), Planetoids grumpy (two), Fractures worried and their Splinters scared, bawling or gritting their teeth (one of three at random, same rock and colour), Flares furious and Bulwarks stubborn. The Coil sneers, the Brood wails and the Black Hole glares. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.
+Only your planet is happy, and each of the twelve planets has its own happy face: Embertide grins, Driftlight is calm, Palefrost is shy, Cinderbloom shows its teeth, Hollowmere looks sly, Duskwarden looks confident, Verdant Halo is starry-eyed, Ashen Coil wears sunglasses, Glasswake is delighted, Moltencrown winks, Voidkin sticks its tongue out and Starforged beams. Every enemy wears one negative emotion, and the more dangerous the enemy, the more intense its emotion: Drifters are lonely, Splinters doubt themselves, Shards are irritable, Fractures are frustrated, Bulwarks are ashamed, Planetoids are resentful and Flares are angry. The bosses carry the heaviest: the Coil is disgusted, the Brood grieves and the Black Hole is hopeless. Each emotion comes in a few expressions picked at random, so a crowd never looks cloned, and no enemy ever looks happy.
+
+| Enemy | Emotion | Expressions |
+|---|---|---|
+| Drifter | Loneliness | forlorn, teary, moping, weary, lost, longing, sniffly, wistful |
+| Splinter | Self-doubt | unsure, timid, shrinking |
+| Shard | Irritability | huffy, twitchy, snappy, scowling (on three shapes) |
+| Fracture | Frustration | fed up, exasperated, strained |
+| Bulwark | Shame | hiding, cringing, ashamed |
+| Planetoid | Resentment | grudging, bitter, brooding |
+| Flare | Anger | furious, seething, roaring |
+| The Coil | Disgust | disgusted, then revolted below half health |
+| The Brood | Grief | mourning, then wailing below half health |
+| The Black Hole | Hopelessness | empty, then despairing below half health |
+
+Drifters come on three rock shapes in three colours mixed at random. They blink, look scared while they are close to your planet, and look shocked for a moment when one next to them pops. Each panics in its own way (a forlorn one dreads, a teary one bawls, a moping one grimaces, a weary one jolts awake, a lost one gets spiral eyes, a longing one pleads, a sniffly one screams, a wistful one trembles), at its own distance from you, and about one in five never panics at all. When a neighbour pops it shows one of four shocked faces (gasping, jaw-dropped, a double take with one eye popping, flinching). That is all looks: every enemy of a kind has the same size, speed and toughness. Each boss is bigger than the last: the Brood is 1.3 times the size of the Coil and the Black Hole 1.6 times.
 
 When an enemy is destroyed it pops in its own colour only: a flash, a ring and a few little stars, all shades of the thing that died (a Drifter in its own rock's colour), so a whole crowd popping at once stays clean and easy to read.

@@ -2,12 +2,13 @@ using Godot;
 
 /// <summary>
 /// Makes a crowd of Drifters look like a crowd rather than one rock stamped out
-/// thirty times. Each one is dressed from parts (one of three rock shapes in one
-/// of three colours, with one of eight unhappy moods) and then its face lives a
-/// little: it blinks now and then, looks scared while it is close to the planet,
-/// and looks shocked for a moment when a Drifter next to it pops. Its fear is its
-/// mood's own (a glum one dreads, a sleepy one jolts awake, a nervous one gets
-/// spiral eyes), each panics at its own distance, and a few never panic at all.
+/// thirty times. Drifters are lonely: each one is dressed from parts (one of
+/// three rock shapes in one of three colours, with one of eight shades of
+/// loneliness) and then its face lives a little: it blinks now and then, looks
+/// scared while it is close to the planet, and looks shocked for a moment when a
+/// Drifter next to it pops. Its fear is its mood's own (a forlorn one dreads, a
+/// weary one jolts awake, a lost one gets spiral eyes), each panics at its own
+/// distance, and a few never panic at all.
 ///
 /// Looks only. The body's size, hitbox, speed and health are untouched, and the
 /// picks stay off the run's seeded generator.
@@ -17,7 +18,7 @@ public partial class DrifterFace : Sprite2D
 	private static readonly string[] Shapes = { "jagged", "pebble", "lumpy" };
 	private static readonly string[] Rocks = { "rose", "stone", "clay" };
 	private static readonly Color[] RockColours = { new("bc7f83"), new("a6979b"), new("c9a07e") };
-	private static readonly string[] Moods = { "glum", "teary", "sulking", "sleepy", "nervous", "pouty", "sniffly", "grumbling" };
+	private static readonly string[] Moods = { "forlorn", "teary", "moping", "weary", "lost", "longing", "sniffly", "wistful" };
 
 	/// <summary>
 	/// How close to the planet a Drifter gets before it panics differs from one
