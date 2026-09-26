@@ -150,6 +150,11 @@ public partial class ReleaseQa : Node
         Check(core.Banked == Balance.MaxBankedUpgrades && Mathf.IsEqualApprox(core.CoreFraction, 1f), "no more than three bars are saved");
         Check(core.BuyWithCore(RunUpgradeId.FireRate) && core.LevelOf(RunUpgradeId.FireRate) == 1 && core.Banked == 2, "a saved bar buys one rank");
         Check(core.BuyWithCore(RunUpgradeId.FireRate) && core.BuyWithCore(RunUpgradeId.SpreadShot) && !core.CoreReady, "three saved bars buy three upgrades");
+        Check(Mathf.IsEqualApprox(Mathf.Pow(Balance.FireRatePerLevel, RunUpgrades.FireRate.MaxLevel), 0.84f * 0.84f * 0.84f, 0.01f), "two ranks of Faster Shots do what three used to");
+        core.AddCore(core.CoreNeeded * 0.9f);
+        float nearlyFull = core.Core;
+        core.FillCore();
+        Check(core.Banked == 1 && core.Core > nearlyFull * 0.8f, "a CORE Burst saves a whole upgrade and keeps the bar's progress");
         Check(core.CoreNeeded > firstBar, "each bar needs more CORE than the last");
         Check(Pickups.CoreFor(BodyKind.Planetoid) > Pickups.CoreFor(BodyKind.Drifter) && Pickups.CoreFor(BodyKind.Drifter) > 0f, "every kill gives CORE, tougher ones more");
         core.FillCore();

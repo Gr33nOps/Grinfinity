@@ -33,11 +33,12 @@ public partial class GameSettings : Node
 
 	// v2 moved rapid fire off Q. v3 adds mode and difficulty. v4 adds every
 	// M7 option and accessibility toggle. v5 moves Nova's default from R to Q.
+	// v6 turns damage numbers off by default; kills show CORE motes instead.
 	// Bumping the version lets
 	// LoadSettings drop the stale bind instead of restoring the key the
 	// migration exists to escape; an older save simply has none of the new
 	// fields on record and falls back to their defaults.
-	private const int SaveVersion = 5;
+	private const int SaveVersion = 6;
 
 	/// <summary>Windowed-mode choices. Fullscreen ignores this and uses the display's own size.</summary>
 	public static readonly (int Width, int Height)[] Resolutions =
@@ -72,7 +73,7 @@ public partial class GameSettings : Node
 	public float UiScale { get; private set; } = 1.0f;
 
 	// --- Accessibility --------------------------------------------------------
-	public bool ShowDamageNumbers { get; private set; } = true;
+	public bool ShowDamageNumbers { get; private set; } = false;
 	/// <summary>Gently pulls gamepad aim toward the nearest body within a narrow cone.</summary>
 	public bool GamepadAimAssist { get; private set; } = false;
 	public bool ColourblindMode { get; private set; } = false;
@@ -421,7 +422,9 @@ public partial class GameSettings : Node
 		VSyncEnabled = SaveStore.Value(config, Section, "vsync", VSyncEnabled).AsBool();
 		FpsCapIndex = Mathf.Clamp(SaveStore.Value(config, Section, "fps_cap_index", FpsCapIndex).AsInt32(), 0, FpsCaps.Length - 1);
 		UiScale = Mathf.Clamp(SaveStore.Value(config, Section, "ui_scale", UiScale).AsSingle(), 0.85f, 1.3f);
-		ShowDamageNumbers = SaveStore.Value(config, Section, "show_damage_numbers", ShowDamageNumbers).AsBool();
+		// Saves from before v6 recorded the old default (on); only a choice made since counts.
+		if (SaveStore.Value(config, Section, "version", 1).AsInt32() >= 6)
+			ShowDamageNumbers = SaveStore.Value(config, Section, "show_damage_numbers", ShowDamageNumbers).AsBool();
 		GamepadAimAssist = SaveStore.Value(config, Section, "gamepad_aim_assist", GamepadAimAssist).AsBool();
 		ColourblindMode = SaveStore.Value(config, Section, "colourblind_mode", ColourblindMode).AsBool();
 		HighContrastOutlines = SaveStore.Value(config, Section, "high_contrast_outlines", HighContrastOutlines).AsBool();

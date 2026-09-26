@@ -150,7 +150,7 @@ public partial class RunState : Node
 	// Read every time they are used, so a pickup takes effect on the next shot.
 
 	/// <summary>Shots come this much closer together. Below 1 is faster.</summary>
-	public float FireIntervalScale => Mathf.Pow(0.84f, LevelOf(RunUpgradeId.FireRate));
+	public float FireIntervalScale => Mathf.Pow(Balance.FireRatePerLevel, LevelOf(RunUpgradeId.FireRate));
 
 	/// <summary>Extra enemies each shot passes through.</summary>
 	public int ExtraPierce => LevelOf(RunUpgradeId.Piercing) switch { 0 => 0, 1 => 1, _ => 3 };
@@ -238,7 +238,11 @@ public partial class RunState : Node
 		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
 	}
 
-	/// <summary>A CORE Burst: the bar is full at once.</summary>
+	/// <summary>
+	/// A CORE Burst: one whole upgrade saved at once, however full the bar was,
+	/// and the progress toward the next one kept. A top-up of whatever was
+	/// missing would make the pickup worth almost nothing to a nearly full bar.
+	/// </summary>
 	public void FillCore()
 	{
 		if (BuildComplete)
@@ -246,7 +250,14 @@ public partial class RunState : Node
 			AddCore(Balance.OverchargeBar);
 			return;
 		}
-		AddCore(Mathf.Max(CoreNeeded - Core, 0.01f));
+		if (Banked >= BankCap)
+			return;
+
+		float progress = Mathf.Clamp(Core / CoreNeeded, 0f, 1f);
+		Banked++;
+		// The next bar is longer; keep the same share of it filled.
+		Core = Banked >= BankCap ? 0f : progress * CoreNeeded;
+		EmitSignal(SignalName.CoreChanged, CoreFraction, CoreReady);
 	}
 
 	/// <summary>Spends one saved bar on one rank of an upgrade.</summary>

@@ -9,7 +9,8 @@ using Godot;
 /// Opened whenever the player likes; buying needs a full CORE bar and takes one
 /// rank. The whole game is paused behind it (see
 /// <see cref="GameManager.OpenUpgradeTree"/>). A node's words are shown in the
-/// readout at the top centre when it is pointed at, so the tree itself stays
+/// readout at the top centre when it is pointed at — a little looping picture
+/// of it at work, its name and a few words — so the tree itself stays
 /// just icons, names and rank pips.
 /// </summary>
 public partial class UpgradeTree : Control
@@ -29,6 +30,7 @@ public partial class UpgradeTree : Control
 	private VBoxContainer rows;
 	private SkillBranches canvas;
 	private TextureRect infoIcon;
+	private UpgradePreview preview;
 	private Label infoName, infoLine;
 	private Button close;
 	private readonly List<SkillNode> nodes = new();
@@ -116,21 +118,29 @@ public partial class UpgradeTree : Control
 	/// </summary>
 	private void BuildReadout()
 	{
-		var readout = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Position = new Vector2(CanvasSize.X * 0.5f - 300, 4), Size = new Vector2(600, 150) };
-		readout.AddThemeConstantOverride("separation", 2);
+		// A little loop showing the upgrade at work, then its name and what it does.
+		var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center, Position = new Vector2(CanvasSize.X * 0.5f - 400, 4), Size = new Vector2(800, 136) };
+		readout.AddThemeConstantOverride("separation", 24);
 		canvas.AddChild(readout);
 
-		var title = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
-		title.AddThemeConstantOverride("separation", 12);
-		readout.AddChild(title);
-		infoIcon = ArcadeSkin.Icon("firerate", 56);
+		preview = new UpgradePreview { CustomMinimumSize = new Vector2(240, 132) };
+		readout.AddChild(preview);
+
+		var words = new VBoxContainer { MouseFilter = MouseFilterEnum.Ignore, Alignment = BoxContainer.AlignmentMode.Center };
+		words.AddThemeConstantOverride("separation", 4);
+		readout.AddChild(words);
+		var title = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+		title.AddThemeConstantOverride("separation", 10);
+		words.AddChild(title);
+		infoIcon = ArcadeSkin.Icon("firerate", 48);
 		title.AddChild(infoIcon);
-		infoName = ArcadeSkin.Label("", 34);
+		infoName = ArcadeSkin.Label("", 32);
 		infoName.VerticalAlignment = VerticalAlignment.Center;
 		title.AddChild(infoName);
 
 		infoLine = ArcadeSkin.Label("", 24);
-		readout.AddChild(infoLine);
+		infoLine.HorizontalAlignment = HorizontalAlignment.Left;
+		words.AddChild(infoLine);
 	}
 
 	private void Refresh(RunState run)
@@ -164,6 +174,7 @@ public partial class UpgradeTree : Control
 		infoName.Text = profile.Name;
 		infoName.AddThemeColorOverride("font_color", profile.Colour);
 		infoLine.Text = profile.Short;
+		preview.Play(profile.Id);
 	}
 
 	private void Buy(SkillNode node)

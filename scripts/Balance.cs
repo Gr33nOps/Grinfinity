@@ -90,7 +90,9 @@ public static class Balance
 	/// <summary>Blinking safety window after the dash stops moving.</summary>
 	public const float DashGrace = 0.4f;
 	/// <summary>Each Dash upgrade level adds this fraction of the base distance.</summary>
-	public const float DashDistancePerLevel = 0.14f;
+	/// <summary>Faster Shots: each rank multiplies the gap between shots by this.</summary>
+	public const float FireRatePerLevel = 0.77f;
+	public const float DashDistancePerLevel = 0.21f;
 	/// <summary>Each Dash upgrade level adds this much grace, in seconds.</summary>
 	public const float DashGracePerLevel = 0.12f;
 	/// <summary>Share of a boss's full health one dash takes. Counted once per dash.</summary>
@@ -100,14 +102,14 @@ public static class Balance
 	public const float OverdriveDuration = 6f;
 	/// <summary>Fire interval multiplier while Overdrive is up. Lower is faster.</summary>
 	public const float OverdriveFireScale = 0.4f;
-	public const float OverdriveFireScalePerLevel = 0.88f;
+	public const float OverdriveFireScalePerLevel = 0.8255f;
 	public const float OverdriveDurationPerLevel = 1.5f;
 	public const int OverdriveDamageMultiplier = 2;
 	public const int OverdriveExtraPierce = 1;
 
 	public const float NovaCooldown = 40f;
 	public const float NovaRadius = 720f;
-	public const float NovaRadiusPerLevel = 0.15f;
+	public const float NovaRadiusPerLevel = 0.225f;
 	/// <summary>How long the blast takes to reach its full radius. Enemies pop as it passes.</summary>
 	public const float NovaExpandTime = 0.4f;
 	/// <summary>Share of a boss's full health one Nova takes.</summary>
@@ -133,7 +135,7 @@ public static class Balance
 	/// <summary>CORE needed for the first upgrade.</summary>
 	public const float CoreFirstBar = 35f;
 	/// <summary>Each later bar needs this much more than the one before.</summary>
-	public const float CoreBarGrowth = 1.32f;
+	public const float CoreBarGrowth = 1.42f;
 	/// <summary>Blinking safety after buying an upgrade, so returning to the fight is never an instant death.</summary>
 	/// <summary>
 	/// Once every upgrade is bought, CORE keeps filling this bar instead, and

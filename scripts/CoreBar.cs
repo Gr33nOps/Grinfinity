@@ -2,8 +2,9 @@ using Godot;
 
 /// <summary>
 /// The CORE bar along the bottom of the HUD. Fills left to right with every
-/// kill and ticks brighter for a moment each time CORE comes in, so even a
-/// single kill shows.
+/// kill, and each time CORE comes in the leading edge of the fill flares with a
+/// few sparks, so even a single kill shows — down here, out of the fight,
+/// rather than anything flying across the screen.
 ///
 /// Full bars are saved, up to three: the pips at the right end count them, and
 /// the bar turns orange and says how many are ready and which button spends
@@ -69,7 +70,7 @@ public partial class CoreBar : Control
 	{
 		float step = (float)delta;
 		time += step;
-		tick = Mathf.Max(0f, tick - step * 5f);
+		tick = Mathf.Max(0f, tick - step * 3f);
 		pop = Mathf.Max(0f, pop - step * 3f);
 		// Eases up to the real value, but snaps down when a bar rolls over.
 		shown = target < shown ? target : Mathf.Lerp(shown, target, 1f - Mathf.Exp(-14f * step));
@@ -87,6 +88,8 @@ public partial class CoreBar : Control
 		DrawStyleBox(Box(ready && !complete ? Full : Track, ready && !complete ? new Color("ffcd85") : Rim, radius, 2), area);
 
 		float width = Mathf.Max((area.Size.X - 6f) * shown, 0f);
+		if (width > 1f && !ready && !complete && tick > 0f)
+			Flare(area.Position + new Vector2(3f + width, area.Size.Y * 0.5f), area.Size.Y);
 		if (width > 1f)
 		{
 			Color fill = complete ? Overcharge
@@ -117,6 +120,19 @@ public partial class CoreBar : Control
 			bool saved = i < banked;
 			DrawCircle(at, r, saved ? ArcadeSkin.Cream : new Color(Track, 0.85f));
 			DrawArc(at, r, 0f, Mathf.Tau, 20, saved ? ArcadeSkin.Ink : new Color(ArcadeSkin.Cream, 0.6f), 2f, true);
+		}
+	}
+
+	/// <summary>A short flare at the fill's edge when CORE comes in: a glow and a few sparks rising.</summary>
+	private void Flare(Vector2 edge, float height)
+	{
+		float age = 1f - tick;
+		DrawCircle(edge, height * (0.5f + 0.4f * age), new Color(Full, 0.35f * tick));
+		for (int i = 0; i < 3; i++)
+		{
+			float side = (i - 1) * 7f;
+			var spark = edge + new Vector2(side, -height * 0.4f - age * height * 0.9f);
+			DrawCircle(spark, 2.2f * tick + 0.4f, new Color(ArcadeSkin.Cream, tick));
 		}
 	}
 

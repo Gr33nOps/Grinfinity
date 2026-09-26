@@ -59,7 +59,7 @@ public static class RunUpgrades
 	public static readonly Profile FireRate = new()
 	{
 		Id = RunUpgradeId.FireRate, Branch = Branch.Gun, Name = TranslationServer.Translate("UPG_FireRate_NAME"),
-		Short = "Shoot faster", Icon = "firerate", Colour = Gun, MaxLevel = 3, BossWeight = 1.2f
+		Short = "Shoot faster", Icon = "firerate", Colour = Gun, MaxLevel = 2, BossWeight = 1.2f
 	};
 
 	public static readonly Profile SpreadShot = new()
@@ -77,7 +77,7 @@ public static class RunUpgrades
 	public static readonly Profile DashReach = new()
 	{
 		Id = RunUpgradeId.DashReach, Branch = Branch.Dash, Name = "DASH REACH",
-		Short = "Dash further", Icon = "dash", Colour = Move, MaxLevel = 3
+		Short = "Dash further", Icon = "dash", Colour = Move, MaxLevel = 2
 	};
 
 	public static readonly Profile DashBlink = new()
@@ -89,7 +89,7 @@ public static class RunUpgrades
 	public static readonly Profile OverdrivePower = new()
 	{
 		Id = RunUpgradeId.OverdrivePower, Branch = Branch.Overdrive, Name = "OVERDRIVE POWER",
-		Short = "Even faster firing", Icon = "rapid", Colour = Power, MaxLevel = 3, BossWeight = 1.2f
+		Short = "Even faster firing", Icon = "rapid", Colour = Power, MaxLevel = 2, BossWeight = 1.2f
 	};
 
 	public static readonly Profile OverdriveDuration = new()
@@ -101,7 +101,7 @@ public static class RunUpgrades
 	public static readonly Profile BiggerNova = new()
 	{
 		Id = RunUpgradeId.BiggerNova, Branch = Branch.Nova, Name = TranslationServer.Translate("UPG_BiggerNova_NAME"),
-		Short = "Wider blast", Icon = "nova", Colour = Blast, MaxLevel = 3, BossWeight = 1.1f
+		Short = "Wider blast", Icon = "nova", Colour = Blast, MaxLevel = 2, BossWeight = 1.1f
 	};
 
 	public static readonly Profile NovaPower = new()
