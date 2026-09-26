@@ -55,8 +55,8 @@ public partial class Body : CharacterBody2D, IShootable
 	private static readonly Dictionary<BodyKind, string[]> FaceFiles = new()
 	{
 		[BodyKind.Drifter] = new[] { "body_drifter", "body_drifter_2", "body_drifter_3" },
-		// Irritability, in three shapes.
-		[BodyKind.Shard] = Mix("body_shard", new[] { "wedge", "sliver", "chipped" }, new[] { "huffy", "twitchy", "snappy", "scowling" }),
+		// Irritability, in three four-cornered crystal shapes.
+		[BodyKind.Shard] = Mix("body_shard", new[] { "kite", "blade", "arrow" }, new[] { "huffy", "twitchy", "snappy", "scowling" }),
 		// Self-doubt, frustration, shame, resentment and anger.
 		[BodyKind.Splinter] = Faces("body_splinter", "unsure", "timid", "shrinking"),
 		[BodyKind.Fracture] = Faces("body_fracture", "fed_up", "exasperated", "strained"),

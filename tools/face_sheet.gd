@@ -7,7 +7,7 @@ extends Node2D
 const NAMES := ["face", "face_blink", "face_happy",
 	"body_drifter", "body_drifter_2", "body_drifter_3",
 	"body_splinter_unsure", "body_splinter_timid", "body_splinter_shrinking",
-	"body_shard_wedge_huffy", "body_shard_sliver_twitchy", "body_shard_chipped_snappy", "body_shard_wedge_scowling",
+	"body_shard_kite_huffy", "body_shard_blade_twitchy", "body_shard_arrow_snappy", "body_shard_kite_scowling",
 	"body_fracture_fed_up", "body_fracture_exasperated", "body_fracture_strained",
 	"body_bulwark_hiding", "body_bulwark_cringing", "body_bulwark_ashamed",
 	"body_planetoid_grudging", "body_planetoid_bitter", "body_planetoid_brooding",

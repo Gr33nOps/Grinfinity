@@ -6,12 +6,15 @@ enemy, the more intense its emotion, so the arena grows darker in feeling as a
 run brings in tougher kinds. Each emotion comes in a few expressions, picked at
 random per enemy, so a crowd never looks cloned:
 
-  Drifter    loneliness     forlorn, teary, moping, weary, lost, longing,
-                            sniffly, wistful (built from parts: three rock
-                            shapes, three colours, plus scared and shocked
+  Drifter    sadness        rose rocks: forlorn, teary, sniffly, moping
+             loneliness     stone rocks: longing, wistful, weary, forsaken
+             anxiety        clay rocks: jittery, fretting, uneasy, tense
+                            (built from parts: three rock shapes, the colour
+                            giving the emotion, plus scared and shocked
                             reactions)
   Splinter   self-doubt     unsure, timid, shrinking
-  Shard      irritability   huffy, twitchy, snappy, scowling (three shapes)
+  Shard      irritability   huffy, twitchy, snappy, scowling (three
+                            four-cornered crystal shapes)
   Fracture   frustration    fed up, exasperated, strained
   Bulwark    shame          hiding, cringing, ashamed
   Planetoid  resentment     grudging, bitter, brooding
@@ -214,9 +217,6 @@ svg('body_drifter_3', drifter + craters([(92, 60, 11), (200, 132, 16), (58, 124,
     + path('M 120 162 Q 138 154 156 164', 'none', 'stroke-width="7"'))
 
 SHARD = '#EAA36F'
-shard = path('M 19 160 Q 8 119 38 85 L 109 34 Q 139 18 160 52 L 230 174 Q 242 205 204 216 L 67 215 Z', SHARD)
-shard += path('M 21 169 L 67 211 L 203 210 L 160 180 Z', '#C46E68', 'stroke="none"')
-shard += path('M 53 89 L 75 70', 'none', f'stroke="{CREAM}"')
 
 # Shards come in packs, so each is one of three shapes wearing one of four
 # irritable faces, mixed at random: a pack still reads as orange Shards at a
@@ -233,16 +233,31 @@ def shard_shape(outline, band, shine):
             + path(shine, 'none', f'stroke="{CREAM}"'))
 
 
-# Wedge: the original, leaning to one side. Sliver: tall and upright. Chipped:
-# a notch knocked out of one side, with a crack running from it.
+def rounded(points, r=14):
+    """A closed outline through `points` with each corner rounded off."""
+    import math
+    d = ''
+    n = len(points)
+    for i in range(n):
+        (px, py), (x, y), (nx, ny) = points[i - 1], points[i], points[(i + 1) % n]
+        a_len = math.hypot(x - px, y - py)
+        b_len = math.hypot(nx - x, ny - y)
+        ax, ay = x + (px - x) * r / a_len, y + (py - y) * r / a_len
+        bx, by = x + (nx - x) * r / b_len, y + (ny - y) * r / b_len
+        d += (f'M {ax:.1f} {ay:.1f}' if i == 0 else f' L {ax:.1f} {ay:.1f}') + f' Q {x} {y} {bx:.1f} {by:.1f}'
+    return d + ' Z'
+
+
+# Every Shard has four corners, never three and never square: long, pointed
+# shards of crystal. A tall kite, a leaning blade with one sharp tip, and an
+# arrow lying on its side.
 shard_shapes = {
-    'wedge': (shard, (131, 125)),
-    'sliver': (shard_shape('M 40 212 Q 30 228 52 228 L 212 228 Q 234 228 222 208 L 150 30 Q 138 6 124 30 Z',
-                           'M 0 196 L 256 190 L 256 256 L 0 256 Z', 'M 96 96 L 112 66'), (133, 142)),
-    'chipped': (shard_shape('M 26 190 Q 14 170 32 150 L 102 44 Q 118 22 136 44 L 168 90 L 150 106 L 186 118 '
-                            'L 232 180 Q 248 212 210 214 L 48 214 Q 20 214 26 190 Z',
-                            'M 0 190 L 256 182 L 256 256 L 0 256 Z', 'M 60 128 L 82 96')
-                + path('M 150 106 L 138 124', 'none', 'stroke-width="6"'), (126, 146)),
+    'kite': (shard_shape(rounded([(132, 10), (208, 108), (122, 246), (46, 120)], 12),
+                         'M 0 182 L 256 176 L 256 256 L 0 256 Z', 'M 72 100 L 100 64'), (127, 120)),
+    'blade': (shard_shape(rounded([(46, 96), (216, 18), (206, 150), (86, 234)], 12),
+                          'M 0 186 L 256 164 L 256 256 L 0 256 Z', 'M 80 96 L 118 78'), (136, 128)),
+    'arrow': (shard_shape(rounded([(16, 140), (150, 48), (240, 118), (140, 216)], 12),
+                          'M 0 184 L 256 170 L 256 256 L 0 256 Z', 'M 60 126 L 96 100'), (148, 128)),
 }
 
 
@@ -325,7 +340,8 @@ fracture_faces = {
 for mood, face in fracture_faces.items():
     svg(f'body_fracture_{mood}', fract + face)
 
-# Self-doubt, for the small broken-off pieces.
+# Self-doubt, for the small broken-off pieces. Smooth: the crack stays with the Fracture.
+splinter = path('M 32 85 L 91 30 L 173 36 L 228 99 L 220 170 L 163 225 L 75 214 L 25 153 Z', FRACT)
 splinter_faces = {
     # Unsure: glancing sideways, one brow up, a small wavering mouth, sweating.
     'unsure': eye(88, 114, 15, (-6, 2), 0.45) + eye(136, 114, 15, (-6, 2), 0.45)
@@ -342,7 +358,7 @@ splinter_faces = {
                  + grimace(112, 164, 32, 16) + sweat(58, 74),
 }
 for mood, face in splinter_faces.items():
-    svg(f'body_splinter_{mood}', fract + face)
+    svg(f'body_splinter_{mood}', splinter + face)
 
 pts = []
 import math
@@ -654,8 +670,8 @@ def moods(skin):
         'weary': (eye(113, 118, 13, (0, 7)) + lid(113, 118, 13, 4, 4, skin) + eye(159, 114, 13, (0, 7)) + lid(159, 114, 13, 4, 4, skin),
                    path('M 101 141 Q 113 147 125 141', 'none', 'stroke-width="3"') + path('M 147 137 Q 159 143 171 137', 'none', 'stroke-width="3"')
                    + path('M 124 165 L 150 163', 'none', 'stroke-width="6"')),
-        # Lost: eyes darting sideways, brows up, a sweat drop, a shaky mouth.
-        'lost': (eye(113, 116, 13, (6, 2), 0.5) + eye(159, 112, 13, (6, 2), 0.5),
+        # Jittery: eyes darting sideways, brows up, a sweat drop, a shaky mouth.
+        'jittery': (eye(113, 116, 13, (6, 2), 0.5) + eye(159, 112, 13, (6, 2), 0.5),
                     worried + sweat(188, 86) + wobble(136, 162, 28, 3)),
         # Longing: big pleading eyes looking up, bottom lip pushed out.
         'longing': (eye(113, 116, 14, (0, -3), 0.62) + eye(159, 112, 14, (0, -3), 0.62),
@@ -664,6 +680,23 @@ def moods(skin):
         'sniffly': (eye(113, 118, 13, (0, 5)) + lid(113, 118, 13, 0, -6, skin) + eye(159, 114, 13, (0, 5)) + lid(159, 114, 13, -6, 0, skin),
                     f'<ellipse cx="136" cy="140" rx="10" ry="7" fill="{BLUSH}" stroke="none"/>'
                     + tear(143, 145, 0.55) + frown(134, 168, 24, 8, 6)),
+        # Forsaken: staring far off to one side under drooping lids, a single tear.
+        'forsaken': (eye(113, 118, 13, (-7, 3)) + lid(113, 118, 13, 2, -7, skin) + eye(159, 114, 13, (-7, 3)) + lid(159, 114, 13, -7, 2, skin),
+                     brow(98, 90, 122, 84, -2) + brow(150, 80, 174, 86, -2)
+                     + tear(172, 132, 0.7) + path('M 124 166 L 148 163', 'none', 'stroke-width="6"')),
+        # Fretting: looking down and aside, brows pinched high, biting its lip, sweating.
+        'fretting': (eye(113, 116, 13, (-3, 5), 0.5) + eye(159, 112, 13, (-3, 5), 0.5),
+                     worried + grimace(136, 162, 30, 16) + sweat(80, 94)),
+        # Uneasy: a sideways glance, one brow cocked, a crooked frown.
+        'uneasy': (eye(113, 116, 13, (5, 1), 0.5) + eye(159, 112, 13, (5, 1), 0.5),
+                   brow(98, 90, 122, 88, 0) + brow(150, 78, 174, 72, 5)
+                   + path('M 122 166 Q 136 157 152 163', 'none', 'stroke-width="6"')),
+        # Tense: staring wide, brows up, lips pressed tight, a bead of sweat.
+        'tense': (eye(113, 116, 14, (0, 0), 0.3) + eye(159, 112, 14, (0, 0), 0.3),
+                  brow(97, 86, 122, 78, -3) + brow(150, 76, 175, 84, -3)
+                  + path('M 120 164 L 152 164', 'none', 'stroke-width="6"')
+                  + path('M 118 159 L 120 164 L 118 169 M 154 159 L 152 164 L 154 169', 'none', 'stroke-width="4"')
+                  + sweat(188, 84)),
         # Wistful: gazing up and away, brows gently pinched, eyes welling, a small frown.
         'wistful': (eye(113, 116, 13, (-5, -4), 0.5) + eye(159, 112, 13, (-5, -4), 0.5),
                     brow(98, 88, 122, 82, -2) + brow(150, 78, 174, 84, -2)
@@ -673,8 +706,16 @@ def moods(skin):
     }
 
 
+# The rock's colour gives a Drifter its emotion, each in four expressions.
+EMOTIONS = {
+    'rose': ('forlorn', 'teary', 'sniffly', 'moping'),      # sadness
+    'stone': ('longing', 'wistful', 'weary', 'forsaken'),   # loneliness
+    'clay': ('jittery', 'fretting', 'uneasy', 'tense'),     # anxiety
+}
 for rock, (base, _) in ROCKS.items():
     for mood, (eyes, rest) in moods(base).items():
+        if mood not in EMOTIONS[rock]:
+            continue
         svg(f'drifter_face_{rock}_{mood}', eyes + rest)
         svg(f'drifter_face_{rock}_{mood}_blink', shut_sad + rest)
 
@@ -721,8 +762,8 @@ scared_faces = {
     'fear_weary': eye(113, 112, 18, (0, 0), 0.2) + eye(159, 108, 18, (0, 0), 0.2)
                    + brow(96, 78, 124, 70, 6) + brow(146, 68, 174, 74, 6) + o_mouth(136, 170, 7)
                    + jolt(['M 118 36 L 122 52', 'M 142 32 L 142 48', 'M 166 36 L 162 52']),
-    # Lost goes to pieces: spiral eyes, a wobbling mouth, sweat both sides.
-    'fear_lost': spiral(113, 114, 15) + spiral(159, 110, 15)
+    # Jittery goes to pieces: spiral eyes, a wobbling mouth, sweat both sides.
+    'fear_jittery': spiral(113, 114, 15) + spiral(159, 110, 15)
                     + wobble(136, 164, 46, 6) + sweat(192, 84) + sweat(78, 96),
     # Longing begs: huge shiny eyes, a trembling lip, one tear.
     'fear_longing': shiny(113, 114, 17) + shiny(159, 110, 17) + high_worry + pout(136, 162, 30)
@@ -731,6 +772,19 @@ scared_faces = {
     'fear_sniffly': eye(113, 114, 15, (0, 0), 0.22) + eye(159, 110, 15, (0, 0), 0.22) + high_worry
                     + wail(136, 170, 46, 40) + tear(94, 132, 0.9)
                     + jolt(['M 118 38 L 122 54', 'M 154 34 L 152 50']),
+    # Forsaken breaks down: eyes shut and drooping, tears streaming, a shaking mouth.
+    'fear_forsaken': path('M 100 122 L 126 113', 'none', 'stroke-width="7"') + path('M 146 109 L 172 118', 'none', 'stroke-width="7"')
+                     + high_worry + tear(98, 126, 1.1) + tear(170, 122, 1.1) + wobble(136, 166, 36, 5),
+    # Fretting panics: pin-prick eyes, teeth bared in a frown, sweat flying.
+    'fear_fretting': eye(113, 114, 15, (0, 0), 0.22) + eye(159, 110, 15, (0, 0), 0.22) + high_worry
+                     + grimace(136, 166, 46, 22) + sweat(80, 92) + sweat(192, 84),
+    # Uneasy bolts: eyes swung hard to the side, a wobbling mouth, jolt lines.
+    'fear_uneasy': eye(113, 114, 15, (9, 0), 0.25) + eye(159, 110, 15, (9, 0), 0.25) + high_worry
+                   + wobble(136, 166, 34, 5) + jolt(['M 118 38 L 122 54', 'M 154 34 L 152 50']),
+    # Tense freezes: huge eyes, brows flying up, a tiny trembling mouth, sweating.
+    'fear_tense': eye(113, 112, 18, (0, 0), 0.2) + eye(159, 108, 18, (0, 0), 0.2)
+                  + brow(94, 76, 124, 66, 6) + brow(146, 64, 176, 74, 6)
+                  + wobble(136, 170, 20, 3) + sweat(190, 80),
     # Wistful trembles: eyes wide and staring up, tears spilling, a shaking mouth.
     'fear_wistful': eye(113, 112, 15, (0, -2), 0.25) + eye(159, 108, 15, (0, -2), 0.25) + high_worry
                     + wobble(136, 166, 36, 5) + tear(92, 128) + tear(180, 124)

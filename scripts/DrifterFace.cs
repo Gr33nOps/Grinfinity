@@ -2,13 +2,14 @@ using Godot;
 
 /// <summary>
 /// Makes a crowd of Drifters look like a crowd rather than one rock stamped out
-/// thirty times. Drifters are lonely: each one is dressed from parts (one of
-/// three rock shapes in one of three colours, with one of eight shades of
-/// loneliness) and then its face lives a little: it blinks now and then, looks
-/// scared while it is close to the planet, and looks shocked for a moment when a
-/// Drifter next to it pops. Its fear is its mood's own (a forlorn one dreads, a
-/// weary one jolts awake, a lost one gets spiral eyes), each panics at its own
-/// distance, and a few never panic at all.
+/// thirty times. Each one is dressed from parts (one of three rock shapes in one
+/// of three colours) and its colour gives its emotion: rose rocks are sad, stone
+/// rocks lonely and clay rocks anxious, each in one of four expressions. Then its
+/// face lives a little: it blinks now and then, looks scared while it is close to
+/// the planet, and looks shocked for a moment when a Drifter next to it pops. Its
+/// fear is its expression's own (a forlorn one dreads, a weary one jolts awake, a
+/// jittery one gets spiral eyes), each panics at its own distance, and a few
+/// never panic at all.
 ///
 /// Looks only. The body's size, hitbox, speed and health are untouched, and the
 /// picks stay off the run's seeded generator.
@@ -18,7 +19,13 @@ public partial class DrifterFace : Sprite2D
 	private static readonly string[] Shapes = { "jagged", "pebble", "lumpy" };
 	private static readonly string[] Rocks = { "rose", "stone", "clay" };
 	private static readonly Color[] RockColours = { new("bc7f83"), new("a6979b"), new("c9a07e") };
-	private static readonly string[] Moods = { "forlorn", "teary", "moping", "weary", "lost", "longing", "sniffly", "wistful" };
+	/// <summary>Each rock's emotion, as its four expressions: sadness, loneliness and anxiety.</summary>
+	private static readonly string[][] Moods =
+	{
+		new[] { "forlorn", "teary", "sniffly", "moping" },
+		new[] { "longing", "wistful", "weary", "forsaken" },
+		new[] { "jittery", "fretting", "uneasy", "tense" }
+	};
 
 	/// <summary>
 	/// How close to the planet a Drifter gets before it panics differs from one
@@ -49,7 +56,8 @@ public partial class DrifterFace : Sprite2D
 		// It pops in its own rock's colour (the colourblind palette keeps its own).
 		if (GameSettings.Instance?.ColourblindMode != true)
 			owner.SetBurstColour(RockColours[rockIndex]);
-		string feeling = Moods[GD.Randi() % (uint)Moods.Length];
+		string[] moods = Moods[rockIndex];
+		string feeling = moods[GD.Randi() % (uint)moods.Length];
 		art.Texture = Load($"drifter_body_{Shapes[GD.Randi() % (uint)Shapes.Length]}_{rock}");
 
 		var face = new DrifterFace
