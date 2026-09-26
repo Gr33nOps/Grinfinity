@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ng3gun0kwb6t"
-path="res://.godot/imported/drifter_face_scared.svg-56cc79d083e43677f07935352ae722e6.ctex"
+uid="uid://syxabxcjuus1"
+path="res://.godot/imported/drifter_face_fear_sleepy.svg-de5f421f5068cd60de7c7195c2ad4a30.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/cosmic/drifter_face_scared.svg"
-dest_files=["res://.godot/imported/drifter_face_scared.svg-56cc79d083e43677f07935352ae722e6.ctex"]
+source_file="res://art/cosmic/drifter_face_fear_sleepy.svg"
+dest_files=["res://.godot/imported/drifter_face_fear_sleepy.svg-de5f421f5068cd60de7c7195c2ad4a30.ctex"]
 
 [params]
 

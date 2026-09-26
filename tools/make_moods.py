@@ -516,8 +516,8 @@ for rock, (base, _) in ROCKS.items():
         svg(f'drifter_face_{rock}_{mood}', eyes + rest)
         svg(f'drifter_face_{rock}_{mood}_blink', shut_sad + rest)
 
-# Reactions. Each Drifter is given one scared face and one shocked face of its own,
-# so a crowd reacting at once still reacts in different ways.
+# Reactions. Each Drifter has its own fear face (its mood's) and one shocked face of
+# four, so a crowd reacting at once still reacts in different ways.
 high_worry = brow(96, 84, 122, 76, -3) + brow(150, 74, 176, 82, -3)
 
 
@@ -533,20 +533,56 @@ def jolt(lines):
     return ''.join(path(d, 'none', 'stroke-width="5"') for d in lines)
 
 
+def spiral(x, y, r):
+    """A dizzy spiral eye."""
+    import math
+    points = []
+    for k in range(40):
+        t = k / 39 * 3 * math.pi
+        rr = r * (0.12 + 0.88 * k / 39)
+        points.append(f'{x + rr * math.cos(t):.1f} {y + rr * math.sin(t):.1f}')
+    return (f'<circle cx="{x}" cy="{y}" r="{r + 2}" fill="{CREAM}" stroke-width="5"/>'
+            + path('M ' + ' L '.join(points), 'none', 'stroke-width="4"'))
+
+
+def shiny(x, y, r):
+    """A huge pleading eye: big pupil, two glints."""
+    return (eye(x, y, r, (0, -2), 0.7)
+            + circle(round(x - r * 0.25, 1), round(y + r * 0.3, 1), round(r * 0.14, 1), CREAM, 'none'))
+
+
+# Fear, close to the planet: each mood panics in its own way, so a crowd bunched
+# around you never wears one face. Drawn to differ in outline at play size, not
+# just in small details.
 scared_faces = {
-    # Frozen: huge eyes with tiny pupils, teeth clenched, sweating.
-    'scared': eye(113, 114, 15, (0, 0), 0.32) + eye(159, 110, 15, (0, 0), 0.32) + high_worry
-              + gritted(136, 162, 40, 18) + sweat(190, 84),
-    # Terrified: eyes screwed shut, wailing, tears flying.
-    'scared_2': squeezed(113, 116, 14, 1) + squeezed(159, 112, 14, -1) + high_worry
-                + wail(136, 166, 42, 30) + tear(96, 130) + tear(178, 126),
-    # Panicking: one eye bigger than the other, a shaking mouth, sweat everywhere.
-    'scared_3': eye(113, 114, 17, (0, 0), 0.25) + eye(160, 112, 12, (0, 0), 0.3)
-                + brow(94, 80, 124, 72, -3) + brow(150, 82, 174, 88, -2)
-                + wobble(136, 164, 44, 6) + sweat(192, 82) + sweat(80, 96),
-    # Cowering: looking away, a tiny "eek", shivering at the sides.
-    'scared_4': eye(113, 116, 14, (-6, -2), 0.45) + eye(159, 112, 14, (-6, -2), 0.45) + high_worry
-                + gritted(136, 164, 26, 14) + jolt(['M 70 102 L 60 110', 'M 70 124 L 58 128', 'M 202 98 L 212 104', 'M 202 120 L 214 122']),
+    # Glum dreads it: wide wet eyes, a big wavering frown.
+    'fear_glum': eye(113, 114, 15, (0, 3), 0.3) + eye(159, 110, 15, (0, 3), 0.3) + high_worry
+                 + f'<ellipse cx="113" cy="131" rx="11" ry="3.5" fill="{TEAR}" stroke="none"/>'
+                 + f'<ellipse cx="159" cy="127" rx="11" ry="3.5" fill="{TEAR}" stroke="none"/>'
+                 + path('M 108 174 Q 136 142 164 174 Q 150 164 136 166 Q 122 164 108 174 Z', INK, 'stroke-width="5"'),
+    # Teary bawls: eyes screwed shut, a huge wail, tears everywhere.
+    'fear_teary': squeezed(113, 116, 14, 1) + squeezed(159, 112, 14, -1) + high_worry
+                  + wail(136, 168, 50, 34) + tear(92, 128, 1.2) + tear(182, 124, 1.2) + tear(86, 156, 0.8),
+    # Sulking grimaces: one eye shut, one staring, teeth bared to one side.
+    'fear_sulking': squeezed(113, 116, 13, 1) + eye(160, 111, 16, (0, 0), 0.28)
+                    + brow(98, 92, 124, 88, 0) + brow(146, 72, 176, 80, -3) + gritted(142, 165, 46, 17),
+    # Sleepy is jolted wide awake: enormous eyes, a tiny o, shock lines.
+    'fear_sleepy': eye(113, 112, 18, (0, 0), 0.2) + eye(159, 108, 18, (0, 0), 0.2)
+                   + brow(96, 78, 124, 70, 6) + brow(146, 68, 174, 74, 6) + o_mouth(136, 170, 7)
+                   + jolt(['M 118 36 L 122 52', 'M 142 32 L 142 48', 'M 166 36 L 162 52']),
+    # Nervous goes to pieces: spiral eyes, a wobbling mouth, sweat both sides.
+    'fear_nervous': spiral(113, 114, 15) + spiral(159, 110, 15)
+                    + wobble(136, 164, 46, 6) + sweat(192, 84) + sweat(78, 96),
+    # Pouty begs: huge shiny eyes, a trembling lip, one tear.
+    'fear_pouty': shiny(113, 114, 17) + shiny(159, 110, 17) + high_worry + pout(136, 162, 30)
+                  + tear(98, 136, 0.8) + jolt(['M 112 186 L 116 182', 'M 160 186 L 156 182']),
+    # Sniffly screams: eyes shut tight, mouth wide open.
+    'fear_sniffly': squeezed(113, 116, 13, 1) + squeezed(159, 112, 13, -1)
+                    + brow(98, 86, 124, 80, 4) + brow(148, 78, 174, 84, 4) + shout(136, 164, 42, 36),
+    # Grumbling clenches: brows down hard, eyes wide, a big row of gritted teeth.
+    'fear_grumbling': eye(113, 116, 14, (0, 0), 0.35) + eye(159, 112, 14, (0, 0), 0.35)
+                      + path('M 96 94 L 126 100', 'none', 'stroke-width="8"') + path('M 146 98 L 176 90', 'none', 'stroke-width="8"')
+                      + gritted(136, 166, 58, 24),
 }
 shocked_faces = {
     # Gasp: brows flying up, round eyes, mouth a big O.
@@ -569,4 +605,4 @@ shocked_faces = {
 for name, face in {**scared_faces, **shocked_faces}.items():
     svg(f'drifter_face_{name}', face)
 
-print('Wrote 14 planet faces, 12 enemy faces, 3 boss faces, 9 Drifter bodies and 56 Drifter faces')
+print('Wrote 14 planet faces, 12 enemy faces, 3 boss faces, 9 Drifter bodies and 60 Drifter faces')

@@ -5,8 +5,9 @@ using Godot;
 /// thirty times. Each one is dressed from parts (one of three rock shapes in one
 /// of three colours, with one of eight unhappy moods) and then its face lives a
 /// little: it blinks now and then, looks scared while it is close to the planet,
-/// and looks shocked for a moment when a Drifter next to it pops. Each one has
-/// its own way of being scared and of being shocked, four of each.
+/// and looks shocked for a moment when a Drifter next to it pops. Its fear is its
+/// mood's own (a glum one dreads, a sleepy one jolts awake, a nervous one gets
+/// spiral eyes), each panics at its own distance, and a few never panic at all.
 ///
 /// Looks only. The body's size, hitbox, speed and health are untouched, and the
 /// picks stay off the run's seeded generator.
@@ -17,23 +18,28 @@ public partial class DrifterFace : Sprite2D
 	private static readonly string[] Rocks = { "rose", "stone", "clay" };
 	private static readonly string[] Moods = { "glum", "teary", "sulking", "sleepy", "nervous", "pouty", "sniffly", "grumbling" };
 
-	/// <summary>Closer than this to the planet and it looks scared; it calms down again past <see cref="CalmAt"/>.</summary>
-	private const float ScaredAt = 250f, CalmAt = 310f;
+	/// <summary>
+	/// How close to the planet a Drifter gets before it panics differs from one
+	/// to the next, so a crowd closing in changes face a few at a time. Each calms
+	/// again a little further out than it panicked.
+	/// </summary>
+	private const float BravestAt = 190f, JumpiestAt = 320f, CalmMargin = 60f;
+	/// <summary>Share of Drifters that never panic at all and just keep their mood.</summary>
+	private const float Unbothered = 0.2f;
 	/// <summary>How far a pop reaches to startle its neighbours.</summary>
 	private const float StartleReach = 170f;
 
-	/// <summary>Four ways to be scared and four to be shocked; each Drifter is given one of each.</summary>
-	private static Texture2D[] scaredFaces, shockedFaces;
+	/// <summary>Four ways to be shocked; each Drifter is given one. Its fear face comes from its mood.</summary>
+	private static Texture2D[] shockedFaces;
 
 	private Body body;
 	private Texture2D mood, blink, scared, shocked;
-	private float blinkIn, blinkLeft, startledLeft;
+	private float blinkIn, blinkLeft, startledLeft, scaredAt;
 	private bool frightened;
 
 	/// <summary>Gives <paramref name="owner"/> a random rock and face, drawn over and inside <paramref name="art"/>.</summary>
 	public static DrifterFace Dress(Body owner, Sprite2D art)
 	{
-		scaredFaces ??= Variants("drifter_face_scared");
 		shockedFaces ??= Variants("drifter_face_shocked");
 
 		string rock = Rocks[GD.Randi() % (uint)Rocks.Length];
@@ -46,7 +52,8 @@ public partial class DrifterFace : Sprite2D
 			body = owner,
 			mood = Load($"drifter_face_{rock}_{feeling}"),
 			blink = Load($"drifter_face_{rock}_{feeling}_blink"),
-			scared = scaredFaces[GD.Randi() % (uint)scaredFaces.Length],
+			scared = GD.Randf() < Unbothered ? null : Load($"drifter_face_fear_{feeling}"),
+			scaredAt = (float)GD.RandRange(BravestAt, JumpiestAt),
 			shocked = shockedFaces[GD.Randi() % (uint)shockedFaces.Length],
 			blinkIn = (float)GD.RandRange(1.0, 5.0)
 		};
@@ -73,7 +80,7 @@ public partial class DrifterFace : Sprite2D
 		FlipH = GetParent<Sprite2D>().FlipH;
 
 		float distance = body.GlobalPosition.DistanceTo(body.WorldPosition);
-		frightened = frightened ? distance < CalmAt : distance < ScaredAt;
+		frightened = scared != null && (frightened ? distance < scaredAt + CalmMargin : distance < scaredAt);
 
 		if (blinkLeft > 0f)
 			blinkLeft -= step;
