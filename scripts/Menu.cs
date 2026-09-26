@@ -20,13 +20,13 @@ public partial class Menu : Node
         var note=ArcadeSkin.Label("Move • Aim • Shoot • Survive",26,ArcadeSkin.Muted);note.HorizontalAlignment=HorizontalAlignment.Left;column.AddChild(note);
         column.AddChild(new Control {CustomMinimumSize=new Vector2(0,44)});
         var buttons=new VBoxContainer {Name="Buttons"};buttons.AddThemeConstantOverride("separation",15);column.AddChild(buttons);
-        var play=AddButton(buttons,"PlayButton","PLAY",()=>GoTo("game"),true);
-        AddButton(buttons,"LeaderboardButton","LEADERBOARD",()=>GoTo("leaderboard"));
-        AddButton(buttons,"SettingsButton","SETTINGS",()=>GoTo("settings"));
-        AddButton(buttons,"StatsButton","MY PLANET",()=>GoTo("stats"));
+        var play=AddButton(buttons,"PlayButton","PLAY","play",()=>GoTo("game"),true);
+        AddButton(buttons,"LeaderboardButton","LEADERBOARD","trophy",()=>GoTo("leaderboard"));
+        AddButton(buttons,"SettingsButton","SETTINGS","gear",()=>GoTo("settings"));
+        AddButton(buttons,"StatsButton","MY PLANET","planet",()=>GoTo("stats"));
         var footer=new HBoxContainer();footer.AddThemeConstantOverride("separation",16);buttons.AddChild(footer);
-        AddButton(footer,"CreditsButton","CREDITS",()=>GoTo("credits"));
-        AddButton(footer,"QuitButton","QUIT",()=>GameSettings.Instance.QuitGame());
+        AddButton(footer,"CreditsButton","CREDITS","star",()=>GoTo("credits"));
+        AddButton(footer,"QuitButton","QUIT","power",()=>GameSettings.Instance.QuitGame());
         var best=ArcadeSkin.Label($"BEST TIME   {ScoreManager.FormatTime(ScoreManager.BestTime)}",28,ArcadeSkin.Orange);
         Place(best,layer,.56f,.77f,.9f,.83f);
         best.Visible=ScoreManager.BestTime>0f;
@@ -43,9 +43,10 @@ public partial class Menu : Node
     }
     private static void Place(Control control,Node parent,float left,float top,float right,float bottom)
     {parent.AddChild(control);control.AnchorLeft=left;control.AnchorRight=right;control.AnchorTop=top;control.AnchorBottom=bottom;}
-    private Button AddButton(BoxContainer rows,string name,string text,System.Action action,bool primary=false)
+    private Button AddButton(BoxContainer rows,string name,string text,string icon,System.Action action,bool primary=false)
     {
-        var button=ArcadeSkin.Button(text,()=>{buttonSound.Play();action();},primary);button.Name=name;
+        var button=ArcadeSkin.Button(text,()=>{buttonSound.Play();action();},primary,icon);button.Name=name;
+        UiIcons.On(button,icon,38);
         button.CustomMinimumSize=new Vector2(0,78);button.SizeFlagsHorizontal=Control.SizeFlags.ExpandFill;
         button.MouseEntered+=()=>hoverSound.Play();rows.AddChild(button);return button;
     }

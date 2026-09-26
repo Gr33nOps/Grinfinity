@@ -92,7 +92,7 @@ public partial class UpgradeTree : Control
 		footer.AddThemeConstantOverride("separation", 24);
 		rows.AddChild(footer);
 		footer.AddChild(ArcadeSkin.Label(InputDevice.Pad ? "BACK to close" : $"{UIManager.UpgradeHint()} or ESC to close", 20, ArcadeSkin.Muted));
-		close = ArcadeSkin.Button("BACK TO THE FIGHT", () => GameManager.Of(this)?.CloseUpgradeTree());
+		close = ArcadeSkin.Button("BACK TO THE FIGHT", () => GameManager.Of(this)?.CloseUpgradeTree(), false, "play");
 		close.CustomMinimumSize = new Vector2(300, 52);
 		footer.AddChild(close);
 

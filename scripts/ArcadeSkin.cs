@@ -18,6 +18,24 @@ public static class ArcadeSkin
         var focus=Box(new Color(0,0,0,0), Cream,18,3);focus.ShadowSize=0;focus.ShadowColor=Colors.Transparent;theme.SetStylebox("focus","Button",focus);
         theme.SetStylebox("normal", "LineEdit", Box(new Color("281b36"), Muted, 12, 2));
         theme.SetColor("font_color", "LineEdit", Cream);
+        // Icons follow the text: cream, ink on the orange hover.
+        theme.SetColor("icon_normal_color", "Button", Cream);
+        theme.SetColor("icon_focus_color", "Button", Cream);
+        theme.SetColor("icon_hover_color", "Button", Ink);
+        theme.SetColor("icon_pressed_color", "Button", Cream);
+        theme.SetColor("icon_hover_pressed_color", "Button", Cream);
+        theme.SetIcon("arrow", "OptionButton", UiIcons.Get("dropdown"));
+        theme.SetConstant("modulate_arrow", "OptionButton", 1);
+        // Sliders: a dark groove, filled orange up to a little planet for a knob.
+        var groove = new StyleBoxFlat { BgColor = new Color("281b36"), ContentMarginTop = 6, ContentMarginBottom = 6 };
+        groove.SetCornerRadiusAll(8);
+        var filled = new StyleBoxFlat { BgColor = Orange, ContentMarginTop = 6, ContentMarginBottom = 6 };
+        filled.SetCornerRadiusAll(8);
+        theme.SetStylebox("slider", "HSlider", groove);
+        theme.SetStylebox("grabber_area", "HSlider", filled);
+        theme.SetStylebox("grabber_area_highlight", "HSlider", filled);
+        foreach (string state in new[] { "grabber", "grabber_highlight", "grabber_disabled" })
+            theme.SetIcon(state, "HSlider", UiIcons.Get("knob"));
         return theme;
     }
     public static StyleBoxFlat Box(Color fill, Color border, int radius = 28, int line = 3) => new()
@@ -37,7 +55,7 @@ public static class ArcadeSkin
         label.AddThemeColorOverride("font_color", color ?? Cream);
         return label;
     }
-    public static Button Button(string text, System.Action action, bool primary = false)
+    public static Button Button(string text, System.Action action, bool primary = false, string icon = null)
     {
         var button = new Button { Text = text, CustomMinimumSize = new Vector2(0, 70), MouseDefaultCursorShape = Control.CursorShape.PointingHand };
         button.Theme = Theme();
@@ -46,9 +64,12 @@ public static class ArcadeSkin
             button.AddThemeStyleboxOverride("normal", Box(Orange, new Color("ffcd85"),18,3));
             // Ink in every state: cream on orange is too faint to read, and the
             // primary button is usually the focused one.
-            foreach (string state in new[] { "font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color" })
+            foreach (string state in new[] { "font_color", "font_focus_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color",
+                         "icon_normal_color", "icon_focus_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color" })
                 button.AddThemeColorOverride(state, Ink);
         }
+        if (icon != null)
+            UiIcons.On(button, icon);
         button.Pressed += action;
         return button;
     }
@@ -100,13 +121,19 @@ public static class ArcadeSkin
                 button.Flat=false;button.Theme=Theme();button.AddThemeFontSizeOverride("font_size",26);
                 foreach(string key in new[]{"font_color","font_hover_color","font_focus_color","font_pressed_color"})button.RemoveThemeColorOverride(key);
                 button.CustomMinimumSize=new Vector2(button.CustomMinimumSize.X,52);
+                if(button.ToggleMode&&button.Name=="Check")UiIcons.Switch(button);
+                else if(button is not OptionButton&&UiIcons.For(button.Name) is string icon)UiIcons.On(button,icon);
             }
-            if(node is LineEdit field)field.AddThemeFontSizeOverride("font_size",28);
+            if(node is LineEdit field){field.AddThemeFontSizeOverride("font_size",28);field.RightIcon=UiIcons.Get("pencil_field");}
+            if(node is HBoxContainer row&&UiIcons.For(row.Name) is string mark)UiIcons.Lead(row,mark);
             if(node is BoxContainer box)box.AddThemeConstantOverride("separation",10);
             if(node is HBoxContainer && root is ControlsMenu && node.GetParent().Name=="Rows")((HBoxContainer)node).Alignment=BoxContainer.AlignmentMode.Center;
             foreach(Node child in node.GetChildren())Style(child);
         }
         Style(layout);
+        // The screen's title and its hint line each get their icon.
+        if(layout.GetNodeOrNull<Label>("Title") is Label title&&UiIcons.For(root.Name) is string heading)UiIcons.Beside(title,heading,44,Orange);
+        if(layout.GetNodeOrNull<Label>("Hint") is Label hint){hint.AddThemeColorOverride("font_color",Muted);UiIcons.Beside(hint,"info",28,Muted);}
         layout.OffsetLeft=-550;layout.OffsetRight=550;
         float height=Mathf.Min(940,layout.GetCombinedMinimumSize().Y+24);
         layout.OffsetTop=-height/2;layout.OffsetBottom=height/2;

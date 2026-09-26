@@ -73,8 +73,15 @@ public partial class StatsMenu : Control
 		planetName = GetNode<Label>($"{Showcase}/PlanetName");
 		planetNote = GetNode<Label>($"{Showcase}/PlanetNote");
 		planetCount = GetNode<Label>($"{Showcase}/Picker/Count");
-		GetNode<Button>($"{Showcase}/Picker/Prev").Pressed += () => Browse(-1);
-		GetNode<Button>($"{Showcase}/Picker/Next").Pressed += () => Browse(1);
+		var prev = GetNode<Button>($"{Showcase}/Picker/Prev");
+		var next = GetNode<Button>($"{Showcase}/Picker/Next");
+		prev.Pressed += () => Browse(-1);
+		next.Pressed += () => Browse(1);
+		foreach (var (arrow, icon) in new[] { (prev, "chevron_left"), (next, "chevron_right") })
+		{
+			arrow.Text = "";
+			UiIcons.On(arrow, icon, 28).IconAlignment = HorizontalAlignment.Center;
+		}
 
 		browsedWorld = GameSettings.Instance?.World ?? 1;
 		if (!PlayerProfile.IsWorldUnlocked(browsedWorld))

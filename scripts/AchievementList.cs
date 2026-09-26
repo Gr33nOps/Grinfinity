@@ -17,11 +17,13 @@ public partial class AchievementList : Control
 	private static readonly Color Faded = new(0.77f, 0.66f, 0.75f, 0.55f);
 
 	private Font font;
+	private Texture2D medal;
 
 	public override void _Ready()
 	{
 		MouseFilter = MouseFilterEnum.Ignore;
 		font = GD.Load<Font>("res://fonts/LilitaOne.ttf");
+		medal = UiIcons.Get("medal");
 		CustomMinimumSize = new Vector2(0f, Pad + HeaderHeight + RowHeight * Achievements.All.Length + Pad * 0.6f);
 	}
 
@@ -40,7 +42,8 @@ public partial class AchievementList : Control
 				earnedCount++;
 
 		float headerBase = Pad + 26f;
-		DrawString(font, new Vector2(Pad, headerBase), "ACHIEVEMENTS", HorizontalAlignment.Left, -1, 28, ArcadeSkin.Orange);
+		DrawTextureRect(medal, new Rect2(Pad, headerBase - 28f, 32f, 32f), false, ArcadeSkin.Orange);
+		DrawString(font, new Vector2(Pad + 42f, headerBase), "ACHIEVEMENTS", HorizontalAlignment.Left, -1, 28, ArcadeSkin.Orange);
 		DrawString(font, new Vector2(Pad, headerBase), $"{earnedCount} / {Achievements.All.Length}", HorizontalAlignment.Right, Size.X - Pad * 2f, 28, ArcadeSkin.Cream);
 		float rule = Pad + HeaderHeight - 8f;
 		DrawLine(new Vector2(Pad, rule), new Vector2(Size.X - Pad, rule), new Color(Edge, 0.6f), 2f);

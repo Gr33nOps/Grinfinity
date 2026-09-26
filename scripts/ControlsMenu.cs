@@ -38,7 +38,7 @@ public partial class ControlsMenu : Control
 	{
 		foreach (var (action, label) in GameSettings.RebindableActions)
 		{
-			var row = new HBoxContainer();
+			var row = new HBoxContainer { Name = $"Bind_{action}" };
 			row.AddThemeConstantOverride("separation", 20);
 
 			var name = new Label

@@ -25,16 +25,16 @@ public partial class GameOver : Control
 	public override void _Ready()
 	{
         var rows=ArcadeSkin.Modal(this,"GAME OVER",850);
-        rows.AddChild(ArcadeSkin.Label("YOU SURVIVED",22,ArcadeSkin.Orange));
+        var survived=ArcadeSkin.Label("YOU SURVIVED",22,ArcadeSkin.Orange);rows.AddChild(survived);UiIcons.Beside(survived,"clock",26,ArcadeSkin.Orange);
         scoreLabel=ArcadeSkin.Label("00:00",104);scoreLabel.Name="FinalTime";rows.AddChild(scoreLabel);
         highScoreLabel=ArcadeSkin.Label("",30,ArcadeSkin.Orange);rows.AddChild(highScoreLabel);
         leaderboardLabel=ArcadeSkin.Label("",24);rows.AddChild(leaderboardLabel);
         worldUnlockLabel=ArcadeSkin.Label("",22,ArcadeSkin.Muted);worldUnlockLabel.AutowrapMode=TextServer.AutowrapMode.WordSmart;rows.AddChild(worldUnlockLabel);
         nameRow=new HBoxContainer {Alignment=BoxContainer.AlignmentMode.Center};rows.AddChild(nameRow);
         var prompt=ArcadeSkin.Label("YOUR NAME",22);prompt.Name="Prompt";nameRow.AddChild(prompt);
-        nameField=new LineEdit {Name="Field",PlaceholderText="PLAYER",MaxLength=12,CustomMinimumSize=new Vector2(260,54)};nameRow.AddChild(nameField);
-        restartButton=ArcadeSkin.Button("PLAY AGAIN",()=>{},true);restartButton.Name="Retry";rows.AddChild(restartButton);
-        menuButton=ArcadeSkin.Button("MAIN MENU",()=>{});menuButton.Name="ReturnToMenu";rows.AddChild(menuButton);
+        nameField=new LineEdit {Name="Field",PlaceholderText="PLAYER",MaxLength=12,CustomMinimumSize=new Vector2(260,54),RightIcon=UiIcons.Get("pencil_field")};nameRow.AddChild(nameField);
+        restartButton=ArcadeSkin.Button("PLAY AGAIN",()=>{},true,"restart");restartButton.Name="Retry";rows.AddChild(restartButton);
+        menuButton=ArcadeSkin.Button("MAIN MENU",()=>{},false,"home");menuButton.Name="ReturnToMenu";rows.AddChild(menuButton);
 
 		buttonSound = GetNodeOrNull<AudioStreamPlayer>("ButtonSound");
 		hoverSound = GetNodeOrNull<AudioStreamPlayer>("HoverSound");

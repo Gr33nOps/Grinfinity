@@ -4,6 +4,8 @@ using Godot;
 public partial class LeaderboardMenu : Control
 {
 	private static readonly Color Idle = new Color(0.85f, 0.85f, 0.9f);
+	/// <summary>Gold, silver and bronze.</summary>
+	private static readonly Color[] Medals = { new("ffc94f"), new("d9d2e6"), new("d08a55") };
 
 	private VBoxContainer rows;
 	private Label emptyLabel;
@@ -56,6 +58,11 @@ public partial class LeaderboardMenu : Control
 			// style guide already uses for "this one matters".
 			Color rankColour = i < 3 ? new Color(1.0f, 0.72f, 0.32f) : Idle;
 
+			// The top three wear a medal; everyone else keeps the same indent.
+			if (i < 3)
+				row.AddChild(UiIcons.Mark("medal", 38, Medals[i]));
+			else
+				row.AddChild(new Control { CustomMinimumSize = new Vector2(38, 38) });
 			row.AddChild(Cell($"#{i + 1}", 40, rankColour, 90));
 			row.AddChild(Cell(entry.Name, 40, rankColour, 300));
 			row.AddChild(Cell(ScoreManager.FormatTime(entry.SurvivalTime), 40, rankColour, 170));
